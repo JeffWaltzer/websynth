@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,53 +45,58 @@
 
         /* Mini Keyboard Styles */
         .mini-keyboard-container {
-            height: 30px;
+            height: 28px; /* Reduced height slightly */
             width: 100%;
-            margin-top: 3px;
-            margin-bottom: 3px;
+            margin-top: 1px;
+            margin-bottom: 1px;
             display: flex;
             justify-content: center;
         }
         .mini-keyboard {
             display: flex;
-            position: relative; /* For absolute positioning of black keys */
+            position: relative;
             height: 100%;
-            width: 150px; /* Increased width for 3 octaves */
-            border: 1px solid #4A5568; /* gray-600 */
+            width: 90px;
+            border: 1px solid #4A5568;
             border-radius: 3px;
             overflow: hidden;
-            background-color: #4A5568; /* Background for gaps if any */
+            background-color: #4A5568;
         }
         .mini-keyboard .key {
             box-sizing: border-box;
             border-right: 1px solid #4A5568;
         }
-        .mini-keyboard .key:last-child { /* Last white key */
+        .mini-keyboard .key:last-child {♥
             border-right: none;
         }
         .mini-keyboard .white-key {
             height: 100%;
-            background-color: #E2E8F0; /* gray-200 */
-            flex-grow: 1; /* White keys share space equally */
+            background-color: #E2E8F0;
+            flex-grow: 1;
             z-index: 1;
         }
         .mini-keyboard .black-key {
             position: absolute;
             height: 60%;
-            background-color: #2D3748; /* gray-700 */
-            border: 1px solid #1A202C; /* gray-800 */
-            /* Width is set dynamically in JS */
+            background-color: #2D3748;
+            border: 1px solid #1A202C;
+            width: 8%;
             z-index: 2;
+            margin-left: -4%;
         }
+        .mini-keyboard .black-key[data-pitch-class="1"]  { left: calc(1 * 14.28% - 0%); }
+        .mini-keyboard .black-key[data-pitch-class="3"]  { left: calc(2 * 14.28% - 0%); }
+        .mini-keyboard .black-key[data-pitch-class="6"]  { left: calc(4 * 14.28% - 0%); }
+        .mini-keyboard .black-key[data-pitch-class="8"]  { left: calc(5 * 14.28% - 0%); }
+        .mini-keyboard .black-key[data-pitch-class="10"] { left: calc(6 * 14.28% - 0%); }
 
         .mini-keyboard .key.active.white-key {
-            background-color: #60a5fa; /* blue-400 */
+            background-color: #60a5fa;
         }
         .mini-keyboard .key.active.black-key {
-            background-color: #3b82f6; /* blue-500 */
+            background-color: #3b82f6;
             border-color: #2563eb;
         }
-
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen h-screen flex flex-col items-center justify-center p-1 sm:p-2 overflow-hidden">
@@ -120,6 +126,8 @@
         const chordGrid = document.getElementById('chord-grid');
         const deviceSelect = document.getElementById('midi-device-select');
         const noteNames = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+        const whiteKeyPitchClasses = [0, 2, 4, 5, 7, 9, 11];
+        const blackKeyPitchClasses = [1, 3, 6, 8, 10];
 
         let activeNotesByChannel = {};
         for (let i = 0; i < 16; i++) activeNotesByChannel[i] = new Set();
@@ -173,68 +181,15 @@
             'm7_int':{name:"Minor 7th Int",comp:""},'M7_int':{name:"Major 7th Int",comp:""}
         };
 
-        const START_MIDI_NOTE = 36; // C2
-        const END_MIDI_NOTE = 71;   // B4 (3 octaves total: 36 notes)
+        function generateMiniKeyboardHTML(channelIndex, keyboardTypeSuffix) { // Added keyboardTypeSuffix
+            let keyboardHtml = `<div class="mini-keyboard" id="keyboard-${keyboardTypeSuffix}-ch-${channelIndex}">`;
 
-        function generateMiniKeyboardHTML(channelIndex) {
-            let keyboardHtml = `<div class="mini-keyboard" id="keyboard-ch-${channelIndex}">`;
-            const totalWhiteKeys = 21; // 7 white keys per octave * 3 octaves
-            const whiteKeyWidthPercentage = 100 / totalWhiteKeys;
-            const blackKeyWidthPercentage = whiteKeyWidthPercentage * 0.6; // Black keys are narrower
-
-            let whiteKeyCounter = 0;
-            for (let midiNote = START_MIDI_NOTE; midiNote <= END_MIDI_NOTE; midiNote++) {
-                const pitchClass = midiNote % 12;
-                const isBlackKey = [1, 3, 6, 8, 10].includes(pitchClass);
-
-                if (!isBlackKey) {
-                    keyboardHtml += `<div class="key white-key" id="key-${channelIndex}-${midiNote}" style="width: ${whiteKeyWidthPercentage}%;"></div>`;
-                    whiteKeyCounter++;
-                }
-            }
-
-            // Add black keys separately and position them
-            // This positioning is approximate and might need fine-tuning
-            whiteKeyCounter = 0; // Reset for black key positioning
-            for (let midiNote = START_MIDI_NOTE; midiNote <= END_MIDI_NOTE; midiNote++) {
-                const pitchClass = midiNote % 12;
-                const isBlackKey = [1, 3, 6, 8, 10].includes(pitchClass);
-
-                if (isBlackKey) {
-                    // Calculate left position based on the preceding white key
-                    // This is a simplified calculation
-                    let leftOffset = 0;
-                    if (pitchClass === 1 || pitchClass === 3 ) { // C#, D#
-                        leftOffset = whiteKeyCounter * whiteKeyWidthPercentage - (blackKeyWidthPercentage / 2.5) ;
-                    } else if (pitchClass === 6 || pitchClass === 8 || pitchClass === 10) { // F#, G#, A#
-                         leftOffset = whiteKeyCounter * whiteKeyWidthPercentage - (blackKeyWidthPercentage / 2.5) ;
-                    }
-                     // Adjust for subsequent octaves
-                    const octaveOffset = Math.floor((midiNote - START_MIDI_NOTE) / 12);
-                    // This logic for leftOffset is tricky with flex white keys.
-                    // A more robust way would be to calculate based on the actual white key elements if possible,
-                    // or use a more predictable grid for keys.
-                    // For now, this is a simplified attempt:
-                    let blackKeyLeft = 0;
-                    // C#, D#, F#, G#, A#
-                    // Relative to start of octave
-                    const relativePitch = pitchClass;
-                    if (relativePitch === 1) blackKeyLeft = (whiteKeyCounter -1 + 0.70) * whiteKeyWidthPercentage; // C#
-                    else if (relativePitch === 3) blackKeyLeft = (whiteKeyCounter -1 + 0.70) * whiteKeyWidthPercentage; // D#
-                    else if (relativePitch === 6) blackKeyLeft = (whiteKeyCounter -1 + 0.70) * whiteKeyWidthPercentage; // F#
-                    else if (relativePitch === 8) blackKeyLeft = (whiteKeyCounter -1 + 0.70) * whiteKeyWidthPercentage; // G#
-                    else if (relativePitch === 10) blackKeyLeft = (whiteKeyCounter -1 + 0.70) * whiteKeyWidthPercentage; // A#
-
-                    // Add full octave offsets
-                    blackKeyLeft += octaveOffset * 7 * whiteKeyWidthPercentage;
-
-
-                    keyboardHtml += `<div class="key black-key" id="key-${channelIndex}-${midiNote}" style="width: ${blackKeyWidthPercentage}%; left: ${leftOffset}%;"></div>`;
-                }
-                if(!isBlackKey) whiteKeyCounter++;
-
-
-            }
+            whiteKeyPitchClasses.forEach(pc => {
+                keyboardHtml += `<div class="key white-key" id="key-${keyboardTypeSuffix}-${channelIndex}-${pc}" data-pitch-class="${pc}"></div>`;
+            });
+            blackKeyPitchClasses.forEach(pc => {
+                keyboardHtml += `<div class="key black-key" id="key-${keyboardTypeSuffix}-${channelIndex}-${pc}" data-pitch-class="${pc}"></div>`;
+            });
             keyboardHtml += `</div>`;
             return keyboardHtml;
         }
@@ -249,57 +204,15 @@
                     <div>
                         <div class="text-[0.6rem] sm:text-xs text-gray-400 mb-0">CH ${i + 1}</div>
                         <div id="chord-ch-${i}" class="chord-display font-semibold text-sky-300 break-words leading-tight flex items-center justify-center">---</div>
+                        <div class="mini-keyboard-container">${generateMiniKeyboardHTML(i, 'active')}</div> {/* Keyboard for active notes */}
                         <div id="desc-ch-${i}" class="chord-description-display text-sky-100 mt-0.5 break-words leading-tight"></div>
-                        <div class="mini-keyboard-container">${generateMiniKeyboardHTML(i)}</div>
                         <div class="text-[0.6rem] text-gray-400 mt-0.5">Suggestions:</div>
                         <div id="reco-ch-${i}" class="recommendations-display text-teal-300 leading-tight">---</div>
+                        <div class="mini-keyboard-container">${generateMiniKeyboardHTML(i, 'suggested')}</div> {/* Keyboard for suggested chord */}
                     </div>
                     <div id="notes-ch-${i}" class="notes-list-display text-gray-500 mt-0.5 truncate">---</div>
                 `;
                 chordGrid.appendChild(channelDiv);
-                 // After appending, explicitly set black key positions for this channel's keyboard
-                const keyboardElement = document.getElementById(`keyboard-ch-${i}`);
-                if (keyboardElement) {
-                    const whiteKeyElements = keyboardElement.querySelectorAll('.white-key');
-                    const blackKeyElements = keyboardElement.querySelectorAll('.black-key');
-                    const whiteKeyWidth = whiteKeyElements.length > 0 ? whiteKeyElements[0].offsetWidth : (keyboardElement.offsetWidth / 21); // Approx
-                    const blackKeyCalculatedWidth = whiteKeyWidth * 0.6;
-
-                    let bkIndex = 0;
-                    for (let octave = 0; octave < 3; octave++) {
-                        const whiteKeyOffsetInOctave = octave * 7;
-                        // C#
-                        if (blackKeyElements[bkIndex]) {
-                            blackKeyElements[bkIndex].style.width = `${blackKeyCalculatedWidth}px`;
-                            blackKeyElements[bkIndex].style.left = `${whiteKeyElements[whiteKeyOffsetInOctave].offsetLeft + whiteKeyWidth - (blackKeyCalculatedWidth/2)}px`;
-                            bkIndex++;
-                        }
-                        // D#
-                        if (blackKeyElements[bkIndex]) {
-                            blackKeyElements[bkIndex].style.width = `${blackKeyCalculatedWidth}px`;
-                            blackKeyElements[bkIndex].style.left = `${whiteKeyElements[whiteKeyOffsetInOctave + 1].offsetLeft + whiteKeyWidth - (blackKeyCalculatedWidth/2)}px`;
-                            bkIndex++;
-                        }
-                        // F#
-                        if (blackKeyElements[bkIndex]) {
-                            blackKeyElements[bkIndex].style.width = `${blackKeyCalculatedWidth}px`;
-                            blackKeyElements[bkIndex].style.left = `${whiteKeyElements[whiteKeyOffsetInOctave + 3].offsetLeft + whiteKeyWidth - (blackKeyCalculatedWidth/2)}px`;
-                            bkIndex++;
-                        }
-                        // G#
-                        if (blackKeyElements[bkIndex]) {
-                            blackKeyElements[bkIndex].style.width = `${blackKeyCalculatedWidth}px`;
-                            blackKeyElements[bkIndex].style.left = `${whiteKeyElements[whiteKeyOffsetInOctave + 4].offsetLeft + whiteKeyWidth - (blackKeyCalculatedWidth/2)}px`;
-                            bkIndex++;
-                        }
-                        // A#
-                        if (blackKeyElements[bkIndex]) {
-                            blackKeyElements[bkIndex].style.width = `${blackKeyCalculatedWidth}px`;
-                            blackKeyElements[bkIndex].style.left = `${whiteKeyElements[whiteKeyOffsetInOctave + 5].offsetLeft + whiteKeyWidth - (blackKeyCalculatedWidth/2)}px`;
-                            bkIndex++;
-                        }
-                    }
-                }
             }
         }
 
@@ -445,23 +358,33 @@
             if (a === b) return true; if (a == null || b == null) return false; if (a.length !== b.length) return false;
             for (let i = 0; i < a.length; ++i) if (a[i] !== b[i]) return false; return true;
         }
-        function getNotesForSuggestedChord(fullChordName) { /* ... same ... */
+
+        // Modified to return an array of MIDI notes for the suggested chord
+        function getMidiNotesForSuggestedChord(fullChordName) {
             let rootName = ""; let suffix = "";
             const match = fullChordName.match(/^([A-Ga-g][#♯b♭]?)(.*)$/);
             if (match) { rootName = match[1].replace('b', '♭').replace('#','♯'); suffix = match[2];}
-            else { return ""; }
+            else { return []; } // Return empty array if parse fails
             const rootPitchClass = noteNames.indexOf(rootName);
-            if (rootPitchClass === -1) return "";
+            if (rootPitchClass === -1) return [];
             const intervals = chordFormulas[suffix];
-            if (!intervals) { console.warn(`No formula for suffix: '${suffix}' in '${fullChordName}'`); return ""; }
-            const baseMidiRoot = 60 + rootPitchClass;
-            return intervals.map(interval => midiNoteToNameWithOctave(baseMidiRoot + interval)).join('-');
+            if (!intervals) { console.warn(`No formula for suffix: '${suffix}' in '${fullChordName}'`); return []; }
+            const baseMidiRoot = 60 + rootPitchClass; // Base octave around C4
+            return intervals.map(interval => baseMidiRoot + interval);
         }
-        function identifyChord(notesSet) { /* ... same, returns recommendations string ... */
-            const notes = Array.from(notesSet).sort((a, b) => a - b);
-            let chordName = "---"; let noteList = ""; let description = ""; let recommendations = "";
 
-            if (notes.length === 0) return { chordName, noteList, description, recommendations };
+        function getNoteNamesForSuggestedChordDisplay(fullChordName) { // For display string
+            const midiNotes = getMidiNotesForSuggestedChord(fullChordName);
+            if (!midiNotes || midiNotes.length === 0) return "";
+            return midiNotes.map(note => midiNoteToNameWithOctave(note)).join('-');
+        }
+
+        function identifyChord(notesSet) {
+            const notes = Array.from(notesSet).sort((a, b) => a - b);
+            let chordName = "---"; let noteList = ""; let description = "";
+            let recommendations = ""; let firstSuggestionMidiNotes = new Set();
+
+            if (notes.length === 0) return { chordName, noteList, description, recommendations, firstSuggestionMidiNotes };
 
             const uniquePitchClasses = [...new Set(notes.map(n => n % 12))].sort((a,b)=>a-b);
             noteList = notes.map(n => midiNoteToNameWithOctave(n)).join(' ');
@@ -472,15 +395,19 @@
                 if(descObj) {
                     description = descObj.name;
                     if (descObj.comp) {
-                         recommendations = descObj.comp.split(',')
-                            .map(s => s.trim()).filter(s => s)
-                            .map(cn => {
-                                const notesOfSugg = getNotesForSuggestedChord(cn);
-                                return notesOfSugg ? `${cn} (${notesOfSugg})` : cn;
-                            }).join('; ');
+                         const firstSuggName = descObj.comp.split(',')[0].trim();
+                         if (firstSuggName) {
+                             firstSuggestionMidiNotes = new Set(getMidiNotesForSuggestedChord(firstSuggName).map(n => n % 12)); // Store pitch classes
+                             recommendations = descObj.comp.split(',')
+                                .map(s => s.trim()).filter(s => s)
+                                .map(cn => {
+                                    const notesOfSugg = getNoteNamesForSuggestedChordDisplay(cn);
+                                    return notesOfSugg ? `${cn} (${notesOfSugg})` : cn;
+                                }).join('; ');
+                         }
                     }
                 }
-                return { chordName, noteList, description, recommendations };
+                return { chordName, noteList, description, recommendations, firstSuggestionMidiNotes };
             }
 
             for (const rootCandidatePitchClass of uniquePitchClasses) {
@@ -496,20 +423,24 @@
                         if(descObj) {
                             description = descObj.name;
                             if (descObj.comp) {
+                                const firstSuggName = descObj.comp.split(',')[0].trim();
+                                if (firstSuggName) {
+                                     firstSuggestionMidiNotes = new Set(getMidiNotesForSuggestedChord(firstSuggName).map(n => n % 12)); // Store pitch classes
+                                }
                                 recommendations = descObj.comp.split(',')
                                     .map(s => s.trim()).filter(s => s)
                                     .map(chordNameSuggestion => {
-                                        const notesOfSuggestion = getNotesForSuggestedChord(chordNameSuggestion);
+                                        const notesOfSuggestion = getNoteNamesForSuggestedChordDisplay(chordNameSuggestion);
                                         return notesOfSuggestion ? `${chordNameSuggestion} (${notesOfSuggestion})` : chordNameSuggestion;
                                     }).join('; ');
                             }
                         }
-                        return { chordName, noteList, description, recommendations };
+                        return { chordName, noteList, description, recommendations, firstSuggestionMidiNotes };
                     }
                 }
             }
             chordName = uniquePitchClasses.map(pc => noteNames[pc]).join(' ');
-            return { chordName, noteList, description, recommendations };
+            return { chordName, noteList, description, recommendations, firstSuggestionMidiNotes };
         }
 
         function updateChannelDisplay(channel) {
@@ -520,11 +451,28 @@
             const notesEl = document.getElementById(`notes-ch-${channel}`);
             const recoEl = document.getElementById(`reco-ch-${channel}`);
 
-            // Update keyboard
-            for (let midiNote = START_MIDI_NOTE; midiNote <= END_MIDI_NOTE; midiNote++) {
-                const keyEl = document.getElementById(`key-${channel}-${midiNote}`);
+            // Update active notes keyboard
+            for (let pc=0; pc<12; pc++) { // Iterate through pitch classes 0-11
+                const keyEl = document.getElementById(`key-active-${channel}-${pc}`);
                 if (keyEl) {
-                    if (activeNotesByChannel[channel].has(midiNote)) {
+                    let isActive = false;
+                    for (const note of activeNotesByChannel[channel]) {
+                        if (note % 12 === pc) {
+                            isActive = true;
+                            break;
+                        }
+                    }
+                    if (isActive) keyEl.classList.add('active');
+                    else keyEl.classList.remove('active');
+                }
+            }
+
+            // Update suggested chord keyboard
+            const suggestionNotes = chordResult.firstSuggestionMidiNotes || new Set();
+             for (let pc=0; pc<12; pc++) { // Iterate through pitch classes 0-11
+                const keyEl = document.getElementById(`key-suggested-${channel}-${pc}`);
+                if (keyEl) {
+                    if (suggestionNotes.has(pc)) { // Check if pitch class is in the set
                         keyEl.classList.add('active');
                     } else {
                         keyEl.classList.remove('active');
