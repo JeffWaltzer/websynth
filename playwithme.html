@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MIDI Chord Suggester (Cycling Jazz)</title>
+    <title>MIDI Chord Suggester (Multi-Genre)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -16,6 +16,7 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
+        /* Hide spinners from number inputs if any were to be added back */
         input[type="number"] {
             -moz-appearance: textfield;
         }
@@ -31,7 +32,7 @@
     <div class="bg-slate-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-2xl space-y-6">
         <header class="text-center">
             <h1 class="text-3xl font-bold text-sky-400">MIDI Chord Suggester</h1>
-            <p class="text-slate-400 mt-1">Cycling Through Jazz Chord Suggestions</p>
+            <p class="text-slate-400 mt-1">Cycling Through Multi-Genre Chord Suggestions</p>
         </header>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
@@ -57,8 +58,19 @@
             </div>
         </div>
 
+        <div class="mb-6">
+            <label for="suggestionModeSelect" class="block text-sm font-medium text-sky-300 mb-1">Suggestion Mode:</label>
+            <select id="suggestionModeSelect" class="custom-select w-full p-3 bg-slate-700 border border-slate-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 text-slate-100">
+                <option value="jazz">Jazz</option>
+                <option value="classical">Classical</option>
+                <option value="progRock">Prog Rock</option>
+                <option value="celtic">Celtic</option>
+            </select>
+        </div>
+
+
         <div class="space-y-2 mb-6 text-center">
-            <p class="text-sm text-slate-400">The app will cycle through different jazz chord suggestions for each input. Suggested chords play for a fixed duration.</p>
+            <p class="text-sm text-slate-400">The app will cycle through different chord suggestions based on the selected mode. Suggested chords play for a fixed duration.</p>
         </div>
 
         <div class="space-y-4">
@@ -77,7 +89,7 @@
             </div>
         </div>
          <footer class="text-center text-xs text-slate-500 pt-4 border-t border-slate-700">
-            Play a Major/Minor triad. App cycles through different 7th chord suggestions.
+            Play a Major/Minor triad. App cycles through 7th chord suggestions in the selected mode.
         </footer>
     </div>
 
@@ -88,6 +100,7 @@
         let selectedOutputId = null;
         let selectedInputChannel = 0;
         let selectedOutputChannel = 0;
+        let currentSuggestionMode = 'jazz'; // Default mode
 
         const activeInputNotes = new Map();
         let lastProcessedInputNotes = [];
@@ -103,10 +116,10 @@
         const midiOutSelect = document.getElementById('midiOutSelect');
         const channelInSelect = document.getElementById('channelInSelect');
         const channelOutSelect = document.getElementById('channelOutSelect');
+        const suggestionModeSelect = document.getElementById('suggestionModeSelect');
         const statusDiv = document.getElementById('statusDiv');
         const inputChordDiv = document.getElementById('inputChordDiv');
         const suggestedChordDiv = document.getElementById('suggestedChordDiv');
-        // const fullChordDurationInput = document.getElementById('fullChordDurationInput'); // Removed
 
         const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
@@ -187,6 +200,13 @@
                 selectedOutputChannel = parseInt(event.target.value) - 1;
                 statusDiv.textContent = `Output Channel: ${event.target.value}`;
             });
+            suggestionModeSelect.addEventListener('change', (event) => {
+                currentSuggestionMode = event.target.value;
+                nextMajorSuggestionIndex = 0;
+                nextMinorSuggestionIndex = 0;
+                statusDiv.textContent = `Suggestion Mode: ${currentSuggestionMode.charAt(0).toUpperCase() + currentSuggestionMode.slice(1)}`;
+                processActiveInputNotes(true);
+            });
         }
 
         function assignMIDIMessageHandler() {
@@ -220,9 +240,10 @@
             processActiveInputNotes();
         }
 
-        function processActiveInputNotes() {
+        function processActiveInputNotes(forceReprocess = false) {
             const currentNotes = Array.from(activeInputNotes.keys()).sort((a, b) => a - b);
-            if (arraysEqual(currentNotes, lastProcessedInputNotes)) return;
+            if (!forceReprocess && arraysEqual(currentNotes, lastProcessedInputNotes)) return;
+
             lastProcessedInputNotes = [...currentNotes];
             inputChordDiv.textContent = notesArrayToNames(currentNotes);
 
@@ -234,13 +255,30 @@
                     let suggestionIndex;
                     if (analyzedChord.quality === 'Major') {
                         suggestionIndex = nextMajorSuggestionIndex;
-                        nextMajorSuggestionIndex = (nextMajorSuggestionIndex + 1) % 4; // 4 suggestions for Major
+                        if(forceReprocess && suggestionIndex > 0 && !arraysEqual(currentNotes, [])) { // Only reset if notes are held during mode change
+                           // nextMajorSuggestionIndex remains, but suggestionIndex for this call is 0
+                           suggestionIndex = 0;
+                           nextMajorSuggestionIndex = 1; // Next time it will be 1
+                        } else {
+                           nextMajorSuggestionIndex = (nextMajorSuggestionIndex + 1) % 4;
+                        }
                     } else { // Minor
                         suggestionIndex = nextMinorSuggestionIndex;
-                        nextMinorSuggestionIndex = (nextMinorSuggestionIndex + 1) % 4; // 4 suggestions for Minor
+                         if(forceReprocess && suggestionIndex > 0 && !arraysEqual(currentNotes, [])) {
+                           suggestionIndex = 0;
+                           nextMinorSuggestionIndex = 1;
+                         } else {
+                           nextMinorSuggestionIndex = (nextMinorSuggestionIndex + 1) % 4;
+                         }
                     }
+                     if (forceReprocess && arraysEqual(currentNotes, [])) { // If no notes held, truly reset index for next play
+                         nextMajorSuggestionIndex = 0;
+                         nextMinorSuggestionIndex = 0;
+                         suggestionIndex = 0;
+                     }
 
-                    const suggested = getSuggestedChord(analyzedChord, suggestionIndex);
+
+                    const suggested = getSuggestedChord(analyzedChord, suggestionIndex, currentSuggestionMode);
 
                     if (suggested) {
                         suggestedChordDiv.textContent = suggested.name + " (" + notesArrayToNames(suggested.notes) + ")";
@@ -250,7 +288,7 @@
                         clearAndStopChordPlayback();
                     }
                 } else {
-                    suggestedChordDiv.textContent = '-'; // Show raw notes if not a recognized triad
+                    suggestedChordDiv.textContent = notesArrayToNames(currentNotes);
                     clearAndStopChordPlayback();
                 }
             } else {
@@ -281,7 +319,7 @@
             return null;
         }
 
-        function getSuggestedChord(analyzedChord, suggestionIndex) {
+        function getSuggestedChord(analyzedChord, suggestionIndex, mode) {
             if (!analyzedChord) return null;
             const originalRoot = analyzedChord.rootMidi;
             let suggestedActualRoot, suggestedNotes, suggestedChordName, suggestedQuality;
@@ -289,18 +327,10 @@
             const buildChord = (root, type) => {
                 let notes = [];
                 switch (type) {
-                    case 'm7':
-                        notes = [root, root + 3, root + 7, root + 10];
-                        break;
-                    case 'maj7':
-                        notes = [root, root + 4, root + 7, root + 11];
-                        break;
-                    case '7':
-                        notes = [root, root + 4, root + 7, root + 10];
-                        break;
-                    case 'm7b5':
-                        notes = [root, root + 3, root + 6, root + 10];
-                        break;
+                    case 'm7': notes = [root, root + 3, root + 7, root + 10]; break;
+                    case 'maj7': notes = [root, root + 4, root + 7, root + 11]; break;
+                    case '7': notes = [root, root + 4, root + 7, root + 10]; break;
+                    case 'm7b5': notes = [root, root + 3, root + 6, root + 10]; break;
                 }
                 return notes.filter(n => n >= 0 && n <= 127).sort((a,b) => a-b);
             };
@@ -312,57 +342,112 @@
                 return Math.max(21, Math.min(108 - 12, newRoot));
             };
 
-            if (analyzedChord.quality === 'Major') {
-                switch (suggestionIndex) {
-                    case 0:
-                        suggestedActualRoot = findOctave((originalRoot - 3 + 12) % 12, originalRoot);
-                        suggestedQuality = 'm7';
-                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7";
-                        break;
-                    case 1:
-                        suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot);
-                        suggestedQuality = 'maj7';
-                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7";
-                        break;
-                    case 2:
-                        suggestedActualRoot = findOctave((originalRoot + 6 + 12) % 12, originalRoot);
-                        suggestedQuality = 'm7b5';
-                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7b5";
-                        break;
-                    case 3:
-                        suggestedActualRoot = findOctave((originalRoot + 4 + 12) % 12, originalRoot);
-                        suggestedQuality = '7';
-                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "7 (alt)";
-                        break;
-                    default: return null;
-                }
-            } else if (analyzedChord.quality === 'Minor') {
-                switch (suggestionIndex) {
-                    case 0:
-                        suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot);
-                        suggestedQuality = '7';
-                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "7";
-                        break;
-                    case 1:
-                        suggestedActualRoot = findOctave((originalRoot + 3 + 12) % 12, originalRoot);
-                        suggestedQuality = 'm7';
-                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7";
-                        break;
-                    case 2:
-                        suggestedActualRoot = findOctave((originalRoot - 5 + 12) % 12, originalRoot);
-                        suggestedQuality = 'maj7';
-                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7";
-                        break;
-                    case 3:
-                        suggestedActualRoot = findOctave((originalRoot - 2 + 12) % 12, originalRoot);
-                        suggestedQuality = 'maj7';
-                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7";
-                        break;
-                    default: return null;
-                }
-            } else {
-                return null;
-            }
+            if (mode === 'jazz') {
+                if (analyzedChord.quality === 'Major') {
+                    switch (suggestionIndex) {
+                        case 0: suggestedActualRoot = findOctave((originalRoot - 3 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7"; break;
+                        case 1: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7"; break;
+                        case 2: suggestedActualRoot = findOctave((originalRoot + 6 + 12) % 12, originalRoot); suggestedQuality = 'm7b5'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7b5"; break;
+                        case 3: suggestedActualRoot = findOctave((originalRoot + 4 + 12) % 12, originalRoot); suggestedQuality = '7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "7 (alt)"; break;
+                        default: return null;
+                    }
+                } else if (analyzedChord.quality === 'Minor') {
+                    switch (suggestionIndex) {
+                        case 0: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = '7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "7"; break;
+                        case 1: suggestedActualRoot = findOctave((originalRoot + 3 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7"; break;
+                        case 2: suggestedActualRoot = findOctave((originalRoot - 5 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7"; break;
+                        case 3: suggestedActualRoot = findOctave((originalRoot - 2 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7"; break;
+                        default: return null;
+                    }
+                } else { return null; }
+            } else if (mode === 'classical') {
+                 if (analyzedChord.quality === 'Major') {
+                    switch (suggestionIndex) {
+                        case 0: suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot); suggestedQuality = '7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "7 (V7)"; break;
+                        case 1: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (IV)"; break;
+                        case 2: suggestedActualRoot = findOctave((originalRoot + 2 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (ii)"; break;
+                        case 3: suggestedActualRoot = findOctave((originalRoot - 3 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (vi)"; break;
+                        default: return null;
+                    }
+                } else if (analyzedChord.quality === 'Minor') {
+                    switch (suggestionIndex) {
+                        case 0: suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot); suggestedQuality = '7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "7 (V7)"; break;
+                        case 1: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (iv)"; break;
+                        case 2: suggestedActualRoot = findOctave((originalRoot + 3 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (III)"; break;
+                        case 3: suggestedActualRoot = findOctave((originalRoot - 4 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (VI)"; break;
+                        default: return null;
+                    }
+                } else { return null; }
+            } else if (mode === 'progRock') {
+                if (analyzedChord.quality === 'Major') { // Input is I
+                    switch (suggestionIndex) {
+                        case 0: // bVIImaj7
+                            suggestedActualRoot = findOctave((originalRoot - 2 + 12) % 12, originalRoot);
+                            suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (bVII)"; break;
+                        case 1: // ivm7 (borrowed)
+                            suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot);
+                            suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (iv)"; break;
+                        case 2: // vm7 (Dorian on V)
+                            suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot);
+                            suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (v)"; break;
+                        case 3: // bVImaj7 (borrowed)
+                            suggestedActualRoot = findOctave((originalRoot - 4 + 12) % 12, originalRoot);
+                            suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (bVI)"; break;
+                        default: return null;
+                    }
+                } else if (analyzedChord.quality === 'Minor') { // Input is i
+                    switch (suggestionIndex) {
+                        case 0: // IVmaj7 (Dorian IV)
+                            suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot);
+                            suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (IV)"; break;
+                        case 1: // vm7 (Aeolian v)
+                            suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot);
+                            suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (v)"; break;
+                        case 2: // bVIImaj7 (Aeolian bVII)
+                            suggestedActualRoot = findOctave((originalRoot - 2 + 12) % 12, originalRoot);
+                            suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (bVII)"; break;
+                        case 3: // bVImaj7 (Phrygian or borrowed)
+                            suggestedActualRoot = findOctave((originalRoot - 4 + 12) % 12, originalRoot);
+                            suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (bVI)"; break;
+                        default: return null;
+                    }
+                } else { return null; }
+            } else if (mode === 'celtic') {
+                if (analyzedChord.quality === 'Major') { // Input is I
+                    switch (suggestionIndex) {
+                        case 0: // IVmaj7
+                            suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot);
+                            suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (IV)"; break;
+                        case 1: // V7
+                            suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot);
+                            suggestedQuality = '7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "7 (V)"; break;
+                        case 2: // iim7
+                            suggestedActualRoot = findOctave((originalRoot + 2 + 12) % 12, originalRoot);
+                            suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (ii)"; break;
+                        case 3: // vim7
+                            suggestedActualRoot = findOctave((originalRoot - 3 + 12) % 12, originalRoot);
+                            suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (vi)"; break;
+                        default: return null;
+                    }
+                } else if (analyzedChord.quality === 'Minor') { // Input is i
+                    switch (suggestionIndex) {
+                        case 0: // IVmaj7 (Dorian IV)
+                            suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot);
+                            suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (IV)"; break;
+                        case 1: // vm7 (Aeolian v)
+                            suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot);
+                            suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (v)"; break;
+                        case 2: // bVIImaj7 (Aeolian bVII)
+                            suggestedActualRoot = findOctave((originalRoot - 2 + 12) % 12, originalRoot);
+                            suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (bVII)"; break;
+                        case 3: // im7 (Tonic minor 7th for color)
+                            suggestedActualRoot = findOctave((originalRoot + 0 + 12) % 12, originalRoot);
+                            suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (i)"; break;
+                        default: return null;
+                    }
+                } else { return null; }
+            } else { return null; }
+
 
             suggestedNotes = buildChord(suggestedActualRoot, suggestedQuality);
             if (!suggestedNotes || suggestedNotes.length < 3) return null;
@@ -390,7 +475,7 @@
 
             clearAndStopChordPlayback();
             activeSuggestedChordNotes = [...notesToPlay];
-            console.log(`Sending CHORD notes to ${outputDevice.name}: ${notesArrayToNames(activeSuggestedChordNotes)}`);
+            console.log(`Sending CHORD notes to ${outputDevice.name} (Mode: ${currentSuggestionMode}): ${notesArrayToNames(activeSuggestedChordNotes)}`);
             activeSuggestedChordNotes.forEach(note => {
                 outputDevice.send([0x90 | selectedOutputChannel, note, velocity]);
             });
