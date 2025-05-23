@@ -123,8 +123,11 @@
         let midiAccess = null;
         let selectedDeviceId = null;
 
-        const KEYBOARD_START_MIDI_NOTE = 48; // C3
-        const KEYBOARD_END_MIDI_NOTE = 71;   // B4 (2 octaves = 24 notes)
+        const ACTIVE_KEYBOARD_START_MIDI_NOTE = 48; // C3
+        const ACTIVE_KEYBOARD_END_MIDI_NOTE = 71;   // B4 (2 octaves)
+        const SUGGESTED_KEYBOARD_START_MIDI_NOTE = 60; // C4
+        const SUGGESTED_KEYBOARD_END_MIDI_NOTE = 83;   // B5 (2 octaves)
+
 
         const chordFormulas = { /* ... same chord formulas ... */
             '13':[0,2,4,7,9,10],'m13':[0,2,3,7,9,10],'△13':[0,2,4,7,9,11],'11':[0,2,5,7,10],
@@ -138,7 +141,7 @@
             'm':[0,3,7],'°':[0,3,6],'+':[0,4,8],'sus4':[0,5,7],'sus2':[0,2,7],
             'add9':[0,2,4,7],'mAdd9':[0,2,3,7],'6/9':[0,2,4,7,9],
             'P1':[0],'m2':[0,1],'M2':[0,2],'m3':[0,3],'M3':[0,4],'P4':[0,5],'TT':[0,6],
-            'P5':[0,7],'m6_int':[0,8],'M6_int':[0,9],'m7_int':[0,10],'M7_int':[0,11]
+            'P5':[0,7],'5':[0,7],'m6_int':[0,8],'M6_int':[0,9],'m7_int':[0,10],'M7_int':[0,11]
         };
         const sortedChordFormulas = Object.entries(chordFormulas)
             .sort(([,a],[,b]) => b.length - a.length);
@@ -172,19 +175,17 @@
             'm7_int':{name:"Minor 7th Int",comp:""},'M7_int':{name:"Major 7th Int",comp:""}
         };
 
-        function generateMiniKeyboardHTML(channelIndex, keyboardTypeSuffix) {
+        function generateMiniKeyboardHTML(channelIndex, keyboardTypeSuffix, startNote, endNote) {
             let keyboardHtml = `<div class="mini-keyboard" id="keyboard-${keyboardTypeSuffix}-ch-${channelIndex}">`;
-            // White keys first for flex layout
-            for (let midiNote = KEYBOARD_START_MIDI_NOTE; midiNote <= KEYBOARD_END_MIDI_NOTE; midiNote++) {
+            for (let midiNote = startNote; midiNote <= endNote; midiNote++) {
                 const pitchClass = midiNote % 12;
-                if (![1, 3, 6, 8, 10].includes(pitchClass)) { // If it's a white key
+                if (![1, 3, 6, 8, 10].includes(pitchClass)) {
                     keyboardHtml += `<div class="key white-key" id="key-${keyboardTypeSuffix}-${channelIndex}-${midiNote}"></div>`;
                 }
             }
-            // Black keys next, will be positioned absolutely by JS
-            for (let midiNote = KEYBOARD_START_MIDI_NOTE; midiNote <= KEYBOARD_END_MIDI_NOTE; midiNote++) {
+            for (let midiNote = startNote; midiNote <= endNote; midiNote++) {
                 const pitchClass = midiNote % 12;
-                if ([1, 3, 6, 8, 10].includes(pitchClass)) { // If it's a black key
+                if ([1, 3, 6, 8, 10].includes(pitchClass)) {
                     keyboardHtml += `<div class="key black-key" id="key-${keyboardTypeSuffix}-${channelIndex}-${midiNote}"></div>`;
                 }
             }
@@ -192,38 +193,36 @@
             return keyboardHtml;
         }
 
-        function positionBlackKeys(keyboardElement) {
+        function positionBlackKeys(keyboardElement, startNote, endNote) {
             const whiteKeyElements = Array.from(keyboardElement.querySelectorAll('.white-key'));
             const blackKeyElements = Array.from(keyboardElement.querySelectorAll('.black-key'));
 
-            if (whiteKeyElements.length === 0 || blackKeyElements.length === 0) {
-                // console.warn("No white or black keys found for positioning in", keyboardElement.id);
-                return;
-            }
+            if (whiteKeyElements.length === 0 || blackKeyElements.length === 0) return;
 
             const keyboardWidth = keyboardElement.offsetWidth;
-            const numWhiteKeys = whiteKeyElements.length; // Should be 14 for 2 octaves (C3-B4)
-            if (numWhiteKeys === 0) return; // Avoid division by zero
+            const numWhiteKeys = whiteKeyElements.length;
+            if (numWhiteKeys === 0) return;
 
             const whiteKeyWidth = keyboardWidth / numWhiteKeys;
             const blackKeyWidth = whiteKeyWidth * 0.6;
 
             blackKeyElements.forEach(blackKey => {
                 const blackKeyMidiNote = parseInt(blackKey.id.split('-').pop());
-
-                // Find the white key immediately to the left of this black key's logical position
                 const anchorWhiteKeyMidiNote = blackKeyMidiNote - 1;
+
+                // Find the white key element that corresponds to the anchor note for this black key
                 const anchorWhiteKeyElement = whiteKeyElements.find(wk => parseInt(wk.id.split('-').pop()) === anchorWhiteKeyMidiNote);
 
                 if (anchorWhiteKeyElement) {
                     blackKey.style.width = `${blackKeyWidth}px`;
-                    // Position the black key to straddle the boundary:
-                    // Start at the right edge of the anchor white key, then shift left by half a black key's width.
                     const leftPosition = anchorWhiteKeyElement.offsetLeft + whiteKeyWidth - (blackKeyWidth / 2);
                     blackKey.style.left = `${leftPosition}px`;
                 } else {
-                    // console.warn(`Could not find anchor white key for black key: ${blackKey.id} (anchor MIDI: ${anchorWhiteKeyMidiNote})`);
-                    blackKey.style.display = 'none'; // Hide if anchor not found
+                    // This might happen if the black key is at the very beginning of a range
+                    // and its anchor white key is outside the displayed range.
+                    // For this specific 2-octave C-B layout, all black keys should have an anchor.
+                    // console.warn(`Could not find anchor white key for black key: ${blackKey.id}`);
+                    blackKey.style.display = 'none';
                 }
             });
         }
@@ -239,22 +238,20 @@
                     <div>
                         <div class="text-[0.6rem] sm:text-xs text-gray-400 mb-0">CH ${i + 1}</div>
                         <div id="chord-ch-${i}" class="chord-display font-semibold text-sky-300 break-words leading-tight flex items-center justify-center">---</div>
-                        <div class="mini-keyboard-container">${generateMiniKeyboardHTML(i, 'active')}</div>
+                        <div class="mini-keyboard-container">${generateMiniKeyboardHTML(i, 'active', ACTIVE_KEYBOARD_START_MIDI_NOTE, ACTIVE_KEYBOARD_END_MIDI_NOTE)}</div>
                         <div id="desc-ch-${i}" class="chord-description-display text-sky-100 mt-0.5 break-words leading-tight"></div>
                         <div class="text-[0.6rem] text-gray-400 mt-0.5">Suggestions:</div>
                         <div id="reco-ch-${i}" class="recommendations-display text-teal-300 leading-tight">---</div>
-                        <div class="mini-keyboard-container">${generateMiniKeyboardHTML(i, 'suggested')}</div>
+                        <div class="mini-keyboard-container">${generateMiniKeyboardHTML(i, 'suggested', SUGGESTED_KEYBOARD_START_MIDI_NOTE, SUGGESTED_KEYBOARD_END_MIDI_NOTE)}</div>
                     </div>
                     <div id="notes-ch-${i}" class="notes-list-display text-gray-500 mt-0.5 truncate">---</div>
                 `;
                 chordGrid.appendChild(channelDiv);
-                // Position black keys after the keyboard is in the DOM
-                // Use requestAnimationFrame to ensure layout is calculated
                 requestAnimationFrame(() => {
                     const activeKeyboardElement = document.getElementById(`keyboard-active-ch-${i}`);
-                    if (activeKeyboardElement) positionBlackKeys(activeKeyboardElement);
+                    if (activeKeyboardElement) positionBlackKeys(activeKeyboardElement, ACTIVE_KEYBOARD_START_MIDI_NOTE, ACTIVE_KEYBOARD_END_MIDI_NOTE);
                     const suggestedKeyboardElement = document.getElementById(`keyboard-suggested-ch-${i}`);
-                    if (suggestedKeyboardElement) positionBlackKeys(suggestedKeyboardElement);
+                    if (suggestedKeyboardElement) positionBlackKeys(suggestedKeyboardElement, SUGGESTED_KEYBOARD_START_MIDI_NOTE, SUGGESTED_KEYBOARD_END_MIDI_NOTE);
                 });
             }
         }
@@ -410,8 +407,8 @@
             const rootPitchClass = noteNames.indexOf(rootName);
             if (rootPitchClass === -1) return [];
             const intervals = chordFormulas[suffix];
-            if (!intervals) { console.warn(`No formula for suffix: '${suffix}' in '${fullChordName}'`); return []; }
-            const baseMidiRoot = 60 + rootPitchClass; // Suggestion root around C4
+            if (!intervals) { console.warn(`No formula for suffix: '${suffix}' in suggested chord: '${fullChordName}'`); return []; }
+            const baseMidiRoot = 60 + rootPitchClass; // Suggestions rooted around C4
             return intervals.map(interval => baseMidiRoot + interval);
         }
 
@@ -493,8 +490,8 @@
             const notesEl = document.getElementById(`notes-ch-${channel}`);
             const recoEl = document.getElementById(`reco-ch-${channel}`);
 
-            // Update active notes keyboard
-            for (let midiNote = KEYBOARD_START_MIDI_NOTE; midiNote <= KEYBOARD_END_MIDI_NOTE; midiNote++) {
+            // Update active notes keyboard (C3-B4)
+            for (let midiNote = ACTIVE_KEYBOARD_START_MIDI_NOTE; midiNote <= ACTIVE_KEYBOARD_END_MIDI_NOTE; midiNote++) {
                 const keyElActive = document.getElementById(`key-active-${channel}-${midiNote}`);
                 if (keyElActive) {
                     if (activeNotesByChannel[channel].has(midiNote)) {
@@ -503,10 +500,13 @@
                         keyElActive.classList.remove('active');
                     }
                 }
-                // Update suggested notes keyboard
+            }
+            // Update suggested notes keyboard (C4-B5)
+            const suggestionMidiNotesSet = chordResult.firstSuggestionMidiNotes || new Set();
+            for (let midiNote = SUGGESTED_KEYBOARD_START_MIDI_NOTE; midiNote <= SUGGESTED_KEYBOARD_END_MIDI_NOTE; midiNote++) {
                 const keyElSuggested = document.getElementById(`key-suggested-${channel}-${midiNote}`);
                 if (keyElSuggested) {
-                     if (chordResult.firstSuggestionMidiNotes && chordResult.firstSuggestionMidiNotes.has(midiNote)) {
+                     if (suggestionMidiNotesSet.has(midiNote)) {
                         keyElSuggested.classList.add('active');
                     } else {
                         keyElSuggested.classList.remove('active');
