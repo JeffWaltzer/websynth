@@ -9,170 +9,112 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            overscroll-behavior: none; /* Prevents pull-to-refresh or overscroll effects */
+            overscroll-behavior: none;
         }
-        /* Custom scrollbar for aesthetics if content ever does overflow, though aiming not to */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1f2937; /* bg-gray-800 */
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #4b5563; /* bg-gray-600 */
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #6b7280; /* bg-gray-500 */
-        }
-        .chord-display {
-            min-height: 40px; /* Adjusted for new description line */
-        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        .chord-display { min-height: 24px; }
         .chord-description-display {
-            min-height: 20px; /* Consistent height for description */
-            line-height: 1.2;
+            min-height: 15px;
+            line-height: 1.1;
+            font-size: 0.5rem;
         }
+        .notes-list-display {
+            min-height: 10px;
+            font-size: 0.5rem;
+        }
+        /* Removed styles for .mini-notation-display, .staff-wrapper, .staff-slot-svg-container, .staff-slot-svg, .accidental-text */
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen h-screen flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
+<body class="bg-gray-900 text-gray-100 min-h-screen h-screen flex flex-col items-center justify-center p-1 sm:p-2 overflow-hidden">
 
     <div class="w-full max-w-4xl flex flex-col h-full">
-        <header class="mb-2 text-center">
-            <h1 class="text-2xl sm:text-3xl font-bold text-sky-400">MIDI Chord Monitor</h1>
-            <div id="status" class="mt-1 text-sm text-gray-400">Requesting MIDI access...</div>
-            <div class="my-2 sm:my-3 w-full max-w-xs mx-auto">
-                <label for="midi-device-select" class="block text-xs text-gray-400 mb-1 text-left">Select MIDI Input:</label>
-                <select id="midi-device-select" class="bg-gray-700 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full p-2">
+        <header class="mb-1 text-center">
+            <h1 class="text-xl sm:text-2xl font-bold text-sky-400">MIDI Chord Monitor</h1>
+            <div id="status" class="mt-1 text-xs sm:text-sm text-gray-400">Requesting MIDI access...</div>
+            <div class="my-1 sm:my-2 w-full max-w-xs mx-auto">
+                <label for="midi-device-select" class="block text-xs text-gray-400 mb-0.5 text-left">Select MIDI Input:</label>
+                <select id="midi-device-select" class="bg-gray-700 border border-gray-600 text-gray-100 text-xs sm:text-sm rounded-md focus:ring-sky-500 focus:border-sky-500 block w-full p-1.5">
                     <option value="">Detecting devices...</option>
                 </select>
             </div>
         </header>
 
-        <main id="chord-grid" class="grid grid-cols-4 gap-2 sm:gap-3 flex-grow overflow-y-auto">
+        <main id="chord-grid" class="grid grid-cols-4 gap-1 sm:gap-2 flex-grow overflow-y-auto">
             </main>
 
-        <footer class="text-center mt-3 text-xs text-gray-500">
-            Note: Chord detection may vary with complex voicings or rapid changes.
+        <footer class="text-center mt-1 sm:mt-2 text-xs text-gray-500">
+            Chord detection may vary.
         </footer>
     </div>
 
     <script>
-        // --- Global Variables and Constants ---
         const statusDiv = document.getElementById('status');
         const chordGrid = document.getElementById('chord-grid');
         const deviceSelect = document.getElementById('midi-device-select');
         const noteNames = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 
         let activeNotesByChannel = {};
-        for (let i = 0; i < 16; i++) {
-            activeNotesByChannel[i] = new Set();
-        }
+        for (let i = 0; i < 16; i++) activeNotesByChannel[i] = new Set();
 
         let midiAccess = null;
         let selectedDeviceId = null;
 
-        // Chord formulas: Suffix and intervals from the root (0)
-        // Using UTF-8 symbols for chord qualities
         const chordFormulas = {
-            // Sevenths (most specific first)
-            '△7':   [0, 4, 7, 11], // Major 7th
-            'm7':   [0, 3, 7, 10], // Minor 7th
-            '7':    [0, 4, 7, 10], // Dominant 7th
-            '°7':   [0, 3, 6, 9], // Diminished 7th
-            'ø7':   [0, 3, 6, 10], // Half-diminished 7th (m7b5)
-            'm△7':  [0, 3, 7, 11], // Minor Major 7th
-            '+7':   [0, 4, 8, 10], // Augmented Dominant 7th
-            '+△7':  [0, 4, 8, 11], // Augmented Major 7th
-
-            // Sixths
-            'M6':   [0, 4, 7, 9], // Major 6th
-            'm6':   [0, 3, 7, 9], // Minor 6th
-
-            // Triads
-            '':     [0, 4, 7], // Major Triad (no suffix for major)
-            'm':    [0, 3, 7], // Minor Triad
-            '°':    [0, 3, 6], // Diminished Triad
-            '+':    [0, 4, 8], // Augmented Triad
-            'sus4': [0, 5, 7],
-            'sus2': [0, 2, 7],
-
-            // Extended (simplified)
-            'add9':    [0, 2, 4, 7],
-            'mAdd9':   [0, 2, 3, 7],
-            '6/9':     [0, 2, 4, 7, 9],
-
-            // Intervals (2 notes) - Suffixes chosen to be distinct or common
-            'P1': [0], 'm2': [0, 1], 'M2': [0, 2], 'm3': [0, 3], 'M3': [0, 4],
-            'P4': [0, 5], 'TT': [0, 6], 'P5': [0, 7], 'm6': [0, 8], 'M6_int': [0, 9], // M6_int to distinguish from M6 chord
-            'm7_int': [0, 10], 'M7_int': [0, 11] // _int to distinguish from 7th chords
+            '△7': [0,4,7,11],'m7': [0,3,7,10],'7': [0,4,7,10],'°7': [0,3,6,9],'ø7': [0,3,6,10],
+            'm△7': [0,3,7,11],'+7': [0,4,8,10],'+△7': [0,4,8,11],'M6': [0,4,7,9],'m6': [0,3,7,9],
+            '': [0,4,7],'m': [0,3,7],'°': [0,3,6],'+': [0,4,8],'sus4': [0,5,7],'sus2': [0,2,7],
+            'add9': [0,2,4,7],'mAdd9': [0,2,3,7],'6/9': [0,2,4,7,9],
+            'P1': [0],'m2': [0,1],'M2': [0,2],'m3': [0,3],'M3': [0,4],'P4': [0,5],'TT': [0,6],
+            'P5': [0,7],'m6_int': [0,8],'M6_int': [0,9],'m7_int': [0,10],'M7_int': [0,11]
         };
-
         const sortedChordFormulas = Object.entries(chordFormulas)
-            .sort(([, aIntervals], [, bIntervals]) => bIntervals.length - aIntervals.length);
+            .sort(([,a],[,b]) => b.length - a.length);
 
-        // Chord descriptions: Keys match new UTF-8 suffixes
         const chordDescriptions = {
-            '':     { name: "Major Triad (Stable, Bright)", comp: "Relative Minor / Dominant V" }, // Major triad has empty suffix
-            'm':    { name: "Minor Triad (Somber, Emotional)", comp: "Relative Major / Dominant V" },
-            '7':    { name: "Dominant 7th (Tense, Resolves)", comp: "Tonic (I)" },
-            '△7':   { name: "Major 7th (Rich, Jazzy)", comp: "ii m7" },
-            'm7':   { name: "Minor 7th (Smooth, Jazzy)", comp: "V7" },
-            '°':    { name: "Diminished Triad (Dissonant, Unstable)", comp: "Resolving Chord" },
-            '+':    { name: "Augmented Triad (Tense, Ethereal)", comp: "Resolving Chord" },
-            'sus4': { name: "Suspended 4th (Open, Anticipates)", comp: "Major/Minor Triad" },
-            'sus2': { name: "Suspended 2nd (Open, Bright)", comp: "Major Triad" },
-            'ø7':   { name: "Half-Diminished 7th (Jazzy Pre-Dominant)", comp: "Dominant 7th" },
-            '°7':   { name: "Diminished 7th (Very Tense, Symmetrical)", comp: "Resolving Chord" },
-            'm△7':  { name: "Minor Major 7th (Melancholic, Complex)", comp: "Dominant 7th" },
-            '+7':   { name: "Augmented Dominant 7th (Altered Tension)", comp: "Resolving Minor/Major" },
-            '+△7':  { name: "Augmented Major 7th (Ethereal, Jazzy)", comp: "Minor 7th" },
-            'M6':   { name: "Major 6th (Stable, Sweet)", comp: "Relative m7" },
-            'm6':   { name: "Minor 6th (Rich, Melancholic)", comp: "ii ø7" },
-            'add9': { name: "Added 9th (Rich Major)", comp: "Dominant 7th" },
-            'mAdd9':{ name: "Minor Added 9th (Rich Minor)", comp: "Dominant 7th" },
-            '6/9':  { name: "6/9 Chord (Lush, Jazzy)", comp: "Altered Dominant" },
-
-            'P1': { name: "Unison / Octave", comp: "" },
-            'm2': { name: "Minor 2nd Interval (Dissonant)", comp: "" },
-            'M2': { name: "Major 2nd Interval (Stepping)", comp: "" },
-            'm3': { name: "Minor 3rd Interval (Somber)", comp: "" },
-            'M3': { name: "Major 3rd Interval (Bright)", comp: "" },
-            'P4': { name: "Perfect 4th Interval (Open)", comp: "" },
-            'TT': { name: "Tritone Interval (Tense)", comp: "" },
-            'P5': { name: "Perfect 5th Interval (Strong)", comp: "" },
-            'm6_int': { name: "Minor 6th Interval (Melancholic)", comp: "" }, // Renamed to avoid clash
-            'M6_int': { name: "Major 6th Interval (Sweet)", comp: "" }, // Renamed to avoid clash
-            'm7_int': { name: "Minor 7th Interval (Jazzy)", comp: "" }, // Renamed to avoid clash
-            'M7_int': { name: "Major 7th Interval (Jazzy, Bright)", comp: "" } // Renamed to avoid clash
+            '':{name:"Major Triad (Stable, Bright)",comp:"Rel Minor/Dom V"},'m':{name:"Minor Triad (Somber, Emotional)",comp:"Rel Major/Dom V"},
+            '7':{name:"Dominant 7th (Tense, Resolves)",comp:"Tonic (I)"},'△7':{name:"Major 7th (Rich, Jazzy)",comp:"ii m7"},
+            'm7':{name:"Minor 7th (Smooth, Jazzy)",comp:"V7"},'°':{name:"Diminished Triad (Dissonant, Unstable)",comp:"Resolving Chord"},
+            '+':{name:"Augmented Triad (Tense, Ethereal)",comp:"Resolving Chord"},'sus4':{name:"Suspended 4th (Open, Anticipates)",comp:"Major/Minor Triad"},
+            'sus2':{name:"Suspended 2nd (Open, Bright)",comp:"Major Triad"},'ø7':{name:"Half-Diminished 7th (Jazzy Pre-Dom)",comp:"Dom 7th"},
+            '°7':{name:"Diminished 7th (Very Tense, Symmetrical)",comp:"Resolving Chord"},'m△7':{name:"Minor Major 7th (Melancholic, Complex)",comp:"Dom 7th"},
+            '+7':{name:"Augmented Dominant 7th (Altered Tension)",comp:"Resolving Minor/Major"},'+△7':{name:"Augmented Major 7th (Ethereal, Jazzy)",comp:"Minor 7th"},
+            'M6':{name:"Major 6th (Stable, Sweet)",comp:"Rel m7"},'m6':{name:"Minor 6th (Rich, Melancholic)",comp:"ii ø7"},
+            'add9':{name:"Added 9th (Rich Major)",comp:"Dom 7th"},'mAdd9':{name:"Minor Added 9th (Rich Minor)",comp:"Dom 7th"},
+            '6/9':{name:"6/9 Chord (Lush, Jazzy)",comp:"Altered Dom"},'P1':{name:"Unison / Octave"},'m2':{name:"Minor 2nd Interval"},
+            'M2':{name:"Major 2nd Interval"},'m3':{name:"Minor 3rd Interval"},'M3':{name:"Major 3rd Interval"},'P4':{name:"Perfect 4th Interval"},
+            'TT':{name:"Tritone Interval"},'P5':{name:"Perfect 5th Interval"},'m6_int':{name:"Minor 6th Interval"},'M6_int':{name:"Major 6th Interval"},
+            'm7_int':{name:"Minor 7th Interval"},'M7_int':{name:"Major 7th Interval"}
         };
 
+        // Removed compactStaffLayout and getAccidentalChar function
 
-        // --- UI Initialization ---
         function initializeUI() {
-            chordGrid.innerHTML = ''; // Clear any existing
+            chordGrid.innerHTML = '';
             for (let i = 0; i < 16; i++) {
                 const channelDiv = document.createElement('div');
-                channelDiv.className = 'bg-gray-800 p-2 sm:p-3 rounded-lg shadow-md text-center flex flex-col justify-between';
+                channelDiv.className = 'bg-gray-800 p-1 sm:p-2 rounded-md shadow-md text-center flex flex-col justify-between';
+                // Removed notation-ch-${i} div from here
                 channelDiv.innerHTML = `
                     <div>
-                        <div class="text-[0.6rem] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">CH ${i + 1}</div>
-                        <div id="chord-ch-${i}" class="chord-display text-sm sm:text-base md:text-lg font-semibold text-sky-300 break-words leading-tight flex items-center justify-center">---</div>
-                        <div id="desc-ch-${i}" class="chord-description-display text-[0.55rem] sm:text-[0.6rem] text-sky-100 mt-0.5 sm:mt-1 break-words leading-tight"></div>
-                    </div>
-                    <div id="notes-ch-${i}" class="text-[0.55rem] sm:text-[0.65rem] text-gray-500 mt-1 truncate"></div>
+                        <div class="text-[0.55rem] sm:text-xs text-gray-400 mb-0.5">CH ${i + 1}</div>
+                        <div id="chord-ch-${i}" class="chord-display text-xs sm:text-sm md:text-base font-semibold text-sky-300 break-words leading-tight flex items-center justify-center">---</div>
+                        <div id="desc-ch-${i}" class="chord-description-display text-sky-100 mt-0.5 break-words leading-tight"></div>
+                        </div>
+                    <div id="notes-ch-${i}" class="notes-list-display text-gray-500 mt-0.5 truncate"></div>
                 `;
                 chordGrid.appendChild(channelDiv);
             }
         }
 
-        // --- MIDI Handling ---
         function requestMidiAccess() {
             if (navigator.requestMIDIAccess) {
-                navigator.requestMIDIAccess({ sysex: false })
-                    .then(onMIDISuccess, onMIDIFailure);
+                navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
             } else {
-                statusDiv.textContent = "Web MIDI API not supported in this browser.";
-                statusDiv.className = "mt-1 text-sm text-red-400";
+                statusDiv.textContent = "Web MIDI API not supported."; statusDiv.className = "mt-1 text-xs sm:text-sm text-red-400";
                 deviceSelect.innerHTML = '<option value="">MIDI API not supported</option>';
             }
         }
@@ -184,8 +126,7 @@
         }
 
         function onMIDIFailure() {
-            statusDiv.textContent = "Failed to get MIDI access.";
-            statusDiv.className = "mt-1 text-sm text-red-400";
+            statusDiv.textContent = "Failed to get MIDI access."; statusDiv.className = "mt-1 text-xs sm:text-sm text-red-400";
             deviceSelect.innerHTML = '<option value="">MIDI access failed</option>';
         }
 
@@ -198,7 +139,7 @@
             if (inputs.size === 0) {
                 deviceSelect.innerHTML = '<option value="">No MIDI input devices found</option>';
                 statusDiv.textContent = "MIDI access granted, but no input devices found.";
-                statusDiv.className = "mt-1 text-sm text-yellow-400";
+                statusDiv.className = "mt-1 text-xs sm:text-sm text-yellow-400";
                 selectedDeviceId = null;
                 attachListenerToSelectedDevice();
                 return;
@@ -236,16 +177,15 @@
                 const device = midiAccess.inputs.get(selectedDeviceId);
                 if (device) {
                     device.onmidimessage = handleMIDIMessage;
-                    console.log(`Listening to MIDI input: ${device.name} (ID: ${device.id})`);
                     statusDiv.textContent = `Listening to: ${device.name || 'Unknown Device'}`;
-                    statusDiv.className = "mt-1 text-sm text-green-400";
+                    statusDiv.className = "mt-1 text-xs sm:text-sm text-green-400";
                 } else {
                      statusDiv.textContent = "Selected MIDI device not found.";
-                     statusDiv.className = "mt-1 text-sm text-yellow-400";
+                     statusDiv.className = "mt-1 text-xs sm:text-sm text-yellow-400";
                 }
             } else if (midiAccess.inputs.size > 0) {
                  statusDiv.textContent = "Please select a MIDI device.";
-                 statusDiv.className = "mt-1 text-sm text-yellow-400";
+                 statusDiv.className = "mt-1 text-xs sm:text-sm text-yellow-400";
             }
         }
 
@@ -265,108 +205,75 @@
             const velocity = event.data[2];
 
             switch (command) {
-                case 9: // Note On
-                    if (velocity > 0) activeNotesByChannel[channel].add(note);
-                    else activeNotesByChannel[channel].delete(note);
-                    break;
-                case 8: // Note Off
-                    activeNotesByChannel[channel].delete(note);
-                    break;
+                case 9: if (velocity > 0) activeNotesByChannel[channel].add(note);
+                        else activeNotesByChannel[channel].delete(note); break;
+                case 8: activeNotesByChannel[channel].delete(note); break;
             }
             updateChannelDisplay(channel);
         }
 
-        // --- Chord Recognition Logic ---
-        function midiNoteToName(midiNote) {
-            return noteNames[midiNote % 12];
-        }
-
-        function arraysEqual(a, b) {
-            if (a === b) return true;
-            if (a == null || b == null) return false;
-            if (a.length !== b.length) return false;
-            for (let i = 0; i < a.length; ++i) if (a[i] !== b[i]) return false;
-            return true;
+        function midiNoteToName(midiNote) { return noteNames[midiNote % 12]; }
+        function arraysEqual(a,b) {
+            if (a === b) return true; if (a == null || b == null) return false; if (a.length !== b.length) return false;
+            for (let i = 0; i < a.length; ++i) if (a[i] !== b[i]) return false; return true;
         }
 
         function identifyChord(notesSet) {
             const notes = Array.from(notesSet).sort((a, b) => a - b);
-            let chordName = "---";
-            let noteList = "";
-            let description = "";
+            let chordName = "---"; let noteList = ""; let description = "";
 
-            if (notes.length === 0) {
-                return { chordName, noteList, description };
-            }
-
-            const uniquePitchClasses = [...new Set(notes.map(n => n % 12))].sort((a, b) => a - b);
-            noteList = notes.map(n => midiNoteToName(n) + Math.floor(n/12 -1) ).join(' ');
+            if (notes.length === 0) return { chordName, noteList, description };
+            const uniquePitchClasses = [...new Set(notes.map(n => n % 12))].sort((a,b)=>a-b);
+            noteList = notes.map(n => midiNoteToName(n) + Math.floor(n/12 -1)).join(' ');
 
             if (uniquePitchClasses.length === 1) {
                 chordName = noteNames[uniquePitchClasses[0]];
-                const descObj = chordDescriptions['P1']; // Unison/Octave
-                if (descObj) {
-                    description = descObj.name;
-                    if (descObj.comp) description += ` (Comp: ${descObj.comp})`;
-                }
+                const descObj = chordDescriptions['P1'];
+                if(descObj) {description = descObj.name; if(descObj.comp) description += ` (Comp: ${descObj.comp})`;}
                 return { chordName, noteList, description };
             }
-
             for (const rootCandidatePitchClass of uniquePitchClasses) {
-                const intervals = uniquePitchClasses
-                    .map(pc => (pc - rootCandidatePitchClass + 12) % 12)
-                    .sort((a, b) => a - b);
-
+                const intervals = uniquePitchClasses.map(pc => (pc - rootCandidatePitchClass + 12) % 12).sort((a,b)=>a-b);
                 for (const [suffix, formulaIntervals] of sortedChordFormulas) {
                     if (arraysEqual(intervals, formulaIntervals)) {
                         chordName = noteNames[rootCandidatePitchClass] + suffix;
                         const descObj = chordDescriptions[suffix];
-                        if (descObj) {
-                            description = descObj.name;
-                            if (descObj.comp) description += ` (Comp: ${descObj.comp})`;
-                        }
+                        if(descObj) {description = descObj.name; if(descObj.comp) description += ` (Comp: ${descObj.comp})`;}
                         return { chordName, noteList, description };
                     }
                 }
             }
-
             chordName = uniquePitchClasses.map(pc => noteNames[pc]).join(' ');
             return { chordName, noteList, description };
         }
 
-        // --- UI Update ---
+        // Removed generateSimplifiedNotation function
+
         function updateChannelDisplay(channel) {
             const chordResult = identifyChord(activeNotesByChannel[channel]);
-            const chordDisplayElement = document.getElementById(`chord-ch-${channel}`);
-            const notesDisplayElement = document.getElementById(`notes-ch-${channel}`);
-            const descDisplayElement = document.getElementById(`desc-ch-${channel}`);
+            // Removed call to generateSimplifiedNotation and notationEl
 
-            if (chordDisplayElement) chordDisplayElement.textContent = chordResult.chordName;
+            const chordEl = document.getElementById(`chord-ch-${channel}`);
+            const descEl = document.getElementById(`desc-ch-${channel}`);
+            const notesEl = document.getElementById(`notes-ch-${channel}`);
+            // Removed notationEl from query selectors
 
-            if (descDisplayElement) {
-                descDisplayElement.textContent = chordResult.description;
-                if (descDisplayElement.scrollHeight > descDisplayElement.clientHeight || descDisplayElement.scrollWidth > descDisplayElement.clientWidth) {
-                    descDisplayElement.title = chordResult.description;
-                } else {
-                    descDisplayElement.title = '';
-                }
+            if (chordEl) chordEl.textContent = chordResult.chordName;
+            if (descEl) {
+                descEl.textContent = chordResult.description;
+                descEl.title = (descEl.scrollHeight > descEl.clientHeight || descEl.scrollWidth > descEl.clientWidth) ? chordResult.description : '';
             }
-            if (notesDisplayElement) {
-                notesDisplayElement.textContent = chordResult.noteList;
-                if (notesDisplayElement.scrollWidth > notesDisplayElement.clientWidth) {
-                    notesDisplayElement.title = chordResult.noteList;
-                } else {
-                    notesDisplayElement.title = '';
-                }
+            // Removed update for notationEl
+            if (notesEl) {
+                notesEl.textContent = chordResult.noteList;
+                notesEl.title = (notesEl.scrollWidth > notesEl.clientWidth) ? chordResult.noteList : '';
             }
         }
 
-        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             initializeUI();
             requestMidiAccess();
         });
-
     </script>
 </body>
 </html>
