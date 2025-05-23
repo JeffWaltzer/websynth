@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI Chord Suggester (Cycling Jazz)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="bg-slate-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-2xl space-y-6">
+        <header class="text-center">
+            <h1 class="text-3xl font-bold text-sky-400">MIDI Chord Suggester</h1>
+            <p class="text-slate-400 mt-1">Cycling Through Jazz Chord Suggestions</p>
+        </header>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label for="midiInSelect" class="block text-sm font-medium text-sky-300 mb-1">MIDI Input Device:</label>
+                <select id="midiInSelect" class="custom-select w-full p-3 bg-slate-700 border border-slate-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 text-slate-100">
+                    <option value="">Select Input</option>
+                </select>
+            </div>
+            <div>
+                <label for="channelInSelect" class="block text-sm font-medium text-sky-300 mb-1">Input Channel:</label>
+                <select id="channelInSelect" class="custom-select w-full p-3 bg-slate-700 border border-slate-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 text-slate-100"></select>
+            </div>
+            <div>
+                <label for="midiOutSelect" class="block text-sm font-medium text-sky-300 mb-1">MIDI Output Device:</label>
+                <select id="midiOutSelect" class="custom-select w-full p-3 bg-slate-700 border border-slate-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 text-slate-100">
+                    <option value="">Select Output</option>
+                </select>
+            </div>
+            <div>
+                <label for="channelOutSelect" class="block text-sm font-medium text-sky-300 mb-1">Output Channel:</label>
+                <select id="channelOutSelect" class="custom-select w-full p-3 bg-slate-700 border border-slate-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 text-slate-100"></select>
+            </div>
+        </div>
+
+        <div class="space-y-2 mb-6 text-center">
+            <p class="text-sm text-slate-400">The app will cycle through different jazz chord suggestions for each input. Suggested chords play for a fixed duration.</p>
+        </div>
+
+        <div class="space-y-4">
+            <div id="statusDiv" class="p-3 bg-slate-700 rounded-lg text-sm text-center min-h-[40px] flex items-center justify-center">
+                Initializing MIDI...
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
+                <div class="bg-slate-700 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-sky-400 mb-1">Input Chord:</h3>
+                    <p id="inputChordDiv" class="text-xl font-mono text-slate-200 min-h-[30px]">-</p>
+                </div>
+                <div class="bg-slate-700 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-teal-400 mb-1">Suggested Chord:</h3>
+                    <p id="suggestedChordDiv" class="text-xl font-mono text-slate-200 min-h-[30px]">-</p>
+                </div>
+            </div>
+        </div>
+         <footer class="text-center text-xs text-slate-500 pt-4 border-t border-slate-700">
+            Play a Major/Minor triad. App cycles through different 7th chord suggestions.
+        </footer>
+    </div>
+
+    <script>
+        // --- Global State ---
+        let midiAccess = null;
+        let selectedInputId = null;
+        let selectedOutputId = null;
+        let selectedInputChannel = 0;
+        let selectedOutputChannel = 0;
+
+        const activeInputNotes = new Map();
+        let lastProcessedInputNotes = [];
+
+        let activeSuggestedChordNotes = null;
+        let currentSuggestedChordOffTimeout = null;
+
+        let nextMajorSuggestionIndex = 0;
+        let nextMinorSuggestionIndex = 0;
+
+        // --- UI Elements ---
+        const midiInSelect = document.getElementById('midiInSelect');
+        const midiOutSelect = document.getElementById('midiOutSelect');
+        const channelInSelect = document.getElementById('channelInSelect');
+        const channelOutSelect = document.getElementById('channelOutSelect');
+        const statusDiv = document.getElementById('statusDiv');
+        const inputChordDiv = document.getElementById('inputChordDiv');
+        const suggestedChordDiv = document.getElementById('suggestedChordDiv');
+        // const fullChordDurationInput = document.getElementById('fullChordDurationInput'); // Removed
+
+        const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+        function noteNumberToName(noteNumber) {
+            if (noteNumber < 0 || noteNumber > 127) return '';
+            const octave = Math.floor(noteNumber / 12) - 1;
+            const name = NOTE_NAMES[noteNumber % 12];
+            return name + octave;
+        }
+
+        function notesArrayToNames(notes) {
+            if (!notes || notes.length === 0) return '-';
+            return notes.map(noteNumberToName).join(' ');
+        }
+
+        async function setupMIDIAccess() {
+            try {
+                midiAccess = await navigator.requestMIDIAccess({ sysex: true });
+                statusDiv.textContent = 'MIDI Access Granted. Select devices and channels.';
+                statusDiv.classList.remove('bg-red-600', 'bg-yellow-500');
+                statusDiv.classList.add('bg-green-700');
+                populateDeviceSelectors();
+                attachEventListenersToSelectors();
+            } catch (e) {
+                console.error("Could not access MIDI devices.", e);
+                statusDiv.textContent = 'Error: Could not access MIDI devices. ' + e.message;
+                statusDiv.classList.remove('bg-green-700', 'bg-yellow-500');
+                statusDiv.classList.add('bg-red-600');
+                if (e.name === 'SecurityError' && e.message.includes('permissions policy')) {
+                    statusDiv.innerHTML += '<br><small>This might be due to browser/page settings restricting MIDI. Check console (F12).</small>';
+                }
+            }
+        }
+
+        function populateDeviceSelectors() {
+            if (!midiAccess) return;
+            midiInSelect.innerHTML = '<option value="">Select Input</option>';
+            midiOutSelect.innerHTML = '<option value="">Select Output</option>';
+            channelInSelect.innerHTML = '';
+            channelOutSelect.innerHTML = '';
+
+            if (midiAccess.inputs.size === 0) {
+                 midiInSelect.add(new Option("No MIDI inputs found", "", false, true)).disabled = true;
+            } else {
+                 midiAccess.inputs.forEach(input => midiInSelect.add(new Option(input.name, input.id)));
+            }
+            if (midiAccess.outputs.size === 0) {
+                midiOutSelect.add(new Option("No MIDI outputs found", "", false, true)).disabled = true;
+            } else {
+                midiAccess.outputs.forEach(output => midiOutSelect.add(new Option(output.name, output.id)));
+            }
+
+            for (let i = 1; i <= 16; i++) {
+                channelInSelect.add(new Option(`Channel ${i}`, i));
+                channelOutSelect.add(new Option(`Channel ${i}`, i));
+            }
+            channelInSelect.value = "1";
+            selectedInputChannel = 0;
+            channelOutSelect.value = "2";
+            selectedOutputChannel = 1;
+        }
+
+        function attachEventListenersToSelectors() {
+            midiInSelect.addEventListener('change', (event) => {
+                selectedInputId = event.target.value;
+                assignMIDIMessageHandler();
+                statusDiv.textContent = selectedInputId && midiInSelect.options[midiInSelect.selectedIndex] ? `Input: ${midiInSelect.options[midiInSelect.selectedIndex].text}` : 'Input device deselected.';
+            });
+            midiOutSelect.addEventListener('change', (event) => {
+                selectedOutputId = event.target.value;
+                statusDiv.textContent = selectedOutputId && midiOutSelect.options[midiOutSelect.selectedIndex] ? `Output: ${midiOutSelect.options[midiOutSelect.selectedIndex].text}` : 'Output device deselected.';
+            });
+            channelInSelect.addEventListener('change', (event) => {
+                selectedInputChannel = parseInt(event.target.value) - 1;
+                statusDiv.textContent = `Input Channel: ${event.target.value}`;
+            });
+            channelOutSelect.addEventListener('change', (event) => {
+                selectedOutputChannel = parseInt(event.target.value) - 1;
+                statusDiv.textContent = `Output Channel: ${event.target.value}`;
+            });
+        }
+
+        function assignMIDIMessageHandler() {
+            if (!midiAccess) return;
+            midiAccess.inputs.forEach(input => { input.onmidimessage = null; });
+            if (!selectedInputId) {
+                console.log("No MIDI input selected.");
+                activeInputNotes.clear();
+                processActiveInputNotes();
+                return;
+            }
+            const inputDevice = midiAccess.inputs.get(selectedInputId);
+            if (inputDevice) {
+                inputDevice.onmidimessage = onMIDIMessage;
+                console.log(`Listening on ${inputDevice.name} (ID: ${inputDevice.id})`);
+                statusDiv.textContent = `Listening on: ${inputDevice.name}`;
+            } else {
+                 statusDiv.textContent = `Failed to connect to input: ${selectedInputId}`;
+                 console.warn(`Could not find input ID: ${selectedInputId}`);
+            }
+        }
+
+        function onMIDIMessage(event) {
+            const command = event.data[0] >> 4;
+            const channel = event.data[0] & 0x0f;
+            const noteNumber = event.data[1];
+            const velocity = event.data.length > 2 ? event.data[2] : 0;
+            if (channel !== selectedInputChannel) return;
+            if (command === 0x9 && velocity > 0) activeInputNotes.set(noteNumber, velocity);
+            else if (command === 0x8 || (command === 0x9 && velocity === 0)) activeInputNotes.delete(noteNumber);
+            processActiveInputNotes();
+        }
+
+        function processActiveInputNotes() {
+            const currentNotes = Array.from(activeInputNotes.keys()).sort((a, b) => a - b);
+            if (arraysEqual(currentNotes, lastProcessedInputNotes)) return;
+            lastProcessedInputNotes = [...currentNotes];
+            inputChordDiv.textContent = notesArrayToNames(currentNotes);
+
+            if (currentNotes.length >= 3) {
+                const analyzedChord = analyzeChord(currentNotes);
+                if (analyzedChord) {
+                    inputChordDiv.textContent = analyzedChord.name + " (" + notesArrayToNames(analyzedChord.originalNotes) + ")";
+
+                    let suggestionIndex;
+                    if (analyzedChord.quality === 'Major') {
+                        suggestionIndex = nextMajorSuggestionIndex;
+                        nextMajorSuggestionIndex = (nextMajorSuggestionIndex + 1) % 4; // 4 suggestions for Major
+                    } else { // Minor
+                        suggestionIndex = nextMinorSuggestionIndex;
+                        nextMinorSuggestionIndex = (nextMinorSuggestionIndex + 1) % 4; // 4 suggestions for Minor
+                    }
+
+                    const suggested = getSuggestedChord(analyzedChord, suggestionIndex);
+
+                    if (suggested) {
+                        suggestedChordDiv.textContent = suggested.name + " (" + notesArrayToNames(suggested.notes) + ")";
+                        playSuggestedChord(suggested.notes);
+                    } else {
+                        suggestedChordDiv.textContent = '-';
+                        clearAndStopChordPlayback();
+                    }
+                } else {
+                    suggestedChordDiv.textContent = '-'; // Show raw notes if not a recognized triad
+                    clearAndStopChordPlayback();
+                }
+            } else {
+                suggestedChordDiv.textContent = '-';
+                clearAndStopChordPlayback();
+                if (currentNotes.length === 0) lastProcessedInputNotes = [];
+            }
+        }
+
+        function analyzeChord(notes) {
+            if (notes.length < 3) return null;
+            const root = notes[0];
+            const intervals = notes.slice(1).map(n => n - root);
+            const isMajor = intervals.includes(4) && intervals.includes(7);
+            if (isMajor && notes.length === 3) {
+                const majorNotes = [root, root + 4, root + 7];
+                if (notes.every(n => majorNotes.includes(n))) {
+                     return { rootMidi: root, quality: 'Major', name: noteNumberToName(root) + ' Major', originalNotes: notes };
+                }
+            }
+            const isMinor = intervals.includes(3) && intervals.includes(7);
+            if (isMinor && notes.length === 3) {
+                const minorNotes = [root, root + 3, root + 7];
+                 if (notes.every(n => minorNotes.includes(n))) {
+                    return { rootMidi: root, quality: 'Minor', name: noteNumberToName(root) + ' Minor', originalNotes: notes };
+                }
+            }
+            return null;
+        }
+
+        function getSuggestedChord(analyzedChord, suggestionIndex) {
+            if (!analyzedChord) return null;
+            const originalRoot = analyzedChord.rootMidi;
+            let suggestedActualRoot, suggestedNotes, suggestedChordName, suggestedQuality;
+
+            const buildChord = (root, type) => {
+                let notes = [];
+                switch (type) {
+                    case 'm7':
+                        notes = [root, root + 3, root + 7, root + 10];
+                        break;
+                    case 'maj7':
+                        notes = [root, root + 4, root + 7, root + 11];
+                        break;
+                    case '7':
+                        notes = [root, root + 4, root + 7, root + 10];
+                        break;
+                    case 'm7b5':
+                        notes = [root, root + 3, root + 6, root + 10];
+                        break;
+                }
+                return notes.filter(n => n >= 0 && n <= 127).sort((a,b) => a-b);
+            };
+
+            const findOctave = (rootPitchClass, referenceRoot) => {
+                let newRoot = Math.floor(referenceRoot / 12) * 12 + rootPitchClass;
+                if (newRoot < referenceRoot - 6 && newRoot < 80 ) newRoot += 12;
+                else if (newRoot > referenceRoot + 6 && newRoot > 30) newRoot -=12;
+                return Math.max(21, Math.min(108 - 12, newRoot));
+            };
+
+            if (analyzedChord.quality === 'Major') {
+                switch (suggestionIndex) {
+                    case 0:
+                        suggestedActualRoot = findOctave((originalRoot - 3 + 12) % 12, originalRoot);
+                        suggestedQuality = 'm7';
+                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7";
+                        break;
+                    case 1:
+                        suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot);
+                        suggestedQuality = 'maj7';
+                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7";
+                        break;
+                    case 2:
+                        suggestedActualRoot = findOctave((originalRoot + 6 + 12) % 12, originalRoot);
+                        suggestedQuality = 'm7b5';
+                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7b5";
+                        break;
+                    case 3:
+                        suggestedActualRoot = findOctave((originalRoot + 4 + 12) % 12, originalRoot);
+                        suggestedQuality = '7';
+                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "7 (alt)";
+                        break;
+                    default: return null;
+                }
+            } else if (analyzedChord.quality === 'Minor') {
+                switch (suggestionIndex) {
+                    case 0:
+                        suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot);
+                        suggestedQuality = '7';
+                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "7";
+                        break;
+                    case 1:
+                        suggestedActualRoot = findOctave((originalRoot + 3 + 12) % 12, originalRoot);
+                        suggestedQuality = 'm7';
+                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7";
+                        break;
+                    case 2:
+                        suggestedActualRoot = findOctave((originalRoot - 5 + 12) % 12, originalRoot);
+                        suggestedQuality = 'maj7';
+                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7";
+                        break;
+                    case 3:
+                        suggestedActualRoot = findOctave((originalRoot - 2 + 12) % 12, originalRoot);
+                        suggestedQuality = 'maj7';
+                        suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7";
+                        break;
+                    default: return null;
+                }
+            } else {
+                return null;
+            }
+
+            suggestedNotes = buildChord(suggestedActualRoot, suggestedQuality);
+            if (!suggestedNotes || suggestedNotes.length < 3) return null;
+
+            return {
+                rootMidi: suggestedActualRoot,
+                quality: suggestedQuality,
+                name: suggestedChordName,
+                notes: suggestedNotes
+            };
+        }
+
+        function playSuggestedChord(notesToPlay, velocity = 90) {
+            const chordDuration = 1000; // Fixed duration
+            if (!midiAccess || !selectedOutputId || !notesToPlay || notesToPlay.length === 0) {
+                console.warn("Cannot play chord: MIDI setup issue or no notes.");
+                return;
+            }
+            const outputDevice = midiAccess.outputs.get(selectedOutputId);
+            if (!outputDevice) {
+                console.warn("Output device not found.");
+                statusDiv.textContent = "Error: Output device not found.";
+                return;
+            }
+
+            clearAndStopChordPlayback();
+            activeSuggestedChordNotes = [...notesToPlay];
+            console.log(`Sending CHORD notes to ${outputDevice.name}: ${notesArrayToNames(activeSuggestedChordNotes)}`);
+            activeSuggestedChordNotes.forEach(note => {
+                outputDevice.send([0x90 | selectedOutputChannel, note, velocity]);
+            });
+
+            currentSuggestedChordOffTimeout = setTimeout(() => {
+                if (activeSuggestedChordNotes) {
+                    stopNotes(activeSuggestedChordNotes, outputDevice, selectedOutputChannel);
+                }
+                activeSuggestedChordNotes = null;
+                currentSuggestedChordOffTimeout = null;
+            }, chordDuration);
+        }
+
+        function clearAndStopChordPlayback() {
+            if (currentSuggestedChordOffTimeout) {
+                clearTimeout(currentSuggestedChordOffTimeout);
+                currentSuggestedChordOffTimeout = null;
+            }
+            if (activeSuggestedChordNotes && selectedOutputId && midiAccess) {
+                const outputDevice = midiAccess.outputs.get(selectedOutputId);
+                if (outputDevice) {
+                    stopNotes(activeSuggestedChordNotes, outputDevice, selectedOutputChannel);
+                }
+            }
+            activeSuggestedChordNotes = null;
+        }
+
+        function stopNotes(notesToStop, device, channel) {
+            if (!device || !notesToStop || notesToStop.length === 0) return;
+            notesToStop.forEach(note => {
+                device.send([0x80 | channel, note, 0]);
+            });
+        }
+
+        function arraysEqual(a, b) {
+            if (a === b) return true;
+            if (a == null || b == null) return false;
+            if (a.length !== b.length) return false;
+            for (let i = 0; i < a.length; ++i) {
+                if (a[i] !== b[i]) return false;
+            }
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', setupMIDIAccess);
+    </script>
+</body>
+</html>
