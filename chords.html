@@ -26,6 +26,11 @@
             min-height: 10px;
             font-size: 0.5rem;
         }
+        .recommendations-display {
+            min-height: 10px; /* Adjust as needed */
+            line-height: 1.1;
+            font-size: 0.5rem;
+        }
         .channel-card.active-flash {
             background-color: #075985 !important; /* sky-800, slightly darker for flash */
             transition: background-color 0.05s ease-out;
@@ -50,7 +55,7 @@
             </main>
 
         <footer class="text-center mt-1 sm:mt-2 text-xs text-gray-500">
-            Chord detection may vary.
+            Chord detection may vary. Recommendations are suggestions.
         </footer>
     </div>
 
@@ -70,12 +75,12 @@
         // Comments indicate example chord with C as root
         const chordFormulas = {
             // 13ths
-            '13':   [0, 2, 4, 7, 9, 10],  // C13 (C-E-G-Bb-D-A) - common voicing often omits notes
+            '13':   [0, 2, 4, 7, 9, 10],  // C13 (C-E-G-Bb-D-A)
             'm13':  [0, 2, 3, 7, 9, 10],  // Cm13 (C-Eb-G-Bb-D-A)
             '△13':  [0, 2, 4, 7, 9, 11],  // C△13 (C-E-G-B-D-A) (Major 13th)
 
             // 11ths
-            '11':   [0, 2, 5, 7, 10],     // C11 (C-G-Bb-D-F) - common voicing, often omits 3rd, 5th
+            '11':   [0, 2, 5, 7, 10],     // C11 (C-G-Bb-D-F)
             'm11':  [0, 2, 3, 5, 7, 10],  // Cm11 (C-Eb-G-Bb-D-F)
             '△11':  [0, 2, 4, 5, 7, 11],  // C△11 (C-E-G-B-D-F) (Major 11th)
 
@@ -90,7 +95,7 @@
             '7♭9':  [0, 1, 4, 7, 10],     // C7b9 (C-E-G-Bb-Db)
             '7♭5':  [0, 4, 6, 10],        // C7b5 (C-E-Gb-Bb)
             '7♯11': [0, 4, 6, 7, 10],     // C7#11 (C-E-G-Bb-F#) (Lydian Dominant)
-            '7alt': [0, 1, 3, 4, 6, 8, 10], // C7alt (example structure for C Super Locrian, many variations)
+            '7alt': [0, 1, 3, 4, 6, 8, 10], // C7alt (example structure for C Super Locrian)
 
             // Sevenths
             '△7':   [0, 4, 7, 11],        // C△7 (C-E-G-B) (Major 7th)
@@ -129,90 +134,73 @@
             '6/9':     [0, 2, 4, 7, 9],   // C6/9 (C-E-G-A-D)
 
             // Intervals
-            'P1': [0],                    // C (Unison/Octave)
-            'm2': [0, 1],                 // C-Db (minor 2nd)
-            'M2': [0, 2],                 // C-D (Major 2nd)
-            'm3': [0, 3],                 // C-Eb (minor 3rd)
-            'M3': [0, 4],                 // C-E (Major 3rd)
-            'P4': [0, 5],                 // C-F (Perfect 4th)
-            'TT': [0, 6],                 // C-F# (Tritone)
-            'P5': [0, 7],                 // C-G (Perfect 5th) -> See '5' for Power Chord
-            'm6_int': [0, 8],             // C-Ab (minor 6th interval)
-            'M6_int': [0, 9],             // C-A (Major 6th interval)
-            'm7_int': [0, 10],            // C-Bb (minor 7th interval)
-            'M7_int': [0, 11]             // C-B (Major 7th interval)
-            // Note: Power Chord '5' ([0,7]) is handled by relabeling 'P5' in identifyChord
+            'P1': [0], 'm2': [0, 1], 'M2': [0, 2], 'm3': [0, 3], 'M3': [0, 4],
+            'P4': [0, 5], 'TT': [0, 6], 'P5': [0, 7], 'm6_int': [0, 8], 'M6_int': [0, 9],
+            'm7_int': [0, 10], 'M7_int': [0, 11]
         };
         const sortedChordFormulas = Object.entries(chordFormulas)
             .sort(([,a],[,b]) => b.length - a.length);
 
-        // Chord descriptions: Suffix, full name, and complementary chord idea
-        // Comments indicate example chord with C as root
+        // Chord descriptions: Suffix, full name, and recommendations (comp field)
         const chordDescriptions = {
             // 13ths
-            '△13':{ name: "Major 13th", comp: "Lydian Dominant sound" }, // C△13
-            'm13':{ name: "Minor 13th", comp: "V altered" },             // Cm13
-            '13': { name: "Dominant 13th", comp: "I Major/Minor" },     // C13
+            '△13':{ name: "Major 13th", comp: "Try: ii-V (Dm9-G13)" },
+            'm13':{ name: "Minor 13th", comp: "Try: Altered V (G7alt)" },
+            '13': { name: "Dominant 13th", comp: "Resolves to: I (F△7)" },
             // 11ths
-            '△11':{ name: "Major 11th", comp: "Lydian sound" },          // C△11
-            'm11':{ name: "Minor 11th", comp: "V altered" },             // Cm11
-            '11': { name: "Dominant 11th (no 3rd)", comp: "I Major/Minor" }, // C11
+            '△11':{ name: "Major 11th", comp: "Lydian sound, try: Bm7" },
+            'm11':{ name: "Minor 11th", comp: "Try: V altered (G7alt)" },
+            '11': { name: "Dominant 11th (no 3rd)", comp: "Resolves to: I (F△7)" },
             // 9ths
-            '△9': { name: "Major 9th", comp: "ii m9, V9" },              // C△9
-            'm9': { name: "Minor 9th", comp: "V9, I△9" },                // Cm9
-            '9':  { name: "Dominant 9th", comp: "I Major/Minor" },       // C9
-            'm△9':{ name: "Minor Major 9th", comp: "Tonic Minor (Jazz)"},// Cm△9
+            '△9': { name: "Major 9th", comp: "Try: Dm9, G13" },
+            'm9': { name: "Minor 9th", comp: "Try: G13, C△9 (ii-V-I)" },
+            '9':  { name: "Dominant 9th", comp: "Resolves to: I (F△7)" },
+            'm△9':{ name: "Minor Major 9th", comp: "Try: G7alt (to C)"},
             // Altered Dominants & Lydian Dominant
-            '7♯9':{ name: "Dominant 7th ♯9", comp: "Minor Tonic" },      // C7#9
-            '7♭9':{ name: "Dominant 7th ♭9", comp: "Minor/Major Tonic" },// C7b9
-            '7♭5':{ name: "Dominant 7th ♭5", comp: "Altered V / I" },    // C7b5
-            '7♯11':{name: "Dominant 7th ♯11 (Lydian Dom)", comp: "I Major"},// C7#11
-            '7alt':{name: "Altered Dominant", comp: "Resolving Chord"},  // C7alt
+            '7♯9':{ name: "Dominant 7th ♯9", comp: "Resolves to: Im (Fm7)" },
+            '7♭9':{ name: "Dominant 7th ♭9", comp: "Resolves to: Im/I (Fm7/F△7)" },
+            '7♭5':{ name: "Dominant 7th ♭5", comp: "Resolves to: I (F△7)" },
+            '7♯11':{name: "Dominant 7th ♯11", comp: "Resolves to: I△7 (F△7)"},
+            '7alt':{name: "Altered Dominant", comp: "Resolves to: Im/I (Fm7/F△7)"},
             // Sevenths
-            '△7': { name: "Major 7th", comp: "ii m7" },                  // C△7
-            '△7♯11':{name: "Major 7th ♯11 (Lydian Maj)", comp: "Subdominant Major"},// C△7#11
-            'm7': { name: "Minor 7th", comp: "V7" },                     // Cm7
-            '7':  { name: "Dominant 7th", comp: "Tonic (I)" },           // C7
-            '°7': { name: "Diminished 7th", comp: "Resolving Chord" },    // C°7
-            'ø7': { name: "Half-Diminished 7th", comp: "Dom 7th" },      // Cø7
-            'm△7':{ name: "Minor Major 7th", comp: "Dom 7th" },          // Cm△7
-            '+7': { name: "Augmented Dom 7th", comp: "Resolving Minor/Major" }, // C+7
-            '+△7':{ name: "Augmented Major 7th", comp: "Minor 7th" },    // C+△7
-            '7sus4':{name: "Dominant 7th sus 4", comp: "Dominant 7th / Tonic" }, // C7sus4
+            '△7': { name: "Major 7th", comp: "Try: Dm7, G7 (ii-V-I)" },
+            '△7♯11':{name: "Major 7th ♯11", comp: "Try: Bm7, E7alt"},
+            'm7': { name: "Minor 7th", comp: "Try: V7 (G7), IV△7 (F△7)" },
+            '7':  { name: "Dominant 7th", comp: "Resolves to: I (F△7)" },
+            '°7': { name: "Diminished 7th", comp: "Resolves to: I/Im (F/Fm)" },
+            'ø7': { name: "Half-Diminished 7th", comp: "Try: V7alt (G7alt), Im (Fm)" },
+            'm△7':{ name: "Minor Major 7th", comp: "Try: V7alt (G7alt)" },
+            '+7': { name: "Augmented Dom 7th", comp: "Resolves to: Im/I (Fm/F)" },
+            '+△7':{ name: "Augmented Major 7th", comp: "Try: iim7 (Dm7)" },
+            '7sus4':{name: "Dominant 7th sus 4", comp: "Resolves to: V7 (G7) or I (F)" },
             // Sixths & 6/9
-            'M6': { name: "Major 6th", comp: "Rel m7" },                 // CM6
-            'm6': { name: "Minor 6th", comp: "ii ø7" },                  // Cm6
-            'm6/9':{ name: "Minor 6/9", comp: "Tonic Minor (Jazz)"},     // Cm6/9
+            'M6': { name: "Major 6th", comp: "Try: iim7 (Dm7), V7 (G7)" },
+            'm6': { name: "Minor 6th", comp: "Try: iiø7 (Dø7), V7alt (G7alt)" },
+            'm6/9':{ name: "Minor 6/9", comp: "Try: iiø7 (Dø7), V7alt (G7alt)"},
             // Prog Rock additions
-            '5':    { name: "Power Chord", comp: "Rock/Metal staple" }, // C5
-            '9sus4':{ name: "Suspended 9th (no 7th)", comp: "Dominant 9 / Major 9" }, // C9sus4
-            'm7(11)':{ name: "Minor 7th add 11 (no 9th)", comp: "m9, m11 (Dorian)" }, // Cm7(11)
-            'add♯4':{ name: "Major add #4 (Lydian Triad)", comp: "△7♯11" }, // Cadd#4
-            'm(♭6)':{ name: "Minor add flat 6", comp: "m7 (Aeolian/Phrygian)" }, // Cm(b6)
+            '5':    { name: "Power Chord", comp: "Try: IV (F5), bVII (Bb5)" },
+            '9sus4':{ name: "Suspended 9th (no 7th)", comp: "Try: V9 (G9), I△9 (C△9)" },
+            'm7(11)':{ name: "Minor 7th add 11 (no 9th)", comp: "Try: V9 (G9)" },
+            'add♯4':{ name: "Major add #4 (Lydian Triad)", comp: "Try: V△7#11 (G△7#11)" },
+            'm(♭6)':{ name: "Minor add flat 6", comp: "Try: V7b9 (G7b9)" },
             // Triads & Basic Suspended
-            '':   { name: "Major Triad", comp: "Rel Minor/Dom V" },      // C
-            'm':  { name: "Minor Triad", comp: "Rel Major/Dom V" },      // Cm
-            '°':  { name: "Diminished Triad", comp: "Resolving Chord" },  // C°
-            '+':  { name: "Augmented Triad", comp: "Resolving Chord" },  // C+
-            'sus4':{name: "Suspended 4th", comp: "Major/Minor Triad" },  // Csus4
-            'sus2':{name: "Suspended 2nd", comp: "Major Triad" },        // Csus2
+            '':   { name: "Major Triad", comp: "Try: IV (F), V (G), vi (Am)" },
+            'm':  { name: "Minor Triad", comp: "Try: III (Eb), VI (Ab), V of Rel Maj (G)" },
+            '°':  { name: "Diminished Triad", comp: "Resolves to: I/Im (F/Fm)" },
+            '+':  { name: "Augmented Triad", comp: "Resolves to: I/Im (F/Fm)" },
+            'sus4':{name: "Suspended 4th", comp: "Resolves to: Major/Minor (C/Cm)" },
+            'sus2':{name: "Suspended 2nd", comp: "Resolves to: Major (C)" },
             // Added Note Chords
-            'add9': { name: "Major Add 9", comp: "Dom 7th" },            // Cadd9
-            'mAdd9':{ name: "Minor Add 9", comp: "Dom 7th" },            // CmAdd9
-            '6/9':  { name: "6/9 Chord", comp: "Altered Dom" },          // C6/9
+            'add9': { name: "Major Add 9", comp: "Try: IV△9 (F△9), V9 (G9)" },
+            'mAdd9':{ name: "Minor Add 9", comp: "Try: VI△9 (Ab△9)" },
+            '6/9':  { name: "6/9 Chord", comp: "Try: ii-V (Dm9-G13)" },
             // Intervals
-            'P1': { name: "Unison / Octave" },                           // C
-            'm2': { name: "Minor 2nd Int" },                             // C-Db
-            'M2': { name: "Major 2nd Int" },                             // C-D
-            'm3': { name: "Minor 3rd Int" },                             // C-Eb
-            'M3': { name: "Major 3rd Int" },                             // C-E
-            'P4': { name: "Perfect 4th Int" },                           // C-F
-            'TT': { name: "Tritone Int" },                               // C-F#
-            'P5': { name: "Perfect 5th Int" },                           // C-G (but see '5')
-            'm6_int':{ name: "Minor 6th Int" },                          // C-Ab
-            'M6_int':{ name: "Major 6th Int" },                          // C-A
-            'm7_int':{ name: "Minor 7th Int" },                          // C-Bb
-            'M7_int':{ name: "Major 7th Int" }                           // C-B
+            'P1': { name: "Unison / Octave", comp: "" }, 'm2': { name: "Minor 2nd Int", comp: "" },
+            'M2': { name: "Major 2nd Int", comp: "" }, 'm3': { name: "Minor 3rd Int", comp: "" },
+            'M3': { name: "Major 3rd Int", comp: "" }, 'P4': { name: "Perfect 4th Int", comp: "" },
+            'TT': { name: "Tritone Int", comp: "" }, 'P5': { name: "Perfect 5th Int", comp: "" },
+            'm6_int':{ name: "Minor 6th Int", comp: "" },'M6_int':{ name: "Major 6th Int", comp: "" },
+            'm7_int':{ name: "Minor 7th Int", comp: "" },'M7_int':{ name: "Major 7th Int", comp: "" }
         };
 
         function initializeUI() {
@@ -226,7 +214,9 @@
                         <div class="text-[0.55rem] sm:text-xs text-gray-400 mb-0.5">CH ${i + 1}</div>
                         <div id="chord-ch-${i}" class="chord-display text-xs sm:text-sm md:text-base font-semibold text-sky-300 break-words leading-tight flex items-center justify-center">---</div>
                         <div id="desc-ch-${i}" class="chord-description-display text-sky-100 mt-0.5 break-words leading-tight"></div>
-                        </div>
+                        <div class="text-[0.5rem] text-gray-400 mt-1">Suggestions:</div>
+                        <div id="reco-ch-${i}" class="recommendations-display text-teal-300 leading-tight">---</div>
+                    </div>
                     <div id="notes-ch-${i}" class="notes-list-display text-gray-500 mt-0.5 truncate">---</div>
                 `;
                 chordGrid.appendChild(channelDiv);
@@ -327,11 +317,9 @@
             const note = event.data[1];
             const velocity = event.data[2];
 
-            // console.log(`MIDI In - Ch: ${channel + 1}, Cmd: ${command}, Note: ${note}, Vel: ${velocity}. Active on Ch before: [${Array.from(activeNotesByChannel[channel]).join(', ')}]`);
-
             let stateChanged = false;
             switch (command) {
-                case 9: // Note On
+                case 9:
                     if (velocity > 0) {
                         const sizeBefore = activeNotesByChannel[channel].size;
                         activeNotesByChannel[channel].add(note);
@@ -345,18 +333,18 @@
                                 }, 150);
                             }
                         }
-                    } else { // Note On with velocity 0 is Note Off
+                    } else {
                         if (activeNotesByChannel[channel].delete(note)) {
                             stateChanged = true;
                         }
                     }
                     break;
-                case 8: // Note Off
+                case 8:
                     if (activeNotesByChannel[channel].delete(note)) {
                         stateChanged = true;
                     }
                     break;
-                case 11: // Control Change
+                case 11:
                     if (event.data[1] === 123 && velocity === 0) {
                         if (activeNotesByChannel[channel].size > 0) {
                             activeNotesByChannel[channel].clear();
@@ -366,7 +354,6 @@
                     }
                     break;
             }
-            // console.log(`MIDI In - Ch: ${channel + 1}. Active on Ch after: [${Array.from(activeNotesByChannel[channel]).join(', ')}]`);
 
              if (stateChanged || (command === 9 && velocity > 0)) {
                 updateChannelDisplay(channel);
@@ -378,4 +365,91 @@
         function midiNoteToName(midiNote) { return noteNames[midiNote % 12]; }
         function arraysEqual(a,b) {
             if (a === b) return true; if (a == null || b == null) return false; if (a.length !== b.length) return false;
-            fo
+            for (let i = 0; i < a.length; ++i) if (a[i] !== b[i]) return false; return true;
+        }
+
+        function identifyChord(notesSet) {
+            const notes = Array.from(notesSet).sort((a, b) => a - b);
+            let chordName = "---"; let noteList = ""; let description = ""; let recommendations = "";
+
+            if (notes.length === 0) return { chordName, noteList, description, recommendations };
+
+            const uniquePitchClasses = [...new Set(notes.map(n => n % 12))].sort((a,b)=>a-b);
+            noteList = notes.map(n => midiNoteToName(n) + Math.floor(n/12 -1)).join(' ');
+
+            if (uniquePitchClasses.length === 1) {
+                chordName = noteNames[uniquePitchClasses[0]];
+                const descObj = chordDescriptions['P1'];
+                if(descObj) {
+                    description = descObj.name;
+                    recommendations = descObj.comp || "";
+                }
+                return { chordName, noteList, description, recommendations };
+            }
+
+            for (const rootCandidatePitchClass of uniquePitchClasses) {
+                const intervals = uniquePitchClasses.map(pc => (pc - rootCandidatePitchClass + 12) % 12).sort((a,b)=>a-b);
+                for (const [suffix, formulaIntervals] of sortedChordFormulas) {
+                    if (arraysEqual(intervals, formulaIntervals)) {
+                        let currentSuffix = suffix;
+                        if (suffix === 'P5' && uniquePitchClasses.length === 2 && notes.length >=2) {
+                            currentSuffix = '5'; // Power Chord
+                        }
+
+                        chordName = noteNames[rootCandidatePitchClass] + currentSuffix;
+
+                        const descObj = chordDescriptions[currentSuffix];
+                        if(descObj) {
+                            description = descObj.name;
+                            recommendations = descObj.comp || ""; // Get recommendations
+                        }
+                        return { chordName, noteList, description, recommendations };
+                    }
+                }
+            }
+            chordName = uniquePitchClasses.map(pc => noteNames[pc]).join(' ');
+            // No specific recommendations if it's just a list of notes
+            return { chordName, noteList, description, recommendations };
+        }
+
+        function updateChannelDisplay(channel) {
+            const chordResult = identifyChord(activeNotesByChannel[channel]);
+
+            const chordEl = document.getElementById(`chord-ch-${channel}`);
+            const descEl = document.getElementById(`desc-ch-${channel}`);
+            const notesEl = document.getElementById(`notes-ch-${channel}`);
+            const recoEl = document.getElementById(`reco-ch-${channel}`); // Get recommendation element
+
+            if (chordEl) chordEl.textContent = chordResult.chordName || "---";
+
+            if (descEl) {
+                const newDescription = chordResult.description || "";
+                descEl.textContent = newDescription;
+                descEl.title = (newDescription && (descEl.scrollHeight > descEl.clientHeight || descEl.scrollWidth > descEl.clientWidth)) ? newDescription : '';
+            }
+
+            if (recoEl) { // Update recommendations
+                const newRecommendations = chordResult.recommendations || "---";
+                recoEl.textContent = newRecommendations;
+                recoEl.title = (newRecommendations && newRecommendations !== "---" && (recoEl.scrollHeight > recoEl.clientHeight || recoEl.scrollWidth > recoEl.clientWidth)) ? newRecommendations : '';
+            }
+
+            if (notesEl) {
+                if (activeNotesByChannel[channel].size === 0) {
+                    notesEl.textContent = "---";
+                    notesEl.title = '';
+                } else {
+                    const newNoteList = chordResult.noteList || "";
+                    notesEl.textContent = newNoteList;
+                    notesEl.title = (newNoteList && (notesEl.scrollHeight > notesEl.clientHeight || notesEl.scrollWidth > notesEl.clientWidth)) ? newNoteList : '';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeUI();
+            requestMidiAccess();
+        });
+    </script>
+</body>
+</html>
