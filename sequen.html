@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web MIDI Sequencer with Output</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .btn {
+            @apply px-6 py-3 rounded-lg shadow-md text-white font-semibold transition-all duration-150 ease-in-out;
+        }
+        .btn-blue { @apply bg-blue-500 hover:bg-blue-600; }
+        .btn-green { @apply bg-green-500 hover:bg-green-600; }
+        .btn-red { @apply bg-red-500 hover:bg-red-600; }
+        .btn-yellow { @apply bg-yellow-500 hover:bg-yellow-600 text-gray-800; }
+        .btn-gray { @apply bg-gray-400 hover:bg-gray-500; }
+        .btn:disabled { @apply bg-gray-300 cursor-not-allowed; }
+
+        #midiActivity {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #ccc;
+            transition: background-color 0.1s;
+        }
+        #midiActivity.active {
+            background-color: #34D399; /* Green-400 */
+        }
+        label { @apply block text-sm font-medium text-gray-700 mb-1; }
+        select, input[type="number"] { @apply block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-700; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-2xl">
+        <header class="mb-6 text-center">
+            <h1 class="text-3xl font-bold text-gray-700">MIDI Sequencer</h1>
+            <p class="text-gray-500">Record, play (internal & MIDI out), and overdub.</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+                <label for="midiInputs">MIDI Input:</label>
+                <div class="flex items-center space-x-2">
+                    <select id="midiInputs">
+                        <option value="">No MIDI inputs found</option>
+                    </select>
+                    <div id="midiActivity" title="MIDI Activity Indicator"></div>
+                </div>
+            </div>
+            <div>
+                <label for="midiOutputs">MIDI Output:</label>
+                <select id="midiOutputs">
+                    <option value="">No MIDI outputs found</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <button id="recordButton" class="btn btn-red">Record</button>
+            <button id="playButton" class="btn btn-green" disabled>Play</button>
+            <button id="stopButton" class="btn btn-yellow" disabled>Stop</button>
+            <button id="clearButton" class="btn btn-gray" disabled>Clear</button>
+        </div>
+
+        <div id="status" class="mb-4 p-3 bg-gray-50 rounded-lg text-center text-gray-600 min-h-[40px]">
+            Idle. Select a MIDI device.
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+                <label for="tempo">Tempo (BPM):</label>
+                <input type="number" id="tempo" value="120" min="30" max="300">
+            </div>
+            <div>
+                <label for="midiChannel">Playback Channel:</label>
+                <input type="number" id="midiChannel" value="1" min="1" max="16">
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="mt-8 text-center text-gray-500 text-sm">
+        <p>Powered by Web MIDI API and Tone.js</p>
+    </footer>
+
+    <script>
+        // --- DOM Elements ---
+        const midiInputSelector = document.getElementById('midiInputs');
+        const midiOutputSelector = document.getElementById('midiOutputs');
+        const recordButton = document.getElementById('recordButton');
+        const playButton = document.getElementById('playButton');
+        const stopButton = document.getElementById('stopButton');
+        const clearButton = document.getElementById('clearButton');
+        const statusDisplay = document.getElementById('status');
+        const tempoInput = document.getElementById('tempo');
+        const midiChannelInput = document.getElementById('midiChannel');
+        const midiActivityIndicator = document.getElementById('midiActivity');
+
+        // --- MIDI & Sequencer State ---
+        let midiAccess = null;
+        let activeMidiInput = null;
+        let activeMidiOutput = null;
+        let sequence = []; // Stores { timestamp, command, note, velocity }
+        let isRecording = false;
+        let isPlaying = false;
+        let recordingStartTime = 0;
+        let playbackTimeoutIds = [];
+        let synth; // Tone.js synth
+        let toneStarted = false;
+        let playbackMidiChannel = 0; // 0-15 for MIDI messages
+
+        // --- Initialize Tone.js Synth ---
+        function initializeSynth() {
+            if (!synth) {
+                synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "sawtooth" },
+                    envelope: {
+                        attack: 0.02,
+                        decay: 0.1,
+                        sustain: 0.3,
+                        release: 0.5
+                    },
+                    volume: -10
+                }).toDestination();
+            }
+        }
+
+        // --- Start Tone.js Audio Context ---
+        async function startToneContext() {
+            if (!toneStarted && Tone.context.state !== 'running') {
+                await Tone.start();
+                console.log("AudioContext started");
+                toneStarted = true;
+                initializeSynth();
+            } else if (toneStarted && !synth) {
+                initializeSynth();
+            }
+        }
+
+        // --- MIDI Access ---
+        async function requestMIDIAccess() {
+            try {
+                midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+                statusDisplay.textContent = "MIDI ready. Select devices.";
+                populateMIDIInputs();
+                populateMIDIOutputs();
+                midiAccess.onstatechange = () => {
+                    populateMIDIInputs();
+                    populateMIDIOutputs();
+                };
+            } catch (error) {
+                console.error("Could not access MIDI devices.", error);
+                statusDisplay.textContent = "Error: Could not access MIDI devices. " + error.message;
+            }
+        }
+
+        function populateMIDIInputs() {
+            if (!midiAccess) return;
+            midiInputSelector.innerHTML = '';
+            const inputs = midiAccess.inputs.values();
+            let firstInput = null;
+
+            if (midiAccess.inputs.size === 0) {
+                midiInputSelector.innerHTML = '<option value="">No MIDI inputs found</option>';
+                if (activeMidiInput) {
+                    activeMidiInput.onmidimessage = null;
+                    activeMidiInput = null;
+                }
+            } else {
+                 for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
+                    const option = document.createElement('option');
+                    option.value = input.value.id;
+                    option.textContent = input.value.name;
+                    midiInputSelector.appendChild(option);
+                    if (!firstInput) firstInput = input.value;
+                }
+                if (activeMidiInput && midiAccess.inputs.get(activeMidiInput.id)) {
+                     midiInputSelector.value = activeMidiInput.id;
+                } else if (firstInput) {
+                    midiInputSelector.value = firstInput.id;
+                }
+            }
+            selectMIDIInput(midiInputSelector.value);
+            updateButtonStates();
+        }
+
+        function populateMIDIOutputs() {
+            if (!midiAccess) return;
+            midiOutputSelector.innerHTML = '';
+            const outputs = midiAccess.outputs.values();
+            let firstOutput = null;
+
+            if (midiAccess.outputs.size === 0) {
+                midiOutputSelector.innerHTML = '<option value="">No MIDI outputs found</option>';
+                activeMidiOutput = null;
+            } else {
+                for (let output = outputs.next(); output && !output.done; output = outputs.next()) {
+                    const option = document.createElement('option');
+                    option.value = output.value.id;
+                    option.textContent = output.value.name;
+                    midiOutputSelector.appendChild(option);
+                    if (!firstOutput) firstOutput = output.value;
+                }
+                 if (activeMidiOutput && midiAccess.outputs.get(activeMidiOutput.id)) {
+                     midiOutputSelector.value = activeMidiOutput.id;
+                } else if (firstOutput) {
+                    midiOutputSelector.value = firstOutput.id;
+                }
+            }
+            selectMIDIOutput(midiOutputSelector.value);
+            updateButtonStates();
+        }
+
+        function selectMIDIInput(deviceId) {
+            if (activeMidiInput) {
+                activeMidiInput.onmidimessage = null;
+            }
+            if (midiAccess && deviceId) {
+                activeMidiInput = midiAccess.inputs.get(deviceId);
+                if (activeMidiInput) {
+                    activeMidiInput.onmidimessage = onMIDIMessage;
+                    statusDisplay.textContent = `Input: ${activeMidiInput.name}. Output: ${activeMidiOutput ? activeMidiOutput.name : 'None'}`;
+                    console.log(`Listening to input: ${activeMidiInput.name}`);
+                } else {
+                    statusDisplay.textContent = "Selected MIDI input not found.";
+                }
+            } else {
+                activeMidiInput = null;
+                statusDisplay.textContent = "No MIDI input selected.";
+            }
+            updateButtonStates();
+        }
+
+        function selectMIDIOutput(deviceId) {
+            if (midiAccess && deviceId) {
+                activeMidiOutput = midiAccess.outputs.get(deviceId);
+                if (activeMidiOutput) {
+                    statusDisplay.textContent = `Input: ${activeMidiInput ? activeMidiInput.name : 'None'}. Output: ${activeMidiOutput.name}`;
+                    console.log(`Selected output: ${activeMidiOutput.name}`);
+                } else {
+                     statusDisplay.textContent = "Selected MIDI output not found.";
+                }
+            } else {
+                activeMidiOutput = null;
+                 if (activeMidiInput) { // Keep input status if it exists
+                    statusDisplay.textContent = `Input: ${activeMidiInput.name}. Output: None`;
+                } else {
+                    statusDisplay.textContent = "No MIDI output selected.";
+                }
+            }
+            updateButtonStates();
+        }
+
+        midiInputSelector.addEventListener('change', (event) => selectMIDIInput(event.target.value));
+        midiOutputSelector.addEventListener('change', (event) => selectMIDIOutput(event.target.value));
+        midiChannelInput.addEventListener('change', (event) => {
+            const channel = parseInt(event.target.value, 10);
+            if (channel >= 1 && channel <= 16) {
+                playbackMidiChannel = channel - 1; // 0-indexed for MIDI messages
+                console.log(`Playback MIDI channel set to ${channel}`);
+            } else {
+                event.target.value = playbackMidiChannel + 1; // Reset to valid previous value
+            }
+        });
+
+
+        // --- MIDI Message Handling ---
+        function onMIDIMessage(event) {
+            if (!synth && toneStarted) initializeSynth();
+
+            midiActivityIndicator.classList.add('active');
+            setTimeout(() => midiActivityIndicator.classList.remove('active'), 100);
+
+            const command = event.data[0] >> 4;
+            const note = event.data[1];
+            const velocity = event.data[2];
+
+            if (command === 9 && velocity > 0) { // Note On
+                if (isRecording) {
+                    const timestamp = performance.now() - recordingStartTime;
+                    sequence.push({ timestamp, command: 0x90, note, velocity });
+                }
+                if (synth && toneStarted) {
+                    synth.triggerAttack(Tone.Frequency(note, "midi").toNote(), Tone.now(), velocity / 127);
+                }
+            } else if (command === 8 || (command === 9 && velocity === 0)) { // Note Off
+                if (isRecording) {
+                    const timestamp = performance.now() - recordingStartTime;
+                    sequence.push({ timestamp, command: 0x80, note, velocity: 0 });
+                }
+                 if (synth && toneStarted) {
+                    synth.triggerRelease(Tone.Frequency(note, "midi").toNote(), Tone.now());
+                }
+            }
+        }
+
+        // --- Sequencer Controls ---
+        async function startRecording() {
+            await startToneContext();
+            if (!activeMidiInput) {
+                statusDisplay.textContent = "Please select a MIDI input device first.";
+                return;
+            }
+            if (!synth) {
+                initializeSynth();
+                if(!synth) { statusDisplay.textContent = "Error: Synthesizer not initialized."; return; }
+            }
+
+            isRecording = true;
+            isPlaying = false;
+            stopAllPlaybackTimeouts();
+            recordingStartTime = performance.now();
+            statusDisplay.textContent = "Recording...";
+            updateButtonStates();
+        }
+
+        function stopRecording() {
+            if (!isRecording) return;
+            isRecording = false;
+            statusDisplay.textContent = `Recording stopped. Sequence: ${sequence.length} events.`;
+            updateButtonStates();
+        }
+
+        async function playSequence() {
+            await startToneContext();
+            if (isRecording) stopRecording();
+            if (sequence.length === 0) {
+                statusDisplay.textContent = "Nothing to play. Record something first.";
+                return;
+            }
+            if (!synth) {
+                initializeSynth();
+                if(!synth) { statusDisplay.textContent = "Error: Synthesizer not initialized for playback."; return; }
+            }
+
+            isPlaying = true;
+            statusDisplay.textContent = "Playing...";
+            stopAllPlaybackTimeouts();
+
+            // Ensure playbackMidiChannel is up-to-date from the input field
+            playbackMidiChannel = parseInt(midiChannelInput.value, 10) - 1;
+            if (isNaN(playbackMidiChannel) || playbackMidiChannel < 0 || playbackMidiChannel > 15) {
+                playbackMidiChannel = 0; // Default to channel 1 (0-indexed)
+                midiChannelInput.value = 1;
+            }
+
+
+            sequence.forEach(event => {
+                const delay = event.timestamp;
+                const timeoutId = setTimeout(() => {
+                    if (!isPlaying) return;
+
+                    const noteName = Tone.Frequency(event.note, "midi").toNote();
+                    // Internal Synth
+                    if (event.command === 0x90 && event.velocity > 0) {
+                        synth.triggerAttack(noteName, Tone.now(), event.velocity / 127);
+                    } else if (event.command === 0x80 || (event.command === 0x90 && event.velocity === 0)) {
+                        synth.triggerRelease(noteName, Tone.now());
+                    }
+
+                    // MIDI Output
+                    if (activeMidiOutput) {
+                        let midiMessage;
+                        if (event.command === 0x90 && event.velocity > 0) { // Note On
+                            midiMessage = [0x90 + playbackMidiChannel, event.note, event.velocity];
+                            activeMidiOutput.send(midiMessage);
+                            // console.log(`MIDI Out: Note On Ch ${playbackMidiChannel+1}, Note ${event.note}, Vel ${event.velocity}`);
+                        } else if (event.command === 0x80 || (event.command === 0x90 && event.velocity === 0)) { // Note Off
+                            midiMessage = [0x80 + playbackMidiChannel, event.note, 0]; // Velocity for note off is typically 0
+                            activeMidiOutput.send(midiMessage);
+                            // console.log(`MIDI Out: Note Off Ch ${playbackMidiChannel+1}, Note ${event.note}`);
+                        }
+                    }
+                }, delay);
+                playbackTimeoutIds.push(timeoutId);
+            });
+
+            if (sequence.length > 0) {
+                const lastEventTime = sequence.reduce((max, e) => Math.max(max, e.timestamp), 0);
+                const endTimeoutId = setTimeout(() => {
+                    if (isPlaying) {
+                       stopPlayback(false);
+                       statusDisplay.textContent = "Playback finished.";
+                    }
+                }, lastEventTime + 500);
+                playbackTimeoutIds.push(endTimeoutId);
+            }
+            updateButtonStates();
+        }
+
+        function stopPlayback(userInitiated = true) {
+            const wasPlaying = isPlaying;
+            const wasRecording = isRecording;
+
+            isPlaying = false;
+            if (userInitiated && isRecording) {
+                isRecording = false; // Stop recording if stop button is pressed
+            }
+
+            stopAllPlaybackTimeouts();
+            if (synth) {
+                synth.releaseAll();
+            }
+
+            // Send MIDI All Notes Off to the selected output channel
+            if (activeMidiOutput) {
+                const currentChannelForStop = parseInt(midiChannelInput.value, 10) -1; // Ensure it uses current UI value
+                 if (!isNaN(currentChannelForStop) && currentChannelForStop >= 0 && currentChannelForStop <= 15) {
+                    activeMidiOutput.send([0xB0 + currentChannelForStop, 123, 0]); // All Notes Off CC on the channel
+                    console.log(`Sent All Notes Off to MIDI Ch ${currentChannelForStop + 1}`);
+                }
+            }
+
+            if (userInitiated) {
+                 statusDisplay.textContent = "Stopped.";
+            } else if (wasPlaying && !isRecording) {
+                statusDisplay.textContent = "Playback finished.";
+            } else if (wasRecording && !userInitiated) { // If recording was stopped implicitly
+                statusDisplay.textContent = `Recording stopped. Sequence: ${sequence.length} events.`;
+            }
+
+
+            console.log("Playback/Recording stopped.");
+            updateButtonStates();
+        }
+
+        function stopAllPlaybackTimeouts() {
+            playbackTimeoutIds.forEach(id => clearTimeout(id));
+            playbackTimeoutIds = [];
+        }
+
+        function clearSequence() {
+            if (isRecording) stopRecording();
+            if (isPlaying) stopPlayback(true); // Ensure MIDI notes off are sent
+            sequence = [];
+            statusDisplay.textContent = "Sequence cleared.";
+            updateButtonStates();
+        }
+
+        // --- UI Updates ---
+        function updateButtonStates() {
+            const hasSequence = sequence.length > 0;
+            const midiInputSelected = !!activeMidiInput;
+            // Play button enabled if there's a sequence and (either MIDI output selected OR internal synth can play)
+            // For now, internal synth is always an option if Tone started.
+            const canPlay = hasSequence && (toneStarted || activeMidiOutput);
+
+
+            recordButton.disabled = !midiInputSelected || isPlaying;
+            if (isRecording) {
+                recordButton.textContent = 'Stop Rec';
+                recordButton.classList.remove('btn-red');
+                recordButton.classList.add('btn-yellow');
+            } else {
+                recordButton.textContent = 'Record';
+                recordButton.classList.remove('btn-yellow');
+                recordButton.classList.add('btn-red');
+            }
+
+            playButton.disabled = !canPlay || isRecording || isPlaying;
+            stopButton.disabled = !isRecording && !isPlaying;
+            clearButton.disabled = (!hasSequence && !isRecording && !isPlaying) || (isRecording || isPlaying && !hasSequence); // Simplified: disable if active or nothing to clear
+        }
+
+        // --- Event Listeners ---
+        recordButton.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+        playButton.addEventListener('click', playSequence);
+        stopButton.addEventListener('click', () => stopPlayback(true));
+        clearButton.addEventListener('click', clearSequence);
+
+        tempoInput.addEventListener('change', (event) => {
+            const newTempo = parseInt(event.target.value, 10);
+            if (!isNaN(newTempo)) {
+                console.log("Tempo set to:", newTempo);
+                // Tone.Transport.bpm.value = newTempo; // If using Tone.Transport for timing
+            }
+        });
+
+        // --- Initial Setup ---
+        window.addEventListener('load', () => {
+            requestMIDIAccess();
+            playbackMidiChannel = parseInt(midiChannelInput.value, 10) - 1; // Initialize from default UI value
+            updateButtonStates();
+            statusDisplay.textContent = "Initializing MIDI...";
+        });
+
+    </script>
+</body>
+</html>
