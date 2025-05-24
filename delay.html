@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI Message Delay (Delayed First)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1b26; /* Dark blue-gray */
+            color: #c0caf5; /* Light lavender */
+        }
+        .container {
+            max-width: 560px; /* Adjusted for side-by-side layout */
+            margin: 1.5rem auto;
+            padding: 1.5rem;
+            background-color: #24283b;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .control-group label {
+            color: #a9b1d6;
+            margin-bottom: 0.25rem;
+            display: block; /* Ensure labels take full width */
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #414868;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border-radius: 4px;
+        }
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #7aa2f7;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #1a1b26;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #7aa2f7;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #1a1b26;
+        }
+        select, button {
+            background-color: #414868;
+            color: #c0caf5;
+            border: 1px solid #7aa2f7;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            transition: background-color 0.2s;
+            width: 100%; /* Make selects take full width of their box */
+        }
+        select:hover, button:hover {
+            background-color: #565f89;
+        }
+        button:disabled {
+            background-color: #3b4261;
+            color: #787c99;
+            cursor: not-allowed;
+            border-color: #565f89;
+        }
+        .status-box {
+            background-color: #1f2335;
+            border: 1px solid #414868;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            min-height: 60px;
+            font-size: 0.875rem;
+            color: #a9b1d6;
+            transition: border-color 0.1s ease-in-out;
+        }
+        header h1 {
+            font-size: 1.75rem;
+        }
+        header p {
+            font-size: 0.875rem;
+        }
+        .settings-box {
+            background-color: #292e42; /* Slightly different background for the boxes */
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid #414868;
+        }
+        /* Styling for datalist ticks (browser support varies) */
+        input[type="range"] + datalist {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            color: #a9b1d6;
+            font-size: 0.75rem;
+            margin-top: -0.25rem; /* Adjust to align with slider */
+        }
+        input[type="range"] + datalist option {
+            /* Basic styling, actual tick appearance is browser-dependent */
+            padding: 0;
+        }
+
+
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+<div class="container">
+    <header class="text-center mb-4">
+        <h1 class="text-3xl font-bold text-7aa2f7">MIDI Message Delay (Delayed First)</h1>
+        <p class="text-sm text-a9b1d6">Incoming MIDI is delayed before being sent to the output.</p>
+    </header>
+
+    <div class="status-box mb-4" id="statusMessages">
+        Attempting to initialize MIDI... Please ensure MIDI devices are connected.
+    </div>
+
+    <div class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0 mb-4">
+            <div class="settings-box sm:w-1/2 space-y-3">
+                <h2 class="text-md font-semibold text-center text-a9b1d6 mb-2">Input Settings</h2>
+                <div class="control-group">
+                    <label for="midiInputSelect" class="font-medium">Device:</label>
+                    <select id="midiInputSelect" class="p-2 rounded-md text-sm" disabled>
+                        <option value="">No input devices found</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="midiChannelSelect" class="font-medium">Channel:</label>
+                    <select id="midiChannelSelect" class="p-2 rounded-md text-sm" disabled> </select>
+                </div>
+            </div>
+
+            <div class="settings-box sm:w-1/2 space-y-3">
+                <h2 class="text-md font-semibold text-center text-a9b1d6 mb-2">Output Settings</h2>
+                <div class="control-group">
+                    <label for="midiOutputSelect" class="font-medium">Device:</label>
+                    <select id="midiOutputSelect" class="p-2 rounded-md text-sm" disabled>
+                        <option value="">No output devices found</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="midiOutputChannelSelect" class="font-medium">Channel:</label>
+                    <select id="midiOutputChannelSelect" class="p-2 rounded-md text-sm" disabled> </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label for="delaySlider" class="block mb-1 font-medium">Delay Time: <span id="delayValue">0.50</span>s</label>
+            <input type="range" id="delaySlider" min="0" max="2" step="0.01" value="0.5" class="w-full" disabled>
+        </div>
+
+        <div class="control-group">
+            <label for="repeatsSlider" class="block mb-1 font-medium">Number of Repeats: <span id="repeatsValue">1</span></label>
+            <input type="range" id="repeatsSlider" min="0" max="10" step="1" value="1" class="w-full" disabled>
+        </div>
+
+        <div class="control-group">
+            <label for="pitchShiftSlider" class="block mb-1 font-medium">Pitch Shift per Repeat: <span id="pitchShiftValue">0</span> st</label>
+            <input type="range" id="pitchShiftSlider" min="-12" max="12" step="1" value="0" class="w-full" list="pitchShiftTicks" disabled>
+            <datalist id="pitchShiftTicks">
+            </datalist>
+        </div>
+    </div>
+
+    <footer class="mt-6 text-center text-xs text-gray-500">
+        <p>Web MIDI API based delay.</p>
+        <button id="reInitMidiButton" class="mt-2 px-4 py-2 text-sm">Re-initialize MIDI</button>
+    </footer>
+</div>
+
+<script>
+    // DOM Elements
+    const reInitMidiButton = document.getElementById('reInitMidiButton');
+    const delaySlider = document.getElementById('delaySlider');
+    const delayValueDisplay = document.getElementById('delayValue');
+    const repeatsSlider = document.getElementById('repeatsSlider');
+    const repeatsValueDisplay = document.getElementById('repeatsValue');
+    const pitchShiftSlider = document.getElementById('pitchShiftSlider'); // New pitch shift slider
+    const pitchShiftValueDisplay = document.getElementById('pitchShiftValue'); // Display for pitch shift
+    const pitchShiftTicksDatalist = document.getElementById('pitchShiftTicks'); // Datalist for ticks
+    const midiInputSelect = document.getElementById('midiInputSelect');
+    const midiChannelSelect = document.getElementById('midiChannelSelect');
+    const midiOutputSelect = document.getElementById('midiOutputSelect');
+    const midiOutputChannelSelect = document.getElementById('midiOutputChannelSelect');
+    const statusMessages = document.getElementById('statusMessages');
+
+    // MIDI State
+    let delayTimeSec = 0.5;
+    let numberOfRepeats = 1;
+    let pitchShiftPerRepeat = 0; // New state for pitch shift (in semitones)
+    let selectedInputChannel = 0;
+    let selectedOutputChannel = 0;
+    let selectedMidiInputId = null;
+    let selectedMidiOutputId = null;
+    let midiAccess = null;
+    let midiInitialized = false;
+
+
+    // --- Initialization Functions ---
+    async function initializeMidiSystem() {
+        midiInitialized = false;
+        if (midiAccess) {
+            try {
+                if (midiAccess.inputs) {
+                    midiAccess.inputs.forEach(input => input.onmidimessage = null);
+                }
+                midiAccess.onstatechange = null;
+            } catch (e) {
+                console.warn("Error clearing previous MIDI access state:", e);
+            }
+        }
+        midiAccess = null;
+
+        statusMessages.textContent = 'Attempting to initialize MIDI...';
+
+        if (navigator.requestMIDIAccess) {
+            try {
+                midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+                midiInitialized = true;
+                statusMessages.textContent = 'MIDI system initialized. Scanning devices...';
+                onMIDISuccess();
+                enableControls();
+            } catch (error) {
+                onMIDIFailure(error);
+            }
+        } else {
+            statusMessages.textContent = 'Web MIDI API not supported in this browser.';
+            console.warn("Web MIDI API not supported!");
+            onMIDIFailure({message: "Web MIDI API not supported."});
+        }
+    }
+
+    function onMIDISuccess() {
+        populateMidiDeviceSelectors();
+
+        if (!midiAccess) {
+            console.error("onMIDISuccess called but midiAccess is null.");
+            statusMessages.textContent = "Error: MIDI Access became unavailable.";
+            return;
+        }
+
+        if (midiAccess.inputs.size === 0 && midiAccess.outputs.size === 0) {
+            statusMessages.textContent = 'No MIDI input or output devices found. Connect devices and try re-initializing.';
+        } else if (midiAccess.inputs.size === 0) {
+            statusMessages.textContent = 'No MIDI input devices found. Connect an input device and try re-initializing.';
+        } else if (midiAccess.outputs.size === 0) {
+            statusMessages.textContent = 'No MIDI output devices found. Connect an output device and try re-initializing.';
+        } else {
+            statusMessages.textContent = 'MIDI devices found. Select input, channel, and output.';
+        }
+
+        midiAccess.onstatechange = (event) => {
+            console.log(`MIDI device state changed: ${event.port.name}, ${event.port.type}, ${event.port.state}`);
+            statusMessages.textContent = `MIDI device ${event.port.name} (${event.port.type}) ${event.port.state}. Re-scanning devices...`;
+
+            setTimeout(() => {
+                populateMidiDeviceSelectors();
+                updateInputListeners();
+
+                if (event.port.type === "output" && event.port.state === "disconnected" && event.port.id === selectedMidiOutputId) {
+                    statusMessages.textContent += " Previously selected output disconnected.";
+                }
+                if (event.port.type === "input" && event.port.state === "disconnected" && event.port.id === selectedMidiInputId) {
+                    statusMessages.textContent += " Previously selected input disconnected.";
+                }
+                updateStatusMessage();
+            }, 100);
+        };
+
+        updateInputListeners();
+        updateStatusMessage();
+    }
+
+    function onMIDIFailure(error) {
+        console.error("Failed to get MIDI access:", error);
+        statusMessages.textContent = `Failed to access MIDI devices: ${error.message || 'Unknown error'}. Please check permissions or connect devices and try re-initializing.`;
+        midiInitialized = false;
+        delaySlider.disabled = true;
+        repeatsSlider.disabled = true;
+        pitchShiftSlider.disabled = true; // Disable pitch shift slider
+        midiInputSelect.disabled = true;
+        midiChannelSelect.disabled = true;
+        midiOutputSelect.disabled = true;
+        midiOutputChannelSelect.disabled = true;
+    }
+
+    function populateMidiDeviceSelectors() {
+        if (!midiAccess) return;
+
+        const previouslySelectedInputId = selectedMidiInputId;
+        const previouslySelectedOutputId = selectedMidiOutputId;
+
+        midiInputSelect.innerHTML = '';
+        if (midiAccess.inputs.size > 0) {
+            midiAccess.inputs.forEach(input => {
+                const option = document.createElement('option');
+                option.value = input.id;
+                option.textContent = input.name || `Unknown Input ${input.id}`;
+                midiInputSelect.appendChild(option);
+            });
+            selectedMidiInputId = previouslySelectedInputId && midiAccess.inputs.get(previouslySelectedInputId) ? previouslySelectedInputId : (midiInputSelect.options.length > 0 ? midiInputSelect.options[0].value : null);
+            if(selectedMidiInputId) midiInputSelect.value = selectedMidiInputId;
+        } else {
+            const option = document.createElement('option');
+            option.value = "";
+            option.textContent = "No input devices found";
+            midiInputSelect.appendChild(option);
+            selectedMidiInputId = null;
+        }
+
+        midiOutputSelect.innerHTML = '';
+        if (midiAccess.outputs.size > 0) {
+            midiAccess.outputs.forEach(output => {
+                const option = document.createElement('option');
+                option.value = output.id;
+                option.textContent = output.name || `Unknown Output ${output.id}`;
+                midiOutputSelect.appendChild(option);
+            });
+            selectedMidiOutputId = previouslySelectedOutputId && midiAccess.outputs.get(previouslySelectedOutputId) ? previouslySelectedOutputId : (midiOutputSelect.options.length > 0 ? midiOutputSelect.options[0].value : null);
+            if(selectedMidiOutputId) midiOutputSelect.value = selectedMidiOutputId;
+        } else {
+            const option = document.createElement('option');
+            option.value = "";
+            option.textContent = "No output devices found";
+            midiOutputSelect.appendChild(option);
+            selectedMidiOutputId = null;
+        }
+        updateStatusMessage();
+    }
+
+    function updateInputListeners() {
+        if (!midiAccess) return;
+
+        midiAccess.inputs.forEach(input => {
+            input.onmidimessage = null;
+        });
+
+        const currentInput = selectedMidiInputId ? midiAccess.inputs.get(selectedMidiInputId) : null;
+        if (currentInput) {
+            currentInput.onmidimessage = handleMIDIMessage;
+            console.log(`Listening to MIDI input: ${currentInput.name || currentInput.id}`);
+        }
+        updateStatusMessage();
+    }
+
+    // --- MIDI Message Handling ---
+    function handleMIDIMessage(event) {
+        if (!midiInitialized || !selectedMidiOutputId) {
+            return;
+        }
+
+        const outputDevice = midiAccess.outputs.get(selectedMidiOutputId);
+        if (!outputDevice) {
+            console.warn("Selected MIDI output device not found or no longer available.");
+            statusMessages.textContent = "Error: Selected MIDI output device is not available. Please select another.";
+            selectedMidiOutputId = null;
+            midiOutputSelect.value = "";
+            populateMidiDeviceSelectors();
+            return;
+        }
+
+        const originalStatusByte = event.data[0];
+        const originalChannel = originalStatusByte & 0x0F;
+        const command = originalStatusByte >> 4; // e.g., 9 for Note On, 8 for Note Off, B for CC, E for Pitch Bend
+
+        if (originalChannel === selectedInputChannel) {
+            // Loop for multiple repeats
+            for (let r = 0; r < numberOfRepeats; r++) {
+                const currentDelay = delayTimeSec * (r + 1);
+
+                // Create a copy of the original message data for this repeat
+                let messageDataForThisRepeat = [...event.data];
+
+                // Apply pitch shift only to Note On and Note Off messages
+                if (command === 0x9 || command === 0x8) { // 0x9 = Note On, 0x8 = Note Off
+                    if (messageDataForThisRepeat.length > 1) { // Ensure there's a note byte
+                        let originalNote = messageDataForThisRepeat[1];
+                        let cumulativePitchShift = pitchShiftPerRepeat * (r + 1);
+                        let shiftedNote = originalNote + cumulativePitchShift;
+
+                        // Clamp the shifted note to valid MIDI range (0-127)
+                        shiftedNote = Math.max(0, Math.min(127, shiftedNote));
+                        messageDataForThisRepeat[1] = shiftedNote;
+                    }
+                }
+
+                // Construct new status byte with the selected output channel
+                const newStatusByteForRepeat = (command << 4) | selectedOutputChannel;
+                const finalMessageToSend = [newStatusByteForRepeat, ...messageDataForThisRepeat.slice(1)];
+
+                setTimeout(() => {
+                    const currentOutputDevice = midiAccess ? midiAccess.outputs.get(selectedMidiOutputId) : null;
+                    if (currentOutputDevice) {
+                        try {
+                            currentOutputDevice.send(finalMessageToSend);
+                            showMidiActivityIndicator(true);
+                        } catch (error) {
+                            console.error(`Error sending delayed MIDI message (repeat ${r+1}):`, error, "Message:", finalMessageToSend);
+                        }
+                    }
+                }, currentDelay * 1000);
+            }
+        }
+    }
+
+    // --- UI Control Functions ---
+    function populateChannelSelect(selectElement, currentChannelVar) {
+        selectElement.innerHTML = '';
+        for (let i = 1; i <= 16; i++) {
+            const option = document.createElement('option');
+            option.value = i - 1;
+            option.textContent = `Channel ${i}`;
+            selectElement.appendChild(option);
+        }
+        let channelValue = parseInt(currentChannelVar);
+        if (isNaN(channelValue) || channelValue < 0 || channelValue > 15) {
+            channelValue = 0;
+        }
+        selectElement.value = channelValue;
+        return channelValue;
+    }
+
+    function populatePitchShiftTicks() {
+        pitchShiftTicksDatalist.innerHTML = ''; // Clear existing options
+        for (let i = -12; i <= 12; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            // Add labels only for octaves and 0 for less clutter, or all if preferred
+            if (i % 12 === 0 || i === 0 || i === 7 || i === -7 || i === 5 || i === -5 ) { // Show -12, -7, -5, 0, 5, 7, 12
+                option.label = i.toString();
+            }
+            pitchShiftTicksDatalist.appendChild(option);
+        }
+    }
+
+
+    function enableControls() {
+        delaySlider.disabled = false;
+        repeatsSlider.disabled = false;
+        pitchShiftSlider.disabled = false; // Enable pitch shift slider
+        midiInputSelect.disabled = false;
+        midiChannelSelect.disabled = false;
+        midiOutputSelect.disabled = false;
+        midiOutputChannelSelect.disabled = false;
+    }
+
+    function updateStatusMessage() {
+        if (!midiInitialized || !midiAccess) {
+            return;
+        }
+        const inputObj = selectedMidiInputId ? midiAccess.inputs.get(selectedMidiInputId) : null;
+        const outputObj = selectedMidiOutputId ? midiAccess.outputs.get(selectedMidiOutputId) : null;
+
+        const inputName = inputObj ? (inputObj.name || `Input ID ${inputObj.id.substring(0,6)}...`) : 'No Input Selected';
+        const outputName = outputObj ? (outputObj.name || `Output ID ${outputObj.id.substring(0,6)}...`) : 'No Output Selected';
+
+        statusMessages.textContent = `Input: ${inputName} (Ch ${selectedInputChannel + 1}) -> Output: ${outputName} (Ch ${selectedOutputChannel + 1}). Delay: ${delayTimeSec.toFixed(2)}s. Repeats: ${numberOfRepeats}. Pitch Shift: ${pitchShiftPerRepeat}st`;
+    }
+
+
+    // --- Event Listeners ---
+    reInitMidiButton.addEventListener('click', initializeMidiSystem);
+
+    delaySlider.addEventListener('input', (event) => {
+        delayTimeSec = parseFloat(event.target.value);
+        delayValueDisplay.textContent = delayTimeSec.toFixed(2);
+        if(midiInitialized) updateStatusMessage();
+    });
+
+    repeatsSlider.addEventListener('input', (event) => {
+        numberOfRepeats = parseInt(event.target.value);
+        repeatsValueDisplay.textContent = numberOfRepeats;
+        if(midiInitialized) updateStatusMessage();
+    });
+
+    pitchShiftSlider.addEventListener('input', (event) => { // Event listener for pitch shift
+        pitchShiftPerRepeat = parseInt(event.target.value);
+        pitchShiftValueDisplay.textContent = pitchShiftPerRepeat;
+        if(midiInitialized) updateStatusMessage();
+    });
+
+    midiInputSelect.addEventListener('change', (event) => {
+        selectedMidiInputId = event.target.value;
+        updateInputListeners();
+    });
+
+    midiChannelSelect.addEventListener('change', (event) => {
+        selectedInputChannel = parseInt(event.target.value);
+        console.log("Selected MIDI Input Channel:", selectedInputChannel + 1);
+        if(midiInitialized) updateStatusMessage();
+    });
+
+    midiOutputSelect.addEventListener('change', (event) => {
+        selectedMidiOutputId = event.target.value;
+        if(midiInitialized) updateStatusMessage();
+    });
+
+    midiOutputChannelSelect.addEventListener('change', (event) => {
+        selectedOutputChannel = parseInt(event.target.value);
+        console.log("Selected MIDI Output Channel:", selectedOutputChannel + 1);
+        if(midiInitialized) updateStatusMessage();
+    });
+
+
+    // --- Initial Setup ---
+    selectedInputChannel = populateChannelSelect(midiChannelSelect, selectedInputChannel);
+    selectedOutputChannel = populateChannelSelect(midiOutputChannelSelect, selectedOutputChannel);
+    populatePitchShiftTicks(); // Populate ticks for pitch shift slider
+
+    delayValueDisplay.textContent = parseFloat(delaySlider.value).toFixed(2);
+    delayTimeSec = parseFloat(delaySlider.value);
+
+    repeatsValueDisplay.textContent = parseInt(repeatsSlider.value);
+    numberOfRepeats = parseInt(repeatsSlider.value);
+
+    pitchShiftValueDisplay.textContent = parseInt(pitchShiftSlider.value); // Init pitch shift display
+    pitchShiftPerRepeat = parseInt(pitchShiftSlider.value); // Init pitch shift variable
+
+
+    let originalBorderColor = '#414868';
+
+    function showMidiActivityIndicator(isEcho) {
+        if (statusMessages.style.borderColor === '' || statusMessages.style.borderColor === '#7aa2f7' || statusMessages.style.borderColor === '#f7768e') {
+            originalBorderColor = getComputedStyle(statusMessages).borderColor || '#414868';
+        }
+        const blinkColor = '#f7768e';
+
+        statusMessages.style.borderColor = blinkColor;
+        setTimeout(() => {
+            statusMessages.style.borderColor = originalBorderColor;
+        }, 150);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeMidiSystem();
+    });
+
+</script>
+</body>
+</html>
