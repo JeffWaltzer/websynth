@@ -84,6 +84,17 @@
             color: #a9b1d6;
             transition: border-color 0.1s ease-in-out;
         }
+        .note-display-box { /* New style for note display */
+            background-color: #1f2335;
+            border: 1px solid #414868;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            min-height: 30px;
+            font-size: 0.875rem;
+            color: #7aa2f7; /* Bright blue for note display */
+            text-align: center;
+            margin-top: 0.5rem; /* Space below status box */
+        }
         header h1 {
             font-size: 1.75rem;
         }
@@ -95,14 +106,13 @@
             padding: 0.75rem;
             border-radius: 0.375rem;
             border: 1px solid #414868;
-            display: flex; /* Added for better internal alignment */
-            flex-direction: column; /* Stack items vertically */
-            justify-content: space-between; /* Distribute space for consistent height feel */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         .settings-box h2 {
-            margin-bottom: 0.75rem; /* Increased margin below h2 for better separation */
+            margin-bottom: 0.75rem;
         }
-        /* Styling for datalist ticks (browser support varies) */
         input[type="range"] + datalist {
             display: flex;
             justify-content: space-between;
@@ -123,8 +133,10 @@
         <p class="text-sm text-a9b1d6">Incoming MIDI is delayed before being sent to the output.</p>
     </header>
 
-    <div class="status-box mb-4" id="statusMessages">
-        Attempting to initialize MIDI... Please ensure MIDI devices are connected.
+    <div class="status-box mb-2" id="statusMessages"> Attempting to initialize MIDI... Please ensure MIDI devices are connected.
+    </div>
+    <div class="note-display-box mb-4" id="lastNotePlayed"> {/* New div for note display */}
+        -
     </div>
 
     <div>
@@ -160,16 +172,16 @@
             <div class="settings-box sm:w-1/3 space-y-3">
                 <h2 class="text-md font-semibold text-center text-a9b1d6">Delay Effects</h2>
                 <div class="control-group">
-                    <label for="delaySlider" class="block mb-1 font-medium">Delay Time: <span id="delayValue">0.50</span>s</label>
-                    <input type="range" id="delaySlider" min="0" max="2" step="0.01" value="0.5" class="w-full" disabled>
+                    <label for="delaySlider" class="block mb-1 font-medium">Delay Time: <span id="delayValue">0.33</span>s</label>
+                    <input type="range" id="delaySlider" min="0" max="2" step="0.01" value="0.33" class="w-full" disabled>
                 </div>
                 <div class="control-group">
-                    <label for="repeatsSlider" class="block mb-1 font-medium">Repeats: <span id="repeatsValue">1</span></label>
-                    <input type="range" id="repeatsSlider" min="0" max="10" step="1" value="1" class="w-full" disabled>
+                    <label for="repeatsSlider" class="block mb-1 font-medium">Repeats: <span id="repeatsValue">5</span></label>
+                    <input type="range" id="repeatsSlider" min="0" max="10" step="1" value="5" class="w-full" disabled>
                 </div>
                 <div class="control-group">
-                    <label for="pitchShiftSlider" class="block mb-1 font-medium">Pitch Shift: <span id="pitchShiftValue">0</span> st</label>
-                    <input type="range" id="pitchShiftSlider" min="-12" max="12" step="1" value="0" class="w-full" list="pitchShiftTicks" disabled>
+                    <label for="pitchShiftSlider" class="block mb-1 font-medium">Pitch Shift: <span id="pitchShiftValue">1</span> st</label>
+                    <input type="range" id="pitchShiftSlider" min="-12" max="12" step="1" value="1" class="w-full" list="pitchShiftTicks" disabled>
                     <datalist id="pitchShiftTicks">
                     </datalist>
                 </div>
@@ -198,17 +210,27 @@
     const midiOutputSelect = document.getElementById('midiOutputSelect');
     const midiOutputChannelSelect = document.getElementById('midiOutputChannelSelect');
     const statusMessages = document.getElementById('statusMessages');
+    const lastNotePlayedDisplay = document.getElementById('lastNotePlayed'); // New display element
 
-    // MIDI State
-    let delayTimeSec = 0.5;
-    let numberOfRepeats = 1;
-    let pitchShiftPerRepeat = 0;
+    // MIDI State with new defaults
+    let delayTimeSec = 0.33;
+    let numberOfRepeats = 5;
+    let pitchShiftPerRepeat = 1;
     let selectedInputChannel = 0;
     let selectedOutputChannel = 0;
     let selectedMidiInputId = null;
     let selectedMidiOutputId = null;
     let midiAccess = null;
     let midiInitialized = false;
+
+    const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+    function midiNoteToName(noteNumber) {
+        if (noteNumber < 0 || noteNumber > 127) return "";
+        const octave = Math.floor(noteNumber / 12) - 1;
+        const noteIndex = noteNumber % 12;
+        return NOTE_NAMES[noteIndex] + octave;
+    }
 
 
     // --- Initialization Functions ---
@@ -227,6 +249,7 @@
         midiAccess = null;
 
         statusMessages.textContent = 'Attempting to initialize MIDI...';
+        lastNotePlayedDisplay.textContent = '-'; // Reset note display
 
         if (navigator.requestMIDIAccess) {
             try {
@@ -267,6 +290,7 @@
         midiAccess.onstatechange = (event) => {
             console.log(`MIDI device state changed: ${event.port.name}, ${event.port.type}, ${event.port.state}`);
             statusMessages.textContent = `MIDI device ${event.port.name} (${event.port.type}) ${event.port.state}. Re-scanning devices...`;
+            lastNotePlayedDisplay.textContent = '-';
 
             setTimeout(() => {
                 populateMidiDeviceSelectors();
@@ -289,6 +313,7 @@
     function onMIDIFailure(error) {
         console.error("Failed to get MIDI access:", error);
         statusMessages.textContent = `Failed to access MIDI devices: ${error.message || 'Unknown error'}. Please check permissions or connect devices and try re-initializing.`;
+        lastNotePlayedDisplay.textContent = 'MIDI Error';
         midiInitialized = false;
         delaySlider.disabled = true;
         repeatsSlider.disabled = true;
@@ -368,6 +393,7 @@
         if (!outputDevice) {
             console.warn("Selected MIDI output device not found or no longer available.");
             statusMessages.textContent = "Error: Selected MIDI output device is not available. Please select another.";
+            lastNotePlayedDisplay.textContent = 'Output Error';
             selectedMidiOutputId = null;
             midiOutputSelect.value = "";
             populateMidiDeviceSelectors();
@@ -382,14 +408,15 @@
             for (let r = 0; r < numberOfRepeats; r++) {
                 const currentDelay = delayTimeSec * (r + 1);
                 let messageDataForThisRepeat = [...event.data];
+                let shiftedNoteNumber = -1; // To store the note number for display
 
-                if (command === 0x9 || command === 0x8) {
+                if (command === 0x9 || command === 0x8) { // Note On or Note Off
                     if (messageDataForThisRepeat.length > 1) {
                         let originalNote = messageDataForThisRepeat[1];
                         let cumulativePitchShift = pitchShiftPerRepeat * (r + 1);
-                        let shiftedNote = originalNote + cumulativePitchShift;
-                        shiftedNote = Math.max(0, Math.min(127, shiftedNote));
-                        messageDataForThisRepeat[1] = shiftedNote;
+                        shiftedNoteNumber = originalNote + cumulativePitchShift;
+                        shiftedNoteNumber = Math.max(0, Math.min(127, shiftedNoteNumber));
+                        messageDataForThisRepeat[1] = shiftedNoteNumber;
                     }
                 }
 
@@ -402,6 +429,16 @@
                         try {
                             currentOutputDevice.send(finalMessageToSend);
                             showMidiActivityIndicator(true);
+
+                            // Display Note On messages
+                            // finalMessageToSend[0] is the status byte. Check if it's a Note On (command 9)
+                            // and velocity (finalMessageToSend[2]) is > 0
+                            if ((finalMessageToSend[0] >> 4) === 0x9 && finalMessageToSend.length > 2 && finalMessageToSend[2] > 0) {
+                                const noteNameToDisplay = midiNoteToName(finalMessageToSend[1]);
+                                const velocityToDisplay = finalMessageToSend[2];
+                                lastNotePlayedDisplay.textContent = `Sent: ${noteNameToDisplay} (Vel: ${velocityToDisplay})`;
+                            }
+
                         } catch (error) {
                             console.error(`Error sending delayed MIDI message (repeat ${r+1}):`, error, "Message:", finalMessageToSend);
                         }
@@ -514,6 +551,10 @@
     selectedOutputChannel = populateChannelSelect(midiOutputChannelSelect, selectedOutputChannel);
     populatePitchShiftTicks();
 
+    delaySlider.value = delayTimeSec;
+    repeatsSlider.value = numberOfRepeats;
+    pitchShiftSlider.value = pitchShiftPerRepeat;
+
     delayValueDisplay.textContent = parseFloat(delaySlider.value).toFixed(2);
     delayTimeSec = parseFloat(delaySlider.value);
 
@@ -540,6 +581,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         initializeMidiSystem();
+        updateStatusMessage();
     });
 
 </script>
