@@ -159,7 +159,7 @@
 
         select, button {
             background-color: var(--background-panel-inset);
-            color: var(--control-text);
+            color: var(--control-text); /* Default for buttons */
             border: 1px solid var(--border-panel);
             border-radius: 2px;
             padding: 0.12rem;
@@ -175,6 +175,7 @@
             padding-top: 0.12rem;
             padding-bottom: 0.12rem;
             padding-left: 0.12rem;
+            color: #5C4033; /* Dark Brown for select text */
         }
 
 
@@ -232,8 +233,7 @@
         .live-status-bar > div:nth-child(2) {
             flex-grow: 1;
             flex-basis: 0;
-            /* min-width: 250px; Removed to allow full text to determine width */
-            overflow: visible; /* Allow overflow if necessary, though flex should handle it */
+            overflow: visible;
         }
 
 
@@ -253,11 +253,8 @@
             color: var(--primary-color);
             font-weight: 600;
             display: inline-block;
-            /* white-space: nowrap; Removed */
-            /* overflow: hidden; Removed */
-            /* text-overflow: ellipsis; Removed */
             vertical-align: bottom;
-            max-width: none; /* Changed from 240px */
+            max-width: none;
             background-color: rgba(0,0,0,0.05);
             padding: 0.02rem 0.06rem;
             border-radius: 1px;
@@ -344,44 +341,43 @@
 </div>
 
 <script>
-    const delaySlider = document.getElementById('delaySlider');
-    const delayValueDisplay = document.getElementById('delayValue');
-    const repeatsSlider = document.getElementById('repeatsSlider');
-    const repeatsValueDisplay = document.getElementById('repeatsValue');
-    const pitchShiftSlider = document.getElementById('pitchShiftSlider');
-    const pitchShiftValueDisplay = document.getElementById('pitchShiftValue');
-    const pitchShiftTicksDatalist = document.getElementById('pitchShiftTicks');
-    const velocityScaleSlider = document.getElementById('velocityScaleSlider');
-    const velocityScaleValueDisplay = document.getElementById('velocityScaleValue');
+    const uiElements = {
+        delaySlider: document.getElementById('delaySlider'),
+        delayValueDisplay: document.getElementById('delayValue'),
+        repeatsSlider: document.getElementById('repeatsSlider'),
+        repeatsValueDisplay: document.getElementById('repeatsValue'),
+        pitchShiftSlider: document.getElementById('pitchShiftSlider'),
+        pitchShiftValueDisplay: document.getElementById('pitchShiftValue'),
+        pitchShiftTicksDatalist: document.getElementById('pitchShiftTicks'),
+        velocityScaleSlider: document.getElementById('velocityScaleSlider'),
+        velocityScaleValueDisplay: document.getElementById('velocityScaleValue'),
+        midiInputSelect: document.getElementById('midiInputSelect'),
+        midiChannelSelect: document.getElementById('midiChannelSelect'),
+        midiOutputSelect: document.getElementById('midiOutputSelect'),
+        midiOutputChannelSelect: document.getElementById('midiOutputChannelSelect'),
+        mainStatusMessages: document.getElementById('mainStatusMessages'),
+        midiInActivityEl: document.getElementById('midiInActivity'),
+        currentInputDeviceEl: document.getElementById('currentInputDevice'),
+        currentInputChannelEl: document.getElementById('currentInputChannel'),
+        currentOutputDeviceEl: document.getElementById('currentOutputDevice'),
+        currentOutputChannelEl: document.getElementById('currentOutputChannel'),
+        lastNotePlayedDisplay: document.getElementById('lastNotePlayedDisplay'),
+    };
 
-    const midiInputSelect = document.getElementById('midiInputSelect');
-    const midiChannelSelect = document.getElementById('midiChannelSelect');
-    const midiOutputSelect = document.getElementById('midiOutputSelect');
-    const midiOutputChannelSelect = document.getElementById('midiOutputChannelSelect');
-    const mainStatusMessages = document.getElementById('mainStatusMessages');
-
-    const midiInActivityEl = document.getElementById('midiInActivity');
-    const currentInputDeviceEl = document.getElementById('currentInputDevice');
-    const currentInputChannelEl = document.getElementById('currentInputChannel');
-    const currentOutputDeviceEl = document.getElementById('currentOutputDevice');
-    const currentOutputChannelEl = document.getElementById('currentOutputChannel');
-    const lastNotePlayedDisplay = document.getElementById('lastNotePlayedDisplay');
+    const controlElementsForDisabling = [
+        uiElements.delaySlider, uiElements.repeatsSlider, uiElements.pitchShiftSlider, uiElements.velocityScaleSlider,
+        uiElements.midiInputSelect, uiElements.midiChannelSelect, uiElements.midiOutputSelect, uiElements.midiOutputChannelSelect,
+    ];
 
     const LOCAL_STORAGE_KEY = 'midiDelaySettings_1930s';
-    const initialDefaults = {
+    const initialSettings = {
         delayTimeSec: 0.25, numberOfRepeats: 7, pitchShiftPerRepeat: 1, velocityChangePerRepeat: 0,
         selectedInputChannel: 0, selectedOutputChannel: 0, selectedMidiInputId: null, selectedMidiOutputId: null,
     };
 
-    let delayTimeSec = initialDefaults.delayTimeSec;
-    let numberOfRepeats = initialDefaults.numberOfRepeats;
-    let pitchShiftPerRepeat = initialDefaults.pitchShiftPerRepeat;
-    let velocityChangePerRepeat = initialDefaults.velocityChangePerRepeat;
-    let selectedInputChannel = initialDefaults.selectedInputChannel;
-    let selectedOutputChannel = initialDefaults.selectedOutputChannel;
-    let selectedMidiInputId = initialDefaults.selectedMidiInputId;
-    let selectedMidiOutputId = initialDefaults.selectedMidiOutputId;
-    let midiAccess = null; let midiInitialized = false;
+    let settings = { ...initialSettings };
+    let midiAccess = null;
+    let midiInitialized = false;
 
     const NOTE_NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 
@@ -389,29 +385,29 @@
         const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (savedSettings) {
             try {
-                const settings = JSON.parse(savedSettings);
-                delayTimeSec = settings.delayTimeSec !== undefined ? parseFloat(settings.delayTimeSec) : initialDefaults.delayTimeSec;
-                numberOfRepeats = settings.numberOfRepeats !== undefined ? parseInt(settings.numberOfRepeats) : initialDefaults.numberOfRepeats;
-                pitchShiftPerRepeat = settings.pitchShiftPerRepeat !== undefined ? parseInt(settings.pitchShiftPerRepeat) : initialDefaults.pitchShiftPerRepeat;
-                velocityChangePerRepeat = settings.velocityChangePerRepeat !== undefined ? parseInt(settings.velocityChangePerRepeat) : initialDefaults.velocityChangePerRepeat;
-                selectedInputChannel = settings.selectedInputChannel !== undefined ? parseInt(settings.selectedInputChannel) : initialDefaults.selectedInputChannel;
-                selectedOutputChannel = settings.selectedOutputChannel !== undefined ? parseInt(settings.selectedOutputChannel) : initialDefaults.selectedOutputChannel;
-                selectedMidiInputId = settings.selectedMidiInputId || initialDefaults.selectedMidiInputId;
-                selectedMidiOutputId = settings.selectedMidiOutputId || initialDefaults.selectedMidiOutputId;
+                const parsed = JSON.parse(savedSettings);
+                for (const key in initialSettings) {
+                    settings[key] = parsed[key] !== undefined ? parsed[key] : initialSettings[key];
+                }
+                settings.delayTimeSec = parseFloat(settings.delayTimeSec);
+                settings.numberOfRepeats = parseInt(settings.numberOfRepeats);
+                settings.pitchShiftPerRepeat = parseInt(settings.pitchShiftPerRepeat);
+                settings.velocityChangePerRepeat = parseInt(settings.velocityChangePerRepeat);
+                settings.selectedInputChannel = parseInt(settings.selectedInputChannel);
+                settings.selectedOutputChannel = parseInt(settings.selectedOutputChannel);
+
             } catch (e) {
                 console.warn("Failed to parse settings from localStorage, using defaults.", e);
-                Object.assign(window, initialDefaults);
+                settings = { ...initialSettings };
             }
+        } else {
+            settings = { ...initialSettings };
         }
     }
 
     function saveSettingsToLocalStorage() {
-        const settingsToSave = {
-            delayTimeSec, numberOfRepeats, pitchShiftPerRepeat, velocityChangePerRepeat,
-            selectedInputChannel, selectedOutputChannel, selectedMidiInputId, selectedMidiOutputId
-        };
         try {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settingsToSave));
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settings));
         } catch (e) {
             console.warn("Failed to save settings to localStorage.", e);
         }
@@ -424,22 +420,24 @@
         return NOTE_NAMES[noteIndex] + octave;
     }
 
-    function updateDelayTimeDisplay() { delayValueDisplay.textContent = `${delayTimeSec.toFixed(2)}s`; }
+    function updateDelayTimeDisplay() {
+        uiElements.delayValueDisplay.textContent = `${settings.delayTimeSec.toFixed(2)}s`;
+    }
 
     function flashMidiInActivity() {
-        midiInActivityEl.classList.add('active');
-        setTimeout(() => midiInActivityEl.classList.remove('active'), 100);
+        uiElements.midiInActivityEl.classList.add('active');
+        setTimeout(() => uiElements.midiInActivityEl.classList.remove('active'), 100);
     }
 
     function updateLiveStatusBar() {
-        const inputDevice = selectedMidiInputId && midiAccess ? midiAccess.inputs.get(selectedMidiInputId) : null;
-        const outputDevice = selectedMidiOutputId && midiAccess ? midiAccess.outputs.get(selectedMidiOutputId) : null;
+        const inputDevice = settings.selectedMidiInputId && midiAccess ? midiAccess.inputs.get(settings.selectedMidiInputId) : null;
+        const outputDevice = settings.selectedMidiOutputId && midiAccess ? midiAccess.outputs.get(settings.selectedMidiOutputId) : null;
 
-        currentInputDeviceEl.textContent = inputDevice ? inputDevice.name : '-'; // Show full name
-        currentInputChannelEl.textContent = midiInitialized ? (selectedInputChannel + 1).toString() : '-';
-        currentOutputDeviceEl.textContent = outputDevice ? outputDevice.name : '-'; // Show full name
-        currentOutputChannelEl.textContent = midiInitialized ? (selectedOutputChannel + 1).toString() : '-';
-        lastNotePlayedDisplay.textContent = lastNotePlayedDisplay.textContent || '-'; // Preserve if already set
+        uiElements.currentInputDeviceEl.textContent = inputDevice ? inputDevice.name : '-';
+        uiElements.currentInputChannelEl.textContent = midiInitialized ? (settings.selectedInputChannel + 1).toString() : '-';
+        uiElements.currentOutputDeviceEl.textContent = outputDevice ? outputDevice.name : '-';
+        uiElements.currentOutputChannelEl.textContent = midiInitialized ? (settings.selectedOutputChannel + 1).toString() : '-';
+        uiElements.lastNotePlayedDisplay.textContent = uiElements.lastNotePlayedDisplay.textContent || '-';
     }
 
     async function initializeMidiSystem() {
@@ -451,8 +449,8 @@
             } catch (e) { console.warn("Error during MIDI cleanup:", e); }
         }
         midiAccess = null;
-        mainStatusMessages.textContent = 'Initializing Etheric Modulator...';
-        lastNotePlayedDisplay.textContent = '-';
+        uiElements.mainStatusMessages.textContent = 'Initializing Etheric Modulator...';
+        uiElements.lastNotePlayedDisplay.textContent = '-';
         disableControls();
         updateLiveStatusBar();
 
@@ -461,40 +459,40 @@
             try {
                 midiAccess = await navigator.requestMIDIAccess({ sysex: false });
                 midiInitialized = true;
-                mainStatusMessages.textContent = 'Etheric Modulator Online. Scanning Frequencies...';
+                uiElements.mainStatusMessages.textContent = 'Etheric Modulator Online. Scanning Frequencies...';
                 onMIDISuccess();
                 enableControls();
             } catch (error) {
                 onMIDIFailure(error);
             }
         } else {
-            mainStatusMessages.textContent = 'Web MIDI Transmission System not detected in this Chrono-Receiver.';
+            uiElements.mainStatusMessages.textContent = 'Web MIDI Transmission System not detected in this Chrono-Receiver.';
             onMIDIFailure({message: "Web MIDI API not supported."});
         }
     }
 
     function onMIDISuccess() {
         populateMidiDeviceSelectors();
-        if (!midiAccess) { mainStatusMessages.textContent = "Critical Error: Modulator Connection Lost."; return; }
+        if (!midiAccess) { uiElements.mainStatusMessages.textContent = "Critical Error: Modulator Connection Lost."; return; }
 
-        if (midiAccess.inputs.size === 0 && midiAccess.outputs.size === 0) mainStatusMessages.textContent = 'No Input or Output Apparatuses Detected.';
-        else if (midiAccess.inputs.size === 0) mainStatusMessages.textContent = 'No Input Apparatuses Detected.';
-        else if (midiAccess.outputs.size === 0) mainStatusMessages.textContent = 'No Output Apparatuses Detected.';
-        else mainStatusMessages.textContent = 'Apparatuses Detected. Select input, channel, and output.';
+        if (midiAccess.inputs.size === 0 && midiAccess.outputs.size === 0) uiElements.mainStatusMessages.textContent = 'No Input or Output Apparatuses Detected.';
+        else if (midiAccess.inputs.size === 0) uiElements.mainStatusMessages.textContent = 'No Input Apparatuses Detected.';
+        else if (midiAccess.outputs.size === 0) uiElements.mainStatusMessages.textContent = 'No Output Apparatuses Detected.';
+        else uiElements.mainStatusMessages.textContent = 'Apparatuses Detected. Select input, channel, and output.';
 
         midiAccess.onstatechange = (event) => {
-            mainStatusMessages.textContent = `Apparatus ${event.port.name} (${event.port.type}) status: ${event.port.state}. Re-scanning...`;
-            lastNotePlayedDisplay.textContent = '-';
+            uiElements.mainStatusMessages.textContent = `Apparatus ${event.port.name} (${event.port.type}) status: ${event.port.state}. Re-scanning...`;
+            uiElements.lastNotePlayedDisplay.textContent = '-';
             setTimeout(() => {
                 populateMidiDeviceSelectors();
                 updateInputListeners();
-                if (event.port.type === "output" && event.port.state === "disconnected" && event.port.id === selectedMidiOutputId) {
-                    mainStatusMessages.textContent += " Output Disconnected.";
-                    selectedMidiOutputId = null;
+                if (event.port.type === "output" && event.port.state === "disconnected" && event.port.id === settings.selectedMidiOutputId) {
+                    uiElements.mainStatusMessages.textContent += " Output Disconnected.";
+                    settings.selectedMidiOutputId = null;
                 }
-                if (event.port.type === "input" && event.port.state === "disconnected" && event.port.id === selectedMidiInputId) {
-                    mainStatusMessages.textContent += " Input Disconnected.";
-                    selectedMidiInputId = null;
+                if (event.port.type === "input" && event.port.state === "disconnected" && event.port.id === settings.selectedMidiInputId) {
+                    uiElements.mainStatusMessages.textContent += " Input Disconnected.";
+                    settings.selectedMidiInputId = null;
                 }
                 populateMidiDeviceSelectors();
                 updateStatusMessage();
@@ -508,8 +506,8 @@
 
 
     function onMIDIFailure(error) {
-        mainStatusMessages.textContent = `Modulator Failure: ${error.message || 'Unknown Anomaly'}.`;
-        lastNotePlayedDisplay.textContent = 'Modulator Error';
+        uiElements.mainStatusMessages.textContent = `Modulator Failure: ${error.message || 'Unknown Anomaly'}.`;
+        uiElements.lastNotePlayedDisplay.textContent = 'Modulator Error';
         midiInitialized = false;
         disableControls();
         updateLiveStatusBar();
@@ -518,8 +516,8 @@
     function populateMidiDeviceSelectors() {
         if (!midiAccess) return;
 
-        const currentInputId = selectedMidiInputId;
-        const currentOutputId = selectedMidiOutputId;
+        const currentInputId = settings.selectedMidiInputId;
+        const currentOutputId = settings.selectedMidiOutputId;
 
         const populate = (selectEl, devices, currentId, type) => {
             const previousValue = selectEl.value;
@@ -549,11 +547,11 @@
             }
         };
 
-        selectedMidiInputId = populate(midiInputSelect, midiAccess.inputs, currentInputId, 'input');
-        selectedMidiOutputId = populate(midiOutputSelect, midiAccess.outputs, currentOutputId, 'output');
+        settings.selectedMidiInputId = populate(uiElements.midiInputSelect, midiAccess.inputs, currentInputId, 'input');
+        settings.selectedMidiOutputId = populate(uiElements.midiOutputSelect, midiAccess.outputs, currentOutputId, 'output');
 
-        if (!midiAccess.inputs.get(selectedMidiInputId)) selectedMidiInputId = midiInputSelect.value || null;
-        if (!midiAccess.outputs.get(selectedMidiOutputId)) selectedMidiOutputId = midiOutputSelect.value || null;
+        if (!midiAccess.inputs.get(settings.selectedMidiInputId)) settings.selectedMidiInputId = uiElements.midiInputSelect.value || null;
+        if (!midiAccess.outputs.get(settings.selectedMidiOutputId)) settings.selectedMidiOutputId = uiElements.midiOutputSelect.value || null;
 
 
         updateStatusMessage();
@@ -567,7 +565,7 @@
             if (input) input.onmidimessage = null;
         });
 
-        const currentInput = selectedMidiInputId ? midiAccess.inputs.get(selectedMidiInputId) : null;
+        const currentInput = settings.selectedMidiInputId ? midiAccess.inputs.get(settings.selectedMidiInputId) : null;
         if (currentInput) {
             currentInput.onmidimessage = handleMIDIMessage;
         }
@@ -577,11 +575,11 @@
 
 
     function handleMIDIMessage(event) {
-        if (!midiInitialized || !selectedMidiOutputId) return;
-        const outputDevice = midiAccess.outputs.get(selectedMidiOutputId);
+        if (!midiInitialized || !settings.selectedMidiOutputId) return;
+        const outputDevice = midiAccess.outputs.get(settings.selectedMidiOutputId);
         if (!outputDevice) {
-            mainStatusMessages.textContent = "Critical Error: Output Apparatus Unavailable."; lastNotePlayedDisplay.textContent = 'Output Error';
-            selectedMidiOutputId = null;
+            uiElements.mainStatusMessages.textContent = "Critical Error: Output Apparatus Unavailable."; uiElements.lastNotePlayedDisplay.textContent = 'Output Error';
+            settings.selectedMidiOutputId = null;
             populateMidiDeviceSelectors();
             return;
         }
@@ -591,54 +589,52 @@
         const command = originalStatusByte >> 4;
         const originalVelocity = (command === 0x9 || command === 0x8) && event.data.length > 2 ? event.data[2] : 64;
 
-        if (originalChannel === selectedInputChannel) {
+        if (originalChannel === settings.selectedInputChannel) {
             flashMidiInActivity();
-            const effectiveDelayTime = delayTimeSec;
 
-            if (numberOfRepeats === 0) {
-                const newStatusByteForPassthrough = (command << 4) | selectedOutputChannel;
+            if (settings.numberOfRepeats === 0) {
+                const newStatusByteForPassthrough = (command << 4) | settings.selectedOutputChannel;
                 const finalMessageToSend = [newStatusByteForPassthrough, ...event.data.slice(1)];
                 try {
                     outputDevice.send(finalMessageToSend);
                     showMidiActivityIndicator(false);
                     if ((finalMessageToSend[0] >> 4) === 0x9 && finalMessageToSend.length > 2 && finalMessageToSend[2] > 0) {
-                        lastNotePlayedDisplay.textContent = `Sent: ${midiNoteToName(finalMessageToSend[1])} (Vel: ${finalMessageToSend[2]})`;
+                        uiElements.lastNotePlayedDisplay.textContent = `Sent: ${midiNoteToName(finalMessageToSend[1])} (Vel: ${finalMessageToSend[2]})`;
                     }
                 } catch (error) { console.error("Error sending MIDI message (passthrough):", error); }
                 return;
             }
 
-
-            for (let r = 0; r < numberOfRepeats; r++) {
-                const currentDelayMs = effectiveDelayTime * (r + 1) * 1000;
+            for (let r = 0; r < settings.numberOfRepeats; r++) {
+                const currentDelayMs = settings.delayTimeSec * (r + 1) * 1000;
                 let messageDataForThisRepeat = [...event.data];
 
                 if (command === 0x9 || command === 0x8) {
                     if (messageDataForThisRepeat.length > 1) {
                         let originalNote = messageDataForThisRepeat[1];
-                        let cumulativePitchShift = pitchShiftPerRepeat * (r + 1);
+                        let cumulativePitchShift = settings.pitchShiftPerRepeat * (r + 1);
                         let shiftedNote = originalNote + cumulativePitchShift;
                         shiftedNote = Math.max(0, Math.min(127, shiftedNote));
                         messageDataForThisRepeat[1] = shiftedNote;
 
                         if (messageDataForThisRepeat.length > 2) {
-                            let currentVelocity = originalVelocity + (velocityChangePerRepeat * (r + 1));
+                            let currentVelocity = originalVelocity + (settings.velocityChangePerRepeat * (r + 1));
                             currentVelocity = Math.max(1, Math.min(127, currentVelocity));
                             messageDataForThisRepeat[2] = currentVelocity;
                         }
                     }
                 }
-                const newStatusByteForRepeat = (command << 4) | selectedOutputChannel;
+                const newStatusByteForRepeat = (command << 4) | settings.selectedOutputChannel;
                 const finalMessageToSend = [newStatusByteForRepeat, ...messageDataForThisRepeat.slice(1)];
 
                 setTimeout(() => {
-                    const currentOutputDevice = midiAccess ? midiAccess.outputs.get(selectedMidiOutputId) : null;
+                    const currentOutputDevice = midiAccess ? midiAccess.outputs.get(settings.selectedMidiOutputId) : null;
                     if (currentOutputDevice) {
                         try {
                             currentOutputDevice.send(finalMessageToSend);
                             showMidiActivityIndicator(true);
                             if ((finalMessageToSend[0] >> 4) === 0x9 && finalMessageToSend.length > 2 && finalMessageToSend[2] > 0) {
-                                lastNotePlayedDisplay.textContent = `Echo: ${midiNoteToName(finalMessageToSend[1])} (Vel: ${finalMessageToSend[2]})`;
+                                uiElements.lastNotePlayedDisplay.textContent = `Echo: ${midiNoteToName(finalMessageToSend[1])} (Vel: ${finalMessageToSend[2]})`;
                             }
                         } catch (error) {
                             console.error("Error sending MIDI message (echo):", error);
@@ -663,82 +659,137 @@
     }
 
     function populatePitchShiftTicks() {
-        pitchShiftTicksDatalist.innerHTML = '';
+        uiElements.pitchShiftTicksDatalist.innerHTML = '';
         const ticks = [-12, -7, -5, 0, 5, 7, 12];
-        for (let i = parseInt(pitchShiftSlider.min); i <= parseInt(pitchShiftSlider.max); i++) {
+        for (let i = parseInt(uiElements.pitchShiftSlider.min); i <= parseInt(uiElements.pitchShiftSlider.max); i++) {
             const option = document.createElement('option');
             option.value = i;
             if (ticks.includes(i)) option.label = i.toString();
-            pitchShiftTicksDatalist.appendChild(option);
+            uiElements.pitchShiftTicksDatalist.appendChild(option);
         }
     }
 
     function resetEffectSettings() {
-        delayTimeSec = initialDefaults.delayTimeSec; numberOfRepeats = initialDefaults.numberOfRepeats;
-        pitchShiftPerRepeat = initialDefaults.pitchShiftPerRepeat; velocityChangePerRepeat = initialDefaults.velocityChangePerRepeat;
-        applyUISettings(); updateDelayTimeDisplay(); updateStatusMessage(); updateLiveStatusBar();
+        settings = { ...initialSettings };
+        applyUISettings();
+        updateStatusMessage();
+        updateLiveStatusBar();
         saveSettingsToLocalStorage();
-        mainStatusMessages.textContent = "Calibrations Reset to Standard Values.";
+        uiElements.mainStatusMessages.textContent = "Calibrations Reset to Standard Values.";
+    }
+
+    function setControlsDisabledState(disabled) {
+        controlElementsForDisabling.forEach(el => {
+            if (el) el.disabled = disabled;
+        });
     }
 
     function enableControls() {
-        [delaySlider, repeatsSlider, pitchShiftSlider, velocityScaleSlider, midiInputSelect, midiChannelSelect, midiOutputSelect, midiOutputChannelSelect].forEach(el => el.disabled = false);
+        setControlsDisabledState(false);
     }
     function disableControls() {
-        [delaySlider, repeatsSlider, pitchShiftSlider, velocityScaleSlider, midiInputSelect, midiChannelSelect, midiOutputSelect, midiOutputChannelSelect].forEach(el => el.disabled = true);
+        setControlsDisabledState(true);
     }
-
 
     function updateStatusMessage() {
         if (!midiInitialized || !midiAccess) {
-            mainStatusMessages.textContent = midiInitialized ? "Modulator Standby..." : "Modulator Offline.";
+            uiElements.mainStatusMessages.textContent = midiInitialized ? "Modulator Standby..." : "Modulator Offline.";
             return;
         }
-        const inputObj = selectedMidiInputId ? midiAccess.inputs.get(selectedMidiInputId) : null;
-        const outputObj = selectedMidiOutputId ? midiAccess.outputs.get(selectedMidiOutputId) : null;
-        const inputName = inputObj ? (inputObj.name.length > 10 ? inputObj.name.substring(0,8) + '..' : inputObj.name) : 'None';
-        const outputName = outputObj ? (outputObj.name.length > 10 ? outputObj.name.substring(0,8) + '..' : outputObj.name) : 'None';
-        mainStatusMessages.textContent = `Input: ${inputName} (Ch ${selectedInputChannel + 1})  |  Output: ${outputName} (Ch ${selectedOutputChannel + 1})  |  Delay: ${delayTimeSec.toFixed(2)}s  |  Repeats: ${numberOfRepeats}  |  Pitch Shift: ${pitchShiftPerRepeat}st  |  Velocity Change: ${velocityChangePerRepeat}`;
+        const inputObj = settings.selectedMidiInputId ? midiAccess.inputs.get(settings.selectedMidiInputId) : null;
+        const outputObj = settings.selectedMidiOutputId ? midiAccess.outputs.get(settings.selectedMidiOutputId) : null;
+        const inputName = inputObj ? inputObj.name : 'None';
+        const outputName = outputObj ? outputObj.name : 'None';
+
+        uiElements.mainStatusMessages.textContent =
+            `Input: ${inputName} (Ch ${settings.selectedInputChannel + 1})  |  ` +
+            `Output: ${outputName} (Ch ${settings.selectedOutputChannel + 1})  |  ` +
+            `Delay: ${settings.delayTimeSec.toFixed(2)}s  |  ` +
+            `Repeats: ${settings.numberOfRepeats}  |  ` +
+            `Pitch Shift: ${settings.pitchShiftPerRepeat}st  |  ` +
+            `Velocity Change: ${settings.velocityChangePerRepeat}`;
         updateLiveStatusBar();
     }
 
+    function setupSliderListener(sliderElem, valueDisplayElem, settingKey, options = {}) {
+        const { parseFn = parseFloat, displaySuffix = '', valueFormatter } = options;
 
-    delaySlider.addEventListener('input', (event) => { delayTimeSec = parseFloat(event.target.value); updateDelayTimeDisplay(); updateStatusMessage(); saveSettingsToLocalStorage(); });
-    repeatsSlider.addEventListener('input', (event) => { numberOfRepeats = parseInt(event.target.value); repeatsValueDisplay.textContent = numberOfRepeats; updateStatusMessage(); saveSettingsToLocalStorage(); });
-    pitchShiftSlider.addEventListener('input', (event) => { pitchShiftPerRepeat = parseInt(event.target.value); pitchShiftValueDisplay.textContent = `${pitchShiftPerRepeat} st`; updateStatusMessage(); saveSettingsToLocalStorage(); });
-    velocityScaleSlider.addEventListener('input', (event) => { velocityChangePerRepeat = parseInt(event.target.value); velocityScaleValueDisplay.textContent = velocityChangePerRepeat; updateStatusMessage(); saveSettingsToLocalStorage(); });
+        sliderElem.addEventListener('input', (event) => {
+            const rawValue = event.target.value;
+            settings[settingKey] = parseFn(rawValue);
 
-    midiInputSelect.addEventListener('change', (event) => { selectedMidiInputId = event.target.value; updateInputListeners(); saveSettingsToLocalStorage(); });
-    midiChannelSelect.addEventListener('change', (event) => { selectedInputChannel = parseInt(event.target.value); if(midiInitialized) { updateStatusMessage(); updateLiveStatusBar();} saveSettingsToLocalStorage(); });
-    midiOutputSelect.addEventListener('change', (event) => { selectedMidiOutputId = event.target.value; if(midiInitialized) { updateStatusMessage(); updateLiveStatusBar();} saveSettingsToLocalStorage(); });
-    midiOutputChannelSelect.addEventListener('change', (event) => { selectedOutputChannel = parseInt(event.target.value); if(midiInitialized) { updateStatusMessage(); updateLiveStatusBar();} saveSettingsToLocalStorage(); });
+            if (valueFormatter) {
+                valueDisplayElem.textContent = valueFormatter(settings[settingKey]);
+            } else if (settingKey === 'delayTimeSec') { // Special handling for delay time to ensure .toFixed(2)
+                valueDisplayElem.textContent = `${settings[settingKey].toFixed(2)}${displaySuffix || 's'}`;
+            }
+            else {
+                valueDisplayElem.textContent = `${settings[settingKey]}${displaySuffix}`;
+            }
+
+            updateStatusMessage();
+            saveSettingsToLocalStorage();
+        });
+    }
+
+    function setupSelectListener(selectElem, settingKey, parseFn = (val) => val, afterChangeCallback = null) {
+        selectElem.addEventListener('change', (event) => {
+            settings[settingKey] = parseFn(event.target.value);
+            if (midiInitialized) {
+                updateStatusMessage();
+                updateLiveStatusBar();
+            }
+            saveSettingsToLocalStorage();
+            if (afterChangeCallback) {
+                afterChangeCallback();
+            }
+        });
+    }
 
     function applyUISettings() {
-        delaySlider.value = delayTimeSec;
-        repeatsSlider.value = numberOfRepeats;
-        pitchShiftSlider.value = pitchShiftPerRepeat;
-        velocityScaleSlider.value = velocityChangePerRepeat;
-
-        delayValueDisplay.textContent = `${parseFloat(delaySlider.value).toFixed(2)}s`;
-        repeatsValueDisplay.textContent = parseInt(repeatsSlider.value);
-        pitchShiftValueDisplay.textContent = `${parseInt(pitchShiftSlider.value)} st`;
-        velocityScaleValueDisplay.textContent = parseInt(velocityScaleSlider.value);
-
-        if (midiInputSelect.options.length > 0 && selectedMidiInputId) midiInputSelect.value = selectedMidiInputId;
-        if (midiOutputSelect.options.length > 0 && selectedMidiOutputId) midiOutputSelect.value = selectedMidiOutputId;
-        midiChannelSelect.value = selectedInputChannel;
-        midiOutputChannelSelect.value = selectedOutputChannel;
+        uiElements.delaySlider.value = settings.delayTimeSec;
+        uiElements.repeatsSlider.value = settings.numberOfRepeats;
+        uiElements.pitchShiftSlider.value = settings.pitchShiftPerRepeat;
+        uiElements.velocityScaleSlider.value = settings.velocityChangePerRepeat;
 
         updateDelayTimeDisplay();
+        uiElements.repeatsValueDisplay.textContent = settings.numberOfRepeats;
+        uiElements.pitchShiftValueDisplay.textContent = `${settings.pitchShiftPerRepeat} st`;
+        uiElements.velocityScaleValueDisplay.textContent = settings.velocityChangePerRepeat;
+
+        if (uiElements.midiInputSelect.options.length > 0 && settings.selectedMidiInputId) {
+            uiElements.midiInputSelect.value = settings.selectedMidiInputId;
+        }
+        if (uiElements.midiOutputSelect.options.length > 0 && settings.selectedMidiOutputId) {
+            uiElements.midiOutputSelect.value = settings.selectedMidiOutputId;
+        }
+        uiElements.midiChannelSelect.value = settings.selectedInputChannel;
+        uiElements.midiOutputChannelSelect.value = settings.selectedOutputChannel;
+
         updateLiveStatusBar();
     }
 
     document.addEventListener('DOMContentLoaded', () => {
         loadSettingsFromLocalStorage();
-        selectedInputChannel = populateChannelSelect(midiChannelSelect, selectedInputChannel);
-        selectedOutputChannel = populateChannelSelect(midiOutputChannelSelect, selectedOutputChannel);
+
+        settings.selectedInputChannel = populateChannelSelect(uiElements.midiChannelSelect, settings.selectedInputChannel);
+        settings.selectedOutputChannel = populateChannelSelect(uiElements.midiOutputChannelSelect, settings.selectedOutputChannel);
         populatePitchShiftTicks();
+
         applyUISettings();
+
+        setupSliderListener(uiElements.delaySlider, uiElements.delayValueDisplay, 'delayTimeSec', {
+            valueFormatter: val => `${parseFloat(val).toFixed(2)}s`
+        });
+        setupSliderListener(uiElements.repeatsSlider, uiElements.repeatsValueDisplay, 'numberOfRepeats', { parseFn: parseInt });
+        setupSliderListener(uiElements.pitchShiftSlider, uiElements.pitchShiftValueDisplay, 'pitchShiftPerRepeat', { parseFn: parseInt, displaySuffix: ' st' });
+        setupSliderListener(uiElements.velocityScaleSlider, uiElements.velocityScaleValueDisplay, 'velocityChangePerRepeat', { parseFn: parseInt });
+
+        setupSelectListener(uiElements.midiInputSelect, 'selectedMidiInputId', (val) => val, updateInputListeners);
+        setupSelectListener(uiElements.midiChannelSelect, 'selectedInputChannel', parseInt);
+        setupSelectListener(uiElements.midiOutputSelect, 'selectedMidiOutputId');
+        setupSelectListener(uiElements.midiOutputChannelSelect, 'selectedOutputChannel', parseInt);
+
         initializeMidiSystem();
     });
 
@@ -746,10 +797,10 @@
     const activityBlinkColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-accent').trim() || '#8B0000';
 
     function showMidiActivityIndicator(isEcho) {
-        mainStatusMessages.style.borderColor = activityBlinkColor;
+        uiElements.mainStatusMessages.style.borderColor = activityBlinkColor;
         setTimeout(() => {
             originalBorderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-panel').trim();
-            mainStatusMessages.style.borderColor = originalBorderColor;
+            uiElements.mainStatusMessages.style.borderColor = originalBorderColor;
         }, 150);
     }
 </script>
