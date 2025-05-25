@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Instrument Web Synth - 1960s Compact Edition</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            height: 100vh;
+            background-color: #f5f5dc;
+            color: #4a3b31;
+            overflow-y: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 310px);
+            overflow-y: auto;
+        }
+
+        h1 {
+            margin-top: 8px;
+            margin-bottom: 6px;
+            color: #8B4513;
+            font-size: 1.6em;
+            font-weight: 600;
+            text-align: center;
+            min-height: 1.2em;
+            flex-shrink: 0;
+        }
+
+        #main-display-area {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-grow: 1;
+            min-height: 0;
+            /* align-items: flex-start; REMOVED - defaults to stretch */
+        }
+
+        #top-controls-area {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+            background-color: #d2b48c;
+            border: 1px solid #a0522d;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            flex: 1;
+            min-width: 300px;
+            box-sizing: border-box;
+        }
+
+        .control-group-inline {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            border-radius: 4px;
+            background-color: #c7a77f;
+            padding: 5px;
+            border: 1px solid #b59670;
+        }
+
+        #top-controls-area label {
+            margin-right: 3px;
+            font-weight: bold;
+            font-size: 0.85em;
+            color: #5D4037;
+        }
+
+        #midi-input-select, #instrument-select, #midi-channel-select {
+            padding: 5px 7px;
+            border-radius: 3px;
+            border: 1px solid #8B7355;
+            font-size: 0.85em;
+            background-color: #fff8e7;
+            color: #4a3b31;
+            cursor: pointer;
+            flex-grow: 1;
+            min-width: 90px;
+        }
+        #midi-status {
+            font-size: 0.8em;
+            color: #757575;
+            margin-left: 5px;
+            flex-basis: 100%;
+            text-align: left;
+        }
+
+        #octave-control-group {
+            justify-content: center;
+        }
+
+        #current-octave-display {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #4a3b31;
+            padding: 5px 8px;
+            background-color: #fff8e7;
+            border: 1px solid #8B7355;
+            border-radius: 3px;
+            min-width: 50px;
+            text-align: center;
+            margin: 0 5px;
+        }
+        #top-controls-area button {
+            background: linear-gradient(to bottom, #ef6c00, #e65100);
+            color: #fff;
+            border: 1px solid #bf360c;
+            padding: 5px 10px;
+            font-size: 0.85em;
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+            -webkit-tap-highlight-color: transparent;
+        }
+        #top-controls-area button:hover {
+            background: linear-gradient(to bottom, #f57c00, #ef6c00);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+        }
+        #top-controls-area button:active {
+            background: linear-gradient(to top, #ef6c00, #e65100);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        #oscilloscope-container {
+            flex: 0 0 50%;
+            max-width: 50%;
+            min-width: 250px;
+            min-height: 200px;
+            background-color: #424242;
+            border: 2px solid #8B4513;
+            border-radius: 4px;
+            box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+
+        #oscilloscope-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 2px;
+        }
+
+
+        #piano-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            background-color: #8B4513;
+            padding: 15px 0;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.4);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
+            z-index: 10;
+        }
+
+        #piano {
+            display: flex;
+            position: relative;
+            height: 280px;
+            background: #654321;
+            padding: 0 4px;
+            border-radius: 3px;
+            min-width: fit-content;
+        }
+
+        .key {
+            box-sizing: border-box;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 8px;
+            font-size: 11px;
+            font-weight: normal;
+            transition: background-color 0.05s ease-out, box-shadow 0.05s ease-out;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+            border-radius: 0 0 3px 3px;
+        }
+
+        .key .note-label {
+            pointer-events: none;
+        }
+
+        .white-key {
+            background-color: #fffdd0;
+            width: 48px;
+            height: 100%;
+            border: 1px solid #b0a08a;
+            border-top: 1px solid #fff;
+            z-index: 1;
+            color: #544;
+            margin-right: 2px;
+            box-shadow: inset 0 -4px 2px rgba(0,0,0,0.15), 0 1px 1px rgba(0,0,0,0.2);
+        }
+
+        .white-key:last-child {
+            margin-right: 0;
+        }
+
+        .white-key.pressed, .white-key:active {
+            background-color: #ede4c2;
+            border-top-color: #f0f0f0;
+            box-shadow: inset 0 -2px 1px rgba(0,0,0,0.2), inset 0 1px 1px rgba(0,0,0,0.05);
+        }
+
+        .black-key {
+            background: #424242;
+            width: 30px;
+            height: 170px;
+            position: absolute;
+            top: 0;
+            z-index: 2;
+            color: #ccc;
+            border: 1px solid #212121;
+            border-radius: 0 0 3px 3px;
+            box-shadow: inset 0 -3px 1px rgba(0,0,0,0.25), 1px 1px 2px rgba(0,0,0,0.3);
+            padding-bottom: 5px;
+            font-size: 9px;
+        }
+
+        .black-key.pressed, .black-key:active {
+            background: #303030;
+            box-shadow: inset 0 -1px 1px rgba(0,0,0,0.25), inset 0 1px 2px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <h1 id="synth-title">Pizzicato Strings Synth</h1>
+
+    <div id="main-display-area">
+        <div id="top-controls-area">
+            <div class="control-group-inline" id="instrument-control-group">
+                <label for="instrument-select">Instrument:</label>
+                <select id="instrument-select">
+                    <option value="pizzicato">Pizzicato Strings 🎻</option>
+                    <option value="acousticPiano">Acoustic Piano 🎹</option>
+                    <option value="electricPiano">Electric Piano ⚡</option>
+                    <option value="deepBell">Deep Bells 🔔</option>
+                    <option value="polySynth70s">70s Poly Synth 🚀</option>
+                    <option value="hammondOrgan">Hammond Organ 🎶</option>
+                    <option value="synthBass">Synth Bass 🎸</option>
+                </select>
+            </div>
+
+            <div class="control-group-inline" id="octave-control-group">
+                <button id="octave-down">Octave (-)</button>
+                <div id="current-octave-display">Octave: 0</div>
+                <button id="octave-up">Octave (+)</button>
+            </div>
+
+            <div class="control-group-inline" id="midi-control-group">
+                <label for="midi-input-select">MIDI In:</label>
+                <select id="midi-input-select">
+                    <option value="">No MIDI Device</option>
+                </select>
+                <label for="midi-channel-select">Ch:</label>
+                <select id="midi-channel-select">
+                    <option value="omni">Omni</option>
+                </select>
+                <span id="midi-status"></span>
+            </div>
+        </div>
+
+        <div id="oscilloscope-container">
+            <canvas id="oscilloscope-canvas"></canvas>
+        </div>
+    </div>
+
+</div>
+
+
+<div id="piano-container">
+    <div id="piano">
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const piano = document.getElementById('piano');
+        const octaveDownButton = document.getElementById('octave-down');
+        const octaveUpButton = document.getElementById('octave-up');
+        const currentOctaveDisplay = document.getElementById('current-octave-display');
+        const instrumentSelect = document.getElementById('instrument-select');
+        const synthTitle = document.getElementById('synth-title');
+        const midiInputSelect = document.getElementById('midi-input-select');
+        const midiChannelSelect = document.getElementById('midi-channel-select');
+        const midiStatus = document.getElementById('midi-status');
+        const oscilloscopeCanvas = document.getElementById('oscilloscope-canvas');
+        const oscilloscopeCtx = oscilloscopeCanvas.getContext('2d');
+
+
+        let audioCtx;
+        let mainBusGain;
+        let analyser;
+        let dataArray;
+        let bufferLength;
+
+        let currentOctaveOffset = 0;
+        const minOctaveOffset = -2;
+        const maxOctaveOffset = 2;
+
+
+        const activeNotes = {};
+        let currentInstrument = 'polySynth70s';
+        instrumentSelect.value = currentInstrument;
+
+        let selectedMidiChannel = 'omni';
+
+        let isDragging = false;
+        let lastDraggedKeyElement = null;
+
+        let midiAccess = null;
+        let currentMidiInput = null;
+
+        for (let i = 1; i <= 16; i++) {
+            const option = document.createElement('option');
+            option.value = (i - 1).toString();
+            option.textContent = i.toString();
+            midiChannelSelect.appendChild(option);
+        }
+        midiChannelSelect.addEventListener('change', (event) => {
+            selectedMidiChannel = event.target.value;
+        });
+
+
+        function updateSynthTitle() {
+            const selectedOption = instrumentSelect.options[instrumentSelect.selectedIndex];
+            synthTitle.textContent = selectedOption.text + " Synth";
+        }
+        instrumentSelect.addEventListener('change', (event) => {
+            currentInstrument = event.target.value;
+            updateSynthTitle();
+        });
+        updateSynthTitle();
+
+
+        function updateOctaveDisplay() {
+            currentOctaveDisplay.textContent = `Octave: ${currentOctaveOffset >= 0 ? '+' : ''}${currentOctaveOffset}`;
+        }
+        updateOctaveDisplay();
+
+        function initializeAudioContext() {
+            if (audioCtx) return true;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                mainBusGain = audioCtx.createGain();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 2048;
+                bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                analyser.minDecibels = -90;
+                analyser.maxDecibels = -10;
+                analyser.smoothingTimeConstant = 0.85;
+                mainBusGain.connect(analyser);
+                analyser.connect(audioCtx.destination);
+                drawOscilloscope();
+                return true;
+            } catch (e) {
+                console.error("Web Audio API is not supported in this browser.", e);
+                midiStatus.textContent = "Audio Error. Try refreshing.";
+                return false;
+            }
+        }
+
+        function drawOscilloscope() {
+            requestAnimationFrame(drawOscilloscope);
+            if (!analyser || !oscilloscopeCtx) return;
+            analyser.getByteTimeDomainData(dataArray);
+            oscilloscopeCtx.fillStyle = '#424242';
+            oscilloscopeCtx.fillRect(0, 0, oscilloscopeCanvas.width, oscilloscopeCanvas.height);
+            oscilloscopeCtx.lineWidth = 2;
+            oscilloscopeCtx.strokeStyle = '#FFBF00';
+            oscilloscopeCtx.beginPath();
+            const sliceWidth = oscilloscopeCanvas.width * 1.0 / bufferLength;
+            let x = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = v * oscilloscopeCanvas.height / 2;
+                if (i === 0) {
+                    oscilloscopeCtx.moveTo(x, y);
+                } else {
+                    oscilloscopeCtx.lineTo(x, y);
+                }
+                x += sliceWidth;
+            }
+            oscilloscopeCtx.lineTo(oscilloscopeCanvas.width, oscilloscopeCanvas.height / 2);
+            oscilloscopeCtx.stroke();
+        }
+
+        function resizeOscilloscope() {
+            if (oscilloscopeCanvas) {
+                oscilloscopeCanvas.width = oscilloscopeCanvas.offsetWidth;
+                oscilloscopeCanvas.height = oscilloscopeCanvas.offsetHeight;
+            }
+        }
+        window.addEventListener('resize', resizeOscilloscope);
+
+        function onMIDISuccess(midi) {
+            midiAccess = midi;
+            midiStatus.textContent = "MIDI ready.";
+            populateMIDIInputs();
+            midiAccess.onstatechange = populateMIDIInputs;
+        }
+
+        function onMIDIFailure(msg) {
+            midiStatus.textContent = `Failed to get MIDI access - ${msg}`;
+            console.error(`Failed to get MIDI access - ${msg}`);
+        }
+
+        function populateMIDIInputs() {
+            if (!midiAccess) return;
+            midiInputSelect.innerHTML = '<option value="">Select MIDI Device...</option>';
+            if (midiAccess.inputs.size === 0) {
+                midiStatus.textContent = "No MIDI input devices found.";
+                return;
+            }
+            midiAccess.inputs.forEach(input => {
+                const option = document.createElement('option');
+                option.value = input.id;
+                option.textContent = input.name;
+                midiInputSelect.appendChild(option);
+            });
+            midiStatus.textContent = "Select a MIDI device.";
+        }
+
+        function connectToMidiDevice(deviceId) {
+            if (!midiAccess) return;
+            if (currentMidiInput) {
+                currentMidiInput.onmidimessage = null;
+            }
+            if (!deviceId) {
+                currentMidiInput = null;
+                midiStatus.textContent = "No MIDI device selected.";
+                return;
+            }
+            currentMidiInput = midiAccess.inputs.get(deviceId);
+            if (currentMidiInput) {
+                currentMidiInput.onmidimessage = handleMIDIMessage;
+                midiStatus.textContent = `Connected to: ${currentMidiInput.name}`;
+            } else {
+                midiStatus.textContent = "Failed to connect to selected MIDI device.";
+            }
+        }
+        midiInputSelect.addEventListener('change', (event) => connectToMidiDevice(event.target.value));
+
+        function handleMIDIMessage(message) {
+            const data = message.data;
+            const command = data[0] >> 4;
+            const midiChannelReceived = data[0] & 0x0F;
+            const note = data[1];
+            const velocity = data[2];
+
+            if (selectedMidiChannel !== 'omni' && parseInt(selectedMidiChannel) !== midiChannelReceived) {
+                return;
+            }
+
+            if (command === 9 && velocity > 0) {
+                if (!initializeAudioContext()) return;
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(err => console.error("Error resuming AudioContext:", err));
+                }
+
+                const effectiveMidiNote = note + (currentOctaveOffset * 12);
+                const freq = midiToFreq(effectiveMidiNote);
+                const mappedVelocity = velocity / 127;
+
+                const onScreenKey = Array.from(piano.children).find(keyEl => {
+                    const baseMidi = parseInt(keyEl.dataset.baseMidi);
+                    return (baseMidi) === effectiveMidiNote;
+                });
+
+                switch (currentInstrument) {
+                    case 'pizzicato': playPizzicatoNote(freq, mappedVelocity); break;
+                    case 'acousticPiano': playAcousticPianoNote(freq, mappedVelocity); break;
+                    case 'electricPiano': playElectricPianoNote(freq, mappedVelocity); break;
+                    case 'deepBell': playDeepBellNote(freq, mappedVelocity); break;
+                    case 'polySynth70s': playPolySynth70sNote(freq, mappedVelocity); break;
+                    case 'hammondOrgan': playHammondOrganNote(freq, mappedVelocity); break;
+                    case 'synthBass': playSynthBassNote(freq, mappedVelocity); break;
+                    default: playAcousticPianoNote(freq, mappedVelocity);
+                }
+                if (onScreenKey) {
+                    onScreenKey.classList.add('pressed');
+                    setTimeout(() => onScreenKey.classList.remove('pressed'), 150);
+                }
+            }
+        }
+
+        if (navigator.requestMIDIAccess) {
+            navigator.requestMIDIAccess({ sysex: false })
+                .then(onMIDISuccess, onMIDIFailure);
+        } else {
+            midiStatus.textContent = "Web MIDI API not supported in this browser.";
+        }
+
+
+        function cleanupNote(noteId, noteData, duration) {
+            setTimeout(() => {
+                try {
+                    if (noteData) {
+                        noteData.oscillators.forEach(osc => osc.disconnect());
+                        if (noteData.gains) noteData.gains.forEach(g => g.disconnect());
+                        if (noteData.noteOutput && noteData.noteOutput.numberOfOutputs > 0) noteData.noteOutput.disconnect();
+                        if (noteData.filter && noteData.filter.numberOfOutputs > 0) noteData.filter.disconnect();
+                        if (noteData.masterGain && noteData.masterGain.numberOfOutputs > 0) noteData.masterGain.disconnect();
+                    }
+                } catch (e) { /* console.warn("Error during node disconnection:", e); */ }
+                delete activeNotes[noteId];
+            }, duration * 1000);
+        }
+
+        function playPizzicatoNote(frequency, velocity = 0.8) {
+            if (!audioCtx) { if (!initializeAudioContext()) return; }
+            if (audioCtx.state === 'suspended') { audioCtx.resume().catch(err => console.error("Error resuming AudioContext:", err));}
+            const now = audioCtx.currentTime;
+            const masterGain = audioCtx.createGain();
+            masterGain.connect(mainBusGain);
+
+            const attackTime = 0.005; const decayTime = 0.15;
+            const sustainLevel = 0.01 * velocity; const releaseTime = 0.1;
+            masterGain.gain.setValueAtTime(0, now);
+            masterGain.gain.linearRampToValueAtTime(velocity, now + attackTime);
+            masterGain.gain.setTargetAtTime(sustainLevel, now + attackTime, decayTime / 2);
+
+            const numOscillators = 2;
+            const oscillators = []; const gains = [];
+            const detuneAmounts = [0, 4, -3];
+
+            for (let i = 0; i < numOscillators; i++) {
+                const osc = audioCtx.createOscillator();
+                osc.type = i === 0 ? 'sawtooth' : 'triangle';
+                osc.frequency.setValueAtTime(frequency, now);
+                if (i > 0) { osc.detune.setValueAtTime(detuneAmounts[i], now); }
+                const currentOscGain = audioCtx.createGain();
+                currentOscGain.gain.setValueAtTime(i === 0 ? 0.5 * velocity : 0.3 * velocity, now);
+                osc.connect(currentOscGain);
+                oscillators.push(osc); gains.push(currentOscGain);
+            }
+
+            const noteFilter = audioCtx.createBiquadFilter();
+            noteFilter.type = 'lowpass';
+            const initialFilterFreq = Math.max(1500, Math.min(15000, frequency * 3 + (velocity * 1500)));
+            const endFilterFreq = Math.max(300, frequency * 0.8 + (velocity * 200));
+            noteFilter.frequency.setValueAtTime(initialFilterFreq, now + attackTime * 0.5);
+            noteFilter.Q.setValueAtTime(1.0, now);
+            noteFilter.frequency.exponentialRampToValueAtTime(endFilterFreq, now + attackTime + decayTime + releaseTime * 0.5);
+            noteFilter.connect(masterGain);
+            gains.forEach(gainNode => gainNode.connect(noteFilter));
+            oscillators.forEach(osc => osc.start(now));
+
+            const totalNoteDuration = attackTime + decayTime + releaseTime + 0.2;
+            masterGain.gain.setTargetAtTime(0, now + attackTime + decayTime, releaseTime / 2);
+            const noteId = Date.now() + "_" + frequency + Math.random();
+            const noteData = { oscillators, gains, filter: noteFilter, masterGain };
+            activeNotes[noteId] = noteData;
+            oscillators.forEach(osc => osc.stop(now + totalNoteDuration));
+            cleanupNote(noteId, noteData, totalNoteDuration);
+        }
+
+        function playAcousticPianoNote(frequency, velocity = 0.7) {
+            if (!audioCtx) { if (!initializeAudioContext()) return; }
+            if (audioCtx.state === 'suspended') { audioCtx.resume().catch(err => console.error("Error resuming AudioContext:", err)); }
+            const now = audioCtx.currentTime;
+            const masterGain = audioCtx.createGain();
+            masterGain.connect(mainBusGain);
+
+            const ampAttack = 0.015; const ampDecay = 0.3;
+            const ampSustain = 0.4; const ampRelease = 0.6;
+            masterGain.gain.setValueAtTime(0, now);
+            masterGain.gain.linearRampToValueAtTime(velocity, now + ampAttack);
+            masterGain.gain.setTargetAtTime(ampSustain * velocity, now + ampAttack, ampDecay / 3);
+
+            const numOscillators = frequency > 200 ? 3 : 2;
+            const oscillators = []; const gains = [];
+
+            const noteFilter = audioCtx.createBiquadFilter();
+            noteFilter.type = 'lowpass';
+            const filterCutoff = Math.max(600, Math.min(12000, frequency * 4 + (velocity * 2000)));
+            const filterQ = 1.2;
+            const sustainFilterFreq = Math.max(400, frequency * 1.5);
+            const endFilterFreq = Math.max(200, frequency * 0.8);
+            noteFilter.frequency.setValueAtTime(filterCutoff, now);
+            noteFilter.Q.setValueAtTime(filterQ, now);
+            noteFilter.frequency.setTargetAtTime(sustainFilterFreq, now + ampAttack + 0.05, ampDecay / 2);
+            noteFilter.connect(masterGain);
+
+            for (let i = 0; i < numOscillators; i++) {
+                const osc = audioCtx.createOscillator();
+                osc.type = (i % 2 === 0 && frequency < 1000) ? 'triangle' : 'sawtooth';
+                if (frequency > 1000 && i % 2 !== 0) osc.type = 'square';
+                osc.frequency.setValueAtTime(frequency, now);
+                const detuneAmounts = [0, -3, 3.5];
+                if (i > 0) { osc.detune.setValueAtTime(detuneAmounts[i], now); }
+                const currentOscGain = audioCtx.createGain();
+                currentOscGain.gain.setValueAtTime(i === 0 ? 0.6 : 0.35, now);
+                osc.connect(currentOscGain);
+                currentOscGain.connect(noteFilter);
+                osc.start(now);
+                oscillators.push(osc); gains.push(currentOscGain);
+            }
+
+            const totalSustainDuration = 1.5;
+            const noteEndTime = now + ampAttack + ampDecay + totalSustainDuration;
+            masterGain.gain.setTargetAtTime(0, noteEndTime, ampRelease / 2);
+            noteFilter.frequency.setTargetAtTime(endFilterFreq, noteEndTime, ampRelease/2);
+
+            const noteId = Date.now() + "_" + frequency + Math.random();
+            const noteData = { oscillators, gains, filter: noteFilter, masterGain };
+            activeNotes[noteId] = noteData;
+            const cleanupDuration = ampAttack + ampDecay + totalSustainDuration + ampRelease + 0.1;
+            oscillators.forEach(osc => osc.stop(now + cleanupDuration));
+            cleanupNote(noteId, noteData, cleanupDuration);
+        }
+
+        function playElectricPianoNote(frequency, velocity = 0.7) {
+            if (!audioCtx) { if (!initializeAudioContext()) return; }
+            if (audioCtx.state === 'suspended') { audioCtx.resume().catch(err => console.error("Error resuming AudioContext:", err)); }
+            const now = audioCtx.currentTime;
+            const masterGain = audioCtx.createGain();
+            masterGain.connect(mainBusGain);
+
+            const ampAttack = 0.01; const ampDecay = 0.4;
+            const ampSustain = 0.3; const ampRelease = 0.5;
+            masterGain.gain.setValueAtTime(0, now);
+            masterGain.gain.linearRampToValueAtTime(velocity * 0.8, now + ampAttack);
+            masterGain.gain.setTargetAtTime(ampSustain * velocity * 0.7, now + ampAttack, ampDecay / 2.5);
+
+            const oscillators = []; const gains = [];
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(frequency, now);
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(frequency * 2.01, now);
+            const osc1Gain = audioCtx.createGain();
+            osc1Gain.gain.setValueAtTime(0.6, now);
+            const osc2Gain = audioCtx.createGain();
+            osc2Gain.gain.setValueAtTime(0.25, now);
+            osc1.connect(osc1Gain); osc2.connect(osc2Gain);
+            oscillators.push(osc1, osc2); gains.push(osc1Gain, osc2Gain);
+
+            const noteFilter = audioCtx.createBiquadFilter();
+            noteFilter.type = 'lowpass';
+            const filterCutoff = 8000; const filterQ = 0.5;
+            noteFilter.Q.setValueAtTime(filterQ, now);
+            noteFilter.frequency.setValueAtTime(filterCutoff, now);
+            noteFilter.connect(masterGain);
+            gains.forEach(gainNode => gainNode.connect(noteFilter));
+            oscillators.forEach(osc => osc.start(now));
+
+            const totalSustainDuration = 1.2;
+            const noteEndTime = now + ampAttack + ampDecay + totalSustainDuration;
+            masterGain.gain.setTargetAtTime(0, noteEndTime, ampRelease / 2);
+
+            const noteId = Date.now() + "_" + frequency + Math.random();
+            const noteData = { oscillators, gains, filter: noteFilter, masterGain };
+            activeNotes[noteId] = noteData;
+            const cleanupDuration = ampAttack + ampDecay + totalSustainDuration + ampRelease + 0.1;
+            oscillators.forEach(osc => osc.stop(now + cleanupDuration));
+            cleanupNote(noteId, noteData, cleanupDuration);
+        }
+
+        function playDeepBellNote(frequency, velocity = 0.9) {
+            if (!audioCtx) { if (!initializeAudioContext()) return; }
+            if (audioCtx.state === 'suspended') { audioCtx.resume().catch(err => console.error("Error resuming AudioContext:", err));}
+            const now = audioCtx.currentTime;
+            const masterGain = audioCtx.createGain();
+            masterGain.connect(mainBusGain);
+            const attackTime = 0.01; const decay1Time = 0.3;
+            const decay2Time = 2.5; const sustainLevel = 0.001;
+            const releaseTime = 1.5;
+            masterGain.gain.setValueAtTime(0, now);
+            masterGain.gain.linearRampToValueAtTime(velocity, now + attackTime);
+            masterGain.gain.setTargetAtTime(velocity * 0.4, now + attackTime, decay1Time / 3);
+            masterGain.gain.setTargetAtTime(sustainLevel, now + attackTime + decay1Time, decay2Time / 2);
+            const oscillators = []; const gains = [];
+            const fundamentalFreq = frequency / 2;
+            const partials = [
+                { ratio: 1.0,  gain: 0.6, type: 'sine' },
+                { ratio: 2.0,  gain: 0.3, type: 'sine' },
+                { ratio: 2.37, gain: 0.25, type: 'sine' },
+                { ratio: 3.0,  gain: 0.2, type: 'sine'  },
+                { ratio: 4.15, gain: 0.15, type: 'sine'  },
+                { ratio: 0.5, gain: 0.1, type: 'triangle'}
+            ];
+            partials.forEach(p => {
+                const osc = audioCtx.createOscillator();
+                osc.type = p.type;
+                osc.frequency.setValueAtTime(fundamentalFreq * p.ratio, now);
+                if (p.ratio > 1 && p.ratio < 4) {
+                    osc.detune.setValueAtTime((Math.random() - 0.5) * 10, now);
+                }
+                const partialGain = audioCtx.createGain();
+                partialGain.gain.setValueAtTime(p.gain * velocity, now);
+                if (p.ratio > 2.5) {
+                    partialGain.gain.setTargetAtTime(0, now + attackTime + 0.05, 0.4);
+                } else if (p.ratio < 1.0) {
+                    partialGain.gain.setTargetAtTime(p.gain * velocity * 0.2, now + attackTime, 1.5);
+                }
+                osc.connect(partialGain);
+                oscillators.push(osc); gains.push(partialGain);
+            });
+            const noteFilter = audioCtx.createBiquadFilter();
+            noteFilter.type = 'lowpass';
+            noteFilter.frequency.setValueAtTime(7000, now);
+            noteFilter.Q.setValueAtTime(0.7, now);
+            noteFilter.frequency.setTargetAtTime(4000, now + attackTime + decay1Time, decay2Time);
+            noteFilter.connect(masterGain);
+            gains.forEach(gainNode => gainNode.connect(noteFilter));
+            oscillators.forEach(osc => osc.start(now));
+            const totalNoteDuration = attackTime + decay1Time + decay2Time + releaseTime + 0.5;
+            masterGain.gain.setTargetAtTime(0, now + attackTime + decay1Time + decay2Time, releaseTime / 2);
+            const noteId = Date.now() + "_" + frequency + Math.random();
+            const noteData = { oscillators, gains, filter: noteFilter, masterGain };
+            activeNotes[noteId] = noteData;
+            oscillators.forEach(osc => osc.stop(now + totalNoteDuration));
+            cleanupNote(noteId, noteData, totalNoteDuration);
+        }
+
+        function playPolySynth70sNote(frequency, velocity = 0.7) {
+            if (!audioCtx) { if (!initializeAudioContext()) return; }
+            if (audioCtx.state === 'suspended') { audioCtx.resume().catch(err => console.error("Error resuming AudioContext:", err)); }
+            const now = audioCtx.currentTime;
+            const masterGain = audioCtx.createGain();
+            masterGain.connect(mainBusGain);
+            const ampAttack = 0.05; const ampDecay = 0.2;
+            const ampSustain = 0.6; const ampRelease = 0.4;
+            masterGain.gain.setValueAtTime(0, now);
+            masterGain.gain.linearRampToValueAtTime(velocity, now + ampAttack);
+            masterGain.gain.setTargetAtTime(ampSustain * velocity, now + ampAttack, ampDecay / 2);
+            const oscillators = []; const gains = [];
+            const numOscillators = 2; const detuneAmount = 7;
+            for (let i = 0; i < numOscillators; i++) {
+                const osc = audioCtx.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(frequency, now);
+                if (i > 0) { osc.detune.setValueAtTime(i % 2 === 1 ? detuneAmount : -detuneAmount, now); }
+                const oscGain = audioCtx.createGain();
+                oscGain.gain.setValueAtTime(i === 0 ? 0.4 : 0.35, now);
+                osc.connect(oscGain);
+                oscillators.push(osc); gains.push(oscGain);
+            }
+            const noteFilter = audioCtx.createBiquadFilter();
+            noteFilter.type = 'lowpass';
+            const filterCutoff = 3500; const filterQ = 2.5;
+            const filterEnvAmount = 3000;
+            const filterPeakFreq = filterCutoff + filterEnvAmount * 0.5 * velocity;
+            const filterEndFreq = Math.max(150, filterCutoff / 3);
+            noteFilter.Q.setValueAtTime(filterQ, now);
+            noteFilter.frequency.setValueAtTime(filterCutoff, now);
+            noteFilter.frequency.linearRampToValueAtTime(filterPeakFreq, now + 0.08);
+            noteFilter.frequency.setTargetAtTime(filterCutoff * 0.7, now + 0.08, 0.3);
+            noteFilter.connect(masterGain);
+            gains.forEach(gainNode => gainNode.connect(noteFilter));
+            oscillators.forEach(osc => osc.start(now));
+            const totalSustainDuration = 2.0;
+            const noteEndTime = now + ampAttack + ampDecay + totalSustainDuration;
+            masterGain.gain.setTargetAtTime(0, noteEndTime, ampRelease / 3);
+            noteFilter.frequency.setTargetAtTime(filterEndFreq, noteEndTime, ampRelease / 3);
+            const noteId = Date.now() + "_" + frequency + Math.random();
+            const noteData = { oscillators, gains, filter: noteFilter, masterGain };
+            activeNotes[noteId] = noteData;
+            const cleanupDuration = ampAttack + ampDecay + totalSustainDuration + ampRelease + 0.1;
+            oscillators.forEach(osc => osc.stop(now + cleanupDuration));
+            cleanupNote(noteId, noteData, cleanupDuration);
+        }
+
+        function playHammondOrganNote(frequency, velocity = 0.7) {
+            if (!audioCtx) { if (!initializeAudioContext()) return; }
+            if (audioCtx.state === 'suspended') { audioCtx.resume().catch(err => console.error("Error resuming AudioContext:", err)); }
+            const now = audioCtx.currentTime;
+            const masterGain = audioCtx.createGain();
+            masterGain.connect(mainBusGain);
+            const attackTime = 0.005; const releaseTime = 0.05;
+            masterGain.gain.setValueAtTime(0, now);
+            masterGain.gain.linearRampToValueAtTime(velocity * 0.5, now + attackTime);
+            const oscillators = []; const gains = [];
+            const hammondDrawbars = [
+                { footage: "16'",  ratio: 0.5,  gainSetting: 8, type: 'sine' },
+                { footage: "5 1/3'", ratio: 1.5,  gainSetting: 7, type: 'sine' },
+                { footage: "8'",   ratio: 1.0,  gainSetting: 8, type: 'sine' },
+                { footage: "4'",   ratio: 2.0,  gainSetting: 8, type: 'sine' },
+                { footage: "2 2/3'", ratio: 3.0,  gainSetting: 5, type: 'sine' },
+                { footage: "2'",   ratio: 4.0,  gainSetting: 4, type: 'sine' },
+                { footage: "1 3/5'", ratio: 5.0,  gainSetting: 3, type: 'sine' },
+                { footage: "1 1/3'", ratio: 6.0,  gainSetting: 2, type: 'sine' },
+                { footage: "1'",   ratio: 8.0,  gainSetting: 2, type: 'sine' }
+            ];
+            hammondDrawbars.forEach(drawbar => {
+                const osc = audioCtx.createOscillator();
+                osc.type = drawbar.type;
+                osc.frequency.setValueAtTime(frequency * drawbar.ratio, now);
+                if (drawbar.ratio > 1.0 && drawbar.ratio < 4.0) {
+                    osc.detune.setValueAtTime((Math.random() - 0.5) * 6, now);
+                }
+                const drawbarGain = audioCtx.createGain();
+                drawbarGain.gain.setValueAtTime((drawbar.gainSetting / 8) * 0.35, now);
+                osc.connect(drawbarGain);
+                oscillators.push(osc); gains.push(drawbarGain);
+            });
+            gains.forEach(gainNode => gainNode.connect(masterGain));
+            oscillators.forEach(osc => osc.start(now));
+            const noteHeldDuration = 2.5;
+            masterGain.gain.setTargetAtTime(0, now + noteHeldDuration, releaseTime / 2);
+            const totalNoteDuration = attackTime + noteHeldDuration + releaseTime + 0.1;
+            const noteId = Date.now() + "_" + frequency + Math.random();
+            const noteData = { oscillators, gains, masterGain };
+            activeNotes[noteId] = noteData;
+            oscillators.forEach(osc => osc.stop(now + totalNoteDuration));
+            cleanupNote(noteId, noteData, totalNoteDuration);
+        }
+
+        function playSynthBassNote(frequency, velocity = 0.8) {
+            if (!audioCtx) { if (!initializeAudioContext()) return; }
+            if (audioCtx.state === 'suspended') { audioCtx.resume().catch(err => console.error("Error resuming AudioContext:", err)); }
+            const now = audioCtx.currentTime;
+            const masterGain = audioCtx.createGain();
+            masterGain.connect(mainBusGain);
+
+            const attackTime = 0.01;
+            const decayTime = 0.15;
+            const sustainLevel = 0.4 * velocity;
+            const releaseTime = 0.2;
+
+            masterGain.gain.setValueAtTime(0, now);
+            masterGain.gain.linearRampToValueAtTime(velocity * 0.7, now + attackTime);
+            masterGain.gain.setTargetAtTime(sustainLevel, now + attackTime, decayTime / 2);
+
+            const oscillators = []; const gains = [];
+
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(frequency, now);
+            const osc1Gain = audioCtx.createGain();
+            osc1Gain.gain.setValueAtTime(0.5, now);
+            osc1.connect(osc1Gain);
+            oscillators.push(osc1); gains.push(osc1Gain);
+
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = 'square';
+            osc2.frequency.setValueAtTime(frequency / 2, now);
+            const osc2Gain = audioCtx.createGain();
+            osc2Gain.gain.setValueAtTime(0.4, now);
+            osc2.connect(osc2Gain);
+            oscillators.push(osc2); gains.push(osc2Gain);
+
+            const noteFilter = audioCtx.createBiquadFilter();
+            noteFilter.type = 'lowpass';
+            noteFilter.Q.setValueAtTime(1.5, now);
+
+            const filterStartFreq = 2500;
+            const filterEndFreq = Math.max(80, frequency * 1.5);
+
+            noteFilter.frequency.setValueAtTime(filterStartFreq, now);
+            noteFilter.frequency.exponentialRampToValueAtTime(filterEndFreq, now + 0.08);
+
+            noteFilter.connect(masterGain);
+            gains.forEach(gainNode => gainNode.connect(noteFilter));
+            oscillators.forEach(osc => osc.start(now));
+
+            const noteHeldDuration = 1.0;
+            masterGain.gain.setTargetAtTime(0, now + noteHeldDuration, releaseTime / 2);
+            noteFilter.frequency.setTargetAtTime(Math.max(50, filterEndFreq / 2) , now + noteHeldDuration, releaseTime /2);
+
+
+            const totalNoteDuration = attackTime + decayTime + noteHeldDuration + releaseTime + 0.1;
+            const noteId = Date.now() + "_" + frequency + Math.random();
+            const noteData = { oscillators, gains, filter: noteFilter, masterGain };
+            activeNotes[noteId] = noteData;
+            oscillators.forEach(osc => osc.stop(now + totalNoteDuration));
+            cleanupNote(noteId, noteData, totalNoteDuration);
+        }
+
+        function triggerKeyPlay(keyElement, velocity) {
+            if (!keyElement || !keyElement.classList.contains('key')) return;
+            const baseMidi = parseInt(keyElement.dataset.baseMidi);
+            const effectiveMidi = baseMidi + (currentOctaveOffset * 12);
+            const frequency = midiToFreq(effectiveMidi);
+
+            switch (currentInstrument) {
+                case 'pizzicato': playPizzicatoNote(frequency, velocity); break;
+                case 'acousticPiano': playAcousticPianoNote(frequency, velocity); break;
+                case 'electricPiano': playElectricPianoNote(frequency, velocity); break;
+                case 'deepBell': playDeepBellNote(frequency, velocity); break;
+                case 'polySynth70s': playPolySynth70sNote(frequency, velocity); break;
+                case 'hammondOrgan': playHammondOrganNote(frequency, velocity); break;
+                case 'synthBass': playSynthBassNote(frequency, velocity); break;
+                default:
+                    console.warn("Unknown instrument:", currentInstrument);
+                    playAcousticPianoNote(frequency, velocity);
+            }
+
+            keyElement.classList.add('pressed');
+            setTimeout(() => keyElement.classList.remove('pressed'), 150);
+        }
+
+        const notes = [
+            { name: 'C2', midi: 36, type: 'white' }, { name: 'C#2', midi: 37, type: 'black' },
+            { name: 'D2', midi: 38, type: 'white' }, { name: 'D#2', midi: 39, type: 'black' },
+            { name: 'E2', midi: 40, type: 'white' },
+            { name: 'F2', midi: 41, type: 'white' }, { name: 'F#2', midi: 42, type: 'black' },
+            { name: 'G2', midi: 43, type: 'white' }, { name: 'G#2', midi: 44, type: 'black' },
+            { name: 'A2', midi: 45, type: 'white' }, { name: 'A#2', midi: 46, type: 'black' },
+            { name: 'B2', midi: 47, type: 'white' },
+            { name: 'C3', midi: 48, type: 'white' }, { name: 'C#3', midi: 49, type: 'black' },
+            { name: 'D3', midi: 50, type: 'white' }, { name: 'D#3', midi: 51, type: 'black' },
+            { name: 'E3', midi: 52, type: 'white' },
+            { name: 'F3', midi: 53, type: 'white' }, { name: 'F#3', midi: 54, type: 'black' },
+            { name: 'G3', midi: 55, type: 'white' }, { name: 'G#3', midi: 56, type: 'black' },
+            { name: 'A3', midi: 57, type: 'white' }, { name: 'A#3', midi: 58, type: 'black' },
+            { name: 'B3', midi: 59, type: 'white' },
+            { name: 'C4', midi: 60, type: 'white' }, { name: 'C#4', midi: 61, type: 'black' },
+            { name: 'D4', midi: 62, type: 'white' }, { name: 'D#4', midi: 63, type: 'black' },
+            { name: 'E4', midi: 64, type: 'white' },
+            { name: 'F4', midi: 65, type: 'white' }, { name: 'F#4', midi: 66, type: 'black' },
+            { name: 'G4', midi: 67, type: 'white' }, { name: 'G#4', midi: 68, type: 'black' },
+            { name: 'A4', midi: 69, type: 'white' }, { name: 'A#4', midi: 70, type: 'black' },
+            { name: 'B4', midi: 71, type: 'white' },
+            { name: 'C5', midi: 72, type: 'white' }, { name: 'C#5', midi: 73, type: 'black' },
+            { name: 'D5', midi: 74, type: 'white' }, { name: 'D#5', midi: 75, type: 'black' },
+            { name: 'E5', midi: 76, type: 'white' },
+            { name: 'F5', midi: 77, type: 'white' }, { name: 'F#5', midi: 78, type: 'black' },
+            { name: 'G5', midi: 79, type: 'white' }, { name: 'G#5', midi: 80, type: 'black' },
+            { name: 'A5', midi: 81, type: 'white' }, { name: 'A#5', midi: 82, type: 'black' },
+            { name: 'B5', midi: 83, type: 'white' },
+            { name: 'C6', midi: 84, type: 'white' }, { name: 'C#6', midi: 85, type: 'black' },
+            { name: 'D6', midi: 86, type: 'white' }, { name: 'D#6', midi: 87, type: 'black' },
+            { name: 'E6', midi: 88, type: 'white' },
+            { name: 'F6', midi: 89, type: 'white' }, { name: 'F#6', midi: 90, type: 'black' },
+            { name: 'G6', midi: 91, type: 'white' }, { name: 'G#6', midi: 92, type: 'black' },
+            { name: 'A6', midi: 93, type: 'white' }, { name: 'A#6', midi: 94, type: 'black' },
+            { name: 'B6', midi: 95, type: 'white' },
+            { name: 'C7', midi: 96, type: 'white' }
+        ];
+
+        function midiToFreq(midi) {
+            return 440 * Math.pow(2, (midi - 69) / 12);
+        }
+
+        const whiteKeyWidth = 48;
+        const blackKeyWidth = 30;
+
+        notes.forEach(noteData => {
+            const keyElement = document.createElement('div');
+            keyElement.classList.add('key');
+            keyElement.classList.add(noteData.type === 'white' ? 'white-key' : 'black-key');
+            keyElement.dataset.baseMidi = noteData.midi;
+            const noteNameForLabel = noteData.name.replace(/[0-9]/g, '');
+            keyElement.innerHTML = `<span class="note-label">${noteNameForLabel}</span>`;
+            piano.appendChild(keyElement);
+        });
+
+        const handlePointerDown = (event) => {
+            if (event.type === 'touchstart') { event.preventDefault(); }
+            if (!initializeAudioContext()) return;
+            let targetKey = event.target.closest('.key');
+            if (targetKey) {
+                isDragging = true;
+                lastDraggedKeyElement = targetKey;
+                triggerKeyPlay(targetKey, 0.7 + Math.random() * 0.3);
+            }
+        };
+
+        const handlePointerMove = (event) => {
+            if (!isDragging) return;
+            let currentX, currentY;
+            if (event.type === 'touchmove') {
+                event.preventDefault();
+                currentX = event.touches[0].clientX;
+                currentY = event.touches[0].clientY;
+            } else {
+                currentX = event.clientX;
+                currentY = event.clientY;
+            }
+            let elementUnderPointer = document.elementFromPoint(currentX, currentY);
+            let targetKey = elementUnderPointer ? elementUnderPointer.closest('.key') : null;
+            if (targetKey && targetKey !== lastDraggedKeyElement) {
+                lastDraggedKeyElement = targetKey;
+                triggerKeyPlay(targetKey, 0.6 + Math.random() * 0.2);
+            } else if (!targetKey) {
+                lastDraggedKeyElement = null;
+            }
+        };
+
+        const handlePointerUp = (event) => {
+            if (isDragging) {
+                isDragging = false;
+                lastDraggedKeyElement = null;
+            }
+        };
+
+        piano.addEventListener('mousedown', handlePointerDown);
+        piano.addEventListener('touchstart', handlePointerDown, { passive: false });
+        document.addEventListener('mousemove', handlePointerMove);
+        document.addEventListener('touchmove', handlePointerMove, { passive: false });
+        document.addEventListener('mouseup', handlePointerUp);
+        document.addEventListener('touchend', handlePointerUp);
+        document.addEventListener('touchcancel', handlePointerUp);
+
+        const pianoKeys = Array.from(piano.children);
+        pianoKeys.forEach((key, index) => {
+            if (key.classList.contains('black-key')) {
+                const previousKey = pianoKeys[index - 1];
+                if (previousKey && previousKey.classList.contains('white-key')) {
+                    key.style.left = `${previousKey.offsetLeft + whiteKeyWidth - (blackKeyWidth / 2)}px`;
+                }
+            }
+        });
+
+        const handleOctaveDown = (event) => {
+            if (event.type === 'touchstart') event.preventDefault();
+            if (currentOctaveOffset > minOctaveOffset) {
+                currentOctaveOffset--;
+                updateOctaveDisplay();
+            }function handleMIDIMessage(event) {
+                if (!isValidMidiSetup()) return;
+
+                const [statusByte, note, velocity] = event.data;
+                const channel = statusByte & 0x0F;
+                const command = statusByte >> 4;
+
+                if (channel !== selectedInputChannel) return;
+
+                flashMidiInActivity();
+                scheduleEchoes({ command, note, velocity, event });
+            }
+
+            function isValidMidiSetup() {
+                if (!midiInitialized || !selectedMidiOutputId) return false;
+                const outputDevice = midiAccess.outputs.get(selectedMidiOutputId);
+                if (!outputDevice) {
+                    handleOutputError();
+                    return false;
+                }
+                return true;
+            }
+
+            function scheduleEchoes({ command, note, velocity, event }) {
+                nextEchoFireTime = 0;
+
+                for (let r = 0; r < numberOfRepeats; r++) {
+                    const delay = delayTimeSec * (r + 1);
+                    const messageData = createEchoMessage({ event, command, note, velocity, repeat: r });
+
+                    if (r === 0) {
+                        nextEchoFireTime = Date.now() + (delay * 1000);
+                        startCountdownTimer();
+                    }
+
+                    scheduleEcho(messageData, delay);
+                }
+
+                if (numberOfRepeats === 0) {
+                    nextEchoFireTime = 0;
+                    startCountdownTimer();
+                }
+            }
+        };
+        const handleOctaveUp = (event) => {
+            if (event.type === 'touchstart') event.preventDefault();
+            if (currentOctaveOffset < maxOctaveOffset) {
+                currentOctaveOffset++;
+                updateOctaveDisplay();
+            }
+        };
+
+        octaveDownButton.addEventListener('click', handleOctaveDown);
+        octaveDownButton.addEventListener('touchstart', handleOctaveDown, { passive: false });
+        octaveUpButton.addEventListener('click', handleOctaveUp);
+        octaveUpButton.addEventListener('touchstart', handleOctaveUp, { passive: false });
+
+        resizeOscilloscope();
+
+    });
+</script>
+</body>
+</html>
