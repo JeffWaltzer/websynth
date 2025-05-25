@@ -188,6 +188,20 @@
             transform: translateY(1px);
         }
 
+        button.panic-button {
+            background-color: var(--primary-accent);
+            color: var(--background-panel);
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+            margin-top: 0.5rem;
+            width: 100%;
+            padding: 0.06rem 0.1rem; /* Reduced padding */
+            font-size: 0.7rem; /* Reduced font size */
+        }
+        button.panic-button:hover {
+            background-color: #A52A2A;
+        }
+
+
         button:disabled, input:disabled, select:disabled {
             background-color: #A09483;
             color: #60544C;
@@ -305,6 +319,9 @@
                             <label for="midiOutputChannelSelect" class="font-medium">Channel:</label>
                             <select id="midiOutputChannelSelect" class="text-sm" disabled> </select>
                         </div>
+                        <div class="control-group">
+                            <button id="panicButton" class="panic-button" disabled>ALL NOTES OFF / CLEAR ECHOES</button>
+                        </div>
                     </div>
 
                     <div class="settings-box sm:w-1/3 space-y-4">
@@ -362,11 +379,13 @@
         currentOutputDeviceEl: document.getElementById('currentOutputDevice'),
         currentOutputChannelEl: document.getElementById('currentOutputChannel'),
         lastNotePlayedDisplay: document.getElementById('lastNotePlayedDisplay'),
+        panicButton: document.getElementById('panicButton'),
     };
 
     const controlElementsForDisabling = [
         uiElements.delaySlider, uiElements.repeatsSlider, uiElements.pitchShiftSlider, uiElements.velocityScaleSlider,
         uiElements.midiInputSelect, uiElements.midiChannelSelect, uiElements.midiOutputSelect, uiElements.midiOutputChannelSelect,
+        uiElements.panicButton
     ];
 
     const LOCAL_STORAGE_KEY = 'midiDelaySettings_1930s';
@@ -378,6 +397,7 @@
     let settings = { ...initialSettings };
     let midiAccess = null;
     let midiInitialized = false;
+    let scheduledEchoes = [];
 
     const NOTE_NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 
@@ -599,7 +619,7 @@
                     outputDevice.send(finalMessageToSend);
                     showMidiActivityIndicator(false);
                     if ((finalMessageToSend[0] >> 4) === 0x9 && finalMessageToSend.length > 2 && finalMessageToSend[2] > 0) {
-                        uiElements.lastNotePlayedDisplay.textContent = `Sent: ${midiNoteToName(finalMessageToSend[1])} (Vel: ${finalMessageToSend[2]})`;
+                        uiElements.lastNotePlayedDisplay.textContent = `Sent: Ch ${settings.selectedOutputChannel + 1} ${midiNoteToName(finalMessageToSend[1])} (Vel: ${finalMessageToSend[2]})`;
                     }
                 } catch (error) { console.error("Error sending MIDI message (passthrough):", error); }
                 return;
@@ -608,6 +628,9 @@
             for (let r = 0; r < settings.numberOfRepeats; r++) {
                 const currentDelayMs = settings.delayTimeSec * (r + 1) * 1000;
                 let messageDataForThisRepeat = [...event.data];
+
+                const intendedDeviceIdForEcho = settings.selectedMidiOutputId;
+                const intendedChannelForEcho = settings.selectedOutputChannel;
 
                 if (command === 0x9 || command === 0x8) {
                     if (messageDataForThisRepeat.length > 1) {
@@ -624,23 +647,31 @@
                         }
                     }
                 }
-                const newStatusByteForRepeat = (command << 4) | settings.selectedOutputChannel;
+                const newStatusByteForRepeat = (command << 4) | intendedChannelForEcho;
                 const finalMessageToSend = [newStatusByteForRepeat, ...messageDataForThisRepeat.slice(1)];
 
-                setTimeout(() => {
-                    const currentOutputDevice = midiAccess ? midiAccess.outputs.get(settings.selectedMidiOutputId) : null;
-                    if (currentOutputDevice) {
+
+                const timeoutId = setTimeout(() => {
+                    const outputDeviceForEcho = midiAccess ? midiAccess.outputs.get(intendedDeviceIdForEcho) : null;
+                    if (outputDeviceForEcho) {
                         try {
-                            currentOutputDevice.send(finalMessageToSend);
+                            outputDeviceForEcho.send(finalMessageToSend);
                             showMidiActivityIndicator(true);
                             if ((finalMessageToSend[0] >> 4) === 0x9 && finalMessageToSend.length > 2 && finalMessageToSend[2] > 0) {
-                                uiElements.lastNotePlayedDisplay.textContent = `Echo: ${midiNoteToName(finalMessageToSend[1])} (Vel: ${finalMessageToSend[2]})`;
+                                uiElements.lastNotePlayedDisplay.textContent = `Echo: Ch ${intendedChannelForEcho + 1} ${midiNoteToName(finalMessageToSend[1])} (Vel: ${finalMessageToSend[2]})`;
                             }
                         } catch (error) {
                             console.error("Error sending MIDI message (echo):", error);
                         }
                     }
+                    scheduledEchoes = scheduledEchoes.filter(echo => echo.timeoutId !== timeoutId);
                 }, currentDelayMs);
+
+                scheduledEchoes.push({
+                    timeoutId,
+                    deviceId: intendedDeviceIdForEcho,
+                    channel: intendedChannelForEcho
+                });
             }
         }
     }
@@ -720,7 +751,7 @@
 
             if (valueFormatter) {
                 valueDisplayElem.textContent = valueFormatter(settings[settingKey]);
-            } else if (settingKey === 'delayTimeSec') { // Special handling for delay time to ensure .toFixed(2)
+            } else if (settingKey === 'delayTimeSec') {
                 valueDisplayElem.textContent = `${settings[settingKey].toFixed(2)}${displaySuffix || 's'}`;
             }
             else {
@@ -729,20 +760,6 @@
 
             updateStatusMessage();
             saveSettingsToLocalStorage();
-        });
-    }
-
-    function setupSelectListener(selectElem, settingKey, parseFn = (val) => val, afterChangeCallback = null) {
-        selectElem.addEventListener('change', (event) => {
-            settings[settingKey] = parseFn(event.target.value);
-            if (midiInitialized) {
-                updateStatusMessage();
-                updateLiveStatusBar();
-            }
-            saveSettingsToLocalStorage();
-            if (afterChangeCallback) {
-                afterChangeCallback();
-            }
         });
     }
 
@@ -769,6 +786,45 @@
         updateLiveStatusBar();
     }
 
+    function clearAllScheduledEchoes() {
+        scheduledEchoes.forEach(echo => clearTimeout(echo.timeoutId));
+        scheduledEchoes = [];
+        console.log("All scheduled echoes cleared.");
+    }
+
+    function sendAllNotesOffToDevice(deviceId, channel) {
+        if (!midiAccess || !deviceId) return;
+        const outputDevice = midiAccess.outputs.get(deviceId);
+        if (outputDevice) {
+            try {
+                const allNotesOffMessage = [(0xB0 | channel), 123, 0]; // CC 123: All Notes Off
+                outputDevice.send(allNotesOffMessage);
+                console.log(`Sent All Notes Off to Ch ${channel + 1} on ${outputDevice.name}`);
+            } catch (error) {
+                console.error(`Error sending All Notes Off to Ch ${channel + 1} on ${outputDevice.name}:`, error);
+            }
+        }
+    }
+
+    function sendAllNotesOffToAllChannelsOnDevice(deviceId) {
+        if (!midiAccess || !deviceId) return;
+        const outputDevice = midiAccess.outputs.get(deviceId);
+        if (outputDevice) {
+            for (let ch = 0; ch < 16; ch++) {
+                try {
+                    const allNotesOffMessage = [(0xB0 | ch), 123, 0];
+                    outputDevice.send(allNotesOffMessage);
+                } catch (error) {
+                    console.error(`Error sending All Notes Off to Ch ${ch + 1} on ${outputDevice.name}:`, error);
+                }
+            }
+            console.log(`Sent All Notes Off to ALL CHANNELS on ${outputDevice.name}`);
+            uiElements.mainStatusMessages.textContent = `All notes off sent to ${outputDevice.name}. Echoes cleared.`;
+
+        }
+    }
+
+
     document.addEventListener('DOMContentLoaded', () => {
         loadSettingsFromLocalStorage();
 
@@ -785,10 +841,65 @@
         setupSliderListener(uiElements.pitchShiftSlider, uiElements.pitchShiftValueDisplay, 'pitchShiftPerRepeat', { parseFn: parseInt, displaySuffix: ' st' });
         setupSliderListener(uiElements.velocityScaleSlider, uiElements.velocityScaleValueDisplay, 'velocityChangePerRepeat', { parseFn: parseInt });
 
-        setupSelectListener(uiElements.midiInputSelect, 'selectedMidiInputId', (val) => val, updateInputListeners);
-        setupSelectListener(uiElements.midiChannelSelect, 'selectedInputChannel', parseInt);
-        setupSelectListener(uiElements.midiOutputSelect, 'selectedMidiOutputId');
-        setupSelectListener(uiElements.midiOutputChannelSelect, 'selectedOutputChannel', parseInt);
+        uiElements.midiInputSelect.addEventListener('change', (event) => {
+            settings.selectedMidiInputId = event.target.value;
+            updateInputListeners();
+            saveSettingsToLocalStorage();
+            if (midiInitialized) { updateStatusMessage(); updateLiveStatusBar(); }
+        });
+
+        uiElements.midiChannelSelect.addEventListener('change', (event) => {
+            settings.selectedInputChannel = parseInt(event.target.value);
+            saveSettingsToLocalStorage();
+            if (midiInitialized) { updateStatusMessage(); updateLiveStatusBar(); }
+        });
+
+        uiElements.midiOutputSelect.addEventListener('change', (event) => {
+            const newDeviceId = event.target.value;
+            const oldDeviceId = settings.selectedMidiOutputId;
+            const channelThatWasActiveOnOldDevice = settings.selectedOutputChannel;
+
+            if (midiInitialized && oldDeviceId && oldDeviceId !== newDeviceId) {
+                clearAllScheduledEchoes();
+                sendAllNotesOffToDevice(oldDeviceId, channelThatWasActiveOnOldDevice);
+            }
+            settings.selectedMidiOutputId = newDeviceId;
+            if (midiInitialized) { updateStatusMessage(); updateLiveStatusBar(); }
+            saveSettingsToLocalStorage();
+        });
+
+        uiElements.midiOutputChannelSelect.addEventListener('change', (event) => {
+            const newChannel = parseInt(event.target.value);
+            const oldChannelOnCurrentDevice = settings.selectedOutputChannel;
+            const currentDeviceId = settings.selectedMidiOutputId;
+
+            if (midiInitialized && currentDeviceId && oldChannelOnCurrentDevice !== newChannel) {
+                const echoesToClear = scheduledEchoes.filter(echo =>
+                    echo.deviceId === currentDeviceId && echo.channel === oldChannelOnCurrentDevice
+                );
+                echoesToClear.forEach(echo => clearTimeout(echo.timeoutId));
+                scheduledEchoes = scheduledEchoes.filter(echo =>
+                    !(echo.deviceId === currentDeviceId && echo.channel === oldChannelOnCurrentDevice)
+                );
+                sendAllNotesOffToDevice(currentDeviceId, oldChannelOnCurrentDevice);
+            }
+            settings.selectedOutputChannel = newChannel;
+            if (midiInitialized) { updateStatusMessage(); updateLiveStatusBar(); }
+            saveSettingsToLocalStorage();
+        });
+
+        uiElements.panicButton.addEventListener('click', () => {
+            if (!midiInitialized || !midiAccess) {
+                uiElements.mainStatusMessages.textContent = "Modulator offline. Cannot send panic.";
+                return;
+            }
+            clearAllScheduledEchoes();
+            if (settings.selectedMidiOutputId) {
+                sendAllNotesOffToAllChannelsOnDevice(settings.selectedMidiOutputId);
+            } else {
+                uiElements.mainStatusMessages.textContent = "No output device selected for panic.";
+            }
+        });
 
         initializeMidiSystem();
     });
