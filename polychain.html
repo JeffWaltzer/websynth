@@ -34,33 +34,30 @@
             vertical-align: middle;
             cursor: pointer;
         }
-        .channel-btn-draggable {
+        .channel-btn { /* Renamed from channel-btn-draggable */
             padding: 0.3rem 0.6rem;
             font-size: 0.8rem;
             min-width: 50px;
-            cursor: grab;
+            cursor: pointer; /* Changed from grab */
         }
-        .selected-channels-dropzone {
+        .selected-channels-display-area { /* Renamed from selected-channels-dropzone */
             min-height: 70px;
             background-color: #374151; /* bg-gray-700 */
-            border: 2px dashed #9CA3AF; /* Lighter default border (gray-400) */
+            border: 1px solid #4B5563; /* Solid border instead of dashed */
             color: #D1D5DB;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; /* Align pills to the start */
             gap: 0.5rem;
             padding: 0.75rem;
             border-radius: 0.5rem;
-            transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
         }
-        .selected-channels-dropzone.drag-over {
-            border-color: #0EA5E9; /* sky-500 - Bright for active drag state */
-            background-color: #4b5563; /* gray-600 */
-        }
-        .dropzone-placeholder-text {
-            color: #9CA3AF; /* gray-400 */
+        .display-area-placeholder-text { /* Renamed from dropzone-placeholder-text */
+            color: #9CA3AF;
             font-style: italic;
+            width: 100%; /* Ensure it takes full width if alone */
+            text-align: center; /* Center placeholder if alone */
         }
         .channel-pill {
             background-color: #4f46e5; /* bg-indigo-600 */
@@ -70,11 +67,7 @@
             font-size: 0.875rem; /* text-sm */
             display: inline-flex;
             align-items: center;
-            cursor: grab;
             user-select: none;
-        }
-        .channel-pill.dragging {
-            opacity: 0.5;
         }
         .channel-pill-remove {
             background: none;
@@ -89,14 +82,6 @@
         .channel-pill-remove:hover {
             color: #e5e7eb; /* gray-200 */
         }
-        .drop-placeholder {
-            width: 5px;
-            height: 2rem;
-            background-color: #3b82f6; /* sky-500 */
-            border-radius: 2px;
-            margin: 0 0.25rem;
-        }
-
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
@@ -130,17 +115,21 @@
         </div>
 
         <div>
-            <span class="block text-sm font-medium text-sky-300 mb-1">Available Channels (Drag or Double-Click to add to sequence):</span>
+            <span class="block text-sm font-medium text-sky-300 mb-1">Available Channels (Click or Double-Click to add to sequence):</span>
             <div id="availableChannelsContainer" class="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-3 p-3 bg-gray-700 rounded-lg border border-gray-600">
-            </div>
-
-            <span class="block text-sm font-medium text-sky-300 mb-1">Selected Polychain Channel Sequence (Drag to reorder):</span>
-            <div id="selectedPolychainChannelsDropzone" class="selected-channels-dropzone w-full mb-2">
-                <span class="dropzone-placeholder-text self-center">Drop channels here...</span>
             </div>
             <button id="clearPolychainChannelsBtn" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-150 ease-in-out text-sm">
                 Clear Selected Channels
             </button>
+        </div>
+    </section>
+
+    <section id="routingDisplay" class="space-y-4 mb-6">
+        <div>
+            <h2 class="text-lg font-semibold text-sky-300 mb-1">Selected Polychain Channel Sequence:</h2>
+            <div id="selectedPolychainChannelsDisplayArea" class="selected-channels-display-area w-full">
+                <span class="display-area-placeholder-text">Click channels above to add to sequence...</span>
+            </div>
         </div>
     </section>
 
@@ -175,15 +164,12 @@
     let currentTargetDeviceIndex = 0;
     let currentPolychainChannelIndex = 0;
 
-    let draggedChannelValue = null;
-    let draggedPillIndex = null;
-
     // --- DOM Elements ---
     const midiInSelect = document.getElementById('midiIn');
     const inputChannelSelect = document.getElementById('inputChannel');
     const targetDevicesContainer = document.getElementById('targetDevicesContainer');
     const availableChannelsContainer = document.getElementById('availableChannelsContainer');
-    const selectedPolychainChannelsDropzone = document.getElementById('selectedPolychainChannelsDropzone');
+    const selectedPolychainChannelsDisplayArea = document.getElementById('selectedPolychainChannelsDisplayArea'); // Renamed
     const clearPolychainChannelsBtn = document.getElementById('clearPolychainChannelsBtn');
     const statusMessagesDiv = document.getElementById('statusMessages');
     const activeNotesDisplayDiv = document.getElementById('activeNotesDisplay');
@@ -218,24 +204,22 @@
     }
 
     function renderSelectedPolychainChannels() {
-        selectedPolychainChannelsDropzone.innerHTML = '';
+        selectedPolychainChannelsDisplayArea.innerHTML = '';
 
         if (selectedPolychainChannels.length === 0) {
             const placeholder = document.createElement('span');
-            placeholder.className = 'dropzone-placeholder-text self-center';
-            placeholder.textContent = 'Drop channels here...';
-            selectedPolychainChannelsDropzone.appendChild(placeholder);
+            placeholder.className = 'display-area-placeholder-text';
+            placeholder.textContent = 'Click channels above to add to sequence...';
+            selectedPolychainChannelsDisplayArea.appendChild(placeholder);
         } else {
             selectedPolychainChannels.forEach((channel, index) => {
                 const pill = document.createElement('span');
                 pill.className = 'channel-pill';
                 pill.textContent = `Ch ${channel}`;
-                pill.draggable = true;
-                pill.dataset.index = index;
+                // No longer draggable
+                // pill.draggable = true;
+                pill.dataset.index = index; // Still useful for removal
                 pill.dataset.channelValue = channel;
-
-                pill.addEventListener('dragstart', handlePillDragStart);
-                pill.addEventListener('dragend', handlePillDragEnd);
 
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'channel-pill-remove';
@@ -245,166 +229,18 @@
                 removeBtn.addEventListener('click', handleRemovePolychainChannel);
 
                 pill.appendChild(removeBtn);
-                selectedPolychainChannelsDropzone.appendChild(pill);
+                selectedPolychainChannelsDisplayArea.appendChild(pill);
             });
         }
     }
 
-    // --- Drag and Drop Handlers ---
-    function handleAvailableChannelDragStart(event) {
-        draggedChannelValue = parseInt(event.target.dataset.channel);
-        draggedPillIndex = null; // Ensure only one drag type is active
-        console.log('[DragStart Available] draggedChannelValue:', draggedChannelValue, 'draggedPillIndex:', draggedPillIndex);
-        event.dataTransfer.setData('text/plain', String(draggedChannelValue));
-        event.dataTransfer.effectAllowed = 'copy';
-        event.target.classList.add('opacity-50');
-    }
-    function handleAvailableChannelDragEnd(event) {
-        console.log('[DragEnd Available] Clearing draggedChannelValue. Was:', draggedChannelValue);
-        event.target.classList.remove('opacity-50');
-        // draggedChannelValue is reset in the drop handler or if drag is cancelled.
-        // To be safe, reset if not dropped on a valid target (though drop handler should also do this)
-        // setTimeout(() => { // Allow drop event to process first
-        //    if (draggedChannelValue !== null) { // If drop didn't clear it (e.g., cancelled drag)
-        //         console.log('[DragEnd Available] Fallback: Clearing draggedChannelValue as it was not cleared by drop.');
-        //         draggedChannelValue = null;
-        //    }
-        // }, 0);
-        // Simpler: just reset here. If drop happened, it used the value already.
-        draggedChannelValue = null;
-    }
-
-    function handleDropzoneDragOver(event) {
-        event.preventDefault(); // Essential for 'drop' to fire
-        if (draggedChannelValue !== null) {
-            event.dataTransfer.dropEffect = 'copy';
-        } else if (draggedPillIndex !== null) {
-            event.dataTransfer.dropEffect = 'move';
-        } else {
-            event.dataTransfer.dropEffect = 'none'; // No active drag relevant to this dropzone
-            return;
-        }
-        selectedPolychainChannelsDropzone.classList.add('drag-over');
-
-        if (draggedPillIndex !== null) {
-            removeDropPlaceholder();
-            const afterElement = getDragAfterElement(selectedPolychainChannelsDropzone, event.clientX);
-            const placeholder = document.createElement('div');
-            placeholder.classList.add('drop-placeholder');
-            if (afterElement == null) {
-                selectedPolychainChannelsDropzone.appendChild(placeholder);
-            } else {
-                selectedPolychainChannelsDropzone.insertBefore(placeholder, afterElement);
-            }
-        }
-    }
-    function handleDropzoneDragLeave(event) {
-        if (!selectedPolychainChannelsDropzone.contains(event.relatedTarget) || event.relatedTarget === null) {
-            selectedPolychainChannelsDropzone.classList.remove('drag-over');
-            removeDropPlaceholder();
-        }
-    }
-
-    function handleDropzoneDrop(event) {
-        event.preventDefault();
-        console.log('[Drop] Event fired. effectAllowed:', event.dataTransfer.effectAllowed);
-        console.log('[Drop] Before processing - draggedChannelValue:', draggedChannelValue, 'draggedPillIndex:', draggedPillIndex);
-        selectedPolychainChannelsDropzone.classList.remove('drag-over');
-        removeDropPlaceholder();
-
-        // Check for adding a new channel
-        if (draggedChannelValue !== null && event.dataTransfer.effectAllowed === 'copy') {
-            console.log('[Drop] Adding new channel:', draggedChannelValue);
-            selectedPolychainChannels.push(draggedChannelValue);
-            currentPolychainChannelIndex = 0;
-            logStatus(`Added Ch ${draggedChannelValue} to sequence.`);
-            // Check for reordering an existing pill
-        } else if (draggedPillIndex !== null && event.dataTransfer.effectAllowed === 'move') {
-            console.log('[Drop] Reordering pill from index:', draggedPillIndex);
-            const channelToMove = selectedPolychainChannels[draggedPillIndex];
-            if (typeof channelToMove === 'undefined') {
-                console.error('[Drop Error] Channel to move is undefined. draggedPillIndex:', draggedPillIndex, 'Array:', selectedPolychainChannels);
-                // Reset states and re-render to be safe
-                draggedChannelValue = null;
-                draggedPillIndex = null;
-                renderSelectedPolychainChannels();
-                return;
-            }
-            selectedPolychainChannels.splice(draggedPillIndex, 1);
-
-            // Determine new position based on drop location relative to other pills
-            const currentPillElements = Array.from(selectedPolychainChannelsDropzone.querySelectorAll('.channel-pill:not(.dragging)'));
-            let newArrayIndex = currentPillElements.length;
-            for (let i = 0; i < currentPillElements.length; i++) {
-                const rect = currentPillElements[i].getBoundingClientRect();
-                if (event.clientX < rect.left + rect.width / 2) {
-                    newArrayIndex = i;
-                    break;
-                }
-            }
-            selectedPolychainChannels.splice(newArrayIndex, 0, channelToMove);
-            currentPolychainChannelIndex = 0;
-            logStatus(`Moved Ch ${channelToMove} in sequence.`);
-        } else {
-            console.log('[Drop] No valid action taken. draggedChannelValue:', draggedChannelValue,
-                'draggedPillIndex:', draggedPillIndex,
-                'effectAllowed:', event.dataTransfer.effectAllowed);
-        }
-
-        renderSelectedPolychainChannels();
-        draggedChannelValue = null;
-        draggedPillIndex = null;
-        console.log('[Drop] After processing - draggedChannelValue:', draggedChannelValue, 'draggedPillIndex:', draggedPillIndex);
-    }
-
-    function handlePillDragStart(event) {
-        draggedPillIndex = parseInt(event.target.dataset.index);
-        draggedChannelValue = null; // Ensure only one drag type is active
-        console.log('[DragStart Pill] draggedPillIndex:', draggedPillIndex, 'draggedChannelValue:', draggedChannelValue);
-        event.dataTransfer.setData('text/x-custom-pill-reorder', event.target.dataset.channelValue);
-        event.dataTransfer.effectAllowed = 'move';
-        event.target.classList.add('dragging');
-    }
-    function handlePillDragEnd(event) {
-        console.log('[DragEnd Pill] Clearing draggedPillIndex. Was:', draggedPillIndex);
-        event.target.classList.remove('dragging');
-        // draggedPillIndex is reset in the drop handler or if drag is cancelled.
-        // setTimeout(() => { // Allow drop event to process first
-        //    if (draggedPillIndex !== null) { // If drop didn't clear it
-        //         console.log('[DragEnd Pill] Fallback: Clearing draggedPillIndex as it was not cleared by drop.');
-        //         draggedPillIndex = null;
-        //    }
-        // }, 0);
-        draggedPillIndex = null; // Simpler: just reset here
-        removeDropPlaceholder();
-    }
-
-    function getDragAfterElement(container, x) {
-        const draggableElements = [...container.querySelectorAll('.channel-pill:not(.dragging)')];
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = x - box.left - box.width / 2;
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
-    function removeDropPlaceholder() {
-        const placeholder = selectedPolychainChannelsDropzone.querySelector('.drop-placeholder');
-        if (placeholder) {
-            placeholder.remove();
-        }
-    }
-
-    function handleAvailableChannelDoubleClick(event) {
-        const channel = parseInt(event.target.dataset.channel);
+    function handleAvailableChannelClick(event) { // Renamed from DoubleClick, now handles single click
+        const channel = parseInt(event.currentTarget.dataset.channel); // Use currentTarget for delegated events if needed, but direct here
         selectedPolychainChannels.push(channel);
         renderSelectedPolychainChannels();
         currentPolychainChannelIndex = 0;
-        logStatus(`Added Ch ${channel} to sequence (double-click).`);
-        console.log('[DoubleClick] Added Ch', channel, ' New sequence:', selectedPolychainChannels);
+        logStatus(`Added Ch ${channel} to sequence.`);
+        console.log('[Click] Added Ch', channel, ' New sequence:', selectedPolychainChannels);
     }
 
 
@@ -489,11 +325,10 @@
                 const button = document.createElement('button');
                 button.textContent = `Ch ${i}`;
                 button.dataset.channel = i;
-                button.draggable = true;
-                button.className = 'channel-btn-draggable bg-sky-500 text-white font-semibold rounded-md transition duration-150 ease-in-out hover:bg-sky-600';
-                button.addEventListener('dragstart', handleAvailableChannelDragStart);
-                button.addEventListener('dragend', handleAvailableChannelDragEnd);
-                button.addEventListener('dblclick', handleAvailableChannelDoubleClick);
+                // button.draggable = true; // No longer draggable
+                button.className = 'channel-btn bg-sky-500 text-white font-semibold rounded-md transition duration-150 ease-in-out hover:bg-sky-600'; // Renamed class
+                // Add single click listener instead of drag/double-click for simplicity
+                button.addEventListener('click', handleAvailableChannelClick);
                 availableChannelsContainer.appendChild(button);
             }
         }
@@ -631,9 +466,10 @@
                 setupMidiListeners();
             });
 
-            selectedPolychainChannelsDropzone.addEventListener('dragover', handleDropzoneDragOver);
-            selectedPolychainChannelsDropzone.addEventListener('dragleave', handleDropzoneDragLeave);
-            selectedPolychainChannelsDropzone.addEventListener('drop', handleDropzoneDrop);
+            // Remove drag and drop listeners from the display area
+            // selectedPolychainChannelsDisplayArea.addEventListener('dragover', handleDropzoneDragOver);
+            // selectedPolychainChannelsDisplayArea.addEventListener('dragleave', handleDropzoneDragLeave);
+            // selectedPolychainChannelsDisplayArea.addEventListener('drop', handleDropzoneDrop);
 
 
             WebMidi.addListener("connected", (e) => {
