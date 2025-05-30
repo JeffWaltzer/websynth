@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI Polychain Splitter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/webmidi@latest/dist/iife/webmidi.iife.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        .custom-checkbox:checked {
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+            background-color: #2563eb; /* bg-blue-600 */
+            border-color: #2563eb; /* border-blue-600 */
+        }
+        .custom-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            height: 1.25rem; /* h-5 */
+            width: 1.25rem; /* w-5 */
+            border-radius: 0.25rem; /* rounded */
+            border-width: 1px; /* border */
+            border-color: #9ca3af; /* border-gray-400 */
+            vertical-align: middle;
+            cursor: pointer;
+        }
+        .channel-btn-draggable {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            min-width: 50px;
+            cursor: grab;
+        }
+        .selected-channels-dropzone {
+            min-height: 70px;
+            background-color: #374151; /* bg-gray-700 */
+            border: 2px dashed #9CA3AF; /* Lighter default border (gray-400) */
+            color: #D1D5DB;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+        }
+        .selected-channels-dropzone.drag-over {
+            border-color: #0EA5E9; /* sky-500 - Bright for active drag state */
+            background-color: #4b5563; /* gray-600 */
+        }
+        .dropzone-placeholder-text {
+            color: #9CA3AF; /* gray-400 */
+            font-style: italic;
+        }
+        .channel-pill {
+            background-color: #4f46e5; /* bg-indigo-600 */
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px; /* rounded-full */
+            font-size: 0.875rem; /* text-sm */
+            display: inline-flex;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+        }
+        .channel-pill.dragging {
+            opacity: 0.5;
+        }
+        .channel-pill-remove {
+            background: none;
+            border: none;
+            color: white;
+            margin-left: 0.5rem;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 0;
+            line-height: 1;
+        }
+        .channel-pill-remove:hover {
+            color: #e5e7eb; /* gray-200 */
+        }
+        .drop-placeholder {
+            width: 5px;
+            height: 2rem;
+            background-color: #3b82f6; /* sky-500 */
+            border-radius: 2px;
+            margin: 0 0.25rem;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+<div class="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-2xl">
+    <header class="mb-6 sm:mb-8 text-center">
+        <h1 class="text-3xl sm:text-4xl font-bold text-sky-400">MIDI Polychain Splitter</h1>
+        <p class="text-gray-400 mt-2">Route incoming MIDI notes to selected devices on dynamically assigned channels.</p>
+    </header>
+
+    <section id="midiSetup" class="space-y-6 mb-6">
+        <div>
+            <label for="midiIn" class="block text-sm font-medium text-sky-300 mb-1">MIDI Input:</label>
+            <select id="midiIn" class="custom-select w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out">
+                <option value="">Select MIDI Input</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="inputChannel" class="block text-sm font-medium text-sky-300 mb-1">Input Channel (Listening):</label>
+            <select id="inputChannel" class="custom-select w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out">
+                <option value="all">All Channels</option>
+            </select>
+        </div>
+
+        <div>
+            <span class="block text-sm font-medium text-sky-300 mb-2">Target MIDI Output Devices:</span>
+            <div id="targetDevicesContainer" class="space-y-2 max-h-40 overflow-y-auto bg-gray-700 p-3 rounded-lg border border-gray-600">
+                <p class="text-gray-400 italic">No MIDI outputs found.</p>
+            </div>
+        </div>
+
+        <div>
+            <span class="block text-sm font-medium text-sky-300 mb-1">Available Channels (Drag or Double-Click to add to sequence):</span>
+            <div id="availableChannelsContainer" class="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-3 p-3 bg-gray-700 rounded-lg border border-gray-600">
+            </div>
+
+            <span class="block text-sm font-medium text-sky-300 mb-1">Selected Polychain Channel Sequence (Drag to reorder):</span>
+            <div id="selectedPolychainChannelsDropzone" class="selected-channels-dropzone w-full mb-2">
+                <span class="dropzone-placeholder-text self-center">Drop channels here...</span>
+            </div>
+            <button id="clearPolychainChannelsBtn" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-150 ease-in-out text-sm">
+                Clear Selected Channels
+            </button>
+        </div>
+    </section>
+
+    <section class="space-y-4">
+        <div>
+            <h2 class="text-lg font-semibold text-sky-300 mb-1">Status:</h2>
+            <div id="statusMessages" class="p-3 bg-gray-700 border border-gray-600 rounded-lg text-sm text-gray-300 min-h-[40px]">
+                Initializing...
+            </div>
+        </div>
+        <div>
+            <h2 class="text-lg font-semibold text-sky-300 mb-1">Active Routed Notes:</h2>
+            <div id="activeNotesDisplay" class="p-3 bg-gray-700 border border-gray-600 rounded-lg text-sm text-gray-300 min-h-[60px] max-h-40 overflow-y-auto">
+                No notes active.
+            </div>
+        </div>
+    </section>
+    <footer class="mt-8 text-center">
+        <p class="text-xs text-gray-500">Using WebMidi.js v<span id="webmidiVersion"></span></p>
+    </footer>
+</div>
+
+<script>
+    // --- Global Variables ---
+    let selectedMidiInput = null;
+    let selectedInputChannel = 'all';
+    let selectedTargetDevices = [];
+    let selectedPolychainChannels = [];
+
+    let activeRoutedNotes = new Map();
+
+    let currentTargetDeviceIndex = 0;
+    let currentPolychainChannelIndex = 0;
+
+    let draggedChannelValue = null;
+    let draggedPillIndex = null;
+
+    // --- DOM Elements ---
+    const midiInSelect = document.getElementById('midiIn');
+    const inputChannelSelect = document.getElementById('inputChannel');
+    const targetDevicesContainer = document.getElementById('targetDevicesContainer');
+    const availableChannelsContainer = document.getElementById('availableChannelsContainer');
+    const selectedPolychainChannelsDropzone = document.getElementById('selectedPolychainChannelsDropzone');
+    const clearPolychainChannelsBtn = document.getElementById('clearPolychainChannelsBtn');
+    const statusMessagesDiv = document.getElementById('statusMessages');
+    const activeNotesDisplayDiv = document.getElementById('activeNotesDisplay');
+    const webmidiVersionSpan = document.getElementById('webmidiVersion');
+
+    // --- Utility Functions ---
+    function logStatus(message, isError = false) {
+        console.log(message);
+        const p = document.createElement('p');
+        p.textContent = message;
+        if (isError) {
+            p.className = 'text-red-400';
+        } else {
+            p.className = 'text-green-400';
+        }
+        statusMessagesDiv.innerHTML = '';
+        statusMessagesDiv.appendChild(p);
+    }
+
+    function updateActiveNotesDisplay() {
+        if (activeRoutedNotes.size === 0) {
+            activeNotesDisplayDiv.innerHTML = '<p class="italic text-gray-400">No notes active.</p>';
+            return;
+        }
+        activeNotesDisplayDiv.innerHTML = '';
+        activeRoutedNotes.forEach((details, key) => {
+            const p = document.createElement('p');
+            const inputChannelInfo = key.substring(0, key.indexOf('-note'));
+            p.textContent = `Input: ${inputChannelInfo} (Note ${details.note.name}${details.note.octave}) -> Dev: ${details.outputDevice.name} (Out Ch ${details.outputChannel}) Vel: ${Math.round(details.originalVelocity * 127)}`;
+            activeNotesDisplayDiv.appendChild(p);
+        });
+    }
+
+    function renderSelectedPolychainChannels() {
+        selectedPolychainChannelsDropzone.innerHTML = '';
+
+        if (selectedPolychainChannels.length === 0) {
+            const placeholder = document.createElement('span');
+            placeholder.className = 'dropzone-placeholder-text self-center';
+            placeholder.textContent = 'Drop channels here...';
+            selectedPolychainChannelsDropzone.appendChild(placeholder);
+        } else {
+            selectedPolychainChannels.forEach((channel, index) => {
+                const pill = document.createElement('span');
+                pill.className = 'channel-pill';
+                pill.textContent = `Ch ${channel}`;
+                pill.draggable = true;
+                pill.dataset.index = index;
+                pill.dataset.channelValue = channel;
+
+                pill.addEventListener('dragstart', handlePillDragStart);
+                pill.addEventListener('dragend', handlePillDragEnd);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'channel-pill-remove';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.title = `Remove Ch ${channel} at this position`;
+                removeBtn.dataset.index = index;
+                removeBtn.addEventListener('click', handleRemovePolychainChannel);
+
+                pill.appendChild(removeBtn);
+                selectedPolychainChannelsDropzone.appendChild(pill);
+            });
+        }
+    }
+
+    // --- Drag and Drop Handlers ---
+    function handleAvailableChannelDragStart(event) {
+        draggedChannelValue = parseInt(event.target.dataset.channel);
+        draggedPillIndex = null; // Ensure only one drag type is active
+        console.log('[DragStart Available] draggedChannelValue:', draggedChannelValue, 'draggedPillIndex:', draggedPillIndex);
+        event.dataTransfer.setData('text/plain', String(draggedChannelValue));
+        event.dataTransfer.effectAllowed = 'copy';
+        event.target.classList.add('opacity-50');
+    }
+    function handleAvailableChannelDragEnd(event) {
+        console.log('[DragEnd Available] Clearing draggedChannelValue. Was:', draggedChannelValue);
+        event.target.classList.remove('opacity-50');
+        // draggedChannelValue is reset in the drop handler or if drag is cancelled.
+        // To be safe, reset if not dropped on a valid target (though drop handler should also do this)
+        // setTimeout(() => { // Allow drop event to process first
+        //    if (draggedChannelValue !== null) { // If drop didn't clear it (e.g., cancelled drag)
+        //         console.log('[DragEnd Available] Fallback: Clearing draggedChannelValue as it was not cleared by drop.');
+        //         draggedChannelValue = null;
+        //    }
+        // }, 0);
+        // Simpler: just reset here. If drop happened, it used the value already.
+        draggedChannelValue = null;
+    }
+
+    function handleDropzoneDragOver(event) {
+        event.preventDefault(); // Essential for 'drop' to fire
+        if (draggedChannelValue !== null) {
+            event.dataTransfer.dropEffect = 'copy';
+        } else if (draggedPillIndex !== null) {
+            event.dataTransfer.dropEffect = 'move';
+        } else {
+            event.dataTransfer.dropEffect = 'none'; // No active drag relevant to this dropzone
+            return;
+        }
+        selectedPolychainChannelsDropzone.classList.add('drag-over');
+
+        if (draggedPillIndex !== null) {
+            removeDropPlaceholder();
+            const afterElement = getDragAfterElement(selectedPolychainChannelsDropzone, event.clientX);
+            const placeholder = document.createElement('div');
+            placeholder.classList.add('drop-placeholder');
+            if (afterElement == null) {
+                selectedPolychainChannelsDropzone.appendChild(placeholder);
+            } else {
+                selectedPolychainChannelsDropzone.insertBefore(placeholder, afterElement);
+            }
+        }
+    }
+    function handleDropzoneDragLeave(event) {
+        if (!selectedPolychainChannelsDropzone.contains(event.relatedTarget) || event.relatedTarget === null) {
+            selectedPolychainChannelsDropzone.classList.remove('drag-over');
+            removeDropPlaceholder();
+        }
+    }
+
+    function handleDropzoneDrop(event) {
+        event.preventDefault();
+        console.log('[Drop] Event fired. effectAllowed:', event.dataTransfer.effectAllowed);
+        console.log('[Drop] Before processing - draggedChannelValue:', draggedChannelValue, 'draggedPillIndex:', draggedPillIndex);
+        selectedPolychainChannelsDropzone.classList.remove('drag-over');
+        removeDropPlaceholder();
+
+        // Check for adding a new channel
+        if (draggedChannelValue !== null && event.dataTransfer.effectAllowed === 'copy') {
+            console.log('[Drop] Adding new channel:', draggedChannelValue);
+            selectedPolychainChannels.push(draggedChannelValue);
+            currentPolychainChannelIndex = 0;
+            logStatus(`Added Ch ${draggedChannelValue} to sequence.`);
+            // Check for reordering an existing pill
+        } else if (draggedPillIndex !== null && event.dataTransfer.effectAllowed === 'move') {
+            console.log('[Drop] Reordering pill from index:', draggedPillIndex);
+            const channelToMove = selectedPolychainChannels[draggedPillIndex];
+            if (typeof channelToMove === 'undefined') {
+                console.error('[Drop Error] Channel to move is undefined. draggedPillIndex:', draggedPillIndex, 'Array:', selectedPolychainChannels);
+                // Reset states and re-render to be safe
+                draggedChannelValue = null;
+                draggedPillIndex = null;
+                renderSelectedPolychainChannels();
+                return;
+            }
+            selectedPolychainChannels.splice(draggedPillIndex, 1);
+
+            // Determine new position based on drop location relative to other pills
+            const currentPillElements = Array.from(selectedPolychainChannelsDropzone.querySelectorAll('.channel-pill:not(.dragging)'));
+            let newArrayIndex = currentPillElements.length;
+            for (let i = 0; i < currentPillElements.length; i++) {
+                const rect = currentPillElements[i].getBoundingClientRect();
+                if (event.clientX < rect.left + rect.width / 2) {
+                    newArrayIndex = i;
+                    break;
+                }
+            }
+            selectedPolychainChannels.splice(newArrayIndex, 0, channelToMove);
+            currentPolychainChannelIndex = 0;
+            logStatus(`Moved Ch ${channelToMove} in sequence.`);
+        } else {
+            console.log('[Drop] No valid action taken. draggedChannelValue:', draggedChannelValue,
+                'draggedPillIndex:', draggedPillIndex,
+                'effectAllowed:', event.dataTransfer.effectAllowed);
+        }
+
+        renderSelectedPolychainChannels();
+        draggedChannelValue = null;
+        draggedPillIndex = null;
+        console.log('[Drop] After processing - draggedChannelValue:', draggedChannelValue, 'draggedPillIndex:', draggedPillIndex);
+    }
+
+    function handlePillDragStart(event) {
+        draggedPillIndex = parseInt(event.target.dataset.index);
+        draggedChannelValue = null; // Ensure only one drag type is active
+        console.log('[DragStart Pill] draggedPillIndex:', draggedPillIndex, 'draggedChannelValue:', draggedChannelValue);
+        event.dataTransfer.setData('text/x-custom-pill-reorder', event.target.dataset.channelValue);
+        event.dataTransfer.effectAllowed = 'move';
+        event.target.classList.add('dragging');
+    }
+    function handlePillDragEnd(event) {
+        console.log('[DragEnd Pill] Clearing draggedPillIndex. Was:', draggedPillIndex);
+        event.target.classList.remove('dragging');
+        // draggedPillIndex is reset in the drop handler or if drag is cancelled.
+        // setTimeout(() => { // Allow drop event to process first
+        //    if (draggedPillIndex !== null) { // If drop didn't clear it
+        //         console.log('[DragEnd Pill] Fallback: Clearing draggedPillIndex as it was not cleared by drop.');
+        //         draggedPillIndex = null;
+        //    }
+        // }, 0);
+        draggedPillIndex = null; // Simpler: just reset here
+        removeDropPlaceholder();
+    }
+
+    function getDragAfterElement(container, x) {
+        const draggableElements = [...container.querySelectorAll('.channel-pill:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = x - box.left - box.width / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+    function removeDropPlaceholder() {
+        const placeholder = selectedPolychainChannelsDropzone.querySelector('.drop-placeholder');
+        if (placeholder) {
+            placeholder.remove();
+        }
+    }
+
+    function handleAvailableChannelDoubleClick(event) {
+        const channel = parseInt(event.target.dataset.channel);
+        selectedPolychainChannels.push(channel);
+        renderSelectedPolychainChannels();
+        currentPolychainChannelIndex = 0;
+        logStatus(`Added Ch ${channel} to sequence (double-click).`);
+        console.log('[DoubleClick] Added Ch', channel, ' New sequence:', selectedPolychainChannels);
+    }
+
+
+    // --- MIDI Device List Population & Selection ---
+    function populateMidiDeviceLists() {
+        if (inputChannelSelect.options.length <= 1) {
+            for (let i = 1; i <= 16; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Channel ${i}`;
+                inputChannelSelect.appendChild(option);
+            }
+        }
+
+        const previouslySelectedInputId = selectedMidiInput ? selectedMidiInput.id : midiInSelect.value;
+        midiInSelect.innerHTML = '<option value="">Select MIDI Input</option>';
+        let isInputActuallySelected = false;
+
+        if (WebMidi.inputs.length === 0) {
+            const option = document.createElement('option');
+            option.textContent = "No MIDI Inputs found";
+            option.disabled = true;
+            midiInSelect.appendChild(option);
+            selectedMidiInput = null;
+        } else {
+            WebMidi.inputs.forEach(input => {
+                const option = document.createElement('option');
+                option.value = input.id;
+                option.textContent = input.name;
+                midiInSelect.appendChild(option);
+            });
+            if (WebMidi.getInputById(previouslySelectedInputId)) {
+                midiInSelect.value = previouslySelectedInputId;
+                isInputActuallySelected = true;
+            } else {
+                midiInSelect.value = WebMidi.inputs[0].id;
+                isInputActuallySelected = true;
+            }
+        }
+        if (!isInputActuallySelected) {
+            selectedMidiInput = null;
+        }
+
+        const previouslySelectedDeviceIds = selectedTargetDevices.map(d => d.id);
+        targetDevicesContainer.innerHTML = '';
+        let anyOutputCheckboxChecked = false;
+
+        if (WebMidi.outputs.length === 0) {
+            targetDevicesContainer.innerHTML = '<p class="text-gray-400 italic">No MIDI outputs found.</p>';
+        } else {
+            WebMidi.outputs.forEach(output => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center space-x-2';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `device-out-${output.id}`;
+                checkbox.value = output.id;
+                checkbox.className = 'custom-checkbox';
+                if (previouslySelectedDeviceIds.includes(output.id)) {
+                    checkbox.checked = true;
+                    anyOutputCheckboxChecked = true;
+                }
+                checkbox.addEventListener('change', handleTargetDeviceSelectionChange);
+                const label = document.createElement('label');
+                label.htmlFor = `device-out-${output.id}`;
+                label.textContent = output.name;
+                label.className = 'text-gray-300 cursor-pointer';
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                targetDevicesContainer.appendChild(div);
+            });
+            if (!anyOutputCheckboxChecked && WebMidi.outputs.length > 0) {
+                const firstOutputCheckbox = targetDevicesContainer.querySelector('input[type="checkbox"]');
+                if (firstOutputCheckbox) firstOutputCheckbox.checked = true;
+            }
+        }
+        handleTargetDeviceSelectionChange();
+
+        if (availableChannelsContainer.children.length === 0) {
+            availableChannelsContainer.innerHTML = '';
+            for (let i = 1; i <= 16; i++) {
+                const button = document.createElement('button');
+                button.textContent = `Ch ${i}`;
+                button.dataset.channel = i;
+                button.draggable = true;
+                button.className = 'channel-btn-draggable bg-sky-500 text-white font-semibold rounded-md transition duration-150 ease-in-out hover:bg-sky-600';
+                button.addEventListener('dragstart', handleAvailableChannelDragStart);
+                button.addEventListener('dragend', handleAvailableChannelDragEnd);
+                button.addEventListener('dblclick', handleAvailableChannelDoubleClick);
+                availableChannelsContainer.appendChild(button);
+            }
+        }
+        renderSelectedPolychainChannels();
+        logStatus(`Device scan: ${WebMidi.inputs.length} input(s), ${WebMidi.outputs.length} output(s) found.`);
+    }
+
+    function handleTargetDeviceSelectionChange() {
+        const previouslySelectedCount = selectedTargetDevices.length;
+        selectedTargetDevices = [];
+        const checkboxes = targetDevicesContainer.querySelectorAll('input[type="checkbox"]:checked');
+        checkboxes.forEach(cb => {
+            const device = WebMidi.getOutputById(cb.value);
+            if (device) selectedTargetDevices.push(device);
+        });
+        if (selectedTargetDevices.length > 0) {
+            const firstOutputCheckbox = targetDevicesContainer.querySelector('input[type="checkbox"]');
+            if (previouslySelectedCount === 0 && selectedTargetDevices.length === 1 && firstOutputCheckbox && firstOutputCheckbox.value === selectedTargetDevices[0].id && firstOutputCheckbox.checked) {
+                logStatus(`Auto-selected output: ${selectedTargetDevices[0].name}. Total selected: ${selectedTargetDevices.length}`);
+            } else {
+                logStatus(`${selectedTargetDevices.length} target device(s) selected.`);
+            }
+        } else {
+            logStatus(`No target devices selected.`);
+        }
+        currentTargetDeviceIndex = 0;
+    }
+
+    function handleRemovePolychainChannel(event) {
+        const indexToRemove = parseInt(event.target.dataset.index);
+        if (indexToRemove >= 0 && indexToRemove < selectedPolychainChannels.length) {
+            const removedChannel = selectedPolychainChannels.splice(indexToRemove, 1)[0];
+            renderSelectedPolychainChannels();
+            currentPolychainChannelIndex = 0;
+            logStatus(`Removed Ch ${removedChannel} (at index ${indexToRemove}) from sequence. Sequence: ${selectedPolychainChannels.join(', ')}`);
+        }
+    }
+
+    clearPolychainChannelsBtn.addEventListener('click', () => {
+        selectedPolychainChannels = [];
+        renderSelectedPolychainChannels();
+        currentPolychainChannelIndex = 0;
+        logStatus("Cleared selected polychain channels.");
+    });
+
+    function setupMidiListeners() {
+        if (selectedMidiInput) {
+            selectedMidiInput.removeListener('noteon');
+            selectedMidiInput.removeListener('noteoff');
+        }
+        const inputId = midiInSelect.value;
+        if (!inputId) {
+            selectedMidiInput = null;
+            if (WebMidi.inputs.length > 0) logStatus("Please select a MIDI Input.", true);
+            else logStatus("No MIDI Input selected (none available).", true);
+            activeRoutedNotes.clear();
+            updateActiveNotesDisplay();
+            return;
+        }
+        selectedMidiInput = WebMidi.getInputById(inputId);
+
+        if (selectedMidiInput) {
+            logStatus(`Listening to input: ${selectedMidiInput.name} on channel ${selectedInputChannel}.`);
+            midiInSelect.dataset.userSelected = "true";
+            const targetInputChannel = selectedInputChannel === 'all' ? undefined : parseInt(selectedInputChannel);
+
+            selectedMidiInput.addListener('noteon', e => {
+                if (selectedInputChannel !== 'all' && e.message.channel !== targetInputChannel) return;
+                if (selectedTargetDevices.length === 0 || selectedPolychainChannels.length === 0) return;
+
+                if (activeRoutedNotes.size === 0) { // New chord
+                    currentTargetDeviceIndex = 0;
+                    currentPolychainChannelIndex = 0;
+                    console.log("New chord detected, resetting indices.");
+                }
+
+                const outputDevice = selectedTargetDevices[currentTargetDeviceIndex];
+                const assignedOutputChannel = selectedPolychainChannels[currentPolychainChannelIndex];
+                const inputNoteIdentifier = `ch${e.message.channel}-note${e.note.number}`;
+
+                activeRoutedNotes.set(inputNoteIdentifier, {
+                    note: e.note, outputDevice: outputDevice,
+                    outputChannel: assignedOutputChannel, originalVelocity: e.velocity
+                });
+                outputDevice.channels[assignedOutputChannel].playNote(e.note.identifier, { velocity: e.velocity });
+
+                if(activeRoutedNotes.size === 1) {
+                    logStatus(`Note On: In Ch${e.message.channel} ${e.note.name}${e.note.octave} (Vel ${Math.round(e.velocity * 127)}) -> Dev: ${outputDevice.name} (Out Ch${assignedOutputChannel})`);
+                } else {
+                    console.log(`Note On (cont.): In Ch${e.message.channel} ${e.note.name}${e.note.octave} -> Dev: ${outputDevice.name} (Out Ch${assignedOutputChannel})`);
+                }
+
+                currentTargetDeviceIndex = (currentTargetDeviceIndex + 1) % selectedTargetDevices.length;
+                currentPolychainChannelIndex = (currentPolychainChannelIndex + 1) % selectedPolychainChannels.length;
+                updateActiveNotesDisplay();
+            }, { channels: targetInputChannel });
+
+            selectedMidiInput.addListener('noteoff', e => {
+                if (selectedInputChannel !== 'all' && e.message.channel !== targetInputChannel) return;
+                const inputNoteIdentifier = `ch${e.message.channel}-note${e.note.number}`;
+                const routedNoteDetails = activeRoutedNotes.get(inputNoteIdentifier);
+                if (routedNoteDetails) {
+                    routedNoteDetails.outputDevice.channels[routedNoteDetails.outputChannel].stopNote(routedNoteDetails.note.identifier);
+                    activeRoutedNotes.delete(inputNoteIdentifier);
+                    updateActiveNotesDisplay();
+                    if (activeRoutedNotes.size === 0) logStatus("All notes off.");
+                }
+            }, { channels: targetInputChannel });
+        } else {
+            logStatus(`Selected MIDI input device (ID: ${inputId}) not found. Please reselect.`, true);
+            selectedMidiInput = null;
+            activeRoutedNotes.clear();
+            updateActiveNotesDisplay();
+        }
+    }
+
+    // --- Initialization ---
+    async function initializeApp() {
+        try {
+            if (typeof WebMidi === 'undefined') {
+                logStatus("WebMidi.js library not loaded!", true); return;
+            }
+            webmidiVersionSpan.textContent = WebMidi.VERSION;
+            await WebMidi.enable();
+            logStatus("WebMIDI enabled successfully! Scanning devices...");
+            populateMidiDeviceLists();
+            setupMidiListeners();
+
+            midiInSelect.addEventListener('change', () => {
+                midiInSelect.dataset.userSelected = "true";
+                setupMidiListeners();
+            });
+            inputChannelSelect.addEventListener('change', (e) => {
+                selectedInputChannel = e.target.value;
+                setupMidiListeners();
+            });
+
+            selectedPolychainChannelsDropzone.addEventListener('dragover', handleDropzoneDragOver);
+            selectedPolychainChannelsDropzone.addEventListener('dragleave', handleDropzoneDragLeave);
+            selectedPolychainChannelsDropzone.addEventListener('drop', handleDropzoneDrop);
+
+
+            WebMidi.addListener("connected", (e) => {
+                logStatus(`Device connected: ${e.port.name} (${e.port.type}). Rescanning...`);
+                midiInSelect.dataset.userSelected = undefined;
+                populateMidiDeviceLists();
+                setupMidiListeners();
+            });
+            WebMidi.addListener("disconnected", (e) => {
+                logStatus(`Device disconnected: ${e.port.name} (${e.port.type}). Rescanning...`, true);
+                midiInSelect.dataset.userSelected = undefined;
+                populateMidiDeviceLists();
+                setupMidiListeners();
+            });
+        } catch (err) {
+            logStatus(`Could not enable WebMIDI: ${err.message || err}`, true);
+        }
+        updateActiveNotesDisplay();
+    }
+    initializeApp();
+</script>
+</body>
+</html>
