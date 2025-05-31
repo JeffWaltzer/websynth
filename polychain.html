@@ -1124,7 +1124,6 @@
 
             listeningChannelSelect.addEventListener('change', (e) => {
                 selectedListeningChannel = e.target.value;
-                // console.log(`[DEBUG] Listening channel changed to: ${selectedListeningChannel}`); // Removed
                 if (selectedMidiInput && soleOutputDevice) {
                     setupMidiListeners();
                 } else if (selectedMidiInput && !soleOutputDevice) {
