@@ -22,17 +22,17 @@
         .status-bar {
             background-color: #1f2937;
             border-top: 1px solid #374151;
-            padding: 0.5rem 1rem;
+            padding: 0.25rem 0.75rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: nowrap;
         }
         .status-bar-section.status-messages {
             flex-grow: 1;
             flex-shrink: 1;
-            min-width: 100px;
+            min-width: 80px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -41,63 +41,67 @@
             flex-shrink: 0;
             text-align: right;
         }
-        #activeNotesDisplay ul { margin: 0; padding-left: 0; list-style-type: none;}
-        #activeNotesDisplay li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 
         .panel {
             background-color: #374151;
-            padding: 1rem;
+            padding: 0.75rem;
             border-radius: 0.5rem;
             border: 1px solid #4B5563;
         }
 
         .draggable-channel, .sequenced-channel-item {
-            padding: 0.5rem 0.75rem;
-            margin: 0.25rem;
-            background-color: #4f46e5; /* indigo-600 */
-            border: 1px solid #6366f1; /* indigo-500 */
-            border-radius: 9999px; /* rounded-full for pill shape */
+            padding: 0.375rem 0.625rem;
+            margin: 0.125rem;
+            background-color: #4f46e5;
+            border: 1px solid #6366f1;
+            border-radius: 9999px;
             cursor: grab;
             color: white;
             font-weight: 500;
             text-align: center;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             user-select: none;
+            font-size: 0.875rem;
+            min-width: 60px;
+            box-sizing: border-box;
         }
         .available-channels-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            padding: 0.5rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.25rem;
+            padding: 0.25rem;
             background-color: #374151;
             border-radius: 0.375rem;
             border: 1px solid #4b5563;
+            min-height: 80px;
         }
         .drop-zone {
-            padding: 1rem;
+            padding: 0.75rem;
             background-color: #2d3748;
             border: 2px dashed #4b5563;
             border-radius: 0.375rem;
-            min-height: 100px;
+            min-height: 80px;
             display: flex;
             flex-wrap: wrap;
             align-content: flex-start;
-            gap: 0.5rem;
-            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; /* For visual feedback */
+            gap: 0.25rem;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
         }
-        .drop-zone.drag-over { /* Style for when an item is dragged over the drop zone */
-            background-color: #374151; /* Slightly lighter background */
-            border-color: #60a5fa; /* Brighter border color (Tailwind blue-400) */
+        .drop-zone.drag-over {
+            background-color: #374151;
+            border-color: #60a5fa !important;
+            border-style: solid !important;
         }
         .sequenced-channel-item .remove-btn {
             background: none;
             border: none;
             color: #e5e7eb;
-            margin-left: 0.5rem;
+            margin-left: 0.375rem;
             cursor: pointer;
             font-weight: bold;
-            padding: 0 0.25rem;
+            padding: 0 0.125rem;
             line-height: 1;
         }
         .sequenced-channel-item .remove-btn:hover {
@@ -108,51 +112,112 @@
             font-style: italic;
             text-align: center;
             width: 100%;
+            font-size: 0.875rem;
         }
+
+        #activeNotesDisplayContainer {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.375rem; /* 6px */
+            padding: 0.25rem 0; /* 4px top/bottom */
+            min-height: 86px; /* (2 * 36px button height) + 6px gap + 8px padding = 86px */
+        }
+
+        .channel-note-button {
+            padding: 0.375rem 0.25rem;
+            background-color: #4a5568;
+            color: #e2e8f0;
+            border: 1px solid #718096;
+            border-radius: 0.25rem;
+            text-align: center;
+            font-size: 0.625rem;
+            font-weight: 500;
+            line-height: 1.2;
+            transition: background-color 0.1s ease-in-out, color 0.1s ease-in-out, border-color 0.1s ease-in-out;
+            height: 36px; /* Fixed height */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-sizing: border-box; /* Ensure padding & border are within the height */
+        }
+
+        .channel-note-button.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #2563eb;
+            font-weight: 600;
+        }
+        .channel-note-button .channel-num-default {
+            font-size: 0.625rem;
+            color: #a0aec0;
+            line-height: 1; /* Adjust line height for better fit */
+        }
+        .channel-note-button .notes-list {
+            display: block;
+            width: 100%;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            line-height: 1.1; /* Adjust line height for better fit */
+            margin-top: 1px; /* Add a small margin if needed */
+        }
+        .channel-note-button.active .channel-num-default {
+            font-size: 0.5rem;
+            color: #cbd5e0;
+            line-height: 1;
+            margin-bottom: 1px; /* Reduced margin */
+        }
+        .channel-note-button:not(.active) .notes-list {
+            visibility: hidden; /* Keep space, but hide content */
+            height: 0; /* Further ensure it doesn't take up vertical space if visibility alone isn't enough */
+            overflow: hidden;
+        }
+
 
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
-
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center justify-center p-2 sm:p-3">
 <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl flex flex-col">
-    <header class="mb-6 sm:mb-8 text-center p-6 sm:p-8">
-        <h1 class="text-3xl sm:text-4xl font-bold text-sky-400">MIDI Polychain Splitter</h1>
-        <p class="text-gray-400 mt-2">Define a MIDI channel sequence. Notes are routed to the selected input device (acting as output).</p>
+    <header class="mb-3 sm:mb-4 text-center p-3 sm:p-4">
+        <h1 class="text-2xl sm:text-3xl font-bold text-sky-400">MIDI Polychain Splitter</h1>
+        <p class="text-gray-400 mt-1 text-sm">Define a MIDI channel sequence. Notes are routed to the selected input device (acting as output).</p>
     </header>
 
-    <main class="flex-grow p-6 sm:p-8">
-        <div class="flex flex-col space-y-6 mb-6">
-            <section id="midiSetupPanel" class="w-full space-y-6 panel">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <main class="flex-grow p-3 sm:p-4">
+        <div class="flex flex-col space-y-3 mb-3">
+            <section id="midiSetupPanel" class="w-full space-y-3 panel">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label for="midiIn" class="block text-sm font-medium text-sky-300 mb-1">MIDI Input/Output Device:</label>
-                        <select id="midiIn" class="custom-select w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out">
+                        <label for="midiIn" class="block text-xs font-medium text-sky-300 mb-0.5">MIDI Input/Output Device:</label>
+                        <select id="midiIn" class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
                             <option value="">Select MIDI Device</option>
                         </select>
                     </div>
                     <div>
-                        <label for="inputChannel" class="block text-sm font-medium text-sky-300 mb-1">Input Channel (Listening):</label>
-                        <select id="inputChannel" class="custom-select w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out">
+                        <label for="inputChannel" class="block text-xs font-medium text-sky-300 mb-0.5">Input Channel (Listening):</label>
+                        <select id="inputChannel" class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
                             <option value="all">All Channels</option>
                         </select>
                     </div>
                 </div>
 
                 <div>
-                    <h2 class="text-lg font-semibold text-sky-300 mb-2">Channel Routing Sequence Editor</h2>
-                    <p class="text-sm text-gray-400 mb-2">Drag channels from "Available" to "Current Sequence" to define the order.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <h2 class="text-md font-semibold text-sky-300 mb-1">Channel Routing Sequence Editor</h2>
+                    <p class="text-xs text-gray-400 mb-1">Drag channels from "Available" to "Current Sequence" to define the order.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <h3 class="text-md font-medium text-sky-300 mb-1">Available Channels (Drag to sequence):</h3>
-                            <div id="availableChannelsForDrag" class="available-channels-container min-h-[100px]">
+                            <h3 class="text-sm font-medium text-sky-300 mb-0.5">Available Channels:</h3>
+                            <div id="availableChannelsForDrag" class="available-channels-container">
                             </div>
                         </div>
                         <div>
-                            <h3 class="text-md font-medium text-sky-300 mb-1">Current Channel Sequence (Drag & Drop Here):</h3>
+                            <h3 class="text-sm font-medium text-sky-300 mb-0.5">Current Channel Sequence:</h3>
                             <div id="channelSequenceDropZone" class="drop-zone">
-                                <p class="drop-zone-placeholder">Drag channels here to build the sequence.</p>
+                                <p class="drop-zone-placeholder">Drag channels here.</p>
                             </div>
-                            <button id="clearChannelSequenceBtn" class="mt-2 w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-150 ease-in-out text-sm">
+                            <button id="clearChannelSequenceBtn" class="mt-1 w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-3 rounded-md transition duration-150 ease-in-out text-xs">
                                 Clear Sequence
                             </button>
                         </div>
@@ -161,27 +226,27 @@
             </section>
         </div>
 
-        <section id="activeNotesPanel" class="mb-6 panel">
-            <h2 class="text-lg font-semibold text-sky-300 mb-1">Active Routed Notes:</h2>
-            <div id="activeNotesDisplay" class="text-sm text-gray-300 min-h-[60px] max-h-40 overflow-y-auto">
-                No notes active.
+        <section id="activeNotesPanel" class="mb-3 panel">
+            <h2 class="text-md font-semibold text-sky-300 mb-1">Active Routed Notes (Output Channels):</h2>
+            <div id="activeNotesDisplayContainer" class="min-h-[70px]">
             </div>
         </section>
     </main>
 
     <footer id="statusBar" class="status-bar mt-auto">
         <div class="status-bar-section status-messages">
-            <div id="statusMessages" class="text-xs text-gray-300 min-h-[1.25em]">
+            <div id="statusMessages" class="text-xs text-gray-300 min-h-[1.1em]">
                 Initializing...
             </div>
         </div>
         <div class="status-bar-section version-info">
-            <p class="text-xs text-gray-500">WebMidi.js v<span id="webmidiVersion"></span></p>
+            <p class="text-xs text-gray-500">WebMidi.js v<span id="webmidiVersion">N/A</span></p>
         </div>
     </footer>
 </div>
 
 <script>
+    // Global state variables
     let selectedMidiInput = null;
     let soleOutputDevice = null;
     let selectedInputChannel = 'all';
@@ -189,55 +254,86 @@
     let activeRoutedNotes = new Map();
     let currentChannelSequenceIndex = 0;
     let dragSourceElement = null;
-    // These two are not strictly necessary if dataTransfer is reliable, but can help in debugging.
-    // let draggedChannelValue = null;
-    // let draggedSequenceItemId = null;
 
+    // DOM Element References
     const midiInSelect = document.getElementById('midiIn');
     const inputChannelSelect = document.getElementById('inputChannel');
     const availableChannelsForDragContainer = document.getElementById('availableChannelsForDrag');
     const channelSequenceDropZone = document.getElementById('channelSequenceDropZone');
     const clearChannelSequenceBtn = document.getElementById('clearChannelSequenceBtn');
     const statusMessagesDiv = document.getElementById('statusMessages');
-    const activeNotesDisplayDiv = document.getElementById('activeNotesDisplay');
+    const activeNotesDisplayContainer = document.getElementById('activeNotesDisplayContainer');
     const webmidiVersionSpan = document.getElementById('webmidiVersion');
+
+    const channelDisplayButtons = [];
 
     function logStatus(message, isError = false) {
         console.log(`[Status] ${isError ? 'ERROR: ' : ''}${message}`);
         const p = document.createElement('p');
         p.textContent = message;
-        p.className = isError ? 'text-red-400' : 'text-green-400';
+        p.className = isError ? 'text-red-400 animate-pulse' : 'text-green-400';
         statusMessagesDiv.innerHTML = '';
         statusMessagesDiv.appendChild(p);
     }
 
-    function updateActiveNotesDisplay() {
-        if (activeRoutedNotes.size === 0) {
-            activeNotesDisplayDiv.innerHTML = '<p class="italic text-gray-400">No notes active.</p>';
-            return;
+    function initializeChannelDisplayButtons() {
+        activeNotesDisplayContainer.innerHTML = '';
+        for (let i = 1; i <= 16; i++) {
+            const button = document.createElement('div');
+            button.id = `output-channel-display-${i}`;
+            button.className = 'channel-note-button';
+
+            const defaultTextSpan = document.createElement('span');
+            defaultTextSpan.className = 'channel-num-default';
+            defaultTextSpan.textContent = `Ch ${i}`;
+
+            const notesListSpan = document.createElement('span');
+            notesListSpan.className = 'notes-list';
+
+            button.appendChild(defaultTextSpan);
+            button.appendChild(notesListSpan);
+
+            activeNotesDisplayContainer.appendChild(button);
+            channelDisplayButtons[i] = button;
         }
-        activeNotesDisplayDiv.innerHTML = '';
-        let notesHtml = '<ul>';
-        activeRoutedNotes.forEach((detailsArray, key) => {
+    }
+
+    function updateActiveNotesDisplay() {
+        const notesByOutputChannel = new Array(17).fill(null).map(() => []);
+
+        activeRoutedNotes.forEach((detailsArray) => {
             detailsArray.forEach(details => {
-                try {
-                    const inputChannelInfo = key.substring(0, key.indexOf('-note'));
-                    if (!details || !details.note || !details.note.name || typeof details.note.octave === 'undefined' ||
-                        !details.outputDevice || !details.outputDevice.name || typeof details.outputChannel === 'undefined') {
-                        console.error(`[ActiveNotesDisplay] Incomplete data for active note. Key: ${key}.`);
-                        notesHtml += `<li>Error: Incomplete data for note key ${key}.</li>`;
-                        return;
-                    }
-                    notesHtml += `<li>In ${inputChannelInfo} (${details.note.name}${details.note.octave}) &rarr; ${details.outputDevice.name} (Ch ${details.outputChannel})</li>`;
-                } catch (error) {
-                    console.error(`[ActiveNotesDisplay] Exception rendering active note. Key: ${key}, Error:`, error);
-                    notesHtml += `<li>Exception rendering note: ${key}.</li>`;
+                if (details.outputChannel >= 1 && details.outputChannel <= 16) {
+                    notesByOutputChannel[details.outputChannel].push(`${details.note.name}${details.note.octave}`);
                 }
             });
         });
-        notesHtml += '</ul>';
-        activeNotesDisplayDiv.innerHTML = notesHtml;
+
+        for (let i = 1; i <= 16; i++) {
+            const button = channelDisplayButtons[i];
+            if (button) {
+                const notesArray = notesByOutputChannel[i];
+                const defaultTextSpan = button.querySelector('.channel-num-default');
+                const notesListSpan = button.querySelector('.notes-list');
+
+                if (notesArray.length > 0) {
+                    notesListSpan.textContent = notesArray.join(', ');
+                    notesListSpan.style.visibility = 'visible';
+                    notesListSpan.style.height = 'auto'; // Or a specific height if preferred
+                    button.classList.add('active');
+                } else {
+                    notesListSpan.textContent = '';
+                    notesListSpan.style.visibility = 'hidden';
+                    notesListSpan.style.height = '0';
+                    button.classList.remove('active');
+                }
+                if (defaultTextSpan) {
+                    defaultTextSpan.textContent = `Ch ${i}`;
+                }
+            }
+        }
     }
+
 
     function populateAvailableChannelsForDrag() {
         availableChannelsForDragContainer.innerHTML = '';
@@ -256,7 +352,7 @@
         console.log('[RenderChannelSequence] Rendering sequence:', JSON.stringify(channelSequence));
         channelSequenceDropZone.innerHTML = '';
         if (channelSequence.length === 0) {
-            channelSequenceDropZone.innerHTML = '<p class="drop-zone-placeholder">Drag channels here to build the sequence.</p>';
+            channelSequenceDropZone.innerHTML = '<p class="drop-zone-placeholder">Drag channels here.</p>';
             return;
         }
         channelSequence.forEach((item, index) => {
@@ -268,8 +364,9 @@
 
             el.addEventListener('dragstart', (e) => {
                 console.log('[DragStart SequenceItem] ID:', item.id, 'Channel:', item.channel);
-                // draggedSequenceItemId = item.id; // Can be useful for debugging
-                e.dataTransfer.setData('application/json', JSON.stringify({type: 'sequenceItem', id: item.id, channel: item.channel}));
+                const jsonData = JSON.stringify({type: 'sequenceItem', id: item.id, channel: item.channel});
+                e.dataTransfer.setData('application/json', jsonData);
+                e.dataTransfer.setData('text/plain', item.id);
                 e.dataTransfer.effectAllowed = 'move';
                 dragSourceElement = el;
             });
@@ -292,15 +389,11 @@
     function handleAvailableChannelDragStart(e) {
         const channelVal = e.target.dataset.channelValue;
         console.log('[DragStart AvailableChannel] Channel:', channelVal);
-        
-        // Add this line to explicitly set the data
-        e.dataTransfer.setData('text/plain', channelVal); // Fallback data
-        e.dataTransfer.setData('application/json', JSON.stringify({
-            type: 'newChannel', 
-            channel: channelVal
-        }));
-        
-        // Set the drag image (optional but helps with visual feedback)
+
+        const jsonData = JSON.stringify({type: 'newChannel', channel: channelVal});
+        e.dataTransfer.setData('application/json', jsonData);
+        e.dataTransfer.setData('text/plain', channelVal);
+
         e.dataTransfer.effectAllowed = 'copy';
         dragSourceElement = e.target;
     }
@@ -308,67 +401,147 @@
     channelSequenceDropZone.addEventListener('dragenter', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        channelSequenceDropZone.classList.add('drag-over');
+        if (e.dataTransfer.types.includes('application/json') || e.dataTransfer.types.includes('text/plain')) {
+            channelSequenceDropZone.classList.add('drag-over');
+        }
+        console.log('[DragEnter DropZone] Types:', e.dataTransfer.types);
     });
 
     channelSequenceDropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        e.dataTransfer.dropEffect = 'move';
+        if (dragSourceElement && dragSourceElement.classList.contains('draggable-channel')) {
+            e.dataTransfer.dropEffect = 'copy';
+        } else {
+            e.dataTransfer.dropEffect = 'move';
+        }
     });
 
     channelSequenceDropZone.addEventListener('dragleave', (e) => {
-        // Check if the mouse is truly leaving the drop zone, not just moving over a child element
-        if (e.target === channelSequenceDropZone && !channelSequenceDropZone.contains(e.relatedTarget)) {
+        e.stopPropagation();
+        if (!channelSequenceDropZone.contains(e.relatedTarget) || e.relatedTarget === null) {
             channelSequenceDropZone.classList.remove('drag-over');
-            console.log('[DragLeave DropZone] Left drop zone itself.');
-        } else if (!channelSequenceDropZone.contains(e.relatedTarget)) {
-            // This handles leaving from a child to outside the dropzone
-            channelSequenceDropZone.classList.remove('drag-over');
-            console.log('[DragLeave DropZone] Left from child to outside.');
+            console.log('[DragLeave DropZone] Left drop zone.');
         }
-        // console.log('[DragLeave DropZone] Target:', e.target, 'RelatedTarget:', e.relatedTarget);
     });
 
     channelSequenceDropZone.addEventListener('drop', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         channelSequenceDropZone.classList.remove('drag-over');
-        
+
         let data;
+        let dataTypeUsed = '';
+
         try {
-            // Try getting the JSON data first
-            const dataString = e.dataTransfer.getData('application/json');
-            if (dataString) {
-                data = JSON.parse(dataString);
-            } else {
-                // Fallback to plain text for simple channel numbers
-                const plainData = e.dataTransfer.getData('text/plain');
-                if (plainData) {
-                    data = {
-                        type: 'newChannel',
-                        channel: plainData
-                    };
-                }
+            const jsonString = e.dataTransfer.getData('application/json');
+            console.log('[Drop DropZone] Attempting application/json. Received:', jsonString);
+            if (jsonString) {
+                data = JSON.parse(jsonString);
+                dataTypeUsed = 'application/json';
             }
-            
-            if (!data) {
-                console.error('[Drop DropZone] No valid data transferred');
+        } catch (jsonError) {
+            console.warn('[Drop DropZone] Failed to parse application/json. Error:', jsonError, 'Raw string was:', e.dataTransfer.getData('application/json'));
+        }
+
+        if (!data) {
+            try {
+                const plainString = e.dataTransfer.getData('text/plain');
+                console.log('[Drop DropZone] Attempting text/plain. Received:', plainString);
+                if (plainString && !isNaN(parseInt(plainString))) {
+                    data = { type: 'newChannel', channel: plainString };
+                    dataTypeUsed = 'text/plain (interpreted as newChannel)';
+                } else if (plainString) {
+                    if (dragSourceElement && dragSourceElement.classList.contains('sequenced-channel-item') && plainString) {
+                        data = { type: 'sequenceItem', id: plainString };
+                        dataTypeUsed = 'text/plain (interpreted as sequenceItem ID)';
+                    } else {
+                        console.warn('[Drop DropZone] text/plain data received but not a simple channel number and not clearly a sequence item ID:', plainString);
+                    }
+                }
+            } catch (textError) {
+                console.error('[Drop DropZone] Error getting text/plain data:', textError);
+            }
+        }
+
+        if (!data) {
+            console.error('[Drop DropZone] No valid data extracted from any type.');
+            dragSourceElement = null;
+            return;
+        }
+
+        console.log(`[Drop DropZone] Processed data using ${dataTypeUsed}:`, data);
+
+        if (data.type === 'newChannel' && data.channel) {
+            console.log('[Drop NewChannel] Attempting to add channel:', data.channel);
+            const newChannelNum = parseInt(data.channel);
+            if (isNaN(newChannelNum) || newChannelNum < 1 || newChannelNum > 16) {
+                console.error('[Drop NewChannel] Parsed channel is invalid:', data.channel);
+                dragSourceElement = null;
                 return;
             }
-            
-            console.log('[Drop DropZone] Processed data:', data);
-            
-            // Rest of your existing drop handling code...
-            if (data.type === 'newChannel' && data.channel) {
-                // ... existing channel handling code
-            } else if (data.type === 'sequenceItem' && data.id) {
-                // ... existing sequence item handling code
-            }
-            
-        } catch (error) {
-            console.error('[Drop DropZone] Error processing drop:', error);
-            logStatus('Error processing drop operation', true);
+            channelSequence.push({ channel: newChannelNum, id: `chanSeq-${Date.now()}-${Math.random().toString(36).substring(2,7)}` });
+            logStatus(`Added Ch ${newChannelNum} to sequence.`);
+            console.log('[Drop NewChannel] Sequence after push:', JSON.stringify(channelSequence));
         }
+        else if (data.type === 'sequenceItem' && data.id) {
+            console.log('[Drop Reorder] Attempting to reorder item ID:', data.id, 'Channel (from data):', data.channel);
+            const sourceId = data.id;
+            const targetElement = e.target.closest('.sequenced-channel-item');
+            const sourceIndex = channelSequence.findIndex(item => item.id === sourceId);
+
+            if (sourceIndex === -1) {
+                console.error('[Drop Reorder] Source item (ID:', sourceId, ') not found in sequence for reordering.');
+                dragSourceElement = null;
+                return;
+            }
+
+            const [movedItem] = channelSequence.splice(sourceIndex, 1);
+            console.log('[Drop Reorder] Item removed for reorder:', JSON.stringify(movedItem), 'Sequence now:', JSON.stringify(channelSequence));
+
+            if (targetElement && targetElement.dataset.sequenceItemId !== sourceId) {
+                const targetId = targetElement.dataset.sequenceItemId;
+                const targetIndexInModifiedArray = channelSequence.findIndex(item => item.id === targetId);
+
+                if (targetIndexInModifiedArray !== -1) {
+                    const rect = targetElement.getBoundingClientRect();
+                    const isAfter = e.clientY > rect.top + rect.height / 2;
+                    channelSequence.splice(isAfter ? targetIndexInModifiedArray + 1 : targetIndexInModifiedArray, 0, movedItem);
+                    console.log('[Drop Reorder] Item inserted at index', isAfter ? targetIndexInModifiedArray + 1 : targetIndexInModifiedArray);
+                } else {
+                    console.warn('[Drop Reorder] Target for reorder not found in modified array (was it the source or an anomaly?). Appending.');
+                    channelSequence.push(movedItem);
+                }
+            } else {
+                console.log('[Drop Reorder] No valid distinct target element or dropping on self. Appending item to end or dropping in free space.');
+                let inserted = false;
+                if (!targetElement && channelSequence.length > 0) {
+                    const dropZoneChildren = Array.from(channelSequenceDropZone.querySelectorAll('.sequenced-channel-item'));
+                    for (let i = 0; i < dropZoneChildren.length; i++) {
+                        const childRect = dropZoneChildren[i].getBoundingClientRect();
+                        if (e.clientY < childRect.top + childRect.height / 2) {
+                            const itemIdToInsertBefore = dropZoneChildren[i].dataset.sequenceItemId;
+                            const insertAtIndex = channelSequence.findIndex(it => it.id === itemIdToInsertBefore);
+                            if (insertAtIndex !== -1) {
+                                channelSequence.splice(insertAtIndex, 0, movedItem);
+                                inserted = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!inserted) {
+                    channelSequence.push(movedItem);
+                }
+            }
+            logStatus('Channel sequence reordered.');
+        } else {
+            console.warn('[Drop DropZone] Unknown data type or data missing for add/reorder. Data:', data);
+        }
+
+        renderChannelSequence();
+        currentChannelSequenceIndex = 0;
+        dragSourceElement = null;
     });
 
     clearChannelSequenceBtn.addEventListener('click', () => {
@@ -394,7 +567,7 @@
                 logStatus(`Input: ${selectedMidiInput.name}. No output devices available. MIDI routing will be disabled.`, true);
             }
         } else {
-            logStatus("Selected MIDI input device not found.", true);
+            logStatus("Selected MIDI input device not found or invalid.", true);
         }
         setupMidiListeners();
     }
@@ -429,7 +602,8 @@
             if (WebMidi.getInputById(previouslySelectedInputId)) {
                 midiInSelect.value = previouslySelectedInputId;
                 newSelectedInputId = previouslySelectedInputId;
-            } else if (WebMidi.inputs.length > 0 && !midiInSelect.dataset.userSelected) {
+            }
+            else if (WebMidi.inputs.length > 0 && !midiInSelect.dataset.userSelected) {
                 midiInSelect.value = WebMidi.inputs[0].id;
                 newSelectedInputId = WebMidi.inputs[0].id;
             } else {
@@ -449,10 +623,12 @@
         renderChannelSequence();
 
         if (WebMidi.enabled) {
-            // Status is set by setOutputDeviceFromInput or if no devices are found.
-            // Avoid redundant logging here unless it's a specific "scan complete" message without device details.
             if (WebMidi.inputs.length === 0 && WebMidi.outputs.length === 0) {
                 logStatus("WebMIDI enabled, but no MIDI input or output devices found.", true);
+            } else if (WebMidi.inputs.length === 0) {
+                logStatus("WebMIDI enabled, but no MIDI input devices found.", true);
+            } else if (WebMidi.outputs.length === 0 && selectedMidiInput) {
+                logStatus(`Input selected, but no MIDI output devices found. Routing disabled.`, true);
             }
         }
     }
@@ -514,6 +690,7 @@
             let noteRoutingDetailsArray = activeRoutedNotes.get(inputNoteIdentifier) || [];
 
             soleOutputDevice.channels[assignedOutputChannel].playNote(e.note.identifier, { rawAttack: e.message.dataBytes[1] });
+
             noteRoutingDetailsArray.push({
                 note: e.note,
                 outputDevice: soleOutputDevice,
@@ -521,12 +698,17 @@
                 originalVelocity: e.velocity
             });
 
-            if (noteRoutingDetailsArray.length > 0) {
-                activeRoutedNotes.set(inputNoteIdentifier, noteRoutingDetailsArray);
-                if (activeRoutedNotes.size === 1 && noteRoutingDetailsArray.length === 1) {
-                    logStatus(`Note On: In Ch${e.message.channel} ${e.note.name}${e.note.octave} (Vel ${e.message.dataBytes[1]}) -> ${soleOutputDevice.name} (Seq Ch ${assignedOutputChannel})`);
+            activeRoutedNotes.set(inputNoteIdentifier, noteRoutingDetailsArray);
+            if (noteRoutingDetailsArray.length === 1) {
+                const existingNotesOnOutputChannel = Array.from(activeRoutedNotes.values())
+                    .flat()
+                    .filter(detail => detail.outputChannel === assignedOutputChannel);
+                if (existingNotesOnOutputChannel.length === 1) {
+                    const inputChannelInfo = `ch${e.message.channel}`;
+                    logStatus(`Note On: ${inputChannelInfo} ${e.note.name}${e.note.octave} (Vel ${e.message.dataBytes[1]}) &rarr; Ch ${assignedOutputChannel}`);
                 }
             }
+
 
             currentChannelSequenceIndex = (currentChannelSequenceIndex + 1) % channelSequence.length;
             updateActiveNotesDisplay();
@@ -538,14 +720,16 @@
             const routedNoteDetailsArray = activeRoutedNotes.get(inputNoteIdentifier);
 
             if (routedNoteDetailsArray) {
+                activeRoutedNotes.delete(inputNoteIdentifier);
+
                 routedNoteDetailsArray.forEach(details => {
-                    if (soleOutputDevice && WebMidi.getOutputById(soleOutputDevice.id)) {
+                    if (details.outputDevice && WebMidi.getOutputById(details.outputDevice.id)) {
                         details.outputDevice.channels[details.outputChannel].stopNote(details.note.identifier, {rawRelease: e.message.dataBytes[1]});
-                    } else if (soleOutputDevice) {
-                        console.warn(`[NoteOff] Output device ${soleOutputDevice.name} disconnected for note-off.`);
+                    } else if (details.outputDevice) {
+                        console.warn(`[NoteOff] Output device ${details.outputDevice.name} disconnected for note-off. Note was ${details.note.name}${details.note.octave} on its Ch ${details.outputChannel}.`);
                     }
                 });
-                activeRoutedNotes.delete(inputNoteIdentifier);
+
                 updateActiveNotesDisplay();
                 if (activeRoutedNotes.size === 0) logStatus("All notes off.");
             }
@@ -555,12 +739,15 @@
     async function initializeApp() {
         try {
             if (typeof WebMidi === 'undefined') {
-                logStatus("WebMidi.js library not loaded!", true); return;
+                logStatus("WebMidi.js library not loaded! Cannot initialize.", true); return;
             }
             webmidiVersionSpan.textContent = WebMidi.VERSION;
             statusMessagesDiv.innerHTML = '<p class="text-gray-400">Initializing WebMIDI...</p>';
 
+            initializeChannelDisplayButtons();
+
             await WebMidi.enable();
+            logStatus("WebMIDI enabled. Scanning for devices...", false);
             populateMidiDeviceLists();
 
             midiInSelect.addEventListener('change', (e) => {
@@ -571,8 +758,11 @@
                 selectedInputChannel = e.target.value;
                 if (selectedMidiInput && soleOutputDevice) {
                     setupMidiListeners();
-                } else {
-                    logStatus("Please select a MIDI device first.", true);
+                } else if (selectedMidiInput && !soleOutputDevice) {
+                    logStatus("Input selected, but no output device. Select output or check connections.", true);
+                }
+                else {
+                    logStatus("Please select a MIDI Input/Output device first.", true);
                 }
             });
 
@@ -582,27 +772,46 @@
             });
             WebMidi.addListener("disconnected", (e) => {
                 logStatus(`Device disconnected: ${e.port.name} (${e.port.type}). Rescanning...`, true);
+                let wasActiveDeviceDisconnected = false;
                 if (selectedMidiInput && selectedMidiInput.id === e.port.id) {
                     selectedMidiInput = null;
                     soleOutputDevice = null;
+                    wasActiveDeviceDisconnected = true;
                     logStatus("Active MIDI Input/Output device disconnected.", true);
                 } else if (soleOutputDevice && soleOutputDevice.id === e.port.id) {
                     soleOutputDevice = null;
-                    logStatus("Active MIDI Output device (matched to input) disconnected.", true);
+                    wasActiveDeviceDisconnected = true;
+                    logStatus("Active MIDI Output device (matched to input or sole) disconnected.", true);
                 }
                 populateMidiDeviceLists();
+                if (wasActiveDeviceDisconnected && selectedMidiInput) {
+                    setOutputDeviceFromInput(selectedMidiInput.id);
+                }
             });
+
         } catch (err) {
             logStatus(`Could not enable WebMIDI: ${err.message || err}`, true);
-            if (err.name === "SecurityError" || err.message.includes("secure context")) {
-                statusMessagesDiv.innerHTML += '<p class="text-yellow-400 text-xs mt-1">Web MIDI API requires a secure context (HTTPS or localhost) and user permission.</p>';
-            } else {
-                statusMessagesDiv.innerHTML += '<p class="text-red-400 text-xs mt-1">Ensure MIDI drivers are installed and browser has permissions.</p>';
+            console.error("WebMIDI Enable Error:", err);
+            if (err.message && err.message.toLowerCase().includes("midi has been disabled in this document by permissions policy")) {
+                statusMessagesDiv.innerHTML += '<p class="text-yellow-400 text-xs mt-1">MIDI access is disabled by the document\'s permissions policy. If this page is in an iframe, the iframe may need the `allow="midi"` attribute. Also ensure you are on a secure connection (HTTPS or localhost) and have granted MIDI permissions to this site.</p>';
+            } else if (err.name === "SecurityError" || (err.message && err.message.toLowerCase().includes("secure context"))) {
+                statusMessagesDiv.innerHTML += '<p class="text-yellow-400 text-xs mt-1">Web MIDI API requires a secure context (HTTPS or localhost) and user permission. Please ensure you are on HTTPS or localhost and grant permission when prompted.</p>';
+            } else if (err.message && err.message.toLowerCase().includes("browser does not support webmidi")) {
+                statusMessagesDiv.innerHTML += '<p class="text-yellow-400 text-xs mt-1">Your browser does not support the Web MIDI API. Try a modern browser like Chrome or Edge.</p>';
+            }
+            else {
+                statusMessagesDiv.innerHTML += '<p class="text-red-400 text-xs mt-1">Ensure MIDI drivers are installed and your browser has permission to access MIDI devices. Check browser settings.</p>';
             }
         }
         updateActiveNotesDisplay();
     }
-    initializeApp();
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+        initializeApp();
+    }
+
 </script>
 </body>
 </html>
