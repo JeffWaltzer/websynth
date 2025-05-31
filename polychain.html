@@ -1,4 +1,4 @@
-button.appendChild(notesListSpan);<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -89,10 +89,12 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
             gap: 0.25rem;
             transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
         }
-        .drop-zone.drag-over {
-            background-color: #374151;
-            border-color: #60a5fa !important;
-            border-style: solid !important;
+        .drop-zone.drag-over-enhanced {
+            border: 2px solid #2563eb !important;
+            background-color: #313b4e;
+        }
+        .drop-zone.drag-over-enhanced .drop-zone-placeholder {
+            display: none;
         }
         .poly-chain-item .remove-btn {
             background: none;
@@ -174,6 +176,11 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
             height: 0;
             overflow: hidden;
         }
+        .channel-note-button.in-polychain:not(.active) {
+            border-color: #60a5fa;
+            box-shadow: 0 0 3px 0px #60a5fa;
+        }
+
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center justify-center p-2 sm:p-3">
@@ -189,13 +196,13 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label for="midiIn" class="block text-xs font-medium text-sky-300 mb-0.5">MIDI Device:</label>
-                        <select id="midiIn" class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
+                        <select id="midiIn" title="Select your MIDI interface. This device will be used for receiving notes and sending them out." class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
                             <option value="">Select MIDI Device</option>
                         </select>
                     </div>
                     <div>
                         <label for="listeningChannel" class="block text-xs font-medium text-sky-300 mb-0.5">Listening Channel:</label>
-                        <select id="listeningChannel" class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
+                        <select id="listeningChannel" title="Choose the MIDI channel to listen to on the selected device. 'All Channels' listens to every channel." class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
                             <option value="all">All Channels</option>
                         </select>
                     </div>
@@ -207,15 +214,15 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <h3 class="text-sm font-medium text-sky-300 mb-0.5">Available Channels:</h3>
-                            <div id="availableChannelsForDrag" class="available-channels-container">
+                            <div id="availableChannelsForDrag" title="Drag these channels to the 'Current Poly Chain' area to define your routing order." class="available-channels-container">
                             </div>
                         </div>
                         <div>
                             <h3 class="text-sm font-medium text-sky-300 mb-0.5">Current Poly Chain:</h3>
-                            <div id="polyChainDropZone" class="drop-zone">
+                            <div id="polyChainDropZone" title="Drop channels here to build your poly chain. Notes will be routed to these channels in order." class="drop-zone">
                                 <p class="drop-zone-placeholder">Drag channels here.</p>
                             </div>
-                            <button id="clearPolyChainBtn" class="mt-1 w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-3 rounded-md transition duration-150 ease-in-out text-xs">
+                            <button id="clearPolyChainBtn" title="Clear all channels from the current poly chain." class="mt-1 w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-3 rounded-md transition duration-150 ease-in-out text-xs">
                                 Clear Poly Chain
                             </button>
                         </div>
@@ -251,6 +258,7 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
     let polyChain = [];
     let activeRoutedNotes = new Map();
     let currentPolyChainIndex = 0;
+    let polyChainSlotsState = []; // Stores the noteIdentifier occupying each polyChain slot, or null if free
     let dragSourceElement = null;
 
     // DOM Element References
@@ -274,12 +282,47 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
         statusMessagesDiv.appendChild(p);
     }
 
+    function updatePolyChainHighlights() {
+        const polyChainChannels = new Set(polyChain.map(item => parseInt(item.channel)));
+        for (let i = 1; i <= 16; i++) {
+            const button = channelDisplayButtons[i];
+            if (button) {
+                if (polyChainChannels.has(i)) {
+                    button.classList.add('in-polychain');
+                } else {
+                    button.classList.remove('in-polychain');
+                }
+            }
+        }
+    }
+
+    function resetPolyChainState() {
+        if (activeRoutedNotes.size > 0) {
+            console.log("[PolyChainStateReset] Stopping all active notes due to poly chain modification.");
+            activeRoutedNotes.forEach((detailsArray) => {
+                detailsArray.forEach(detail => {
+                    if (detail.outputDevice && WebMidi.getOutputById(detail.outputDevice.id)) {
+                        detail.outputDevice.channels[detail.outputChannel].stopNote(detail.note.identifier);
+                    }
+                });
+            });
+            activeRoutedNotes.clear();
+            logStatus("Poly chain modified, all notes stopped.");
+        }
+        polyChainSlotsState = new Array(polyChain.length).fill(null);
+        currentPolyChainIndex = 0;
+        updateActiveNotesDisplay();
+        updatePolyChainHighlights();
+    }
+
+
     function initializeChannelDisplayButtons() {
         activeNotesDisplayContainer.innerHTML = '';
         for (let i = 1; i <= 16; i++) {
             const button = document.createElement('div');
             button.id = `output-channel-display-${i}`;
             button.className = 'channel-note-button';
+            button.title = `Shows active notes on physical MIDI Channel ${i}.`;
 
             const defaultTextSpan = document.createElement('span');
             defaultTextSpan.className = 'channel-num-default';
@@ -294,6 +337,7 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
             activeNotesDisplayContainer.appendChild(button);
             channelDisplayButtons[i] = button;
         }
+        updatePolyChainHighlights();
     }
 
     function updateActiveNotesDisplay() {
@@ -341,6 +385,7 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
             el.textContent = `Ch ${i}`;
             el.draggable = true;
             el.dataset.channelValue = i;
+            el.title = `Drag to add Channel ${i} to the poly chain.`;
             el.addEventListener('dragstart', handleAvailableChannelDragStart);
             availableChannelsForDragContainer.appendChild(el);
         }
@@ -349,8 +394,12 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
     function renderPolyChain() {
         console.log('[RenderPolyChain] Rendering poly chain:', JSON.stringify(polyChain));
         polyChainDropZone.innerHTML = '';
+
+        resetPolyChainState(); // Reset state whenever the poly chain is re-rendered
+
         if (polyChain.length === 0) {
             polyChainDropZone.innerHTML = '<p class="drop-zone-placeholder">Drag channels here.</p>';
+            // updatePolyChainHighlights is called by resetPolyChainState
             return;
         }
         polyChain.forEach((item, index) => {
@@ -358,6 +407,7 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
             el.className = 'poly-chain-item';
             el.textContent = `Ch ${item.channel}`;
             el.dataset.polyChainItemId = item.id;
+            el.title = `Channel ${item.channel}. Drag to reorder. Click '×' to remove.`;
             el.draggable = true;
 
             el.addEventListener('dragstart', (e) => {
@@ -372,16 +422,17 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
             const removeBtn = document.createElement('button');
             removeBtn.innerHTML = '&times;';
             removeBtn.className = 'remove-btn';
-            removeBtn.title = "Remove from poly chain";
+            removeBtn.title = `Remove Ch ${item.channel} from poly chain.`;
             removeBtn.addEventListener('click', () => {
                 polyChain.splice(index, 1);
-                renderPolyChain();
-                currentPolyChainIndex = 0;
+                renderPolyChain(); // This will call resetPolyChainState
+                // currentPolyChainIndex is reset in resetPolyChainState
                 logStatus('Removed channel from poly chain.');
             });
             el.appendChild(removeBtn);
             polyChainDropZone.appendChild(el);
         });
+        // updatePolyChainHighlights is called by resetPolyChainState
     }
 
     function handleAvailableChannelDragStart(e) {
@@ -400,7 +451,7 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
         e.preventDefault();
         e.stopPropagation();
         if (e.dataTransfer.types.includes('application/json') || e.dataTransfer.types.includes('text/plain')) {
-            polyChainDropZone.classList.add('drag-over');
+            polyChainDropZone.classList.add('drag-over-enhanced');
         }
         console.log('[DragEnter DropZone] Types:', e.dataTransfer.types);
     });
@@ -418,7 +469,7 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
     polyChainDropZone.addEventListener('dragleave', (e) => {
         e.stopPropagation();
         if (!polyChainDropZone.contains(e.relatedTarget) || e.relatedTarget === null) {
-            polyChainDropZone.classList.remove('drag-over');
+            polyChainDropZone.classList.remove('drag-over-enhanced');
             console.log('[DragLeave DropZone] Left drop zone.');
         }
     });
@@ -426,7 +477,7 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
     polyChainDropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        polyChainDropZone.classList.remove('drag-over');
+        polyChainDropZone.classList.remove('drag-over-enhanced');
 
         let data;
         let dataTypeUsed = '';
@@ -535,16 +586,14 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
             console.warn('[Drop DropZone] Unknown data type or data missing for add/reorder. Data:', data);
         }
 
-        renderPolyChain();
-        currentPolyChainIndex = 0;
+        renderPolyChain(); // This will call resetPolyChainState
         dragSourceElement = null;
     });
 
     clearPolyChainBtn.addEventListener('click', () => {
-        polyChain = [];
+        polyChain = []; // This will be handled by renderPolyChain calling resetPolyChainState
         renderPolyChain();
-        currentPolyChainIndex = 0;
-        logStatus("Cleared poly chain.");
+        logStatus("Cleared poly chain. All notes stopped.");
     });
 
     function setOutputDeviceFromInput(inputId) {
@@ -675,62 +724,60 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
                 return;
             }
 
-            let assignedChannel;
-            let chosenPolyChainIndex = -1;
+            const noteIdentifier = `ch${e.message.channel}-note${e.note.number}`;
 
-            const busyPolyChainChannels = new Set();
-            activeRoutedNotes.forEach(detailsArray => {
-                detailsArray.forEach(routedDetail => {
-                    if (polyChain.some(pcEntry => pcEntry.channel === routedDetail.outputChannel)) {
-                        busyPolyChainChannels.add(routedDetail.outputChannel);
-                    }
-                });
-            });
-
-            let searchStartIndex = currentPolyChainIndex;
-            let foundChannel = false;
-
-            for (let i = 0; i < polyChain.length; i++) {
-                const polyChainEntryIndex = (searchStartIndex + i) % polyChain.length;
-                const channelToTest = polyChain[polyChainEntryIndex].channel;
-                if (!busyPolyChainChannels.has(channelToTest)) {
-                    assignedChannel = channelToTest;
-                    chosenPolyChainIndex = polyChainEntryIndex;
-                    foundChannel = true;
-                    break;
+            if (activeRoutedNotes.has(noteIdentifier)) {
+                const existingDetailsArray = activeRoutedNotes.get(noteIdentifier);
+                if (existingDetailsArray && existingDetailsArray.length > 0) {
+                    const existingDetail = existingDetailsArray[0];
+                    console.log(`[NoteOn] Re-triggering note ${noteIdentifier} on Ch ${existingDetail.outputChannel} (Slot ${existingDetail.polyChainSlotIndex})`);
+                    soleOutputDevice.channels[existingDetail.outputChannel].playNote(e.note.identifier, { rawAttack: e.message.dataBytes[1] });
+                    existingDetail.rawVelocity = e.message.dataBytes[1];
+                    logStatus(`Note Re-Trig: ${noteIdentifier.replace('-note', ' ')} (Vel ${e.message.dataBytes[1]}) &rarr; Ch ${existingDetail.outputChannel} (Slot ${existingDetail.polyChainSlotIndex})`);
+                    return;
                 }
             }
 
-            if (!foundChannel) {
-                chosenPolyChainIndex = currentPolyChainIndex;
-                assignedChannel = polyChain[chosenPolyChainIndex].channel;
+            let assignedChannel = -1;
+            let chosenPolyChainSlotIndex = -1;
+
+            if (polyChain.length > 0) {
+                let searchStartIndex = currentPolyChainIndex;
+                for (let i = 0; i < polyChain.length; i++) {
+                    const slotIndexToTest = (searchStartIndex + i) % polyChain.length;
+                    if (polyChainSlotsState[slotIndexToTest] === null) {
+                        assignedChannel = polyChain[slotIndexToTest].channel;
+                        chosenPolyChainSlotIndex = slotIndexToTest;
+                        break;
+                    }
+                }
             }
 
-            currentPolyChainIndex = (chosenPolyChainIndex + 1) % polyChain.length;
+            if (assignedChannel === -1) {
+                if (polyChain.length > 0) {
+                    console.warn(`[NoteOn] Poly chain is full. All ${polyChain.length} slots are busy. Note ${e.note.name}${e.note.octave} ignored.`);
+                }
+                return;
+            }
 
+            polyChainSlotsState[chosenPolyChainSlotIndex] = noteIdentifier;
+            currentPolyChainIndex = (chosenPolyChainSlotIndex + 1) % polyChain.length;
 
-            const noteIdentifier = `ch${e.message.channel}-note${e.note.number}`;
-            let noteRoutingDetailsArray = activeRoutedNotes.get(noteIdentifier) || [];
-
-            soleOutputDevice.channels[assignedChannel].playNote(e.note.identifier, { rawAttack: e.message.dataBytes[1] });
-
-            noteRoutingDetailsArray.push({
+            const newNoteDetails = {
                 note: e.note,
                 outputDevice: soleOutputDevice,
                 outputChannel: assignedChannel,
-                originalVelocity: e.velocity
-            });
+                originalVelocity: e.velocity,
+                rawVelocity: e.message.dataBytes[1],
+                polyChainSlotIndex: chosenPolyChainSlotIndex
+            };
+            activeRoutedNotes.set(noteIdentifier, [newNoteDetails]);
 
-            activeRoutedNotes.set(noteIdentifier, noteRoutingDetailsArray);
-            if (noteRoutingDetailsArray.length === 1) {
-                const existingNotesOnAssignedChannel = Array.from(activeRoutedNotes.values())
-                    .flat()
-                    .filter(detail => detail.outputChannel === assignedChannel && detail.note.number !== e.note.number);
-                if (existingNotesOnAssignedChannel.length === 0) {
-                    const listeningChannelInfo = `ch${e.message.channel}`;
-                    logStatus(`Note On: ${listeningChannelInfo} ${e.note.name}${e.note.octave} (Vel ${e.message.dataBytes[1]}) &rarr; Ch ${assignedChannel}`);
-                }
-            }
+            soleOutputDevice.channels[assignedChannel].playNote(e.note.identifier, { rawAttack: e.message.dataBytes[1] });
+
+            const listeningChannelInfo = `ch${e.message.channel}`;
+            logStatus(`Note On: ${listeningChannelInfo} ${e.note.name}${e.note.octave} (Vel ${e.message.dataBytes[1]}) &rarr; Ch ${assignedChannel} (Slot ${chosenPolyChainSlotIndex})`);
+
             updateActiveNotesDisplay();
         }, { channels: targetListeningChannel });
 
@@ -739,21 +786,30 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
             const noteIdentifier = `ch${e.message.channel}-note${e.note.number}`;
             const routedNoteDetailsArray = activeRoutedNotes.get(noteIdentifier);
 
-            if (routedNoteDetailsArray) {
-                activeRoutedNotes.delete(noteIdentifier);
+            if (routedNoteDetailsArray && routedNoteDetailsArray.length > 0) {
+                const detail = routedNoteDetailsArray[0];
 
-                routedNoteDetailsArray.forEach(details => {
-                    if (details.outputDevice && WebMidi.getOutputById(details.outputDevice.id)) {
-                        details.outputDevice.channels[details.outputChannel].stopNote(details.note.identifier, {rawRelease: e.message.dataBytes[1]});
-                    } else if (details.outputDevice) {
-                        console.warn(`[NoteOff] Device for messages ${details.outputDevice.name} disconnected. Note was ${details.note.name}${details.note.octave} on its Ch ${details.outputChannel}.`);
+                if (detail.polyChainSlotIndex !== undefined && detail.polyChainSlotIndex < polyChainSlotsState.length) {
+                    if (polyChainSlotsState[detail.polyChainSlotIndex] === noteIdentifier) {
+                        polyChainSlotsState[detail.polyChainSlotIndex] = null;
+                    } else {
+                        console.warn(`[NoteOff] Mismatch in polyChainSlotsState for slot ${detail.polyChainSlotIndex}. Expected ${noteIdentifier}, found ${polyChainSlotsState[detail.polyChainSlotIndex]}`);
                     }
-                });
+                } else {
+                    console.warn(`[NoteOff] Invalid or missing polyChainSlotIndex for note ${noteIdentifier}. Slot index: ${detail.polyChainSlotIndex}`);
+                }
 
+                if (detail.outputDevice && WebMidi.getOutputById(detail.outputDevice.id)) {
+                    detail.outputDevice.channels[detail.outputChannel].stopNote(detail.note.identifier, {rawRelease: e.message.dataBytes[1]});
+                } else if (detail.outputDevice) {
+                    console.warn(`[NoteOff] Device for messages ${detail.outputDevice.name} disconnected. Note was ${details.note.name}${details.note.octave} on its Ch ${details.outputChannel}.`);
+                }
+
+                activeRoutedNotes.delete(noteIdentifier);
                 updateActiveNotesDisplay();
                 if (activeRoutedNotes.size === 0) {
                     logStatus("All notes off.");
-                    currentPolyChainIndex = 0; // Reset to the first item when all notes are off.
+                    currentPolyChainIndex = 0;
                 }
             }
         }, { channels: targetListeningChannel });
@@ -768,49 +824,11 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
             statusMessagesDiv.innerHTML = '<p class="text-gray-400">Initializing WebMIDI...</p>';
 
             initializeChannelDisplayButtons();
+            polyChainSlotsState = new Array(polyChain.length).fill(null); // Initialize based on empty polyChain
 
             await WebMidi.enable();
             logStatus("WebMIDI enabled. Scanning for devices...", false);
             populateMidiDeviceLists();
-
-            midiInSelect.addEventListener('change', (e) => {
-                midiInSelect.dataset.userSelected = "true";
-                setOutputDeviceFromInput(e.target.value);
-            });
-            listeningChannelSelect.addEventListener('change', (e) => {
-                selectedListeningChannel = e.target.value;
-                if (selectedMidiInput && soleOutputDevice) {
-                    setupMidiListeners();
-                } else if (selectedMidiInput && !soleOutputDevice) {
-                    logStatus("Device selected, but no other device for messages. Select device or check connections.", true);
-                }
-                else {
-                    logStatus("Please select a MIDI device first.", true);
-                }
-            });
-
-            WebMidi.addListener("connected", (e) => {
-                logStatus(`Device connected: ${e.port.name} (${e.port.type}). Rescanning...`);
-                populateMidiDeviceLists();
-            });
-            WebMidi.addListener("disconnected", (e) => {
-                logStatus(`Device disconnected: ${e.port.name} (${e.port.type}). Rescanning...`, true);
-                let wasActiveDeviceDisconnected = false;
-                if (selectedMidiInput && selectedMidiInput.id === e.port.id) {
-                    selectedMidiInput = null;
-                    soleOutputDevice = null;
-                    wasActiveDeviceDisconnected = true;
-                    logStatus("Active MIDI device disconnected.", true);
-                } else if (soleOutputDevice && soleOutputDevice.id === e.port.id) {
-                    soleOutputDevice = null;
-                    wasActiveDeviceDisconnected = true;
-                    logStatus("Active device for MIDI messages disconnected.", true);
-                }
-                populateMidiDeviceLists();
-                if (wasActiveDeviceDisconnected && selectedMidiInput) {
-                    setOutputDeviceFromInput(selectedMidiInput.id);
-                }
-            });
 
         } catch (err) {
             logStatus(`Could not enable WebMIDI: ${err.message || err}`, true);
@@ -827,6 +845,7 @@ button.appendChild(notesListSpan);<!DOCTYPE html>
             }
         }
         updateActiveNotesDisplay();
+        updatePolyChainHighlights();
     }
 
     if (document.readyState === 'loading') {
