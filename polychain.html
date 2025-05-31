@@ -49,6 +49,30 @@
             border: 1px solid #4B5563;
         }
 
+        .toolbar-panel {
+            background-color: #374151;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #4B5563;
+            margin-bottom: 0.75rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+        .toolbar-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .toolbar-group + .toolbar-group {
+            margin-left: 0.75rem;
+            padding-left: 0.75rem;
+            border-left: 1px solid #4B5563;
+        }
+
+
         .draggable-channel, .poly-chain-item {
             padding: 0.375rem 0.625rem;
             margin: 0.125rem;
@@ -180,6 +204,88 @@
             border-color: #60a5fa;
             box-shadow: 0 0 3px 0px #60a5fa;
         }
+        .control-button {
+            background-color: #4f46e5;
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.15s ease-in-out;
+            border: 1px solid #6366f1;
+            font-size: 1rem;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+        .control-button:hover {
+            background-color: #4338ca;
+        }
+        .control-button.paused {
+            background-color: #f59e0b;
+            border-color: #d97706;
+        }
+        .control-button.paused:hover {
+            background-color: #b45309;
+        }
+        .toolbar-panel .control-button {
+        }
+        .toolbar-panel .checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            color: #e2e8f0;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            background-color: #4a5568;
+            border: 1px solid #718096;
+            cursor: pointer;
+            height: 2.5rem;
+        }
+        .toolbar-panel input[type="checkbox"] {
+            width: 0.875rem;
+            height: 0.875rem;
+            accent-color: #4f46e5;
+        }
+
+        /* Note Activity Monitor Styles */
+        #noteActivityMonitorPanel {
+            margin-top: 0.75rem; /* mb-3 */
+        }
+        #noteActivityGraphicContainer {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr); /* 12 columns for notes in an octave */
+            gap: 2px; /* Small gap between cells */
+            padding: 0.25rem;
+            background-color: #1f2937; /* Dark background for the grid */
+            border-radius: 0.25rem;
+            min-height: 70px; /* Approx 4 rows of cells */
+        }
+        .note-cell {
+            height: 12px; /* Small height for cells */
+            border-radius: 1px;
+            background-color: #4b5563; /* Default (off) state - gray-600 */
+            transition: background-color 0.05s ease-in-out;
+            font-size: 8px; /* Tiny text for note name if needed */
+            color: #a0aec0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .note-cell.is-black-key { /* For styling black keys differently if desired */
+            background-color: #2d3748; /* Darker for black keys */
+            /* margin: 0 -2px; To make them appear inset, might need more complex layout */
+        }
+        .note-cell.note-played {
+            background-color: #10b981; /* green-500 */
+        }
+        .note-cell.note-ignored-flash {
+            background-color: #ef4444; /* red-500 */
+        }
+
 
     </style>
 </head>
@@ -190,10 +296,30 @@
         <p class="text-gray-400 mt-1 text-sm">Define a MIDI poly chain. Notes are routed via the selected MIDI device.</p>
     </header>
 
+    <div id="appToolbar" class="toolbar-panel">
+        <div class="toolbar-group" id="playbackControls">
+            <button id="pauseResumeBtn" class="control-button" title="Pause MIDI Processing">⏸️</button>
+            <button id="panicBtn" class="control-button" title="Panic! Send All Notes Off / All Sound Off">🚨</button>
+            <button id="reinitializeMidiBtn" class="control-button" title="Reinitialize MIDI Connection">🔄</button>
+        </div>
+        <div class="toolbar-group" id="polyChainManagementControls">
+            <button id="savePolyChainBtn" class="control-button" title="Save Current Poly Chain">💾</button>
+            <button id="loadPolyChainBtn" class="control-button" title="Load Saved Poly Chain">📂</button>
+            <button id="clearPolyChainBtn" class="control-button bg-red-600 hover:bg-red-700" title="Clear Current Poly Chain">🗑️</button>
+        </div>
+        <div class="toolbar-group" id="modeControls">
+            <label class="checkbox-label" title="Toggle random assignment of notes to poly chain slots.">
+                <input type="checkbox" id="randomModeCheckbox">
+                🎲
+            </label>
+        </div>
+    </div>
+
+
     <main class="flex-grow p-3 sm:p-4">
         <div class="flex flex-col space-y-3 mb-3">
             <section id="midiSetupPanel" class="w-full space-y-3 panel">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
                     <div>
                         <label for="midiIn" class="block text-xs font-medium text-sky-300 mb-0.5">MIDI Device:</label>
                         <select id="midiIn" title="Select your MIDI interface. This device will be used for receiving notes and sending them out." class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
@@ -207,9 +333,8 @@
                         </select>
                     </div>
                 </div>
-
                 <div>
-                    <h2 class="text-md font-semibold text-sky-300 mb-1">Channel Poly Chain Editor</h2>
+                    <h2 class="text-md font-semibold text-sky-300 mb-1 mt-3">Channel Poly Chain Editor</h2>
                     <p class="text-xs text-gray-400 mb-1">Drag channels from "Available" to "Current Poly Chain" to define the order.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
@@ -222,9 +347,6 @@
                             <div id="polyChainDropZone" title="Drop channels here to build your poly chain. Notes will be routed to these channels in order." class="drop-zone">
                                 <p class="drop-zone-placeholder">Drag channels here.</p>
                             </div>
-                            <button id="clearPolyChainBtn" title="Clear all channels from the current poly chain." class="mt-1 w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-3 rounded-md transition duration-150 ease-in-out text-xs">
-                                Clear Poly Chain
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -234,6 +356,12 @@
         <section id="activeNotesPanel" class="mb-3 panel">
             <h2 class="text-md font-semibold text-sky-300 mb-1">Active Routed Notes (Device Channels):</h2>
             <div id="activeNotesDisplayContainer" class="min-h-[70px]">
+            </div>
+        </section>
+
+        <section id="noteActivityMonitorPanel" class="panel">
+            <h2 class="text-md font-semibold text-sky-300 mb-1">Note Activity Monitor:</h2>
+            <div id="noteActivityGraphicContainer">
             </div>
         </section>
     </main>
@@ -258,29 +386,109 @@
     let polyChain = [];
     let activeRoutedNotes = new Map();
     let currentPolyChainIndex = 0;
-    let polyChainSlotsState = []; // Stores the noteIdentifier occupying each polyChain slot, or null if free
+    let polyChainSlotsState = [];
     let dragSourceElement = null;
+    let isPaused = false;
+    let isRandomMode = false;
+    let lastStatusMessage = { text: "Initializing...", isError: false, isFlash: false };
+    let statusTimeoutId = null;
+    const LOCAL_STORAGE_KEY = 'midiPolychainApp_savedChain_v1';
+
+    const NOTE_DISPLAY_RANGE_START = 36; // C2
+    const NOTE_DISPLAY_RANGE_END = 83;   // B5 (48 notes total)
+    const noteCellElements = {}; // Store note cell DOM elements by note number
+
 
     // DOM Element References
     const midiInSelect = document.getElementById('midiIn');
     const listeningChannelSelect = document.getElementById('listeningChannel');
     const availableChannelsForDragContainer = document.getElementById('availableChannelsForDrag');
     const polyChainDropZone = document.getElementById('polyChainDropZone');
-    const clearPolyChainBtn = document.getElementById('clearPolyChainBtn');
+    let clearPolyChainBtn;
     const statusMessagesDiv = document.getElementById('statusMessages');
     const activeNotesDisplayContainer = document.getElementById('activeNotesDisplayContainer');
     const webmidiVersionSpan = document.getElementById('webmidiVersion');
+    const pauseResumeBtn = document.getElementById('pauseResumeBtn');
+    const savePolyChainBtn = document.getElementById('savePolyChainBtn');
+    const loadPolyChainBtn = document.getElementById('loadPolyChainBtn');
+    const panicBtn = document.getElementById('panicBtn');
+    const reinitializeMidiBtn = document.getElementById('reinitializeMidiBtn');
+    const randomModeCheckbox = document.getElementById('randomModeCheckbox');
+    const appToolbar = document.getElementById('appToolbar');
+    const noteActivityGraphicContainer = document.getElementById('noteActivityGraphicContainer');
 
     const channelDisplayButtons = [];
 
-    function logStatus(message, isError = false) {
-        console.log(`[Status] ${isError ? 'ERROR: ' : ''}${message}`);
+    function logStatus(message, isError = false, isFlash = false, flashDuration = 3000) {
+        if (statusTimeoutId) {
+            clearTimeout(statusTimeoutId);
+            statusTimeoutId = null;
+        }
+
         const p = document.createElement('p');
         p.textContent = message;
-        p.className = isError ? 'text-red-400 animate-pulse' : 'text-green-400';
+        if (isError) {
+            p.className = 'text-red-400 animate-pulse';
+        } else if (isFlash) {
+            p.className = 'text-yellow-400';
+        } else {
+            p.className = 'text-green-400';
+        }
+
         statusMessagesDiv.innerHTML = '';
         statusMessagesDiv.appendChild(p);
+
+        if (!isFlash) {
+            lastStatusMessage = { text: message, isError: isError, isFlash: false };
+        } else {
+            statusTimeoutId = setTimeout(() => {
+                const lastP = document.createElement('p');
+                lastP.textContent = lastStatusMessage.text;
+                lastP.className = lastStatusMessage.isError ? 'text-red-400 animate-pulse' : 'text-green-400';
+                statusMessagesDiv.innerHTML = '';
+                statusMessagesDiv.appendChild(lastP);
+                statusTimeoutId = null;
+            }, flashDuration);
+        }
     }
+
+    function initializeNoteActivityMonitor() {
+        noteActivityGraphicContainer.innerHTML = '';
+        const blackKeyPattern = [false, true, false, true, false, false, true, false, true, false, true, false]; // C, C#, D, D#, E, F, F#, G, G#, A, A#, B
+
+        for (let noteNum = NOTE_DISPLAY_RANGE_START; noteNum <= NOTE_DISPLAY_RANGE_END; noteNum++) {
+            const cell = document.createElement('div');
+            cell.classList.add('note-cell');
+            cell.id = `note-cell-${noteNum}`;
+            // cell.textContent = WebMidi. নোটs[noteNum % 12].substring(0,1); // Optional: show note letter
+            if (blackKeyPattern[noteNum % 12]) {
+                cell.classList.add('is-black-key');
+            }
+            noteActivityGraphicContainer.appendChild(cell);
+            noteCellElements[noteNum] = cell;
+        }
+    }
+
+    function updateNoteActivityCell(noteNumber, state) { // state can be 'played', 'ignored', or 'off'
+        const cell = noteCellElements[noteNumber];
+        if (!cell) return;
+
+        cell.classList.remove('note-played', 'note-ignored-flash'); // Clear previous states
+
+        if (state === 'played') {
+            cell.classList.add('note-played');
+        } else if (state === 'ignored') {
+            cell.classList.add('note-ignored-flash');
+            setTimeout(() => {
+                // Only remove flash if it hasn't been set to 'played' in the meantime
+                if (cell.classList.contains('note-ignored-flash') && !cell.classList.contains('note-played')) {
+                    cell.classList.remove('note-ignored-flash');
+                }
+            }, 500); // Flash duration
+        }
+        // 'off' state is just the default (no extra class)
+    }
+
 
     function updatePolyChainHighlights() {
         const polyChainChannels = new Set(polyChain.map(item => parseInt(item.channel)));
@@ -296,18 +504,20 @@
         }
     }
 
-    function resetPolyChainState() {
-        if (activeRoutedNotes.size > 0) {
-            console.log("[PolyChainStateReset] Stopping all active notes due to poly chain modification.");
+    function resetPolyChainState(stopNotes = true) {
+        if (stopNotes && activeRoutedNotes.size > 0 && !isPaused) {
             activeRoutedNotes.forEach((detailsArray) => {
                 detailsArray.forEach(detail => {
                     if (detail.outputDevice && WebMidi.getOutputById(detail.outputDevice.id)) {
                         detail.outputDevice.channels[detail.outputChannel].stopNote(detail.note.identifier);
                     }
+                    if (noteCellElements[detail.note.number]) {
+                        updateNoteActivityCell(detail.note.number, 'off');
+                    }
                 });
             });
             activeRoutedNotes.clear();
-            logStatus("Poly chain modified, all notes stopped.");
+        } else if (stopNotes && activeRoutedNotes.size > 0 && isPaused) {
         }
         polyChainSlotsState = new Array(polyChain.length).fill(null);
         currentPolyChainIndex = 0;
@@ -385,21 +595,31 @@
             el.textContent = `Ch ${i}`;
             el.draggable = true;
             el.dataset.channelValue = i;
-            el.title = `Drag to add Channel ${i} to the poly chain.`;
+            el.title = `Drag or Double-Click to add Channel ${i} to the poly chain.`;
             el.addEventListener('dragstart', handleAvailableChannelDragStart);
+            el.addEventListener('dblclick', handleAvailableChannelDoubleClick);
             availableChannelsForDragContainer.appendChild(el);
         }
     }
 
+    function handleAvailableChannelDoubleClick(e) {
+        const channelVal = e.target.dataset.channelValue;
+        if (channelVal) {
+            const newChannelNum = parseInt(channelVal);
+            polyChain.push({ channel: newChannelNum, id: `chanSeq-${Date.now()}-${Math.random().toString(36).substring(2,7)}` });
+            renderPolyChain();
+            logStatus(`Added Ch ${newChannelNum} to poly chain via double-click.`, false, true);
+        }
+    }
+
+
     function renderPolyChain() {
-        console.log('[RenderPolyChain] Rendering poly chain:', JSON.stringify(polyChain));
         polyChainDropZone.innerHTML = '';
 
-        resetPolyChainState(); // Reset state whenever the poly chain is re-rendered
+        resetPolyChainState();
 
         if (polyChain.length === 0) {
             polyChainDropZone.innerHTML = '<p class="drop-zone-placeholder">Drag channels here.</p>';
-            // updatePolyChainHighlights is called by resetPolyChainState
             return;
         }
         polyChain.forEach((item, index) => {
@@ -411,7 +631,6 @@
             el.draggable = true;
 
             el.addEventListener('dragstart', (e) => {
-                console.log('[DragStart PolyChainItem] ID:', item.id, 'Channel:', item.channel);
                 const jsonData = JSON.stringify({type: 'polyChainItem', id: item.id, channel: item.channel});
                 e.dataTransfer.setData('application/json', jsonData);
                 e.dataTransfer.setData('text/plain', item.id);
@@ -425,19 +644,16 @@
             removeBtn.title = `Remove Ch ${item.channel} from poly chain.`;
             removeBtn.addEventListener('click', () => {
                 polyChain.splice(index, 1);
-                renderPolyChain(); // This will call resetPolyChainState
-                // currentPolyChainIndex is reset in resetPolyChainState
+                renderPolyChain();
                 logStatus('Removed channel from poly chain.');
             });
             el.appendChild(removeBtn);
             polyChainDropZone.appendChild(el);
         });
-        // updatePolyChainHighlights is called by resetPolyChainState
     }
 
     function handleAvailableChannelDragStart(e) {
         const channelVal = e.target.dataset.channelValue;
-        console.log('[DragStart AvailableChannel] Channel:', channelVal);
 
         const jsonData = JSON.stringify({type: 'newChannel', channel: channelVal});
         e.dataTransfer.setData('application/json', jsonData);
@@ -453,7 +669,6 @@
         if (e.dataTransfer.types.includes('application/json') || e.dataTransfer.types.includes('text/plain')) {
             polyChainDropZone.classList.add('drag-over-enhanced');
         }
-        console.log('[DragEnter DropZone] Types:', e.dataTransfer.types);
     });
 
     polyChainDropZone.addEventListener('dragover', (e) => {
@@ -470,7 +685,6 @@
         e.stopPropagation();
         if (!polyChainDropZone.contains(e.relatedTarget) || e.relatedTarget === null) {
             polyChainDropZone.classList.remove('drag-over-enhanced');
-            console.log('[DragLeave DropZone] Left drop zone.');
         }
     });
 
@@ -484,19 +698,17 @@
 
         try {
             const jsonString = e.dataTransfer.getData('application/json');
-            console.log('[Drop DropZone] Attempting application/json. Received:', jsonString);
             if (jsonString) {
                 data = JSON.parse(jsonString);
                 dataTypeUsed = 'application/json';
             }
         } catch (jsonError) {
-            console.warn('[Drop DropZone] Failed to parse application/json. Error:', jsonError, 'Raw string was:', e.dataTransfer.getData('application/json'));
+            console.warn('[Drop DropZone] Failed to parse application/json. Error:', jsonError);
         }
 
         if (!data) {
             try {
                 const plainString = e.dataTransfer.getData('text/plain');
-                console.log('[Drop DropZone] Attempting text/plain. Received:', plainString);
                 if (plainString && !isNaN(parseInt(plainString)) && dragSourceElement && dragSourceElement.classList.contains('draggable-channel')) {
                     data = { type: 'newChannel', channel: plainString };
                     dataTypeUsed = 'text/plain (interpreted as newChannel)';
@@ -517,84 +729,153 @@
             return;
         }
 
-        console.log(`[Drop DropZone] Processed data using ${dataTypeUsed}:`, data);
+        const droppedItem = data.type === 'newChannel'
+            ? { channel: parseInt(data.channel), id: `chanSeq-${Date.now()}-${Math.random().toString(36).substring(2,7)}` }
+            : (data.type === 'polyChainItem' ? polyChain.find(item => item.id === data.id) : null);
 
-        if (data.type === 'newChannel' && data.channel) {
-            console.log('[Drop NewChannel] Attempting to add channel:', data.channel);
-            const newChannelNum = parseInt(data.channel);
-            if (isNaN(newChannelNum) || newChannelNum < 1 || newChannelNum > 16) {
-                console.error('[Drop NewChannel] Parsed channel is invalid:', data.channel);
-                dragSourceElement = null;
-                return;
-            }
-            polyChain.push({ channel: newChannelNum, id: `chanSeq-${Date.now()}-${Math.random().toString(36).substring(2,7)}` });
-            logStatus(`Added Ch ${newChannelNum} to poly chain.`);
-            console.log('[Drop NewChannel] Poly chain after push:', JSON.stringify(polyChain));
+        if (!droppedItem) {
+            console.error('[Drop DropZone] Could not create or find dropped item.');
+            dragSourceElement = null;
+            return;
         }
-        else if (data.type === 'polyChainItem' && data.id) {
-            console.log('[Drop Reorder] Attempting to reorder item ID:', data.id, 'Channel (from data):', data.channel);
-            const sourceId = data.id;
-            const targetElement = e.target.closest('.poly-chain-item');
-            const sourceIndex = polyChain.findIndex(item => item.id === sourceId);
 
-            if (sourceIndex === -1) {
-                console.error('[Drop Reorder] Source item (ID:', sourceId, ') not found in poly chain for reordering.');
-                dragSourceElement = null;
-                return;
+        if (data.type === 'polyChainItem') {
+            const sourceIndex = polyChain.findIndex(item => item.id === droppedItem.id);
+            if (sourceIndex > -1) {
+                polyChain.splice(sourceIndex, 1);
             }
+        }
 
-            const [movedItem] = polyChain.splice(sourceIndex, 1);
-            console.log('[Drop Reorder] Item removed for reorder:', JSON.stringify(movedItem), 'Poly chain now:', JSON.stringify(polyChain));
+        let insertAtIndex = polyChain.length;
+        const dropZoneItems = Array.from(polyChainDropZone.querySelectorAll('.poly-chain-item'));
+        let targetElementForDrop = e.target.closest('.poly-chain-item');
 
-            if (targetElement && targetElement.dataset.polyChainItemId !== sourceId) {
-                const targetId = targetElement.dataset.polyChainItemId;
-                const targetIndexInModifiedArray = polyChain.findIndex(item => item.id === targetId);
-
-                if (targetIndexInModifiedArray !== -1) {
-                    const rect = targetElement.getBoundingClientRect();
-                    const isAfter = e.clientY > rect.top + rect.height / 2;
-                    polyChain.splice(isAfter ? targetIndexInModifiedArray + 1 : targetIndexInModifiedArray, 0, movedItem);
-                    console.log('[Drop Reorder] Item inserted at index', isAfter ? targetIndexInModifiedArray + 1 : targetIndexInModifiedArray);
-                } else {
-                    console.warn('[Drop Reorder] Target for reorder not found in modified array. Appending.');
-                    polyChain.push(movedItem);
-                }
-            } else {
-                console.log('[Drop Reorder] No valid distinct target element or dropping on self. Appending item to end or dropping in free space.');
-                let inserted = false;
-                if (!targetElement && polyChain.length > 0) {
-                    const dropZoneChildren = Array.from(polyChainDropZone.querySelectorAll('.poly-chain-item'));
-                    for (let i = 0; i < dropZoneChildren.length; i++) {
-                        const childRect = dropZoneChildren[i].getBoundingClientRect();
-                        if (e.clientY < childRect.top + childRect.height / 2) {
-                            const itemIdToInsertBefore = dropZoneChildren[i].dataset.polyChainItemId;
-                            const insertAtIndex = polyChain.findIndex(it => it.id === itemIdToInsertBefore);
-                            if (insertAtIndex !== -1) {
-                                polyChain.splice(insertAtIndex, 0, movedItem);
-                                inserted = true;
-                                break;
-                            }
-                        }
+        if (targetElementForDrop) {
+            const targetId = targetElementForDrop.dataset.polyChainItemId;
+            const targetIndexInCurrentChain = polyChain.findIndex(item => item.id === targetId);
+            if (targetIndexInCurrentChain !== -1) {
+                const rect = targetElementForDrop.getBoundingClientRect();
+                const isAfter = e.clientY > rect.top + rect.height / 2;
+                insertAtIndex = isAfter ? targetIndexInCurrentChain + 1 : targetIndexInCurrentChain;
+            }
+        } else {
+            for (let i = 0; i < dropZoneItems.length; i++) {
+                const childRect = dropZoneItems[i].getBoundingClientRect();
+                if (e.clientY < childRect.bottom && e.clientX < childRect.right) {
+                    const itemIdToInsertBefore = dropZoneItems[i].dataset.polyChainItemId;
+                    const indexInCurrentChain = polyChain.findIndex(it => it.id === itemIdToInsertBefore);
+                    if (indexInCurrentChain !== -1) {
+                        insertAtIndex = indexInCurrentChain;
+                        break;
                     }
                 }
-                if (!inserted) {
-                    polyChain.push(movedItem);
-                }
             }
-            logStatus('Poly chain reordered.');
-        } else {
-            console.warn('[Drop DropZone] Unknown data type or data missing for add/reorder. Data:', data);
         }
 
-        renderPolyChain(); // This will call resetPolyChainState
+        polyChain.splice(insertAtIndex, 0, droppedItem);
+
+        if (data.type === 'newChannel') {
+            logStatus(`Added Ch ${droppedItem.channel} to poly chain at specific position.`);
+        } else {
+            logStatus('Poly chain reordered.');
+        }
+
+        renderPolyChain();
         dragSourceElement = null;
     });
 
-    clearPolyChainBtn.addEventListener('click', () => {
-        polyChain = []; // This will be handled by renderPolyChain calling resetPolyChainState
-        renderPolyChain();
-        logStatus("Cleared poly chain. All notes stopped.");
-    });
+
+    function savePolyChainToLocalStorage() {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(polyChain));
+            logStatus("Poly chain saved successfully!", false, true);
+        } catch (e) {
+            console.error("Error saving poly chain to localStorage:", e);
+            logStatus("Error saving poly chain. Storage might be full or disabled.", true, true);
+        }
+    }
+
+    function loadPolyChainFromLocalStorage() {
+        try {
+            const savedChainString = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedChainString) {
+                const loadedChain = JSON.parse(savedChainString);
+                if (Array.isArray(loadedChain)) {
+                    polyChain = loadedChain;
+                    renderPolyChain();
+                    logStatus("Poly chain loaded successfully!", false, false);
+                } else {
+                    logStatus("Could not load poly chain: Invalid data format.", true, true);
+                }
+            } else {
+                logStatus("No saved poly chain found.", false, true);
+            }
+        } catch (e) {
+            console.error("Error loading poly chain from localStorage:", e);
+            logStatus("Error loading poly chain. Saved data might be corrupt.", true, true);
+        }
+    }
+
+    function sendPanic() {
+        if (soleOutputDevice) {
+            logStatus("Panic! Sending All Notes Off / All Sound Off...", true, true);
+            for (let i = 1; i <= 16; i++) {
+                soleOutputDevice.channels[i].sendControlChange(123, 0);
+                soleOutputDevice.channels[i].sendControlChange(120, 0);
+            }
+            activeRoutedNotes.clear();
+            polyChainSlotsState = new Array(polyChain.length).fill(null);
+            // Clear all visual note activity cells
+            for (const noteNum in noteCellElements) {
+                updateNoteActivityCell(noteNum, 'off');
+            }
+            updateActiveNotesDisplay(); // Clears the channel button displays
+            logStatus("Panic complete. All notes should be off.", false, true, 4000);
+
+            if (!isPaused) {
+                togglePauseResume();
+            }
+
+        } else {
+            logStatus("Cannot send panic: No MIDI device selected/active.", true, true);
+        }
+    }
+
+    async function reinitializeMidi() {
+        logStatus("Reinitializing MIDI...", false, true);
+        sendPanic();
+
+        try {
+            if (WebMidi.enabled) {
+                await WebMidi.disable();
+                logStatus("WebMIDI disabled for reinitialization.", false, true);
+            }
+        } catch (disableError) {
+            console.error("Error disabling WebMIDI during reinitialization:", disableError);
+            logStatus("Error disabling WebMIDI. Reinitialization might be incomplete.", true, true);
+        }
+
+        selectedMidiInput = null;
+        soleOutputDevice = null;
+        midiInSelect.innerHTML = '<option value="">Select MIDI Device</option>';
+        listeningChannelSelect.value = 'all';
+        selectedListeningChannel = 'all';
+
+        try {
+            await WebMidi.enable();
+            logStatus("WebMIDI re-enabled. Scanning for devices...", false);
+            populateMidiDeviceLists();
+        } catch (enableError) {
+            logStatus(`Could not re-enable WebMIDI: ${enableError.message || enableError}`, true);
+            console.error("WebMIDI Re-enable Error:", enableError);
+            if (enableError.message && enableError.message.toLowerCase().includes("midi has been disabled in this document by permissions policy")) {
+                statusMessagesDiv.innerHTML += '<p class="text-yellow-400 text-xs mt-1">MIDI access is disabled by the document\'s permissions policy. If this page is in an iframe, the iframe may need the `allow="midi"` attribute. Also ensure you are on a secure connection (HTTPS or localhost) and have granted MIDI permissions to this site.</p>';
+            } else {
+                statusMessagesDiv.innerHTML += '<p class="text-red-400 text-xs mt-1">Ensure MIDI drivers are installed and your browser has permission to access MIDI devices.</p>';
+            }
+        }
+    }
+
 
     function setOutputDeviceFromInput(inputId) {
         selectedMidiInput = WebMidi.getInputById(inputId);
@@ -682,7 +963,6 @@
         if (selectedMidiInput && selectedMidiInput.hasListener('noteon')) {
             selectedMidiInput.removeListener('noteon');
             selectedMidiInput.removeListener('noteoff');
-            console.log(`[MIDI Setup] Removed listeners from ${selectedMidiInput.name}`);
         }
 
         if (!selectedMidiInput) {
@@ -709,10 +989,12 @@
         const targetListeningChannel = selectedListeningChannel === 'all' ? undefined : parseInt(selectedListeningChannel);
 
         selectedMidiInput.addListener('noteon', e => {
+            if (isPaused) return;
             if (selectedListeningChannel !== 'all' && e.message.channel !== targetListeningChannel) return;
 
             if (polyChain.length === 0) {
-                console.warn("[NoteOn] Poly chain is empty. Note ignored.");
+                updateNoteActivityCell(e.note.number, 'ignored');
+                logStatus("Poly chain is empty. Note ignored.", true, true);
                 return;
             }
             if (!soleOutputDevice || !WebMidi.getOutputById(soleOutputDevice.id)) {
@@ -730,9 +1012,9 @@
                 const existingDetailsArray = activeRoutedNotes.get(noteIdentifier);
                 if (existingDetailsArray && existingDetailsArray.length > 0) {
                     const existingDetail = existingDetailsArray[0];
-                    console.log(`[NoteOn] Re-triggering note ${noteIdentifier} on Ch ${existingDetail.outputChannel} (Slot ${existingDetail.polyChainSlotIndex})`);
                     soleOutputDevice.channels[existingDetail.outputChannel].playNote(e.note.identifier, { rawAttack: e.message.dataBytes[1] });
                     existingDetail.rawVelocity = e.message.dataBytes[1];
+                    updateNoteActivityCell(e.note.number, 'played'); // Re-trigger visual
                     logStatus(`Note Re-Trig: ${noteIdentifier.replace('-note', ' ')} (Vel ${e.message.dataBytes[1]}) &rarr; Ch ${existingDetail.outputChannel} (Slot ${existingDetail.polyChainSlotIndex})`);
                     return;
                 }
@@ -742,26 +1024,45 @@
             let chosenPolyChainSlotIndex = -1;
 
             if (polyChain.length > 0) {
-                let searchStartIndex = currentPolyChainIndex;
-                for (let i = 0; i < polyChain.length; i++) {
-                    const slotIndexToTest = (searchStartIndex + i) % polyChain.length;
-                    if (polyChainSlotsState[slotIndexToTest] === null) {
-                        assignedChannel = polyChain[slotIndexToTest].channel;
-                        chosenPolyChainSlotIndex = slotIndexToTest;
-                        break;
+                let availableSlots = [];
+                for(let i=0; i < polyChainSlotsState.length; i++) {
+                    if(polyChainSlotsState[i] === null) {
+                        availableSlots.push(i);
+                    }
+                }
+
+                if (availableSlots.length > 0) {
+                    if (isRandomMode) {
+                        chosenPolyChainSlotIndex = availableSlots[Math.floor(Math.random() * availableSlots.length)];
+                    } else {
+                        for (let i = 0; i < polyChain.length; i++) {
+                            const slotIndexToTest = (currentPolyChainIndex + i) % polyChain.length;
+                            if (polyChainSlotsState[slotIndexToTest] === null) {
+                                chosenPolyChainSlotIndex = slotIndexToTest;
+                                break;
+                            }
+                        }
+                    }
+                    if (chosenPolyChainSlotIndex !== -1) {
+                        assignedChannel = polyChain[chosenPolyChainSlotIndex].channel;
                     }
                 }
             }
 
+
             if (assignedChannel === -1) {
                 if (polyChain.length > 0) {
-                    console.warn(`[NoteOn] Poly chain is full. All ${polyChain.length} slots are busy. Note ${e.note.name}${e.note.octave} ignored.`);
+                    const msg = `Poly chain full (${polyChain.length} slots). Note ${e.note.name}${e.note.octave} ignored.`;
+                    updateNoteActivityCell(e.note.number, 'ignored');
+                    logStatus(msg, true, true);
                 }
                 return;
             }
 
             polyChainSlotsState[chosenPolyChainSlotIndex] = noteIdentifier;
-            currentPolyChainIndex = (chosenPolyChainSlotIndex + 1) % polyChain.length;
+            if (!isRandomMode) {
+                currentPolyChainIndex = (chosenPolyChainSlotIndex + 1) % polyChain.length;
+            }
 
             const newNoteDetails = {
                 note: e.note,
@@ -774,6 +1075,7 @@
             activeRoutedNotes.set(noteIdentifier, [newNoteDetails]);
 
             soleOutputDevice.channels[assignedChannel].playNote(e.note.identifier, { rawAttack: e.message.dataBytes[1] });
+            updateNoteActivityCell(e.note.number, 'played');
 
             const listeningChannelInfo = `ch${e.message.channel}`;
             logStatus(`Note On: ${listeningChannelInfo} ${e.note.name}${e.note.octave} (Vel ${e.message.dataBytes[1]}) &rarr; Ch ${assignedChannel} (Slot ${chosenPolyChainSlotIndex})`);
@@ -782,9 +1084,12 @@
         }, { channels: targetListeningChannel });
 
         selectedMidiInput.addListener('noteoff', e => {
+            if (isPaused) return;
             if (selectedListeningChannel !== 'all' && e.message.channel !== targetListeningChannel) return;
             const noteIdentifier = `ch${e.message.channel}-note${e.note.number}`;
             const routedNoteDetailsArray = activeRoutedNotes.get(noteIdentifier);
+
+            updateNoteActivityCell(e.note.number, 'off'); // Turn off visual on note-off
 
             if (routedNoteDetailsArray && routedNoteDetailsArray.length > 0) {
                 const detail = routedNoteDetailsArray[0];
@@ -815,16 +1120,89 @@
         }, { channels: targetListeningChannel });
     }
 
+    function togglePauseResume() {
+        isPaused = !isPaused;
+        if (isPaused) {
+            pauseResumeBtn.innerHTML = "▶️";
+            pauseResumeBtn.title = "Resume MIDI Processing";
+            pauseResumeBtn.classList.add('paused');
+            logStatus("MIDI paused.", false, true);
+        } else {
+            pauseResumeBtn.innerHTML = "⏸️";
+            pauseResumeBtn.title = "Pause MIDI Processing";
+            pauseResumeBtn.classList.remove('paused');
+            logStatus("MIDI resumed.", false, false);
+        }
+    }
+
+    function toggleRandomMode() {
+        isRandomMode = randomModeCheckbox.checked;
+        if (isRandomMode) {
+            logStatus("Random poly chain assignment enabled.", false, true);
+        } else {
+            logStatus("Round-robin poly chain assignment enabled.", false, true);
+        }
+        currentPolyChainIndex = 0;
+    }
+
+
     async function initializeApp() {
         try {
             if (typeof WebMidi === 'undefined') {
                 logStatus("WebMidi.js library not loaded! Cannot initialize.", true); return;
             }
             webmidiVersionSpan.textContent = WebMidi.VERSION;
-            statusMessagesDiv.innerHTML = '<p class="text-gray-400">Initializing WebMIDI...</p>';
+            statusMessagesDiv.innerHTML = '<p class="text-gray-400">Initializing...</p>';
+            lastStatusMessage = { text: "Initializing...", isError: false, isFlash: false };
 
             initializeChannelDisplayButtons();
-            polyChainSlotsState = new Array(polyChain.length).fill(null); // Initialize based on empty polyChain
+            initializeNoteActivityMonitor(); // Initialize the new graphic display
+
+            loadPolyChainFromLocalStorage();
+            if (polyChain.length === 0) {
+                polyChainSlotsState = new Array(0).fill(null);
+            }
+
+
+            pauseResumeBtn.addEventListener('click', togglePauseResume);
+            if (isPaused) {
+                pauseResumeBtn.innerHTML = "▶️";
+                pauseResumeBtn.title = "Resume MIDI Processing";
+                pauseResumeBtn.classList.add('paused');
+            } else {
+                pauseResumeBtn.innerHTML = "⏸️";
+                pauseResumeBtn.title = "Pause MIDI Processing";
+                pauseResumeBtn.classList.remove('paused');
+            }
+
+            savePolyChainBtn.addEventListener('click', savePolyChainToLocalStorage);
+            loadPolyChainBtn.addEventListener('click', loadPolyChainFromLocalStorage);
+            panicBtn.addEventListener('click', sendPanic);
+            reinitializeMidiBtn.addEventListener('click', reinitializeMidi);
+            randomModeCheckbox.addEventListener('change', toggleRandomMode);
+
+            let existingClearBtn = appToolbar.querySelector('#clearPolyChainBtn');
+            if (!existingClearBtn) {
+                clearPolyChainBtn = document.createElement('button');
+                clearPolyChainBtn.id = 'clearPolyChainBtn';
+                const polyChainManagementGroup = appToolbar.querySelector('#polyChainManagementControls');
+                if (polyChainManagementGroup) {
+                    polyChainManagementGroup.appendChild(clearPolyChainBtn);
+                } else {
+                    appToolbar.appendChild(clearPolyChainBtn);
+                }
+            } else {
+                clearPolyChainBtn = existingClearBtn;
+            }
+            clearPolyChainBtn.innerHTML = "🗑️";
+            clearPolyChainBtn.title = "Clear Current Poly Chain";
+            clearPolyChainBtn.classList.add('control-button', 'bg-red-600', 'hover:bg-red-700');
+            clearPolyChainBtn.addEventListener('click', () => {
+                polyChain = [];
+                renderPolyChain();
+                logStatus("Cleared poly chain. All notes stopped.");
+            });
+
 
             await WebMidi.enable();
             logStatus("WebMIDI enabled. Scanning for devices...", false);
