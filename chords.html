@@ -3,635 +3,543 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MIDI Chord Suggester (Multi-Genre)</title>
+    <title>MIDI Chord Monitor</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .custom-select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        .chord-display {
+            min-height: 24px;
+        }
+        .chord-description-display {
+            min-height: 15px;
+            line-height: 1.1;
+            font-size: 0.55rem;
+        }
+        .notes-list-display {
+            min-height: 10px;
+            font-size: 0.5rem;
+        }
+        .recommendations-display {
+            min-height: 10px;
+            line-height: 1.1;
+            font-size: 0.5rem;
+        }
+        .channel-card.active-flash {
+            background-color: #075985 !important;
+            transition: background-color 0.05s ease-out;
+        }
+
+        /* Mini Keyboard Styles */
+        .mini-keyboard-container {
+            height: 28px;
+            width: 100%;
+            margin-top: 1px;
+            margin-bottom: 1px;
+            display: flex;
+            justify-content: center;
+        }
+        .mini-keyboard {
+            display: flex;
+            position: relative;
+            height: 100%;
+            width: 140px; /* Width for 2-octave keyboard */
+            border: 1px solid #4A5568;
+            border-radius: 3px;
+            overflow: hidden;
+            background-color: #1f2937;
+        }
+        .mini-keyboard .key {
+            box-sizing: border-box;
+            border-right: 1px solid #374151;
+        }
+        .mini-keyboard .white-key:last-of-type {
+            border-right: none;
+        }
+        .mini-keyboard .white-key {
+            height: 100%;
+            background-color: #E2E8F0;
+            flex-grow: 1;
+            z-index: 1;
+        }
+        .mini-keyboard .black-key {
+            position: absolute;
+            height: 60%;
+            background-color: #2D3748;
+            border: 1px solid #1A202C;
+            border-top: none;
+            z-index: 2;
+            /* Width and Left position set by JavaScript */
+        }
+
+        .mini-keyboard .key.active.white-key {
+            background-color: #60a5fa;
+        }
+        .mini-keyboard .key.active.black-key {
+            background-color: #3b82f6;
+            border-color: #2563eb;
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-gray-900 text-gray-100 min-h-screen h-screen flex flex-col items-center justify-center p-1 sm:p-2 overflow-hidden">
 
-<div class="bg-slate-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-2xl space-y-6">
-    <header class="text-center">
-        <h1 class="text-3xl font-bold text-sky-400">MIDI Chord Suggester</h1>
-        <p class="text-slate-400 mt-1">Chord & Looping Melody Suggestions Across Genres</p>
+<div class="w-full max-w-5xl flex flex-col h-full">
+    <header class="mb-1 text-center">
+        <h1 class="text-xl sm:text-2xl font-bold text-sky-400">MIDI Chord Monitor</h1>
+        <div id="status" class="mt-1 text-xs sm:text-sm text-gray-400">Requesting MIDI access...</div>
+        <div class="my-1 sm:my-2 w-full max-w-xs mx-auto">
+            <label for="midi-device-select" class="block text-xs text-gray-400 mb-0.5 text-left">Select MIDI Input:</label>
+            <select id="midi-device-select" class="bg-gray-700 border border-gray-600 text-gray-100 text-xs sm:text-sm rounded-md focus:ring-sky-500 focus:border-sky-500 block w-full p-1.5">
+                <option value="">Detecting devices...</option>
+            </select>
+        </div>
     </header>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-        <div>
-            <label for="midiInSelect" class="block text-sm font-medium text-sky-300 mb-1">MIDI Input Device:</label>
-            <select id="midiInSelect" class="custom-select w-full p-3 bg-slate-700 border border-slate-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 text-slate-100">
-                <option value="">Select Input</option>
-            </select>
-        </div>
-        <div>
-            <label for="channelInSelect" class="block text-sm font-medium text-sky-300 mb-1">Input Channel:</label>
-            <select id="channelInSelect" class="custom-select w-full p-3 bg-slate-700 border border-slate-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 text-slate-100"></select>
-        </div>
-        <div>
-            <label for="midiOutSelect" class="block text-sm font-medium text-sky-300 mb-1">MIDI Output Device:</label>
-            <select id="midiOutSelect" class="custom-select w-full p-3 bg-slate-700 border border-slate-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 text-slate-100">
-                <option value="">Select Output</option>
-            </select>
-        </div>
-        <div>
-            <label for="channelOutSelect" class="block text-sm font-medium text-sky-300 mb-1">Output Channel:</label>
-            <select id="channelOutSelect" class="custom-select w-full p-3 bg-slate-700 border border-slate-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 text-slate-100"></select>
-        </div>
-    </div>
+    <main id="chord-grid" class="grid grid-cols-4 gap-1 sm:gap-2 flex-grow overflow-y-auto">
+    </main>
 
-    <div class="mb-6">
-        <label for="suggestionModeSelect" class="block text-sm font-medium text-sky-300 mb-1">Suggestion Mode:</label>
-        <select id="suggestionModeSelect" class="custom-select w-full p-3 bg-slate-700 border border-slate-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 text-slate-100">
-            <option value="circleOfFifths">Circle of Fifths</option>
-            <option value="jazz">Jazz</option>
-            <option value="classical">Classical</option>
-            <option value="progRock">Prog Rock</option>
-            <option value="celtic">Celtic</option>
-            <option value="harmoniousMelody">Harmonious Melody</option>
-        </select>
-    </div>
-
-
-    <div class="space-y-2 mb-6 text-center">
-        <p class="text-sm text-slate-400">The app will suggest chords or melodies based on the selected mode. Chord output plays for a fixed duration. Melody output loops while input chord is held.</p>
-    </div>
-
-    <div class="space-y-4">
-        <div id="statusDiv" class="p-3 bg-slate-700 rounded-lg text-sm text-center min-h-[40px] flex items-center justify-center">
-            Initializing MIDI...
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
-            <div class="bg-slate-700 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold text-sky-400 mb-1">Input Chord:</h3>
-                <p id="inputChordDiv" class="text-xl font-mono text-slate-200 min-h-[30px]">-</p>
-            </div>
-            <div class="bg-slate-700 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold text-teal-400 mb-1">Suggested Output:</h3>
-                <p id="suggestedOutputDiv" class="text-xl font-mono text-slate-200 min-h-[30px]">-</p>
-            </div>
-        </div>
-    </div>
-    <footer class="text-center text-xs text-slate-500 pt-4 border-t border-slate-700">
-        Play a Major/Minor triad. App suggests chords or melodies. Settings are saved in cookies.
+    <footer class="text-center mt-1 sm:mt-2 text-xs text-gray-500">
+        Chord detection may vary. Recommendations are suggestions.
     </footer>
 </div>
 
 <script>
-    // --- Cookie Helper Functions ---
-    function setCookie(name, value, days) {
-        let expires = "";
-        if (days) {
-            const date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "")  + expires + "; path=/; SameSite=Lax";
-    }
+    const statusDiv = document.getElementById('status');
+    const chordGrid = document.getElementById('chord-grid');
+    const deviceSelect = document.getElementById('midi-device-select');
+    const noteNames = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 
-    function getCookie(name) {
-        const nameEQ = name + "=";
-        const ca = document.cookie.split(';');
-        for(let i = 0; i < ca.length; i++) {
-            let c = ca[i];
-            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-        }
-        return null;
-    }
+    let activeNotesByChannel = {};
+    for (let i = 0; i < 16; i++) activeNotesByChannel[i] = new Set();
 
-    // --- Global State ---
     let midiAccess = null;
-    let selectedInputId = null;
-    let selectedOutputId = null;
-    let selectedInputChannel = 0;
-    let selectedOutputChannel = 0;
-    let currentSuggestionMode = 'circleOfFifths';
+    let selectedDeviceId = null;
 
-    const activeInputNotes = new Map();
-    let lastProcessedInputNotes = []; // Stores the actual MIDI notes of the last processed input chord
+    const ACTIVE_KEYBOARD_START_MIDI_NOTE = 48; // C3
+    const ACTIVE_KEYBOARD_END_MIDI_NOTE = 71;   // B4 (2 octaves)
+    const SUGGESTED_KEYBOARD_START_MIDI_NOTE = 60; // C4
+    const SUGGESTED_KEYBOARD_END_MIDI_NOTE = 83;   // B5 (2 octaves)
 
-    let activePlaybackTimeouts = [];
-    let lastScheduledMelodyPattern = null;
-    let initialTriggerChordForMelody = null; // Stores the chord that started the current melody loop
 
-    let nextMajorSuggestionIndex = 0;
-    let nextMinorSuggestionIndex = 0;
+    const chordFormulas = { /* ... same chord formulas ... */
+        '13':[0,2,4,7,9,10],'m13':[0,2,3,7,9,10],'△13':[0,2,4,7,9,11],'11':[0,2,5,7,10],
+        'm11':[0,2,3,5,7,10],'△11':[0,2,4,5,7,11],'△9':[0,2,4,7,11],'m9':[0,2,3,7,10],
+        '9':[0,2,4,7,10],'m△9':[0,2,3,7,11],'7♯9':[0,3,4,7,10],'7♭9':[0,1,4,7,10],
+        '7♭5':[0,4,6,10],'7♯11':[0,4,6,7,10],'7alt':[0,1,3,4,6,8,10],'△7':[0,4,7,11],
+        '△7♯11':[0,4,6,7,11],'m7':[0,3,7,10],'7':[0,4,7,10],'°7':[0,3,6,9],'ø7':[0,3,6,10],
+        'm△7':[0,3,7,11],'+7':[0,4,8,10],'+△7':[0,4,8,11],'7sus4':[0,5,7,10],
+        'M6':[0,4,7,9],'m6':[0,3,7,9],'m6/9':[0,2,3,7,9],'9sus4':[0,2,5,7],
+        'm7(11)':[0,3,5,7,10],'add♯4':[0,4,6,7],'m(♭6)':[0,3,7,8],'':[0,4,7],
+        'm':[0,3,7],'°':[0,3,6],'+':[0,4,8],'sus4':[0,5,7],'sus2':[0,2,7],
+        'add9':[0,2,4,7],'mAdd9':[0,2,3,7],'6/9':[0,2,4,7,9],
+        'P1':[0],'m2':[0,1],'M2':[0,2],'m3':[0,3],'M3':[0,4],'P4':[0,5],'TT':[0,6],
+        'P5':[0,7],'5':[0,7],'m6_int':[0,8],'M6_int':[0,9],'m7_int':[0,10],'M7_int':[0,11]
+    };
+    const sortedChordFormulas = Object.entries(chordFormulas)
+        .sort(([,a],[,b]) => b.length - a.length);
+    const chordDescriptions = { /* ... same chord descriptions ... */
+        '△13':{name:"Major 13th",comp:"Dm9, G13"},'m13':{name:"Minor 13th",comp:"G7alt"},
+        '13':{name:"Dominant 13th",comp:"F△7"},'△11':{name:"Major 11th",comp:"Bm7"},
+        'm11':{name:"Minor 11th",comp:"G7alt"},'11':{name:"Dominant 11th (no 3rd)",comp:"F△7"},
+        '△9':{name:"Major 9th",comp:"Dm9, G13"},'m9':{name:"Minor 9th",comp:"G13, C△9"},
+        '9':{name:"Dominant 9th",comp:"F△7"},'m△9':{name:"Minor Major 9th",comp:"G7alt"},
+        '7♯9':{name:"Dominant 7th ♯9",comp:"Fm7"},'7♭9':{name:"Dominant 7th ♭9",comp:"Fm7, F△7"},
+        '7♭5':{name:"Dominant 7th ♭5",comp:"F△7"},'7♯11':{name:"Dominant 7th ♯11",comp:"F△7"},
+        '7alt':{name:"Altered Dominant",comp:"Fm7, F△7"},'△7':{name:"Major 7th",comp:"Dm7, G7"},
+        '△7♯11':{name:"Major 7th ♯11",comp:"Bm7, E7alt"},'m7':{name:"Minor 7th",comp:"G7, F△7"},
+        '7':{name:"Dominant 7th",comp:"F△7"},'°7':{name:"Diminished 7th",comp:"F, Fm"},
+        'ø7':{name:"Half-Diminished 7th",comp:"G7alt, Fm"},'m△7':{name:"Minor Major 7th",comp:"G7alt"},
+        '+7':{name:"Augmented Dom 7th",comp:"Fm, F"},'+△7':{name:"Augmented Major 7th",comp:"Dm7"},
+        '7sus4':{name:"Dominant 7th sus 4",comp:"G7, F"},'M6':{name:"Major 6th",comp:"Dm7, G7"},
+        'm6':{name:"Minor 6th",comp:"Dø7, G7alt"},'m6/9':{name:"Minor 6/9",comp:"Dø7, G7alt"},
+        '5':{name:"Power Chord",comp:"F5, Bb5"},'9sus4':{name:"Suspended 9th (no 7th)",comp:"G9, C△9"},
+        'm7(11)':{name:"Minor 7th add 11 (no 9th)",comp:"G9"},'add♯4':{name:"Major add #4",comp:"G△7#11"},
+        'm(♭6)':{name:"Minor add flat 6",comp:"G7b9"},'':{name:"Major Triad",comp:"F, G, Am"},
+        'm':{name:"Minor Triad",comp:"Eb, Ab, G"},'°':{name:"Diminished Triad",comp:"F, Fm"},
+        '+':{name:"Augmented Triad",comp:"F, Fm"},'sus4':{name:"Suspended 4th",comp:"C, Cm"},
+        'sus2':{name:"Suspended 2nd",comp:"C"},'add9':{name:"Major Add 9",comp:"F△9, G9"},
+        'mAdd9':{name:"Minor Add 9",comp:"Ab△9"},'6/9':{name:"6/9 Chord",comp:"Dm9, G13"},
+        'P1':{name:"Unison / Octave",comp:""},'m2':{name:"Minor 2nd Int",comp:""},
+        'M2':{name:"Major 2nd Int",comp:""},'m3':{name:"Minor 3rd Int",comp:""},
+        'M3':{name:"Major 3rd Int",comp:""},'P4':{name:"Perfect 4th Int",comp:""},
+        'TT':{name:"Tritone Int",comp:""},'P5':{name:"Perfect 5th Int",comp:""},
+        'm6_int':{name:"Minor 6th Int",comp:""},'M6_int':{name:"Major 6th Int",comp:""},
+        'm7_int':{name:"Minor 7th Int",comp:""},'M7_int':{name:"Major 7th Int",comp:""}
+    };
 
-    // --- UI Elements ---
-    const midiInSelect = document.getElementById('midiInSelect');
-    const midiOutSelect = document.getElementById('midiOutSelect');
-    const channelInSelect = document.getElementById('channelInSelect');
-    const channelOutSelect = document.getElementById('channelOutSelect');
-    const suggestionModeSelect = document.getElementById('suggestionModeSelect');
-    const statusDiv = document.getElementById('statusDiv');
-    const inputChordDiv = document.getElementById('inputChordDiv');
-    const suggestedOutputDiv = document.getElementById('suggestedOutputDiv');
-
-    const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-
-    function noteNumberToName(noteNumber) {
-        if (noteNumber < 0 || noteNumber > 127) return '';
-        const octave = Math.floor(noteNumber / 12) - 1;
-        const name = NOTE_NAMES[noteNumber % 12];
-        return name + octave;
-    }
-
-    function notesArrayToNames(notes) {
-        if (!notes || notes.length === 0) return '-';
-        return notes.map(noteNumberToName).join(' ');
-    }
-
-    async function setupMIDIAccess() {
-        try {
-            midiAccess = await navigator.requestMIDIAccess({ sysex: true });
-            statusDiv.textContent = 'MIDI Access Granted. Select devices and channels.';
-            statusDiv.classList.remove('bg-red-600', 'bg-yellow-500');
-            statusDiv.classList.add('bg-green-700');
-            populateDeviceSelectors();
-            attachEventListenersToSelectors();
-        } catch (e) {
-            console.error("Could not access MIDI devices.", e);
-            statusDiv.textContent = 'Error: Could not access MIDI devices. ' + e.message;
-            statusDiv.classList.remove('bg-green-700', 'bg-yellow-500');
-            statusDiv.classList.add('bg-red-600');
-            if (e.name === 'SecurityError' && e.message.includes('permissions policy')) {
-                statusDiv.innerHTML += '<br><small>This might be due to browser/page settings restricting MIDI. Check console (F12).</small>';
+    function generateMiniKeyboardHTML(channelIndex, keyboardTypeSuffix, startNote, endNote) {
+        let keyboardHtml = `<div class="mini-keyboard" id="keyboard-${keyboardTypeSuffix}-ch-${channelIndex}">`;
+        for (let midiNote = startNote; midiNote <= endNote; midiNote++) {
+            const pitchClass = midiNote % 12;
+            if (![1, 3, 6, 8, 10].includes(pitchClass)) {
+                keyboardHtml += `<div class="key white-key" id="key-${keyboardTypeSuffix}-${channelIndex}-${midiNote}"></div>`;
             }
         }
+        for (let midiNote = startNote; midiNote <= endNote; midiNote++) {
+            const pitchClass = midiNote % 12;
+            if ([1, 3, 6, 8, 10].includes(pitchClass)) {
+                keyboardHtml += `<div class="key black-key" id="key-${keyboardTypeSuffix}-${channelIndex}-${midiNote}"></div>`;
+            }
+        }
+        keyboardHtml += `</div>`;
+        return keyboardHtml;
     }
 
-    function saveSettingsToCookies() {
-        setCookie('midiInputId', selectedInputId, 365);
-        setCookie('midiOutputId', selectedOutputId, 365);
-        setCookie('midiInputChannel', selectedInputChannel, 365);
-        setCookie('midiOutputChannel', selectedOutputChannel, 365);
-        setCookie('suggestionMode', currentSuggestionMode, 365);
-    }
+    function positionBlackKeys(keyboardElement, startNote, endNote) {
+        const whiteKeyElements = Array.from(keyboardElement.querySelectorAll('.white-key'));
+        const blackKeyElements = Array.from(keyboardElement.querySelectorAll('.black-key'));
 
-    function loadSettingsFromCookies() {
-        const savedInputId = getCookie('midiInputId');
-        const savedOutputId = getCookie('midiOutputId');
-        const savedInputChannel = getCookie('midiInputChannel');
-        const savedOutputChannel = getCookie('midiOutputChannel');
-        const savedSuggestionMode = getCookie('suggestionMode');
-        let settingsWereRestored = false;
+        if (whiteKeyElements.length === 0 || blackKeyElements.length === 0) return;
 
-        if (savedInputId && Array.from(midiInSelect.options).some(opt => opt.value === savedInputId)) {
-            selectedInputId = savedInputId; midiInSelect.value = savedInputId; settingsWereRestored = true;
-        }
-        if (savedOutputId && Array.from(midiOutSelect.options).some(opt => opt.value === savedOutputId)) {
-            selectedOutputId = savedOutputId; midiOutSelect.value = savedOutputId; settingsWereRestored = true;
-        }
-        if (savedInputChannel !== null) {
-            selectedInputChannel = parseInt(savedInputChannel); channelInSelect.value = selectedInputChannel + 1; settingsWereRestored = true;
-        }
-        if (savedOutputChannel !== null) {
-            selectedOutputChannel = parseInt(savedOutputChannel); channelOutSelect.value = selectedOutputChannel + 1; settingsWereRestored = true;
-        }
-        if (savedSuggestionMode) {
-            if (Array.from(suggestionModeSelect.options).some(opt => opt.value === savedSuggestionMode)) {
-                currentSuggestionMode = savedSuggestionMode; suggestionModeSelect.value = savedSuggestionMode; settingsWereRestored = true;
+        const keyboardWidth = keyboardElement.offsetWidth;
+        const numWhiteKeys = whiteKeyElements.length;
+        if (numWhiteKeys === 0) return;
+
+        const whiteKeyWidth = keyboardWidth / numWhiteKeys;
+        const blackKeyWidth = whiteKeyWidth * 0.6;
+
+        blackKeyElements.forEach(blackKey => {
+            const blackKeyMidiNote = parseInt(blackKey.id.split('-').pop());
+            const anchorWhiteKeyMidiNote = blackKeyMidiNote - 1;
+
+            // Find the white key element that corresponds to the anchor note for this black key
+            const anchorWhiteKeyElement = whiteKeyElements.find(wk => parseInt(wk.id.split('-').pop()) === anchorWhiteKeyMidiNote);
+
+            if (anchorWhiteKeyElement) {
+                blackKey.style.width = `${blackKeyWidth}px`;
+                const leftPosition = anchorWhiteKeyElement.offsetLeft + whiteKeyWidth - (blackKeyWidth / 2);
+                blackKey.style.left = `${leftPosition}px`;
             } else {
-                suggestionModeSelect.value = currentSuggestionMode;
+                // This might happen if the black key is at the very beginning of a range
+                // and its anchor white key is outside the displayed range.
+                // For this specific 2-octave C-B layout, all black keys should have an anchor.
+                // console.warn(`Could not find anchor white key for black key: ${blackKey.id}`);
+                blackKey.style.display = 'none';
             }
-        }
-
-        if (selectedInputId) assignMIDIMessageHandler();
-
-        if (settingsWereRestored) {
-            if (!selectedInputId) statusDiv.textContent = "Settings restored. Select input device if needed.";
-            else if (!statusDiv.textContent.includes("Listening on")) {
-                const cInName = midiInSelect.options[midiInSelect.selectedIndex]?.text || "Unknown";
-                const cOutName = midiOutSelect.options[midiOutSelect.selectedIndex]?.text || "Unknown";
-                statusDiv.textContent = `Settings Restored: In - ${cInName}, Out - ${cOutName}, Mode - ${currentSuggestionMode.charAt(0).toUpperCase() + currentSuggestionMode.slice(1)}`;
-            }
-        } else if (selectedInputId || selectedOutputId) {
-            const cIn = selectedInputId ? midiInSelect.options[midiInSelect.selectedIndex]?.text : "None";
-            const cOut = selectedOutputId ? midiOutSelect.options[midiOutSelect.selectedIndex]?.text : "None";
-            statusDiv.textContent = `Auto-selected: In - ${cIn}, Out - ${cOut}, Mode - ${currentSuggestionMode.charAt(0).toUpperCase() + currentSuggestionMode.slice(1)}`;
-            if (selectedInputId) assignMIDIMessageHandler();
-        } else {
-            statusDiv.textContent = `Default Mode: ${currentSuggestionMode.charAt(0).toUpperCase() + currentSuggestionMode.slice(1)}. Select devices.`;
-        }
-    }
-
-    function populateDeviceSelectors() {
-        if (!midiAccess) return;
-        midiInSelect.innerHTML = '<option value="">Select Input</option>';
-        midiOutSelect.innerHTML = '<option value="">Select Output</option>';
-        channelInSelect.innerHTML = ''; channelOutSelect.innerHTML = '';
-
-        if (midiAccess.inputs.size === 0) midiInSelect.add(new Option("No MIDI inputs found", "", false, true)).disabled = true;
-        else {
-            midiAccess.inputs.forEach(input => midiInSelect.add(new Option(input.name, input.id)));
-            if (!selectedInputId) {
-                const firstInput = Array.from(midiAccess.inputs.values())[0];
-                selectedInputId = firstInput.id; midiInSelect.value = firstInput.id;
-            }
-        }
-        if (midiAccess.outputs.size === 0) midiOutSelect.add(new Option("No MIDI outputs found", "", false, true)).disabled = true;
-        else {
-            midiAccess.outputs.forEach(output => midiOutSelect.add(new Option(output.name, output.id)));
-            if (!selectedOutputId) {
-                const firstOutput = Array.from(midiAccess.outputs.values())[0];
-                selectedOutputId = firstOutput.id; midiOutSelect.value = firstOutput.id;
-            }
-        }
-
-        for (let i = 1; i <= 16; i++) {
-            channelInSelect.add(new Option(`Channel ${i}`, i));
-            channelOutSelect.add(new Option(`Channel ${i}`, i));
-        }
-        selectedInputChannel = 0; channelInSelect.value = selectedInputChannel + 1;
-        selectedOutputChannel = 1; channelOutSelect.value = selectedOutputChannel + 1;
-        suggestionModeSelect.value = currentSuggestionMode;
-
-        loadSettingsFromCookies();
-    }
-
-    function attachEventListenersToSelectors() {
-        midiInSelect.addEventListener('change', (event) => {
-            selectedInputId = event.target.value; assignMIDIMessageHandler();
-            statusDiv.textContent = selectedInputId && midiInSelect.options[midiInSelect.selectedIndex] ? `Input: ${midiInSelect.options[midiInSelect.selectedIndex].text}` : 'Input device deselected.';
-            saveSettingsToCookies();
-        });
-        midiOutSelect.addEventListener('change', (event) => {
-            selectedOutputId = event.target.value;
-            statusDiv.textContent = selectedOutputId && midiOutSelect.options[midiOutSelect.selectedIndex] ? `Output: ${midiOutSelect.options[midiOutSelect.selectedIndex].text}` : 'Output device deselected.';
-            saveSettingsToCookies();
-        });
-        channelInSelect.addEventListener('change', (event) => {
-            selectedInputChannel = parseInt(event.target.value) - 1;
-            statusDiv.textContent = `Input Channel: ${event.target.value}`;
-            saveSettingsToCookies();
-        });
-        channelOutSelect.addEventListener('change', (event) => {
-            selectedOutputChannel = parseInt(event.target.value) - 1;
-            statusDiv.textContent = `Output Channel: ${event.target.value}`;
-            saveSettingsToCookies();
-        });
-        suggestionModeSelect.addEventListener('change', (event) => {
-            currentSuggestionMode = event.target.value;
-            nextMajorSuggestionIndex = 0; nextMinorSuggestionIndex = 0;
-            statusDiv.textContent = `Suggestion Mode: ${currentSuggestionMode.charAt(0).toUpperCase() + currentSuggestionMode.slice(1)}`;
-            saveSettingsToCookies();
-            processActiveInputNotes(true);
         });
     }
 
-    function assignMIDIMessageHandler() {
-        if (!midiAccess) return;
-        midiAccess.inputs.forEach(input => { input.onmidimessage = null; });
-        if (!selectedInputId) { activeInputNotes.clear(); processActiveInputNotes(); return; }
-        const inputDevice = midiAccess.inputs.get(selectedInputId);
-        if (inputDevice) {
-            inputDevice.onmidimessage = onMIDIMessage;
-            statusDiv.textContent = `Listening on: ${inputDevice.name}`;
-        } else {
-            statusDiv.textContent = `Failed to assign listener: Input ${selectedInputId} not found.`;
-        }
-    }
 
-    function onMIDIMessage(event) {
-        const command = event.data[0] >> 4, channel = event.data[0] & 0x0f, note = event.data[1], vel = event.data[2] || 0;
-        if (channel !== selectedInputChannel) return;
-        if (command === 0x9 && vel > 0) activeInputNotes.set(note, vel);
-        else if (command === 0x8 || (command === 0x9 && vel === 0)) activeInputNotes.delete(note);
-        processActiveInputNotes();
-    }
-
-    function processActiveInputNotes(forceReprocess = false) {
-        const currentNotesSorted = Array.from(activeInputNotes.keys()).sort((a, b) => a - b);
-
-        // If it's not a forced reprocess and the notes haven't changed, do nothing
-        if (!forceReprocess && arraysEqual(currentNotesSorted, lastProcessedInputNotes)) return;
-
-        // If it IS a forced reprocess (e.g. mode change) BUT the notes are the same as last time,
-        // AND the mode is harmoniousMelody, we might not want to interrupt a playing loop if the chord didn't change.
-        // However, for simplicity now, a mode change will always retrigger.
-
-        const prevHeldChordForMelody = initialTriggerChordForMelody ? [...initialTriggerChordForMelody] : null;
-
-        if (!arraysEqual(currentNotesSorted, lastProcessedInputNotes) || forceReprocess) {
-            clearAndStopPlayback(); // Stop previous playback if notes changed or forced
-        }
-
-        lastProcessedInputNotes = [...currentNotesSorted];
-        inputChordDiv.textContent = notesArrayToNames(currentNotesSorted);
-
-        if (currentNotesSorted.length >= 3) {
-            const analyzedChord = analyzeChord(currentNotesSorted);
-            if (analyzedChord) {
-                inputChordDiv.textContent = analyzedChord.name + " (" + notesArrayToNames(analyzedChord.originalNotes) + ")";
-                let suggestionIndex = 0;
-                if (currentSuggestionMode !== 'circleOfFifths' && currentSuggestionMode !== 'harmoniousMelody') {
-                    if (analyzedChord.quality === 'Major') {
-                        suggestionIndex = nextMajorSuggestionIndex;
-                        if (forceReprocess) { suggestionIndex = 0; nextMajorSuggestionIndex = 1; }
-                        else nextMajorSuggestionIndex = (nextMajorSuggestionIndex + 1) % 4;
-                    } else {
-                        suggestionIndex = nextMinorSuggestionIndex;
-                        if (forceReprocess) { suggestionIndex = 0; nextMinorSuggestionIndex = 1; }
-                        else nextMinorSuggestionIndex = (nextMinorSuggestionIndex + 1) % 4;
-                    }
-                }
-                // Store the chord that will trigger the new melody/chord
-                initialTriggerChordForMelody = [...currentNotesSorted];
-
-                const suggested = getSuggestedOutput(analyzedChord, suggestionIndex, currentSuggestionMode);
-                if (suggested) {
-                    suggestedOutputDiv.textContent = suggested.name + " (" + notesArrayToNames(suggested.displayNotes || suggested.notes) + ")";
-                    playOutput(suggested, analyzedChord); // Pass analyzedChord for melody looping condition
-                } else {
-                    suggestedOutputDiv.textContent = '-';
-                    initialTriggerChordForMelody = null;
-                }
-            } else { // Not a recognized triad
-                suggestedOutputDiv.textContent = notesArrayToNames(currentNotesSorted);
-                initialTriggerChordForMelody = null;
-            }
-        } else { // Less than 3 notes
-            suggestedOutputDiv.textContent = '-';
-            initialTriggerChordForMelody = null;
-            if (currentNotesSorted.length === 0) lastProcessedInputNotes = [];
-        }
-    }
-
-    function analyzeChord(notes) {
-        if (notes.length < 3) return null;
-        const root = notes[0], intervals = notes.slice(1).map(n => n - root);
-        const isMajor = intervals.includes(4) && intervals.includes(7);
-        if (isMajor && notes.length === 3 && notes.every(n => [root, root + 4, root + 7].includes(n))) {
-            return { rootMidi: root, quality: 'Major', name: noteNumberToName(root) + ' Major', originalNotes: notes };
-        }
-        const isMinor = intervals.includes(3) && intervals.includes(7);
-        if (isMinor && notes.length === 3 && notes.every(n => [root, root + 3, root + 7].includes(n))) {
-            return { rootMidi: root, quality: 'Minor', name: noteNumberToName(root) + ' Minor', originalNotes: notes };
-        }
-        return null;
-    }
-
-    function getSuggestedOutput(analyzedChord, suggestionIndex, mode) {
-        if (!analyzedChord) return null;
-        const originalRoot = analyzedChord.rootMidi;
-        let suggestedActualRoot, suggestedNotes, suggestedChordName, suggestedQuality, melodyPattern;
-
-        const buildChord = (root, type) => {
-            let notes = [];
-            switch (type) {
-                case 'm7': notes = [root, root + 3, root + 7, root + 10]; break;
-                case 'maj7': notes = [root, root + 4, root + 7, root + 11]; break;
-                case '7': notes = [root, root + 4, root + 7, root + 10]; break;
-                case 'm7b5': notes = [root, root + 3, root + 6, root + 10]; break;
-            }
-            return notes.filter(n => n >= 0 && n <= 127).sort((a,b) => a-b);
-        };
-
-        const findOctave = (rootPitchClass, referenceRoot) => {
-            let newRoot = Math.floor(referenceRoot / 12) * 12 + rootPitchClass;
-            if (newRoot < referenceRoot - 6 && newRoot < 80 ) newRoot += 12;
-            else if (newRoot > referenceRoot + 6 && newRoot > 30) newRoot -=12;
-            return Math.max(21, Math.min(108 - 12, newRoot));
-        };
-
-        if (mode === 'harmoniousMelody') {
-            const root = originalRoot;
-            const third = analyzedChord.quality === 'Major' ? root + 4 : root + 3;
-            const fifth = root + 7;
-            // Using major second as a passing tone for both major/minor for simplicity
-            const passingTone = analyzedChord.quality === 'Major' ? root + 2 : root + 2; // D for Cmaj, B for Amin (or D for Amin if Dorian)
-            // Let's stick to a simpler passing tone for now.
-
-            const adjustOctaveForMelody = (note, baseOctaveRefNote = originalRoot) => {
-                let adjustedNote = note;
-                // Try to keep melody notes above or around the original chord's root
-                while(adjustedNote < baseOctaveRefNote && adjustedNote < 72) adjustedNote += 12; // Try to push up if too low
-                while(adjustedNote > baseOctaveRefNote + 12 && adjustedNote > 48) adjustedNote -=12; // Try to pull down if too high
-
-                // General floor and ceiling
-                while(adjustedNote < 48) adjustedNote += 12; // Min C3-ish
-                while(adjustedNote > 83) adjustedNote -=12; // Max B5-ish
-                return Math.max(36, Math.min(84, adjustedNote));
-            };
-
-            const melRoot = adjustOctaveForMelody(root);
-            const melThird = adjustOctaveForMelody(third);
-            const melFifth = adjustOctaveForMelody(fifth);
-            const melPassing = adjustOctaveForMelody(passingTone, melRoot);
-
-
-            melodyPattern = [ // Simple arpeggio + passing tone
-                { note: melFifth, duration: 250, delay: 0 },    // 5th
-                { note: melThird, duration: 250, delay: 300 },   // 3rd
-                { note: melRoot, duration: 250, delay: 600 },    // Root
-                { note: melPassing, duration: 250, delay: 900 }, // Passing
-                { note: melRoot, duration: 500, delay: 1200 }   // Root (longer)
-            ]; // Total duration approx 1.7s
-            suggestedChordName = `Melody for ${analyzedChord.name}`;
-            const displayNotesForMelody = [...new Set(melodyPattern.map(item => item.note))].sort((a,b)=>a-b);
-            return { name: suggestedChordName, isMelody: true, melodyPattern: melodyPattern, displayNotes: displayNotesForMelody };
-
-        } else if (mode === 'circleOfFifths') {
-            suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot);
-            suggestedQuality = '7';
-            suggestedChordName = noteNumberToName(suggestedActualRoot) + "7";
-        } else if (mode === 'jazz') {
-            if (analyzedChord.quality === 'Major') {
-                switch (suggestionIndex) {
-                    case 0: suggestedActualRoot = findOctave((originalRoot - 3 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7"; break;
-                    case 1: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7"; break;
-                    case 2: suggestedActualRoot = findOctave((originalRoot + 6 + 12) % 12, originalRoot); suggestedQuality = 'm7b5'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7b5"; break;
-                    case 3: suggestedActualRoot = findOctave((originalRoot + 4 + 12) % 12, originalRoot); suggestedQuality = '7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "7 (alt)"; break;
-                    default: return null;
-                }
-            } else if (analyzedChord.quality === 'Minor') {
-                switch (suggestionIndex) {
-                    case 0: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = '7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "7"; break;
-                    case 1: suggestedActualRoot = findOctave((originalRoot + 3 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7"; break;
-                    case 2: suggestedActualRoot = findOctave((originalRoot - 5 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7"; break;
-                    case 3: suggestedActualRoot = findOctave((originalRoot - 2 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7"; break;
-                    default: return null;
-                }
-            } else { return null; }
-        } else if (mode === 'classical') {
-            if (analyzedChord.quality === 'Major') {
-                switch (suggestionIndex) {
-                    case 0: suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot); suggestedQuality = '7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "7 (V7)"; break;
-                    case 1: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (IV)"; break;
-                    case 2: suggestedActualRoot = findOctave((originalRoot + 2 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (ii)"; break;
-                    case 3: suggestedActualRoot = findOctave((originalRoot - 3 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (vi)"; break;
-                    default: return null;
-                }
-            } else if (analyzedChord.quality === 'Minor') {
-                switch (suggestionIndex) {
-                    case 0: suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot); suggestedQuality = '7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "7 (V7)"; break;
-                    case 1: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (iv)"; break;
-                    case 2: suggestedActualRoot = findOctave((originalRoot + 3 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (III)"; break;
-                    case 3: suggestedActualRoot = findOctave((originalRoot - 4 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (VI)"; break;
-                    default: return null;
-                }
-            } else { return null; }
-        } else if (mode === 'progRock') {
-            if (analyzedChord.quality === 'Major') {
-                switch (suggestionIndex) {
-                    case 0: suggestedActualRoot = findOctave((originalRoot - 2 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (bVII)"; break;
-                    case 1: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (iv)"; break;
-                    case 2: suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (v)"; break;
-                    case 3: suggestedActualRoot = findOctave((originalRoot - 4 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (bVI)"; break;
-                    default: return null;
-                }
-            } else if (analyzedChord.quality === 'Minor') {
-                switch (suggestionIndex) {
-                    case 0: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (IV)"; break;
-                    case 1: suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (v)"; break;
-                    case 2: suggestedActualRoot = findOctave((originalRoot - 2 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (bVII)"; break;
-                    case 3: suggestedActualRoot = findOctave((originalRoot - 4 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (bVI)"; break;
-                    default: return null;
-                }
-            } else { return null; }
-        } else if (mode === 'celtic') {
-            if (analyzedChord.quality === 'Major') {
-                switch (suggestionIndex) {
-                    case 0: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (IV)"; break;
-                    case 1: suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot); suggestedQuality = '7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "7 (V)"; break;
-                    case 2: suggestedActualRoot = findOctave((originalRoot + 2 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (ii)"; break;
-                    case 3: suggestedActualRoot = findOctave((originalRoot - 3 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (vi)"; break;
-                    default: return null;
-                }
-            } else if (analyzedChord.quality === 'Minor') {
-                switch (suggestionIndex) {
-                    case 0: suggestedActualRoot = findOctave((originalRoot + 5 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (IV)"; break;
-                    case 1: suggestedActualRoot = findOctave((originalRoot + 7 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (v)"; break;
-                    case 2: suggestedActualRoot = findOctave((originalRoot - 2 + 12) % 12, originalRoot); suggestedQuality = 'maj7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "maj7 (bVII)"; break;
-                    case 3: suggestedActualRoot = findOctave((originalRoot + 0 + 12) % 12, originalRoot); suggestedQuality = 'm7'; suggestedChordName = noteNumberToName(suggestedActualRoot) + "m7 (i)"; break;
-                    default: return null;
-                }
-            } else { return null; }
-        } else { return null; }
-
-        suggestedNotes = buildChord(suggestedActualRoot, suggestedQuality);
-        if (!suggestedNotes || suggestedNotes.length < 3) return null;
-
-        return {
-            rootMidi: suggestedActualRoot, quality: suggestedQuality, name: suggestedChordName,
-            notes: suggestedNotes, isMelody: false
-        };
-    }
-
-    function playOutput(outputObject, triggerMeta, velocity = 90) {
-        if (!midiAccess || !selectedOutputId) { console.warn("Cannot play: MIDI setup issue."); return; }
-        const outputDevice = midiAccess.outputs.get(selectedOutputId);
-        if (!outputDevice) { console.warn("Output device not found."); statusDiv.textContent = "Error: Output device not found."; return; }
-
-        // clearAndStopPlayback() is now called in processActiveInputNotes before playOutput
-        // This ensures that when playOutput is called, it's for a new, distinct event.
-
-        if (outputObject.isMelody && outputObject.melodyPattern) {
-            const pattern = outputObject.melodyPattern;
-            // initialTriggerChordForMelody is already set in processActiveInputNotes
-            lastScheduledMelodyPattern = pattern; // For stopping specific notes if cleared early
-
-            let playMelodyIteration;
-
-            playMelodyIteration = () => {
-                // Check if the initial triggering chord is still held by comparing with global lastProcessedInputNotes
-                if (!arraysEqual(lastProcessedInputNotes, initialTriggerChordForMelody)) {
-                    console.log("Melody loop stopped: Initial triggering chord released or changed.");
-                    lastScheduledMelodyPattern = null;
-                    initialTriggerChordForMelody = null; // Clear the trigger chord
-                    return;
-                }
-
-                console.log("Playing melody iteration, triggered by:", notesArrayToNames(initialTriggerChordForMelody));
-                let maxDelayInPattern = 0;
-
-                pattern.forEach(item => {
-                    const noteOnDelay = item.delay;
-                    const noteOffDelay = item.delay + item.duration;
-                    if (noteOffDelay > maxDelayInPattern) {
-                        maxDelayInPattern = noteOffDelay;
-                    }
-
-                    const onTimeout = setTimeout(() => {
-                        if (!arraysEqual(lastProcessedInputNotes, initialTriggerChordForMelody)) return;
-                        outputDevice.send([0x90 | selectedOutputChannel, item.note, velocity]);
-                        console.log(`Melody ON: ${noteNumberToName(item.note)} (Ch: ${selectedOutputChannel+1})`);
-                    }, noteOnDelay);
-                    activePlaybackTimeouts.push(onTimeout);
-
-                    const offTimeout = setTimeout(() => {
-                        outputDevice.send([0x80 | selectedOutputChannel, item.note, 0]);
-                        console.log(`Melody OFF: ${noteNumberToName(item.note)} (Ch: ${selectedOutputChannel+1})`);
-                    }, noteOffDelay);
-                    activePlaybackTimeouts.push(offTimeout);
-                });
-
-                const loopTimeout = setTimeout(playMelodyIteration, maxDelayInPattern + 100); // 100ms gap before loop
-                activePlaybackTimeouts.push(loopTimeout);
-            };
-            playMelodyIteration(); // Start the first iteration
-
-        } else if (outputObject.notes && outputObject.notes.length > 0) { // It's a chord
-            const chordDuration = 1000;
-            lastScheduledMelodyPattern = null;
-            initialTriggerChordForMelody = null; // Not a melody, so no trigger chord for looping
-            console.log(`Sending CHORD notes to ${outputDevice.name} (Mode: ${currentSuggestionMode}): ${notesArrayToNames(outputObject.notes)}`);
-            outputObject.notes.forEach(note => {
-                outputDevice.send([0x90 | selectedOutputChannel, note, velocity]);
+    function initializeUI() {
+        chordGrid.innerHTML = '';
+        for (let i = 0; i < 16; i++) {
+            const channelDiv = document.createElement('div');
+            channelDiv.id = `channel-card-${i}`;
+            channelDiv.className = 'channel-card bg-gray-800 p-1 rounded-md shadow-md text-center flex flex-col justify-between';
+            channelDiv.innerHTML = `
+                    <div>
+                        <div class="text-[0.6rem] sm:text-xs text-gray-400 mb-0">CH ${i + 1}</div>
+                        <div id="chord-ch-${i}" class="chord-display font-semibold text-sky-300 break-words leading-tight flex items-center justify-center">---</div>
+                        <div class="mini-keyboard-container">${generateMiniKeyboardHTML(i, 'active', ACTIVE_KEYBOARD_START_MIDI_NOTE, ACTIVE_KEYBOARD_END_MIDI_NOTE)}</div>
+                        <div id="desc-ch-${i}" class="chord-description-display text-sky-100 mt-0.5 break-words leading-tight"></div>
+                        <div class="text-[0.6rem] text-gray-400 mt-0.5">Suggestions:</div>
+                        <div id="reco-ch-${i}" class="recommendations-display text-teal-300 leading-tight">---</div>
+                        <div class="mini-keyboard-container">${generateMiniKeyboardHTML(i, 'suggested', SUGGESTED_KEYBOARD_START_MIDI_NOTE, SUGGESTED_KEYBOARD_END_MIDI_NOTE)}</div>
+                    </div>
+                    <div id="notes-ch-${i}" class="notes-list-display text-gray-500 mt-0.5 truncate">---</div>
+                `;
+            chordGrid.appendChild(channelDiv);
+            requestAnimationFrame(() => {
+                const activeKeyboardElement = document.getElementById(`keyboard-active-ch-${i}`);
+                if (activeKeyboardElement) positionBlackKeys(activeKeyboardElement, ACTIVE_KEYBOARD_START_MIDI_NOTE, ACTIVE_KEYBOARD_END_MIDI_NOTE);
+                const suggestedKeyboardElement = document.getElementById(`keyboard-suggested-ch-${i}`);
+                if (suggestedKeyboardElement) positionBlackKeys(suggestedKeyboardElement, SUGGESTED_KEYBOARD_START_MIDI_NOTE, SUGGESTED_KEYBOARD_END_MIDI_NOTE);
             });
-
-            const chordOffTimeout = setTimeout(() => {
-                stopNotes(outputObject.notes, outputDevice, selectedOutputChannel);
-            }, chordDuration);
-            activePlaybackTimeouts.push(chordOffTimeout);
         }
     }
 
-    function clearAndStopPlayback() {
-        console.log("Clearing and stopping playback. Timeouts to clear:", activePlaybackTimeouts.length);
-        activePlaybackTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
-        activePlaybackTimeouts = [];
+    function requestMidiAccess() { /* ... same ... */
+        if (navigator.requestMIDIAccess) {
+            navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
+        } else {
+            statusDiv.textContent = "Web MIDI API not supported."; statusDiv.className = "mt-1 text-xs sm:text-sm text-red-400";
+            deviceSelect.innerHTML = '<option value="">MIDI API not supported</option>';
+        }
+    }
+    function onMIDISuccess(access) { /* ... same ... */
+        midiAccess = access;
+        populateDeviceList();
+        midiAccess.onstatechange = populateDeviceList;
+    }
+    function onMIDIFailure() { /* ... same ... */
+        statusDiv.textContent = "Failed to get MIDI access."; statusDiv.className = "mt-1 text-xs sm:text-sm text-red-400";
+        deviceSelect.innerHTML = '<option value="">MIDI access failed</option>';
+    }
+    function populateDeviceList() { /* ... same ... */
+        if (!midiAccess) return;
+        const inputs = midiAccess.inputs;
+        const previouslySelectedId = deviceSelect.value;
+        deviceSelect.innerHTML = '';
 
-        if (lastScheduledMelodyPattern && selectedOutputId && midiAccess) {
-            const outputDevice = midiAccess.outputs.get(selectedOutputId);
-            if (outputDevice) {
-                console.log("Sending note-offs for last scheduled melody pattern.");
-                const uniqueNotesInPattern = [...new Set(lastScheduledMelodyPattern.map(item => item.note))];
-                stopNotes(uniqueNotesInPattern, outputDevice, selectedOutputChannel);
+        if (inputs.size === 0) {
+            deviceSelect.innerHTML = '<option value="">No MIDI input devices found</option>';
+            statusDiv.textContent = "MIDI access granted, but no input devices found.";
+            statusDiv.className = "mt-1 text-xs sm:text-sm text-yellow-400";
+            selectedDeviceId = null;
+            attachListenerToSelectedDevice();
+            return;
+        }
+
+        inputs.forEach(input => {
+            const option = document.createElement('option');
+            option.value = input.id;
+            option.textContent = input.name || `Unknown Device ${input.id.substring(0,6)}`;
+            deviceSelect.appendChild(option);
+        });
+
+        let foundPrevious = false;
+        if (previouslySelectedId) {
+            for (let i = 0; i < deviceSelect.options.length; i++) {
+                if (deviceSelect.options[i].value === previouslySelectedId) {
+                    deviceSelect.selectedIndex = i;
+                    foundPrevious = true;
+                    break;
+                }
             }
         }
-        lastScheduledMelodyPattern = null;
-        // initialTriggerChordForMelody is cleared in processActiveInputNotes or when a chord is played
-    }
-
-    function stopNotes(notesToStop, device, channel) {
-        if (!device || !notesToStop || notesToStop.length === 0) return;
-        notesToStop.forEach(note => {
-            device.send([0x80 | channel, note, 0]);
-        });
-    }
-
-    function arraysEqual(a, b) {
-        if (a === b) return true;
-        if (a == null || b == null) return false;
-        if (a.length !== b.length) return false;
-        for (let i = 0; i < a.length; ++i) {
-            if (a[i] !== b[i]) return false;
+        if (!foundPrevious && deviceSelect.options.length > 0) {
+            deviceSelect.selectedIndex = 0;
         }
-        return true;
+        selectedDeviceId = deviceSelect.value;
+        attachListenerToSelectedDevice();
+    }
+    function attachListenerToSelectedDevice() { /* ... same ... */
+        if (!midiAccess) return;
+        midiAccess.inputs.forEach(input => input.onmidimessage = null);
+
+        if (selectedDeviceId && midiAccess.inputs.has(selectedDeviceId)) {
+            const device = midiAccess.inputs.get(selectedDeviceId);
+            if (device) {
+                device.onmidimessage = handleMIDIMessage;
+                statusDiv.textContent = `Listening to: ${device.name || 'Unknown Device'}`;
+                statusDiv.className = "mt-1 text-xs sm:text-sm text-green-400";
+            } else {
+                statusDiv.textContent = "Selected MIDI device not found.";
+                statusDiv.className = "mt-1 text-xs sm:text-sm text-yellow-400";
+            }
+        } else if (midiAccess.inputs.size > 0) {
+            statusDiv.textContent = "Please select a MIDI device.";
+            statusDiv.className = "mt-1 text-xs sm:text-sm text-yellow-400";
+        }
+    }
+    deviceSelect.addEventListener('change', () => { /* ... same ... */
+        selectedDeviceId = deviceSelect.value;
+        for (let i = 0; i < 16; i++) {
+            activeNotesByChannel[i].clear();
+            updateChannelDisplay(i);
+        }
+        attachListenerToSelectedDevice();
+    });
+
+    function handleMIDIMessage(event) { /* ... same, with flash logic ... */
+        const command = event.data[0] >> 4;
+        const channel = event.data[0] & 0x0f;
+        const note = event.data[1];
+        const velocity = event.data[2];
+
+        let stateChanged = false;
+        switch (command) {
+            case 9:
+                if (velocity > 0) {
+                    const sizeBefore = activeNotesByChannel[channel].size;
+                    activeNotesByChannel[channel].add(note);
+                    if (activeNotesByChannel[channel].size > sizeBefore) {
+                        stateChanged = true;
+                        const channelCard = document.getElementById(`channel-card-${channel}`);
+                        if (channelCard) {
+                            channelCard.classList.add('active-flash');
+                            setTimeout(() => {
+                                channelCard.classList.remove('active-flash');
+                            }, 150);
+                        }
+                    }
+                } else {
+                    if (activeNotesByChannel[channel].delete(note)) {
+                        stateChanged = true;
+                    }
+                }
+                break;
+            case 8:
+                if (activeNotesByChannel[channel].delete(note)) {
+                    stateChanged = true;
+                }
+                break;
+            case 11:
+                if (event.data[1] === 123 && velocity === 0) {
+                    if (activeNotesByChannel[channel].size > 0) {
+                        activeNotesByChannel[channel].clear();
+                        stateChanged = true;
+                    }
+                    console.log(`All notes off for CH ${channel + 1}`);
+                }
+                break;
+        }
+
+        if (stateChanged || (command === 9 && velocity > 0)) {
+            updateChannelDisplay(channel);
+        } else if (!stateChanged && (command === 8 || (command === 9 && velocity ===0))){
+            if(activeNotesByChannel[channel].size === 0) updateChannelDisplay(channel);
+        }
     }
 
-    document.addEventListener('DOMContentLoaded', setupMIDIAccess);
+    function midiNoteToNameWithOctave(midiNote) { /* ... same ... */
+        const octave = Math.floor(midiNote / 12) - 1;
+        return noteNames[midiNote % 12] + octave;
+    }
+    function arraysEqual(a,b) { /* ... same ... */
+        if (a === b) return true; if (a == null || b == null) return false; if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; ++i) if (a[i] !== b[i]) return false; return true;
+    }
+
+    function getMidiNotesForSuggestedChord(fullChordName) { /* ... same ... */
+        let rootName = ""; let suffix = "";
+        const match = fullChordName.match(/^([A-Ga-g][#♯b♭]?)(.*)$/);
+        if (match) { rootName = match[1].replace('b', '♭').replace('#','♯'); suffix = match[2];}
+        else { return []; }
+        const rootPitchClass = noteNames.indexOf(rootName);
+        if (rootPitchClass === -1) return [];
+        const intervals = chordFormulas[suffix];
+        if (!intervals) { console.warn(`No formula for suffix: '${suffix}' in suggested chord: '${fullChordName}'`); return []; }
+        const baseMidiRoot = 60 + rootPitchClass; // Suggestions rooted around C4
+        return intervals.map(interval => baseMidiRoot + interval);
+    }
+
+    function getNoteNamesForSuggestedChordDisplay(fullChordName) { /* ... same ... */
+        const midiNotes = getMidiNotesForSuggestedChord(fullChordName);
+        if (!midiNotes || midiNotes.length === 0) return "";
+        return midiNotes.map(note => midiNoteToNameWithOctave(note)).join('-');
+    }
+
+    function identifyChord(notesSet) { /* ... same, returns firstSuggestionMidiNotes ... */
+        const notes = Array.from(notesSet).sort((a, b) => a - b);
+        let chordName = "---"; let noteList = ""; let description = "";
+        let recommendations = ""; let firstSuggestionMidiNotes = new Set();
+
+        if (notes.length === 0) return { chordName, noteList, description, recommendations, firstSuggestionMidiNotes };
+
+        const uniquePitchClasses = [...new Set(notes.map(n => n % 12))].sort((a,b)=>a-b);
+        noteList = notes.map(n => midiNoteToNameWithOctave(n)).join(' ');
+
+        if (uniquePitchClasses.length === 1) {
+            chordName = noteNames[uniquePitchClasses[0]];
+            const descObj = chordDescriptions['P1'];
+            if(descObj) {
+                description = descObj.name;
+                if (descObj.comp) {
+                    const firstSuggName = descObj.comp.split(',')[0].trim();
+                    if (firstSuggName) {
+                        firstSuggestionMidiNotes = new Set(getMidiNotesForSuggestedChord(firstSuggName));
+                        recommendations = descObj.comp.split(',')
+                            .map(s => s.trim()).filter(s => s)
+                            .map(cn => {
+                                const notesOfSugg = getNoteNamesForSuggestedChordDisplay(cn);
+                                return notesOfSugg ? `${cn} (${notesOfSugg})` : cn;
+                            }).join('; ');
+                    }
+                }
+            }
+            return { chordName, noteList, description, recommendations, firstSuggestionMidiNotes };
+        }
+
+        for (const rootCandidatePitchClass of uniquePitchClasses) {
+            const intervals = uniquePitchClasses.map(pc => (pc - rootCandidatePitchClass + 12) % 12).sort((a,b)=>a-b);
+            for (const [suffix, formulaIntervals] of sortedChordFormulas) {
+                if (arraysEqual(intervals, formulaIntervals)) {
+                    let currentSuffix = suffix;
+                    if (suffix === 'P5' && uniquePitchClasses.length === 2 && notes.length >=2) {
+                        currentSuffix = '5';
+                    }
+                    chordName = noteNames[rootCandidatePitchClass] + currentSuffix;
+                    const descObj = chordDescriptions[currentSuffix];
+                    if(descObj) {
+                        description = descObj.name;
+                        if (descObj.comp) {
+                            const firstSuggName = descObj.comp.split(',')[0].trim();
+                            if (firstSuggName) {
+                                firstSuggestionMidiNotes = new Set(getMidiNotesForSuggestedChord(firstSuggName));
+                            }
+                            recommendations = descObj.comp.split(',')
+                                .map(s => s.trim()).filter(s => s)
+                                .map(chordNameSuggestion => {
+                                    const notesOfSuggestion = getNoteNamesForSuggestedChordDisplay(chordNameSuggestion);
+                                    return notesOfSuggestion ? `${chordNameSuggestion} (${notesOfSuggestion})` : chordNameSuggestion;
+                                }).join('; ');
+                        }
+                    }
+                    return { chordName, noteList, description, recommendations, firstSuggestionMidiNotes };
+                }
+            }
+        }
+        chordName = uniquePitchClasses.map(pc => noteNames[pc]).join(' ');
+        return { chordName, noteList, description, recommendations, firstSuggestionMidiNotes };
+    }
+
+    function updateChannelDisplay(channel) {
+        const chordResult = identifyChord(activeNotesByChannel[channel]);
+
+        const chordEl = document.getElementById(`chord-ch-${channel}`);
+        const descEl = document.getElementById(`desc-ch-${channel}`);
+        const notesEl = document.getElementById(`notes-ch-${channel}`);
+        const recoEl = document.getElementById(`reco-ch-${channel}`);
+
+        // Update active notes keyboard (C3-B4)
+        for (let midiNote = ACTIVE_KEYBOARD_START_MIDI_NOTE; midiNote <= ACTIVE_KEYBOARD_END_MIDI_NOTE; midiNote++) {
+            const keyElActive = document.getElementById(`key-active-${channel}-${midiNote}`);
+            if (keyElActive) {
+                if (activeNotesByChannel[channel].has(midiNote)) {
+                    keyElActive.classList.add('active');
+                } else {
+                    keyElActive.classList.remove('active');
+                }
+            }
+        }
+        // Update suggested notes keyboard (C4-B5)
+        const suggestionMidiNotesSet = chordResult.firstSuggestionMidiNotes || new Set();
+        for (let midiNote = SUGGESTED_KEYBOARD_START_MIDI_NOTE; midiNote <= SUGGESTED_KEYBOARD_END_MIDI_NOTE; midiNote++) {
+            const keyElSuggested = document.getElementById(`key-suggested-${channel}-${midiNote}`);
+            if (keyElSuggested) {
+                if (suggestionMidiNotesSet.has(midiNote)) {
+                    keyElSuggested.classList.add('active');
+                } else {
+                    keyElSuggested.classList.remove('active');
+                }
+            }
+        }
+
+        if (chordEl) chordEl.textContent = chordResult.chordName || "---";
+        if (descEl) {
+            const newDescription = chordResult.description || "";
+            descEl.textContent = newDescription;
+            descEl.title = (newDescription && (descEl.scrollHeight > descEl.clientHeight || descEl.scrollWidth > descEl.clientWidth)) ? newDescription : '';
+        }
+        if (recoEl) {
+            const newRecommendations = chordResult.recommendations || "---";
+            recoEl.textContent = newRecommendations;
+            recoEl.title = (newRecommendations && newRecommendations !== "---" && (recoEl.scrollHeight > recoEl.clientHeight || recoEl.scrollWidth > recoEl.clientWidth)) ? newRecommendations : '';
+        }
+        if (notesEl) {
+            if (activeNotesByChannel[channel].size === 0) {
+                notesEl.textContent = "---"; notesEl.title = '';
+            } else {
+                const newNoteList = chordResult.noteList || "";
+                notesEl.textContent = newNoteList;
+                notesEl.title = (newNoteList && (notesEl.scrollHeight > notesEl.clientHeight || notesEl.scrollWidth > notesEl.clientWidth)) ? newNoteList : '';
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeUI();
+        requestMidiAccess();
+    });
 </script>
 </body>
 </html>
