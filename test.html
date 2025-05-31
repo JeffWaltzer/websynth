@@ -88,7 +88,8 @@
         }
         .drop-zone.drag-over { /* Style for when an item is dragged over the drop zone */
             background-color: #374151; /* Slightly lighter background */
-            border-color: #60a5fa; /* Brighter border color (Tailwind blue-400) */
+            border-color: #60a5fa !important; /* Brighter border color (Tailwind blue-400), !important for emphasis */
+            border-style: solid !important;
         }
         .sequenced-channel-item .remove-btn {
             background: none;
@@ -188,10 +189,7 @@
     let channelSequence = [];
     let activeRoutedNotes = new Map();
     let currentChannelSequenceIndex = 0;
-    let dragSourceElement = null;
-    // These two are not strictly necessary if dataTransfer is reliable, but can help in debugging.
-    // let draggedChannelValue = null;
-    // let draggedSequenceItemId = null;
+    let dragSourceElement = null; // To identify the source of the drag, if needed.
 
     const midiInSelect = document.getElementById('midiIn');
     const inputChannelSelect = document.getElementById('inputChannel');
@@ -268,8 +266,9 @@
 
             el.addEventListener('dragstart', (e) => {
                 console.log('[DragStart SequenceItem] ID:', item.id, 'Channel:', item.channel);
-                // draggedSequenceItemId = item.id; // Can be useful for debugging
-                e.dataTransfer.setData('application/json', JSON.stringify({type: 'sequenceItem', id: item.id, channel: item.channel}));
+                const jsonData = JSON.stringify({type: 'sequenceItem', id: item.id, channel: item.channel});
+                e.dataTransfer.setData('application/json', jsonData);
+                e.dataTransfer.setData('text/plain', item.id); // Fallback for ID
                 e.dataTransfer.effectAllowed = 'move';
                 dragSourceElement = el;
             });
@@ -292,15 +291,11 @@
     function handleAvailableChannelDragStart(e) {
         const channelVal = e.target.dataset.channelValue;
         console.log('[DragStart AvailableChannel] Channel:', channelVal);
-        
-        // Add this line to explicitly set the data
-        e.dataTransfer.setData('text/plain', channelVal); // Fallback data
-        e.dataTransfer.setData('application/json', JSON.stringify({
-            type: 'newChannel', 
-            channel: channelVal
-        }));
-        
-        // Set the drag image (optional but helps with visual feedback)
+
+        const jsonData = JSON.stringify({type: 'newChannel', channel: channelVal});
+        e.dataTransfer.setData('application/json', jsonData);
+        e.dataTransfer.setData('text/plain', channelVal); // Fallback: just the channel number as text
+
         e.dataTransfer.effectAllowed = 'copy';
         dragSourceElement = e.target;
     }
@@ -308,67 +303,126 @@
     channelSequenceDropZone.addEventListener('dragenter', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        channelSequenceDropZone.classList.add('drag-over');
+        // Check if the dragged data is of a type we can accept
+        if (e.dataTransfer.types.includes('application/json') || e.dataTransfer.types.includes('text/plain')) {
+            channelSequenceDropZone.classList.add('drag-over');
+        }
+        console.log('[DragEnter DropZone] Types:', e.dataTransfer.types);
     });
 
     channelSequenceDropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        e.dataTransfer.dropEffect = 'move';
+        // Consistently set dropEffect, can be 'copy' if from available, 'move' if reordering
+        if (dragSourceElement && dragSourceElement.classList.contains('draggable-channel')) {
+            e.dataTransfer.dropEffect = 'copy';
+        } else {
+            e.dataTransfer.dropEffect = 'move';
+        }
     });
 
     channelSequenceDropZone.addEventListener('dragleave', (e) => {
-        // Check if the mouse is truly leaving the drop zone, not just moving over a child element
-        if (e.target === channelSequenceDropZone && !channelSequenceDropZone.contains(e.relatedTarget)) {
+        e.stopPropagation();
+        // More robust way to remove class: check if relatedTarget is outside the dropzone
+        if (!channelSequenceDropZone.contains(e.relatedTarget) || e.relatedTarget === null) {
             channelSequenceDropZone.classList.remove('drag-over');
-            console.log('[DragLeave DropZone] Left drop zone itself.');
-        } else if (!channelSequenceDropZone.contains(e.relatedTarget)) {
-            // This handles leaving from a child to outside the dropzone
-            channelSequenceDropZone.classList.remove('drag-over');
-            console.log('[DragLeave DropZone] Left from child to outside.');
+            console.log('[DragLeave DropZone] Left drop zone.');
         }
-        // console.log('[DragLeave DropZone] Target:', e.target, 'RelatedTarget:', e.relatedTarget);
     });
 
     channelSequenceDropZone.addEventListener('drop', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         channelSequenceDropZone.classList.remove('drag-over');
-        
+
         let data;
+        let dataTypeUsed = '';
+
         try {
-            // Try getting the JSON data first
-            const dataString = e.dataTransfer.getData('application/json');
-            if (dataString) {
-                data = JSON.parse(dataString);
-            } else {
-                // Fallback to plain text for simple channel numbers
-                const plainData = e.dataTransfer.getData('text/plain');
-                if (plainData) {
-                    data = {
-                        type: 'newChannel',
-                        channel: plainData
-                    };
-                }
+            const jsonString = e.dataTransfer.getData('application/json');
+            console.log('[Drop DropZone] Attempting application/json. Received:', jsonString);
+            if (jsonString) {
+                data = JSON.parse(jsonString);
+                dataTypeUsed = 'application/json';
             }
-            
-            if (!data) {
-                console.error('[Drop DropZone] No valid data transferred');
+        } catch (jsonError) {
+            console.warn('[Drop DropZone] Failed to parse application/json. Error:', jsonError, 'Raw string was:', e.dataTransfer.getData('application/json'));
+        }
+
+        if (!data) {
+            try {
+                const plainString = e.dataTransfer.getData('text/plain');
+                console.log('[Drop DropZone] Attempting text/plain. Received:', plainString);
+                if (plainString && !isNaN(parseInt(plainString))) {
+                    data = { type: 'newChannel', channel: plainString };
+                    dataTypeUsed = 'text/plain (interpreted as newChannel)';
+                } else if (plainString) {
+                    console.warn('[Drop DropZone] text/plain data received but not a simple channel number:', plainString);
+                }
+            } catch (textError) {
+                console.error('[Drop DropZone] Error getting text/plain data:', textError);
+            }
+        }
+
+        if (!data) {
+            console.error('[Drop DropZone] No valid data extracted from any type.');
+            dragSourceElement = null;
+            return;
+        }
+
+        console.log(`[Drop DropZone] Processed data using ${dataTypeUsed}:`, data);
+
+        if (data.type === 'newChannel' && data.channel) {
+            console.log('[Drop NewChannel] Attempting to add channel:', data.channel);
+            const newChannelNum = parseInt(data.channel);
+            if (isNaN(newChannelNum) || newChannelNum < 1 || newChannelNum > 16) { // Added validation
+                console.error('[Drop NewChannel] Parsed channel is invalid:', data.channel);
+                dragSourceElement = null;
                 return;
             }
-            
-            console.log('[Drop DropZone] Processed data:', data);
-            
-            // Rest of your existing drop handling code...
-            if (data.type === 'newChannel' && data.channel) {
-                // ... existing channel handling code
-            } else if (data.type === 'sequenceItem' && data.id) {
-                // ... existing sequence item handling code
+            channelSequence.push({ channel: newChannelNum, id: `chanSeq-${Date.now()}-${Math.random()}` });
+            logStatus(`Added Ch ${newChannelNum} to sequence.`);
+            console.log('[Drop NewChannel] Sequence after push:', JSON.stringify(channelSequence));
+        } else if (data.type === 'sequenceItem' && data.id) {
+            console.log('[Drop Reorder] Attempting to reorder item ID:', data.id, 'Channel:', data.channel); // data.channel might be undefined if only ID was in text/plain
+            const sourceId = data.id;
+            const targetElement = e.target.closest('.sequenced-channel-item');
+            const sourceIndex = channelSequence.findIndex(item => item.id === sourceId);
+
+            if (sourceIndex === -1) {
+                console.error('[Drop Reorder] Source item (ID:', sourceId, ') not found in sequence for reordering.');
+                dragSourceElement = null;
+                return;
             }
-            
-        } catch (error) {
-            console.error('[Drop DropZone] Error processing drop:', error);
-            logStatus('Error processing drop operation', true);
+
+            const [movedItem] = channelSequence.splice(sourceIndex, 1);
+            console.log('[Drop Reorder] Item removed for reorder:', JSON.stringify(movedItem), 'Sequence now:', JSON.stringify(channelSequence));
+
+            if (targetElement && targetElement.dataset.sequenceItemId !== sourceId) {
+                const targetId = targetElement.dataset.sequenceItemId;
+                const targetIndexInModifiedArray = channelSequence.findIndex(item => item.id === targetId);
+
+                if (targetIndexInModifiedArray !== -1) {
+                    const rect = targetElement.getBoundingClientRect();
+                    const isAfter = e.clientY > rect.top + rect.height / 2;
+                    channelSequence.splice(isAfter ? targetIndexInModifiedArray + 1 : targetIndexInModifiedArray, 0, movedItem);
+                    console.log('[Drop Reorder] Item inserted at index', isAfter ? targetIndexInModifiedArray + 1 : targetIndexInModifiedArray);
+                } else {
+                    console.warn('[Drop Reorder] Target for reorder not found in modified array or was the source. Appending.');
+                    channelSequence.push(movedItem);
+                }
+            } else {
+                console.log('[Drop Reorder] No valid target element or dropping on self. Appending item to end.');
+                channelSequence.push(movedItem);
+            }
+            logStatus('Channel sequence reordered.');
+        } else {
+            console.warn('[Drop DropZone] Unknown data type or data missing for add/reorder. Data:', data);
         }
+
+        renderChannelSequence();
+        currentChannelSequenceIndex = 0;
+        dragSourceElement = null;
     });
 
     clearChannelSequenceBtn.addEventListener('click', () => {
@@ -449,8 +503,6 @@
         renderChannelSequence();
 
         if (WebMidi.enabled) {
-            // Status is set by setOutputDeviceFromInput or if no devices are found.
-            // Avoid redundant logging here unless it's a specific "scan complete" message without device details.
             if (WebMidi.inputs.length === 0 && WebMidi.outputs.length === 0) {
                 logStatus("WebMIDI enabled, but no MIDI input or output devices found.", true);
             }
