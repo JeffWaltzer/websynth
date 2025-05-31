@@ -37,9 +37,14 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        .status-bar-section.version-info {
+        .status-bar-section.ignored-note-area {
             flex-shrink: 0;
             text-align: right;
+            min-width: 150px;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .panel {
@@ -322,17 +327,13 @@
             <div id="activeNotesDisplayContainer" class="min-h-[70px]">
             </div>
         </section>
-
     </main>
 
     <footer id="statusBar" class="status-bar mt-auto">
-        <div class="status-bar-section status-messages">
-            <div id="statusMessages" class="text-xs text-gray-300 min-h-[1.1em]">
-                Initializing...
-            </div>
+        <div id="statusMessages" class="status-bar-section status-messages text-xs text-gray-300 min-h-[1.1em]">
+            Initializing...
         </div>
-        <div class="status-bar-section version-info">
-            <p class="text-xs text-gray-500">WebMidi.js v<span id="webmidiVersion">N/A</span></p>
+        <div id="ignoredNoteDisplay" class="status-bar-section ignored-note-area text-xs text-yellow-400 min-h-[1.1em]">
         </div>
     </footer>
 </div>
@@ -351,6 +352,8 @@
     let isRandomMode = false;
     let lastStatusMessage = { text: "Initializing...", isError: false, isFlash: false };
     let statusTimeoutId = null;
+    let ignoredNoteTimeoutId = null;
+    let ignoredNotesCount = 0; // Counter for ignored notes
     const LOCAL_STORAGE_KEY = 'midiPolychainApp_savedChain_v1';
 
 
@@ -359,10 +362,9 @@
     const listeningChannelSelect = document.getElementById('listeningChannel');
     const availableChannelsForDragContainer = document.getElementById('availableChannelsForDrag');
     const polyChainDropZone = document.getElementById('polyChainDropZone');
-    let clearPolyChainBtn;
     const statusMessagesDiv = document.getElementById('statusMessages');
+    const ignoredNoteDisplay = document.getElementById('ignoredNoteDisplay');
     const activeNotesDisplayContainer = document.getElementById('activeNotesDisplayContainer');
-    const webmidiVersionSpan = document.getElementById('webmidiVersion');
     const pauseResumeBtn = document.getElementById('pauseResumeBtn');
     const savePolyChainBtn = document.getElementById('savePolyChainBtn');
     const loadPolyChainBtn = document.getElementById('loadPolyChainBtn');
@@ -370,6 +372,7 @@
     const reinitializeMidiBtn = document.getElementById('reinitializeMidiBtn');
     const randomModeCheckbox = document.getElementById('randomModeCheckbox');
     const appToolbar = document.getElementById('appToolbar');
+    const clearPolyChainBtn = document.getElementById('clearPolyChainBtn');
 
     const channelDisplayButtons = [];
 
@@ -406,6 +409,28 @@
         }
     }
 
+    function displayIgnoredNoteCount(count, reason = "full") {
+        if (ignoredNoteTimeoutId) {
+            clearTimeout(ignoredNoteTimeoutId);
+        }
+        let reasonText = reason === "full" ? "Poly chain full." : "Poly chain empty.";
+        ignoredNoteDisplay.textContent = `${reasonText} Notes Ignored: ${count}`;
+        ignoredNoteTimeoutId = setTimeout(() => {
+            ignoredNoteDisplay.textContent = '';
+            ignoredNoteTimeoutId = null;
+        }, 2500); // Display for 2.5 seconds
+    }
+
+    function clearIgnoredNoteDisplay() {
+        if (ignoredNoteTimeoutId) {
+            clearTimeout(ignoredNoteTimeoutId);
+            ignoredNoteTimeoutId = null;
+        }
+        ignoredNoteDisplay.textContent = '';
+        ignoredNotesCount = 0; // Reset count when display is cleared by a successful note
+    }
+
+
     function updatePolyChainHighlights() {
         const polyChainChannels = new Set(polyChain.map(item => parseInt(item.channel)));
         for (let i = 1; i <= 16; i++) {
@@ -433,6 +458,7 @@
         }
         polyChainSlotsState = new Array(polyChain.length).fill(null);
         currentPolyChainIndex = 0;
+        clearIgnoredNoteDisplay(); // Reset ignored notes count and display
         updateActiveNotesDisplay();
         updatePolyChainHighlights();
     }
@@ -893,15 +919,24 @@
             return;
         }
 
-        logStatus(`Listening to device: ${selectedMidiInput.name} (Messages to: ${soleOutputDevice.name}) on channel ${selectedListeningChannel}.`);
+        console.log(`[DEBUG] Setting up listeners for: selectedListeningChannel=${selectedListeningChannel}`);
         const targetListeningChannel = selectedListeningChannel === 'all' ? undefined : parseInt(selectedListeningChannel);
+        console.log(`[DEBUG] targetListeningChannel for WebMidi.addListener:`, targetListeningChannel);
+
+
+        logStatus(`Listening to device: ${selectedMidiInput.name} (Messages to: ${soleOutputDevice.name}) on channel ${selectedListeningChannel}.`);
 
         selectedMidiInput.addListener('noteon', e => {
+            console.log(`[DEBUG NoteOn] Incoming Msg Ch: ${e.message.channel}, Selected Filter Ch: ${selectedListeningChannel}, Listener Target Ch: ${targetListeningChannel}`);
+            if (selectedListeningChannel !== 'all' && e.message.channel !== targetListeningChannel) {
+                console.log(`[DEBUG NoteOn] Event on Ch ${e.message.channel} ignored due to filter ${targetListeningChannel}.`);
+                return;
+            }
             if (isPaused) return;
-            if (selectedListeningChannel !== 'all' && e.message.channel !== targetListeningChannel) return;
 
             if (polyChain.length === 0) {
-                logStatus("Poly chain is empty. Note ignored.", true, true);
+                ignoredNotesCount++;
+                displayIgnoredNote(`Poly chain empty. Ignored: ${ignoredNotesCount}`);
                 return;
             }
             if (!soleOutputDevice || !WebMidi.getOutputById(soleOutputDevice.id)) {
@@ -921,7 +956,7 @@
                     const existingDetail = existingDetailsArray[0];
                     soleOutputDevice.channels[existingDetail.outputChannel].playNote(e.note.identifier, { rawAttack: e.message.dataBytes[1] });
                     existingDetail.rawVelocity = e.message.dataBytes[1];
-                    logStatus(`Note Re-Trig: ${noteIdentifierForRouting.replace('-note', ' ')} (Vel ${e.message.dataBytes[1]}) &rarr; Ch ${existingDetail.outputChannel} (Slot ${existingDetail.polyChainSlotIndex})`);
+                    clearIgnoredNoteDisplay(); // Reset ignored count on successful play/re-trigger
                     return;
                 }
             }
@@ -958,11 +993,13 @@
 
             if (assignedChannel === -1) {
                 if (polyChain.length > 0) {
-                    const msg = `Poly chain full (${polyChain.length} slots). Note ${e.note.name}${e.note.octave} ignored.`;
-                    logStatus(msg, true, true);
+                    ignoredNotesCount++;
+                    displayIgnoredNote(`Poly chain full. Ignored: ${ignoredNotesCount}`);
                 }
                 return;
             }
+
+            clearIgnoredNoteDisplay(); // Reset ignored count on successful play
 
             polyChainSlotsState[chosenPolyChainSlotIndex] = noteIdentifierForRouting;
             if (!isRandomMode) {
@@ -981,15 +1018,17 @@
 
             soleOutputDevice.channels[assignedChannel].playNote(e.note.identifier, { rawAttack: e.message.dataBytes[1] });
 
-            const listeningChannelInfo = `ch${e.message.channel}`;
-            logStatus(`Note On: ${listeningChannelInfo} ${e.note.name}${e.note.octave} (Vel ${e.message.dataBytes[1]}) &rarr; Ch ${assignedChannel} (Slot ${chosenPolyChainSlotIndex})`);
-
             updateActiveNotesDisplay();
         }, { channels: targetListeningChannel });
 
         selectedMidiInput.addListener('noteoff', e => {
+            console.log(`[DEBUG NoteOff] Incoming Msg Ch: ${e.message.channel}, Selected Filter Ch: ${selectedListeningChannel}, Listener Target Ch: ${targetListeningChannel}`);
+            if (selectedListeningChannel !== 'all' && e.message.channel !== targetListeningChannel) {
+                console.log(`[DEBUG NoteOff] Event on Ch ${e.message.channel} ignored due to filter ${targetListeningChannel}.`);
+                return;
+            }
             if (isPaused) return;
-            if (selectedListeningChannel !== 'all' && e.message.channel !== targetListeningChannel) return;
+
             const noteIdentifierForRouting = `ch${e.message.channel}-note${e.note.number}`;
             const routedNoteDetailsArray = activeRoutedNotes.get(noteIdentifierForRouting);
 
@@ -1017,6 +1056,7 @@
                 if (activeRoutedNotes.size === 0) {
                     logStatus("All notes off.");
                     currentPolyChainIndex = 0;
+                    clearIgnoredNoteDisplay(); // Clear ignored notes when all notes are off
                 }
             }
         }, { channels: targetListeningChannel });
@@ -1034,6 +1074,7 @@
             pauseResumeBtn.title = "Pause MIDI Processing";
             pauseResumeBtn.classList.remove('paused');
             logStatus("MIDI resumed.", false, false);
+            clearIgnoredNoteDisplay(); // Clear ignored notes when resuming
         }
     }
 
@@ -1045,6 +1086,7 @@
             logStatus("Round-robin poly chain assignment enabled.", false, true);
         }
         currentPolyChainIndex = 0;
+        clearIgnoredNoteDisplay(); // Clear ignored notes when mode changes
     }
 
 
@@ -1053,7 +1095,6 @@
             if (typeof WebMidi === 'undefined') {
                 logStatus("WebMidi.js library not loaded! Cannot initialize.", true); return;
             }
-            webmidiVersionSpan.textContent = WebMidi.VERSION;
             statusMessagesDiv.innerHTML = '<p class="text-gray-400">Initializing...</p>';
             lastStatusMessage = { text: "Initializing...", isError: false, isFlash: false };
 
@@ -1082,26 +1123,23 @@
             reinitializeMidiBtn.addEventListener('click', reinitializeMidi);
             randomModeCheckbox.addEventListener('change', toggleRandomMode);
 
-            let existingClearBtn = appToolbar.querySelector('#clearPolyChainBtn');
-            if (!existingClearBtn) {
-                clearPolyChainBtn = document.createElement('button');
-                clearPolyChainBtn.id = 'clearPolyChainBtn';
-                const polyChainManagementGroup = appToolbar.querySelector('#polyChainManagementControls');
-                if (polyChainManagementGroup) {
-                    polyChainManagementGroup.appendChild(clearPolyChainBtn);
-                } else {
-                    appToolbar.appendChild(clearPolyChainBtn);
-                }
-            } else {
-                clearPolyChainBtn = existingClearBtn;
-            }
-            clearPolyChainBtn.innerHTML = "🗑️";
-            clearPolyChainBtn.title = "Clear Current Poly Chain";
-            clearPolyChainBtn.classList.add('control-button', 'bg-red-600', 'hover:bg-red-700');
             clearPolyChainBtn.addEventListener('click', () => {
                 polyChain = [];
                 renderPolyChain();
                 logStatus("Cleared poly chain. All notes stopped.");
+            });
+
+            listeningChannelSelect.addEventListener('change', (e) => {
+                selectedListeningChannel = e.target.value;
+                console.log(`[DEBUG] Listening channel changed to: ${selectedListeningChannel}`);
+                if (selectedMidiInput && soleOutputDevice) {
+                    setupMidiListeners();
+                } else if (selectedMidiInput && !soleOutputDevice) {
+                    logStatus("Device selected, but no other device for messages. Select device or check connections.", true);
+                }
+                else {
+                    logStatus("Please select a MIDI device first.", true);
+                }
             });
 
 
