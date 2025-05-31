@@ -353,7 +353,7 @@
     let lastStatusMessage = { text: "Initializing...", isError: false, isFlash: false };
     let statusTimeoutId = null;
     let ignoredNoteTimeoutId = null;
-    let ignoredNotesCount = 0; // Counter for ignored notes
+    let ignoredNotesCount = 0;
     const LOCAL_STORAGE_KEY = 'midiPolychainApp_savedChain_v1';
 
 
@@ -418,7 +418,7 @@
         ignoredNoteTimeoutId = setTimeout(() => {
             ignoredNoteDisplay.textContent = '';
             ignoredNoteTimeoutId = null;
-        }, 2500); // Display for 2.5 seconds
+        }, 2500);
     }
 
     function clearIgnoredNoteDisplay() {
@@ -427,7 +427,7 @@
             ignoredNoteTimeoutId = null;
         }
         ignoredNoteDisplay.textContent = '';
-        ignoredNotesCount = 0; // Reset count when display is cleared by a successful note
+        ignoredNotesCount = 0;
     }
 
 
@@ -458,7 +458,7 @@
         }
         polyChainSlotsState = new Array(polyChain.length).fill(null);
         currentPolyChainIndex = 0;
-        clearIgnoredNoteDisplay(); // Reset ignored notes count and display
+        clearIgnoredNoteDisplay();
         updateActiveNotesDisplay();
         updatePolyChainHighlights();
     }
@@ -919,17 +919,12 @@
             return;
         }
 
-        console.log(`[DEBUG] Setting up listeners for: selectedListeningChannel=${selectedListeningChannel}`);
         const targetListeningChannel = selectedListeningChannel === 'all' ? undefined : parseInt(selectedListeningChannel);
-        console.log(`[DEBUG] targetListeningChannel for WebMidi.addListener:`, targetListeningChannel);
-
-
         logStatus(`Listening to device: ${selectedMidiInput.name} (Messages to: ${soleOutputDevice.name}) on channel ${selectedListeningChannel}.`);
 
+
         selectedMidiInput.addListener('noteon', e => {
-            console.log(`[DEBUG NoteOn] Incoming Msg Ch: ${e.message.channel}, Selected Filter Ch: ${selectedListeningChannel}, Listener Target Ch: ${targetListeningChannel}`);
             if (selectedListeningChannel !== 'all' && e.message.channel !== targetListeningChannel) {
-                console.log(`[DEBUG NoteOn] Event on Ch ${e.message.channel} ignored due to filter ${targetListeningChannel}.`);
                 return;
             }
             if (isPaused) return;
@@ -956,7 +951,7 @@
                     const existingDetail = existingDetailsArray[0];
                     soleOutputDevice.channels[existingDetail.outputChannel].playNote(e.note.identifier, { rawAttack: e.message.dataBytes[1] });
                     existingDetail.rawVelocity = e.message.dataBytes[1];
-                    clearIgnoredNoteDisplay(); // Reset ignored count on successful play/re-trigger
+                    clearIgnoredNoteDisplay();
                     return;
                 }
             }
@@ -999,7 +994,7 @@
                 return;
             }
 
-            clearIgnoredNoteDisplay(); // Reset ignored count on successful play
+            clearIgnoredNoteDisplay();
 
             polyChainSlotsState[chosenPolyChainSlotIndex] = noteIdentifierForRouting;
             if (!isRandomMode) {
@@ -1022,9 +1017,7 @@
         }, { channels: targetListeningChannel });
 
         selectedMidiInput.addListener('noteoff', e => {
-            console.log(`[DEBUG NoteOff] Incoming Msg Ch: ${e.message.channel}, Selected Filter Ch: ${selectedListeningChannel}, Listener Target Ch: ${targetListeningChannel}`);
             if (selectedListeningChannel !== 'all' && e.message.channel !== targetListeningChannel) {
-                console.log(`[DEBUG NoteOff] Event on Ch ${e.message.channel} ignored due to filter ${targetListeningChannel}.`);
                 return;
             }
             if (isPaused) return;
@@ -1056,7 +1049,7 @@
                 if (activeRoutedNotes.size === 0) {
                     logStatus("All notes off.");
                     currentPolyChainIndex = 0;
-                    clearIgnoredNoteDisplay(); // Clear ignored notes when all notes are off
+                    clearIgnoredNoteDisplay();
                 }
             }
         }, { channels: targetListeningChannel });
@@ -1074,7 +1067,7 @@
             pauseResumeBtn.title = "Pause MIDI Processing";
             pauseResumeBtn.classList.remove('paused');
             logStatus("MIDI resumed.", false, false);
-            clearIgnoredNoteDisplay(); // Clear ignored notes when resuming
+            clearIgnoredNoteDisplay();
         }
     }
 
@@ -1086,7 +1079,7 @@
             logStatus("Round-robin poly chain assignment enabled.", false, true);
         }
         currentPolyChainIndex = 0;
-        clearIgnoredNoteDisplay(); // Clear ignored notes when mode changes
+        clearIgnoredNoteDisplay();
     }
 
 
@@ -1131,7 +1124,7 @@
 
             listeningChannelSelect.addEventListener('change', (e) => {
                 selectedListeningChannel = e.target.value;
-                console.log(`[DEBUG] Listening channel changed to: ${selectedListeningChannel}`);
+                // console.log(`[DEBUG] Listening channel changed to: ${selectedListeningChannel}`); // Removed
                 if (selectedMidiInput && soleOutputDevice) {
                     setupMidiListeners();
                 } else if (selectedMidiInput && !soleOutputDevice) {
