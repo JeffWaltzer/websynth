@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,11 +9,9 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #260e0e; /* Very dark red/brown */
-            color: #fee2e2; /* Tailwind red-100 */
         }
         .custom-select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23fca5a5' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); /* Lighter red arrow */
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
             background-position: right 0.5rem center;
             background-repeat: no-repeat;
             background-size: 1.5em 1.5em;
@@ -21,18 +19,15 @@
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            background-color: #991b1b; /* Tailwind red-800 */
-            border: 1px solid #b91c1c; /* Tailwind red-700 */
-            color: #fee2e2; /* Tailwind red-100 */
         }
         .custom-select:focus {
-            border-color: #f87171; /* Tailwind red-400 */
-            box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.4);
+            outline: 2px solid transparent;
+            outline-offset: 2px;
         }
 
         .status-bar {
-            background-color: #450a0a; /* Darker red/brown - Tailwind red-950 */
-            border-top: 1px solid #7f1d1d; /* Tailwind red-900 */
+            background-color: #1f2937;
+            border-top: 1px solid #374151;
             padding: 0.25rem 0.75rem;
             display: flex;
             justify-content: space-between;
@@ -47,12 +42,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            color: #fecaca; /* Tailwind red-200 */
         }
-        .status-bar-section.status-messages .text-green-400 { color: #86efac; }
-        .status-bar-section.status-messages .text-red-400 { color: #fca5a5; }
-        .status-bar-section.status-messages .text-yellow-400 { color: #fde047; }
-
         .status-bar-section.ignored-note-area {
             flex-shrink: 0;
             text-align: right;
@@ -61,18 +51,20 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            color: #fde047;
         }
 
-        .panel, .toolbar-panel {
-            background-color: #7f1d1d; /* Tailwind red-900 */
+        .panel {
+            background-color: #374151;
             padding: 0.75rem;
             border-radius: 0.5rem;
-            border: 1px solid #991b1b; /* Tailwind red-800 */
-            color: #fee2e2;
+            border: 1px solid #4B5563;
         }
 
         .toolbar-panel {
+            background-color: #374151;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #4B5563;
             margin-bottom: 0.75rem;
             display: flex;
             gap: 0.5rem;
@@ -88,15 +80,15 @@
         .toolbar-group + .toolbar-group {
             margin-left: 0.75rem;
             padding-left: 0.75rem;
-            border-left: 1px solid #991b1b; /* Tailwind red-800 for separator */
+            border-left: 1px solid #4B5563;
         }
 
 
         .draggable-channel, .poly-chain-item {
             padding: 0.375rem 0.625rem;
             margin: 0.125rem;
-            background-color: #dc2626; /* Tailwind red-600 */
-            border: 1px solid #ef4444; /* Tailwind red-500 */
+            background-color: #4f46e5;
+            border: 1px solid #6366f1;
             border-radius: 9999px;
             cursor: grab;
             color: white;
@@ -109,32 +101,34 @@
             font-size: 0.875rem;
             min-width: 60px;
             box-sizing: border-box;
+            height: 2rem; /* Consistent height for alignment with indicator */
         }
         .available-channels-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 0.25rem;
             padding: 0.25rem;
-            background-color: #991b1b; /* Tailwind red-800 */
+            background-color: #374151;
             border-radius: 0.375rem;
-            border: 1px solid #7f1d1d; /* Tailwind red-900 (darker) */
+            border: 1px solid #4b5563;
             min-height: 80px;
         }
         .drop-zone {
             padding: 0.75rem;
-            background-color: #450a0a; /* Tailwind red-950 */
-            border: 2px dashed #b91c1c; /* Tailwind red-700 */
+            background-color: #2d3748;
+            border: 2px dashed #4b5563;
             border-radius: 0.375rem;
             min-height: 80px;
             display: flex;
             flex-wrap: wrap;
+            align-items: center; /* Align items along the cross axis (vertical) */
             align-content: flex-start;
             gap: 0.25rem;
             transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
         }
         .drop-zone.drag-over-enhanced {
-            border: 2px solid #f87171 !important; /* Tailwind red-400 */
-            background-color: #7f1d1d; /* Tailwind red-900 */
+            border: 2px solid #60a5fa !important;
+            background-color: #374151;
         }
         .drop-zone.drag-over-enhanced .drop-zone-placeholder {
             display: none;
@@ -147,17 +141,17 @@
         .poly-chain-item .control-icon-btn {
             background: none;
             border: none;
-            color: #fee2e2;
+            color: #e5e7eb;
             cursor: pointer;
             font-size: 1rem;
             padding: 0 0.2rem;
             line-height: 1;
         }
         .poly-chain-item .control-icon-btn:hover {
-            color: #fecaca; /* Lighter red */
+            color: white;
         }
         .drop-zone-placeholder {
-            color: #fca5a5; /* Tailwind red-300 */
+            color: #9ca3af;
             font-style: italic;
             text-align: center;
             width: 100%;
@@ -174,9 +168,9 @@
 
         .channel-note-button {
             padding: 0.375rem 0.25rem;
-            background-color: #991b1b; /* Tailwind red-800 */
-            color: #fecaca; /* Tailwind red-200 */
-            border: 1px solid #7f1d1d; /* Tailwind red-900 */
+            background-color: #4a5568;
+            color: #e2e8f0;
+            border: 1px solid #718096;
             border-radius: 0.25rem;
             text-align: center;
             font-size: 0.625rem;
@@ -193,14 +187,14 @@
         }
 
         .channel-note-button.active {
-            background-color: #ef4444; /* Tailwind red-500 */
-            color: #fee2e2; /* Tailwind red-100 for text */
-            border-color: #dc2626; /* Tailwind red-600 */
+            background-color: #3b82f6;
+            color: white;
+            border-color: #2563eb;
             font-weight: 600;
         }
         .channel-note-button .channel-num-default {
             font-size: 0.625rem;
-            color: #fca5a5; /* Tailwind red-300 */
+            color: #a0aec0;
             line-height: 1;
         }
         .channel-note-button .notes-list {
@@ -214,7 +208,7 @@
         }
         .channel-note-button.active .channel-num-default {
             font-size: 0.5rem;
-            color: #fecaca; /* Tailwind red-200 */
+            color: #e0e7ff;
             line-height: 1;
             margin-bottom: 1px;
         }
@@ -224,17 +218,17 @@
             overflow: hidden;
         }
         .channel-note-button.in-polychain:not(.active) {
-            border-color: #f87171; /* Tailwind red-400 */
-            box-shadow: 0 0 3px 0px #f87171;
+            border-color: #60a5fa;
+            box-shadow: 0 0 3px 0px #60a5fa;
         }
         .control-button {
-            background-color: #b91c1c; /* Tailwind red-700 */
+            background-color: #4f46e5;
             color: white;
             font-weight: 500;
             padding: 0.5rem;
             border-radius: 0.375rem;
             transition: background-color 0.15s ease-in-out;
-            border: 1px solid #dc2626; /* Tailwind red-600 */
+            border: 1px solid #6366f1;
             font-size: 1rem;
             line-height: 1;
             display: inline-flex;
@@ -244,15 +238,14 @@
             height: 2.5rem;
         }
         .control-button:hover {
-            background-color: #991b1b; /* Tailwind red-800 */
+            background-color: #4338ca;
         }
         .control-button.paused {
-            background-color: #f87171; /* Tailwind red-400 */
-            border-color: #ef4444; /* Tailwind red-500 */
-            color: #450a0a; /* Dark red text */
+            background-color: #f59e0b;
+            border-color: #d97706;
         }
         .control-button.paused:hover {
-            background-color: #ef4444; /* Tailwind red-500 */
+            background-color: #b45309;
         }
         .toolbar-panel .control-button {
         }
@@ -261,18 +254,26 @@
             align-items: center;
             gap: 0.25rem;
             font-size: 0.75rem;
-            color: #fee2e2;
+            color: #e0e7ff;
             padding: 0.5rem;
             border-radius: 0.375rem;
-            background-color: #b91c1c; /* Tailwind red-700 */
-            border: 1px solid #dc2626; /* Tailwind red-600 */
+            background-color: #4338ca;
+            border: 1px solid #4f46e5;
             cursor: pointer;
             height: 2.5rem;
         }
         .toolbar-panel input[type="checkbox"] {
             width: 0.875rem;
             height: 0.875rem;
-            accent-color: #f87171; /* Tailwind red-400 */
+            accent-color: #a78bfa;
+        }
+        #dropIndicatorVisual {
+            width: 3px; /* Vertical bar width */
+            height: 2rem; /* Match poly-chain-item height (approx) */
+            background-color: #818cf8; /* Tailwind indigo-400 or a bright accent */
+            border-radius: 1.5px;
+            margin: 0 2px; /* Horizontal margin */
+            flex-shrink: 0; /* Prevent shrinking if dropzone is crowded */
         }
 
     </style>
@@ -280,8 +281,8 @@
 <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center justify-center p-2 sm:p-3">
 <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl flex flex-col">
     <header class="mb-3 sm:mb-4 text-center p-3 sm:p-4">
-        <h1 class="text-2xl sm:text-3xl font-bold text-red-400">MIDI Polychain Splitter</h1>
-        <p class="text-red-200 mt-1 text-sm">Define a MIDI poly chain. Notes are routed via the selected MIDI device.</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-sky-400">MIDI Polychain Splitter</h1>
+        <p class="text-gray-400 mt-1 text-sm">Define a MIDI poly chain. Notes are routed via the selected MIDI device.</p>
     </header>
 
     <div id="appToolbar" class="toolbar-panel">
@@ -310,29 +311,29 @@
             <section id="midiSetupPanel" class="w-full space-y-3 panel">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
                     <div>
-                        <label for="midiIn" class="block text-xs font-medium text-red-300 mb-0.5">MIDI Device:</label>
+                        <label for="midiIn" class="block text-xs font-medium text-sky-300 mb-0.5">MIDI Device:</label>
                         <select id="midiIn" title="Select your MIDI interface. This device will be used for receiving notes and sending them out." class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
                             <option value="">Select MIDI Device</option>
                         </select>
                     </div>
                     <div>
-                        <label for="listeningChannel" class="block text-xs font-medium text-red-300 mb-0.5">Listening Channel:</label>
+                        <label for="listeningChannel" class="block text-xs font-medium text-sky-300 mb-0.5">Listening Channel:</label>
                         <select id="listeningChannel" title="Choose the MIDI channel to listen to on the selected device. 'All Channels' listens to every channel." class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
                             <option value="all">All Channels</option>
                         </select>
                     </div>
                 </div>
                 <div>
-                    <h2 class="text-md font-semibold text-red-300 mb-1 mt-3">Channel Poly Chain Editor</h2>
-                    <p class="text-xs text-red-200 mb-1">Drag channels from "Available" to "Current Poly Chain" to define the order.</p>
+                    <h2 class="text-md font-semibold text-sky-300 mb-1 mt-3">Channel Poly Chain Editor</h2>
+                    <p class="text-xs text-gray-400 mb-1">Drag channels from "Available" to "Current Poly Chain" to define the order.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <h3 class="text-sm font-medium text-red-300 mb-0.5">Available Channels:</h3>
+                            <h3 class="text-sm font-medium text-sky-300 mb-0.5">Available Channels:</h3>
                             <div id="availableChannelsForDrag" title="Drag these channels to the 'Current Poly Chain' area to define your routing order." class="available-channels-container">
                             </div>
                         </div>
                         <div>
-                            <h3 class="text-sm font-medium text-red-300 mb-0.5">Current Poly Chain:</h3>
+                            <h3 class="text-sm font-medium text-sky-300 mb-0.5">Current Poly Chain:</h3>
                             <div id="polyChainDropZone" title="Drop channels here to build your poly chain. Notes will be routed to these channels in order." class="drop-zone">
                                 <p class="drop-zone-placeholder">Drag channels here.</p>
                             </div>
@@ -343,7 +344,7 @@
         </div>
 
         <section id="activeNotesPanel" class="mb-3 panel">
-            <h2 class="text-md font-semibold text-red-300 mb-1">Active Routed Notes (Device Channels):</h2>
+            <h2 class="text-md font-semibold text-sky-300 mb-1">Active Routed Notes (Device Channels):</h2>
             <div id="activeNotesDisplayContainer" class="min-h-[70px]">
             </div>
         </section>
@@ -397,6 +398,9 @@
 
     const channelDisplayButtons = [];
 
+    const dropIndicator = document.createElement('div');
+    dropIndicator.id = 'dropIndicatorVisual';
+
     function logStatus(message, isError = false, isFlash = false, flashDuration = 3000) {
         if (statusTimeoutId) {
             clearTimeout(statusTimeoutId);
@@ -406,11 +410,11 @@
         const p = document.createElement('p');
         p.textContent = message;
         if (isError) {
-            p.className = 'text-red-400 animate-pulse'; // Using Tailwind's red-400 for errors
+            p.className = 'text-red-400 animate-pulse';
         } else if (isFlash) {
-            p.className = 'text-yellow-400'; // Using Tailwind's yellow-400 for flash
+            p.className = 'text-yellow-400';
         } else {
-            p.className = 'text-green-400'; // Using Tailwind's green-400 for success
+            p.className = 'text-green-400';
         }
 
         statusMessagesDiv.innerHTML = '';
@@ -638,12 +642,87 @@
         } else {
             e.dataTransfer.dropEffect = 'move';
         }
+
+        const existingIndicator = document.getElementById('dropIndicatorVisual');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+
+        const targetItem = e.target.closest('.poly-chain-item');
+        const itemsInDropZone = Array.from(polyChainDropZone.querySelectorAll('.poly-chain-item'));
+
+        let placed = false;
+        if (targetItem && targetItem !== dragSourceElement) {
+            const rect = targetItem.getBoundingClientRect();
+            const dropZoneRect = polyChainDropZone.getBoundingClientRect();
+            // Consider the item's center relative to the drag point AND the flow direction
+            // For flex-wrap, we primarily care about horizontal position on the *same line*
+            // or if we are above/below a line.
+
+            // If on the same visual row as targetItem
+            if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                if (e.clientX < rect.left + rect.width / 2) {
+                    polyChainDropZone.insertBefore(dropIndicator, targetItem);
+                    placed = true;
+                } else {
+                    polyChainDropZone.insertBefore(dropIndicator, targetItem.nextSibling);
+                    placed = true;
+                }
+            } else if (e.clientY < rect.top) { // If cursor is above the target item's row
+                polyChainDropZone.insertBefore(dropIndicator, targetItem);
+                placed = true;
+            }
+
+
+        }
+
+        if (!placed) { // If not placed relative to a specific item (e.g. empty space, or after all items)
+            let nextElement = null;
+            for (const item of itemsInDropZone) {
+                if (item === dragSourceElement) continue;
+                const rect = item.getBoundingClientRect();
+                if (e.clientY < rect.top + rect.height / 2) { // If above middle of an item
+                    if (e.clientX < rect.left + rect.width / 2) { // and to its left
+                        nextElement = item;
+                        break;
+                    }
+                    if (nextElement === null || item.offsetTop < nextElement.offsetTop || (item.offsetTop === nextElement.offsetTop && item.offsetLeft < nextElement.offsetLeft)) {
+                        nextElement = item; // Simplified: find first item below cursor
+                    }
+                }
+                if (e.clientY >= rect.top && e.clientY <= rect.bottom && e.clientX < rect.left + rect.width/2) {
+                    nextElement = item;
+                    break;
+                }
+                if (e.clientY >= rect.top && e.clientY <= rect.bottom && e.clientX >= rect.left + rect.width/2) {
+                    nextElement = item.nextSibling;
+                }
+
+
+            }
+            if (nextElement) {
+                polyChainDropZone.insertBefore(dropIndicator, nextElement);
+            } else {
+                // If drop zone is empty or dragging to the very end.
+                const placeholder = polyChainDropZone.querySelector('.drop-zone-placeholder');
+                if (placeholder && polyChainDropZone.children.length === 1 && polyChainDropZone.firstChild === placeholder) {
+                    polyChainDropZone.insertBefore(dropIndicator, placeholder);
+                } else {
+                    polyChainDropZone.appendChild(dropIndicator);
+                }
+            }
+        }
     });
 
     polyChainDropZone.addEventListener('dragleave', (e) => {
         e.stopPropagation();
+        // Remove indicator only if dragging outside the dropzone entirely
         if (!polyChainDropZone.contains(e.relatedTarget) || e.relatedTarget === null) {
             polyChainDropZone.classList.remove('drag-over-enhanced');
+            const indicator = document.getElementById('dropIndicatorVisual');
+            if (indicator) {
+                indicator.remove();
+            }
         }
     });
 
@@ -651,6 +730,10 @@
         e.preventDefault();
         e.stopPropagation();
         polyChainDropZone.classList.remove('drag-over-enhanced');
+        const indicator = document.getElementById('dropIndicatorVisual');
+        if (indicator) {
+            indicator.remove();
+        }
 
         let data;
         let dataTypeUsed = '';
@@ -688,53 +771,70 @@
             return;
         }
 
-        const droppedItem = data.type === 'newChannel'
+        const isNew = data.type === 'newChannel';
+        const droppedItemData = isNew
             ? { channel: parseInt(data.channel), id: `chanSeq-${Date.now()}-${Math.random().toString(36).substring(2,7)}` }
-            : (data.type === 'polyChainItem' ? polyChain.find(item => item.id === data.id) : null);
+            : polyChain.find(item => item.id === data.id);
 
-        if (!droppedItem) {
-            console.error('[Drop DropZone] Could not create or find dropped item.');
+        if (!droppedItemData) {
+            console.error('[Drop DropZone] Could not create or find dropped item data.');
             dragSourceElement = null;
             return;
         }
 
         if (data.type === 'polyChainItem') {
-            const sourceIndex = polyChain.findIndex(item => item.id === droppedItem.id);
+            const sourceIndex = polyChain.findIndex(item => item.id === droppedItemData.id);
             if (sourceIndex > -1) {
                 polyChain.splice(sourceIndex, 1);
             }
         }
 
         let insertAtIndex = polyChain.length;
-        const dropZoneItems = Array.from(polyChainDropZone.querySelectorAll('.poly-chain-item'));
-        let targetElementForDrop = e.target.closest('.poly-chain-item');
+        const currentDisplayedItems = Array.from(polyChainDropZone.querySelectorAll('.poly-chain-item'));
+        let targetElementForDropLogic = e.target.closest('.poly-chain-item');
 
-        if (targetElementForDrop) {
-            const targetId = targetElementForDrop.dataset.polyChainItemId;
+        if (targetElementForDropLogic && targetElementForDropLogic !== dragSourceElement) {
+            const targetId = targetElementForDropLogic.dataset.polyChainItemId;
             const targetIndexInCurrentChain = polyChain.findIndex(item => item.id === targetId);
             if (targetIndexInCurrentChain !== -1) {
-                const rect = targetElementForDrop.getBoundingClientRect();
+                const rect = targetElementForDropLogic.getBoundingClientRect();
                 const isAfter = e.clientY > rect.top + rect.height / 2;
                 insertAtIndex = isAfter ? targetIndexInCurrentChain + 1 : targetIndexInCurrentChain;
             }
         } else {
-            for (let i = 0; i < dropZoneItems.length; i++) {
-                const childRect = dropZoneItems[i].getBoundingClientRect();
-                if (e.clientY < childRect.bottom && e.clientX < childRect.right) {
-                    const itemIdToInsertBefore = dropZoneItems[i].dataset.polyChainItemId;
+            let foundSpot = false;
+            for (let i = 0; i < currentDisplayedItems.length; i++) {
+                const itemNode = currentDisplayedItems[i];
+                if(itemNode === dragSourceElement) continue;
+
+                const rect = itemNode.getBoundingClientRect();
+                if (e.clientY < rect.top + rect.height / 2) {
+                    const itemIdToInsertBefore = itemNode.dataset.polyChainItemId;
                     const indexInCurrentChain = polyChain.findIndex(it => it.id === itemIdToInsertBefore);
                     if (indexInCurrentChain !== -1) {
                         insertAtIndex = indexInCurrentChain;
+                        foundSpot = true;
+                        break;
+                    }
+                } else if (e.clientY >= rect.top && e.clientY <= rect.bottom && e.clientX < rect.left + rect.width / 2 ) {
+                    const itemIdToInsertBefore = itemNode.dataset.polyChainItemId;
+                    const indexInCurrentChain = polyChain.findIndex(it => it.id === itemIdToInsertBefore);
+                    if (indexInCurrentChain !== -1) {
+                        insertAtIndex = indexInCurrentChain;
+                        foundSpot = true;
                         break;
                     }
                 }
             }
+            if (!foundSpot) {
+                insertAtIndex = polyChain.length;
+            }
         }
 
-        polyChain.splice(insertAtIndex, 0, droppedItem);
+        polyChain.splice(insertAtIndex, 0, droppedItemData);
 
-        if (data.type === 'newChannel') {
-            logStatus(`Added Ch ${droppedItem.channel} to poly chain at specific position.`);
+        if (isNew) {
+            logStatus(`Added Ch ${droppedItemData.channel} to poly chain.`);
         } else {
             logStatus('Poly chain reordered.');
         }
