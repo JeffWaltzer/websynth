@@ -10,286 +10,286 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #3a2f2f; /* Dark, earthy brown */
-            color: #f0f0f0; /* Off-white/light beige */
+            background-color: #3a2f2f;
+            color: #f0f0f0;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
             margin: 0;
-            overflow-x: hidden; /* Prevent horizontal scroll on body */
+            overflow-x: hidden;
         }
         .font-brand {
             font-family: 'Monoton', cursive;
         }
         .panel {
-            background-color: #c5b8a5; /* Wooden panel / light tan */
-            border: 2px solid #8a7868; /* Darker wood grain */
-            box-shadow: 0 0 10px rgba(0,0,0,0.5) inset, 0 2px 5px rgba(0,0,0,0.3);
-            border-radius: 8px;
+            background-color: #c5b8a5;
+            border: 2px solid #8a7868;
+            box-shadow: 0 0 8px rgba(0,0,0,0.4) inset, 0 1px 3px rgba(0,0,0,0.2);
+            border-radius: 6px;
         }
-        header.panel { /* Specific to header */
-            padding: 0.5rem 1rem; /* Reduced padding slightly for compactness */
+        header.panel {
+            padding: 0.4rem 0.8rem;
             display: flex;
-            flex-direction: row; /* Changed to row for responsiveness */
+            flex-direction: row;
             justify-content: space-between;
             align-items: center;
-            gap: 0.5rem; /* Spacing between items */
-            flex-wrap: wrap; /* Allow header items to wrap */
+            gap: 0.3rem;
+            flex-wrap: wrap;
         }
         .control-panel {
-            background-color: #a09383; /* Slightly darker inset panel */
+            background-color: #a09383;
             border: 1px solid #706050;
-            border-radius: 6px;
-            padding: 0.3rem 0.5rem; /* Compact padding */
-            display: flex; /* Use flex for internal alignment */
-            flex-direction: row; /* Align items in a row */
-            align-items: center; /* Center items vertically */
-            gap: 0.5rem; /* Space between controls */
-            flex-wrap: nowrap; /* Prevent individual control panels from wrapping internally unless specified*/
+            border-radius: 4px;
+            padding: 0.2rem 0.4rem;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.3rem;
+            flex-wrap: nowrap;
         }
-        header.panel .control-panel.transport-midi { /* Transport controls etc. */
-            flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
+        header.panel .control-panel.transport-midi {
+            flex-wrap: wrap;
         }
 
-        .project-name-input, .project-id-input {
+        .project-name-input {
             background-color: #f0e6d2;
             color: #3a2f2f;
             border: 1px solid #8a7868;
-            border-radius: 4px;
-            padding: 2px 6px;
-            font-size: 0.75rem;
-            max-width: 150px; /* Limit width */
+            border-radius: 3px;
+            padding: 1px 4px;
+            font-size: 0.7rem;
+            max-width: 120px;
         }
 
-
         .btn-70s {
-            background-color: #f58700; /* Burnt orange */
+            background-color: #f58700;
             color: #fff;
-            border: 2px solid #d47500; /* Darker orange */
-            border-radius: 6px;
-            padding: 6px 10px; /* Adjusted for smaller text */
-            font-weight: 600;
-            text-transform: uppercase;
-            box-shadow: 0 2px 3px rgba(0,0,0,0.2), 0 1px 1px rgba(255,255,255,0.3) inset;
+            border: 1px solid #d47500;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-weight: bold;
+            line-height: 1;
+            font-size: 0.9rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 1px 1px rgba(255,255,255,0.2) inset;
             transition: all 0.1s ease-in-out;
-            font-size: 0.8rem; /* Slightly smaller font for buttons */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
         }
         .btn-70s:hover {
             background-color: #ff9a1f;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.4) inset;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.3) inset;
         }
         .btn-70s:active {
             background-color: #e07000;
             transform: translateY(1px);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.2) inset;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.1) inset;
         }
         .btn-70s.active {
-            background-color: #5a8a28; /* Olive green for active/on state */
+            background-color: #5a8a28;
             border-color: #4a731f;
         }
         .btn-70s.record.active {
-            background-color: #c00; /* Bright red for recording */
+            background-color: #c00;
             border-color: #a00;
-            animation: pulse 1s infinite;
+            animation: pulse 0.8s infinite;
         }
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.7), 0 2px 3px rgba(0,0,0,0.2); }
-            70% { box-shadow: 0 0 0 10px rgba(204, 0, 0, 0), 0 2px 3px rgba(0,0,0,0.2); }
-            100% { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0), 0 2px 3px rgba(0,0,0,0.2); }
+            0% { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.6), 0 1px 2px rgba(0,0,0,0.2); }
+            70% { box-shadow: 0 0 0 8px rgba(204, 0, 0, 0), 0 1px 2px rgba(0,0,0,0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0), 0 1px 2px rgba(0,0,0,0.2); }
         }
 
-        input[type="range"] { /* General slider style */
+        input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
             width: 100%;
-            height: 10px;
-            background: #706050; /* Darker track background */
+            height: 8px;
+            background: #706050;
             outline: none;
-            border-radius: 5px;
-            margin: 5px 0;
+            border-radius: 4px;
+            margin: 3px 0;
             border: 1px solid #504030;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 12px; /* Slightly slimmer thumb */
-            height: 25px; /* Taller thumb for easier grab */
-            background: #f58700; /* Orange thumb */
-            cursor: pointer;
-            border-radius: 3px;
-            border: 1px solid #d47500;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-        input[type="range"]::-moz-range-thumb {
-            width: 12px;
-            height: 25px;
+            width: 10px;
+            height: 20px;
             background: #f58700;
             cursor: pointer;
-            border-radius: 3px;
+            border-radius: 2px;
             border: 1px solid #d47500;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 10px;
+            height: 20px;
+            background: #f58700;
+            cursor: pointer;
+            border-radius: 2px;
+            border: 1px solid #d47500;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
         }
 
-        /* Piano Styles */
         .piano {
             display: flex;
             justify-content: center;
-            padding: 10px;
-            background-color: #4a3f3f; /* Darker wood for piano base */
-            border-top: 3px solid #2a1f1f; /* Shadow line */
-            border-radius: 5px 5px 0 0;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
-            overflow-x: auto; /* Allow horizontal scrolling for piano keys */
+            padding: 6px; /* Further reduced padding */
+            background-color: #4a3f3f;
+            border-top: 2px solid #2a1f1f;
+            border-radius: 4px 4px 0 0;
+            box-shadow: 0 -1px 3px rgba(0,0,0,0.2);
+            overflow-x: auto;
+            margin-top: 0; /* Remove space between grid and piano */
         }
-        .piano-keys-wrapper { /* Added wrapper for centering keys if space allows */
+        .piano-keys-wrapper {
             display: flex;
-            justify-content: center;
+            justify-content: flex-start; /* Align keys to the left */
         }
         .piano-key {
             border: 1px solid #333;
-            border-radius: 0 0 5px 5px;
+            border-radius: 0 0 4px 4px;
             cursor: pointer;
-            box-shadow: 2px 0 3px rgba(0,0,0,0.3);
+            box-shadow: 1px 0 2px rgba(0,0,0,0.2);
             transition: background-color 0.1s;
-            flex-shrink: 0; /* Prevent keys from shrinking */
+            flex-shrink: 0;
         }
         .piano-key.white {
-            width: 40px;
-            height: 180px;
-            background-color: #f0e6d2; /* Ivory/aged white */
+            width: 36px; /* Slightly narrower */
+            height: 150px; /* Shorter */
+            background-color: #f0e6d2;
             z-index: 1;
         }
         .piano-key.black {
-            width: 25px;
-            height: 110px;
+            width: 22px; /* Slightly narrower */
+            height: 95px; /* Shorter */
             background-color: #333;
             color: white;
-            margin-left: -13px; /* Overlap white keys */
-            margin-right: -12px; /* Overlap white keys */
+            margin-left: -11px; /* Adjusted overlap */
+            margin-right: -11px; /* Adjusted overlap */
             z-index: 2;
         }
         .piano-key:active, .piano-key.pressed {
-            background-color: #f58700; /* Orange when pressed */
+            background-color: #f58700;
         }
         .piano-key.black:active, .piano-key.black.pressed {
-            background-color: #e07000; /* Darker orange for black keys */
+            background-color: #e07000;
         }
 
-        /* Sequencer Grid Styles - Merged View */
         .combined-sequencer-view {
-            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            overflow-y: auto; /* Vertical scroll for tracks */
-            background-color: #504840; /* Dark background for sequencer area */
-            border-radius: 4px;
-            padding: 5px;
+            align-items: flex-start; /* Align tracks to the start (left) */
+            overflow-y: auto;
+            background-color: #504840;
+            border-radius: 3px;
+            padding: 3px;
+            width: min-content; /* Make the view only as wide as its content */
+            margin-left: auto; /* Center the block if it's narrower than parent */
+            margin-right: auto; /* Center the block */
         }
         .track-row {
             display: flex;
-            align-items: center; /* Vertically center content in track row */
-            margin-bottom: 3px; /* Small gap between tracks */
-            background-color: #c5b8a5; /* Light wood for track background */
-            border-radius: 6px;
+            align-items: center;
+            margin-bottom: 2px;
+            background-color: #c5b8a5;
+            border-radius: 4px;
             border: 1px solid #8a7868;
-            height: 28px; /* Compact track height */
+            height: 26px;
         }
-        .track-controls { /* Contains track name, volume, pan etc. */
-            min-width: 130px; /* Ensure enough space for controls */
-            padding: 0 6px; /* Padding inside controls area */
-            text-align: left; /* Align text to left */
-            border-right: 2px solid #8a7868; /* Separator line */
-            background-color: #a09383; /* Slightly darker for control panel */
-            border-radius: 6px 0 0 6px; /* Rounded corners on the left */
+        .track-controls {
+            min-width: 110px;
+            padding: 0 4px;
+            text-align: left;
+            border-right: 1px solid #8a7868;
+            background-color: #a09383;
+            border-radius: 4px 0 0 4px;
             display: flex;
-            flex-direction: row; /* Align items horizontally */
-            align-items: center; /* Center items vertically */
-            justify-content: flex-start; /* Align to the start */
-            gap: 4px; /* Space between controls */
-            height: 100%; /* Fill the track row height */
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 2px;
+            height: 100%;
         }
         .track-controls.selected {
-            outline: 2px solid #f58700; /* Orange outline for selected track */
-            box-shadow: 0 0 8px #f58700;
-            z-index: 1; /* Bring to front */
+            outline: 1px solid #f58700;
+            box-shadow: 0 0 6px #f58700;
+            z-index: 1;
         }
-        .track-controls h3 { /* Track name */
-            font-size: 0.7rem; /* Smaller font for track name */
+        .track-controls h3 {
+            font-size: 0.65rem;
             margin: 0;
-            line-height: 1; /* Compact line height */
+            line-height: 1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            flex-shrink: 1; /* Allow name to shrink if needed */
+            flex-shrink: 1;
             color: #3a2f2f;
         }
-        .track-controls label { /* Hide labels for sliders if not needed */
-            display: none; /* Or style as icons/small text */
-        }
-        .track-controls input[type="range"] { /* Volume/pan faders */
-            width: 45px; /* Short faders */
-            height: 6px; /* Slim faders */
-            margin: 0; /* Remove default margins */
-            flex-shrink: 0; /* Don't shrink faders */
+        .track-controls input[type="range"] {
+            width: 40px;
+            height: 5px;
+            margin: 0;
+            flex-shrink: 0;
         }
         .track-controls input[type="range"]::-webkit-slider-thumb {
-            height: 12px; /* Smaller thumb for track faders */
-            width: 8px;   /* Narrower thumb */
+            height: 10px;
+            width: 7px;
         }
         .track-controls input[type="range"]::-moz-range-thumb {
-            height: 12px;
-            width: 8px;
+            height: 10px;
+            width: 7px;
         }
 
-        .track-steps-container { /* Contains the individual steps */
+        .track-steps-container {
             display: flex;
-            flex-grow: 1;
-            overflow-x: auto; /* Horizontal scroll for steps */
-            padding: 3px; /* Padding around steps */
-            align-items: center; /* Center steps vertically if they are smaller than container */
-            height: 100%; /* Fill track row height */
+            overflow-x: auto;
+            padding: 2px;
+            align-items: center;
+            height: 100%;
+            width: fit-content; /* Ensure container fits steps */
         }
         .step {
-            min-width: 25px; /* Ensure minimum tap target */
-            width: 25px;
-            height: 18px; /* Compact step height */
-            background-color: #7d7064; /* Darker, muted step color */
+            min-width: 22px;
+            width: 22px;
+            height: 16px;
+            background-color: #7d7064;
             border: 1px solid #60554b;
-            margin-right: 1px; /* Tiny gap between steps */
+            margin-right: 1px;
             position: relative;
             border-radius: 2px;
             cursor: pointer;
-            flex-shrink: 0; /* Prevent steps from shrinking */
-            display: flex; /* For centering note indicator content */
-            align-items: center; /* Center vertically */
-            justify-content: center; /* Center horizontally */
-        }
-        .step.active-step { /* Playhead position */
-            background-color: rgba(245, 135, 0, 0.3); /* Semi-transparent orange */
-            border-color: #f58700;
-        }
-        .note-indicator {
-            position: absolute;
-            top: 1px; /* Small margin from step border */
-            left: 1px;
-            right: 1px;
-            bottom: 1px;
-            background-color: #5a8a28; /* Olive green for note on */
-            border-radius: 1px; /* Slightly rounded indicator */
-            pointer-events: none; /* Click through to the step */
-            opacity: 0.8;
-            box-shadow: 0 0 2px rgba(0,0,0,0.4) inset; /* Subtle inner shadow */
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
-        .note-indicator.last-active-note { /* Highlight for recently added/edited note */
-            background-color: #8fbc8f; /* Lighter green, or use border */
-            border: 1px solid #f58700; /* Orange border to make it pop */
+        .step.active-step {
+            background-color: rgba(245, 135, 0, 0.4);
+            border-color: #f58700;
+        }
+        .step.record-head {
+            background-color: rgba(204, 0, 0, 0.3);
+            border-color: #cc0000;
+        }
+        .note-indicator {
+            position: absolute;
+            top: 1px; left: 1px; right: 1px; bottom: 1px;
+            background-color: #5a8a28;
+            border-radius: 1px;
+            pointer-events: none;
+            opacity: 0.8;
+            box-shadow: 0 0 1px rgba(0,0,0,0.3) inset;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .note-indicator.last-active-note {
+            background-color: #8fbc8f;
+            border: 1px solid #f58700;
         }
         .note-pitch-text {
-            font-size: 0.55rem; /* Very small pitch text */
+            font-size: 0.5rem;
             color: #f0f0f0;
             line-height: 1;
             pointer-events: none;
@@ -297,64 +297,53 @@
             white-space: nowrap;
         }
 
-
-        .user-id-display {
-            position: fixed;
-            bottom: 5px;
-            right: 10px;
-            font-size: 0.7rem;
-            color: #a09383;
-            opacity: 0.7;
-        }
         .message-box {
             position: fixed;
-            top: 20px;
+            top: 10px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #e0c00d; /* Mustard yellow for messages */
+            background-color: #e0c00d;
             color: #3a2f2f;
-            padding: 10px 20px;
-            border-radius: 6px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            padding: 8px 15px;
+            border-radius: 4px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.2);
             z-index: 1000;
-            display: none; /* Hidden by default */
+            display: none;
             font-weight: bold;
+            font-size: 0.8rem;
         }
-
-        /* Modals removed, styles can be deleted if not reused */
 
         .midi-select {
             background-color: #f0e6d2;
             color: #3a2f2f;
             border: 1px solid #8a7868;
-            border-radius: 4px;
-            padding: 2px 4px; /* Compact padding */
-            min-width: 120px; /* Ensure readability */
-            font-size: 0.75rem; /* Small font for select */
+            border-radius: 3px;
+            padding: 1px 3px;
+            min-width: 110px;
+            font-size: 0.7rem;
         }
-        header.panel .control-panel label.text-xs { /* Targeting labels for MIDI/BPM */
-            font-size: 0.7rem; /* Make labels slightly smaller */
+        header.panel .control-panel label.text-xs {
+            font-size: 0.65rem;
             margin-right: 0.1rem;
         }
         header.panel .control-panel input[type="number"] {
-            padding: 0.1rem 0.25rem;
-            font-size: 0.75rem;
-            width: 4rem; /* Slightly wider for BPM */
+            padding: 0.05rem 0.2rem;
+            font-size: 0.7rem;
+            width: 3.5rem;
         }
     </style>
 </head>
 <body class="text-sm sm:text-base">
 
-<!-- Header: Title, Transport, Master Volume, Save/Load -->
 <header class="panel">
-    <h1 class="font-brand text-2xl sm:text-3xl text-[#3a2f2f] flex-shrink-0">Groovesynth 70</h1>
-    <div class="control-panel transport-midi flex-grow"> <!-- Transport and MIDI controls -->
-        <button id="playBtn" class="btn-70s">Play</button>
-        <button id="stopBtn" class="btn-70s">Stop</button>
-        <button id="recordBtn" class="btn-70s record">Record</button>
+    <h1 class="font-brand text-xl sm:text-2xl text-[#3a2f2f] flex-shrink-0">Groovesynth 70</h1>
+    <div class="control-panel transport-midi flex-grow">
+        <button id="playBtn" class="btn-70s" title="Play/Pause">&#x25B6;</button>
+        <button id="stopBtn" class="btn-70s" title="Stop">&#x25A0;</button>
+        <button id="recordBtn" class="btn-70s record" title="Record">&#x25CF;</button>
         <div class="flex items-center">
             <label for="tempo" class="text-xs text-[#3a2f2f] font-semibold">BPM:</label>
-            <input type="number" id="tempo" value="120" min="40" max="280" class="w-16 p-1 rounded bg-[#f0e6d2] text-[#3a2f2f] border border-[#8a7868] text-center">
+            <input type="number" id="tempo" value="120" min="40" max="280" class="w-14 p-0.5 rounded bg-[#f0e6d2] text-[#3a2f2f] border border-[#8a7868] text-center">
         </div>
         <div class="flex items-center">
             <label for="midiInputSelect" class="text-xs text-[#3a2f2f] font-semibold">In:</label>
@@ -369,55 +358,31 @@
             </select>
         </div>
     </div>
-    <div class="control-panel"> <!-- Project Naming -->
+    <div class="control-panel">
         <label for="currentProjectNameInput" class="text-xs text-[#3a2f2f] font-semibold" style="display: inline-block !important;">Name:</label>
-        <input type="text" id="currentProjectNameInput" placeholder="Project Name" class="project-name-input">
+        <input type="text" id="currentProjectNameInput" placeholder="Local Groove" class="project-name-input">
     </div>
-    <div class="control-panel"> <!-- Save/Load Project -->
-        <button id="saveProjectBtn" class="btn-70s text-xs">Save</button>
-        <input type="text" id="projectIdToLoadInput" placeholder="Project ID to Load" class="project-id-input">
-        <button id="loadProjectBtn" class="btn-70s text-xs">Load ID</button>
-    </div>
-    <div class="control-panel"> <!-- Master Volume -->
+    <div class="control-panel">
         <label for="masterVolume" class="text-xs text-[#3a2f2f] font-semibold" style="display: inline-block !important;">Master:</label>
-        <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="0.8" class="w-20">
+        <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="0.8" class="w-16">
     </div>
 </header>
 
-<!-- Main Sequencer Area -->
-<main class="flex-grow m-2 sm:m-4 panel p-1 sm:p-2">
+<main class="flex-grow mx-1 sm:mx-2 mb-0 panel p-0.5 sm:p-1">
     <div id="combinedSequencerView" class="combined-sequencer-view">
-        <!-- Track rows will be generated here -->
     </div>
 </main>
 
-<!-- Footer Piano Area -->
 <footer class="piano" id="pianoContainer">
     <div id="pianoKeysWrapper" class="piano-keys-wrapper">
-        <!-- Piano keys will be generated here -->
     </div>
 </footer>
 
-<!-- Floating Message Box -->
 <div id="messageBox" class="message-box">Sample Message</div>
-<div id="userIdDisplay" class="user-id-display"></div>
-
-<!-- Modals removed -->
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, where, getDocs, Timestamp, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    const appId = 'groovesynth-70s-local-no-fb';
 
-    // Firebase configuration
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID" };
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'groovesynth-70s-local';
-
-    let app, db, auth;
-    let userId = null;
-    let isAuthReady = false;
-
-    // Sequencer and Audio Constants
     const NUM_CHANNELS = 16;
     const STEPS_PER_BEAT = 4;
     const BEATS_PER_MEASURE = 4;
@@ -427,23 +392,21 @@
     let channelAudioNodes = [];
     let selectedChannelIndex = 0;
     let isRecording = false;
-    let currentStep = 0;
+    let currentPlaybackStep = 0;
+    let manualRecordStep = 0;
     let playheadMarker;
     let currentMIDIInput = null;
     let currentMIDIOutput = null;
     let lastActiveNoteId = null;
     let midiAccessGlobal = null;
 
-    // Main project data structure
     const projectData = {
-        projectId: null,
-        projectName: "Untitled Groove",
+        projectName: "Local Groove",
         tempo: 120,
         masterVolume: 0.8,
         channels: []
     };
 
-    // DOM Element References
     const playBtn = document.getElementById('playBtn');
     const stopBtn = document.getElementById('stopBtn');
     const recordBtn = document.getElementById('recordBtn');
@@ -453,19 +416,14 @@
     const pianoContainer = document.getElementById('pianoContainer');
     const pianoKeysWrapper = document.getElementById('pianoKeysWrapper');
     const messageBox = document.getElementById('messageBox');
-    const userIdDisplay = document.getElementById('userIdDisplay');
     const midiInputSelect = document.getElementById('midiInputSelect');
     const midiOutputSelect = document.getElementById('midiOutputSelect');
-
-    // New/modified DOM elements for save/load without modals
     const currentProjectNameInput = document.getElementById('currentProjectNameInput');
-    const saveProjectBtn = document.getElementById('saveProjectBtn');
-    const projectIdToLoadInput = document.getElementById('projectIdToLoadInput');
-    const loadProjectBtn = document.getElementById('loadProjectBtn');
 
+    const PLAY_SYMBOL = '\u25B6';
+    const PAUSE_SYMBOL = '\u23F8';
 
-    // Utility to show a temporary message to the user
-    function showMessage(message, duration = 3000) {
+    function showMessage(message, duration = 2500) {
         messageBox.textContent = message;
         messageBox.style.display = 'block';
         setTimeout(() => {
@@ -473,82 +431,118 @@
         }, duration);
     }
 
-    // Generates a simple unique ID for notes
     function generateId() {
         return Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
     }
 
-    // --- Piano Keyboard ---
     const notesSharpFlat = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const notesWhite = ["C", "D", "E", "F", "G", "A", "B"]; // Helper for piano generation
     const OCTAVE_START_DEFAULT = 3;
-    const WHITE_KEY_WIDTH_APPROX = 40;
-    const MIN_OCTAVES = 1;
-    const MAX_OCTAVES = 5;
+    const WHITE_KEY_WIDTH_CSS = 36;
+    const MIN_OCTAVES_DISPLAY = 1;
+    const MAX_OCTAVES_DISPLAY = 7;
 
-    function createPiano() {
-        pianoKeysWrapper.innerHTML = '';
-        const containerWidth = pianoContainer.offsetWidth - 20;
-        const keysPerOctave = 7;
-        const approxOctaveWidth = keysPerOctave * WHITE_KEY_WIDTH_APPROX;
-        let numOctavesToDisplay = Math.floor(containerWidth / approxOctaveWidth);
-        numOctavesToDisplay = Math.max(MIN_OCTAVES, Math.min(numOctavesToDisplay, MAX_OCTAVES));
-        let octaveStart = OCTAVE_START_DEFAULT;
-        if (numOctavesToDisplay > 2) {
-            octaveStart = Math.max(1, OCTAVE_START_DEFAULT - Math.floor((numOctavesToDisplay - 2) / 2) );
-        }
-        for (let o = 0; o < numOctavesToDisplay; o++) {
-            notesSharpFlat.forEach((noteName, i) => {
-                const key = document.createElement('div');
-                const isBlack = noteName.includes('#');
-                key.classList.add('piano-key', isBlack ? 'black' : 'white');
-                const currentOctave = octaveStart + o;
-                if (currentOctave < 0 || currentOctave > 8) return;
-                const fullNoteName = noteName + currentOctave;
-                key.dataset.note = fullNoteName;
-                key.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    playPianoKey(fullNoteName, key);
-                });
-                pianoKeysWrapper.appendChild(key);
+    function updateVisualPlayhead(stepIndex, isRecordHead = false) {
+        document.querySelectorAll('.step.active-step').forEach(s => s.classList.remove('active-step'));
+        document.querySelectorAll('.step.record-head').forEach(s => s.classList.remove('record-head'));
+
+        if (stepIndex >= 0 && stepIndex < TOTAL_STEPS) {
+            document.querySelectorAll(`.track-steps-container .step[data-step-index="${stepIndex}"]`).forEach(s => {
+                s.classList.add(isRecordHead ? 'record-head' : 'active-step');
             });
         }
     }
 
+    function createPiano() {
+        pianoKeysWrapper.innerHTML = '';
+        const containerWidth = pianoContainer.clientWidth - 12;
+
+        const whiteKeyWidth = WHITE_KEY_WIDTH_CSS;
+        const maxWhiteKeysThatCanFit = Math.floor(containerWidth / whiteKeyWidth);
+
+        let numOctavesToDisplay = Math.floor(maxWhiteKeysThatCanFit / 7); // 7 white keys per octave
+        numOctavesToDisplay = Math.max(MIN_OCTAVES_DISPLAY, Math.min(numOctavesToDisplay, MAX_OCTAVES_DISPLAY));
+
+        let octaveStart = OCTAVE_START_DEFAULT;
+        if (numOctavesToDisplay < 3 && numOctavesToDisplay > 0) { // Try to center for 1 or 2 octaves
+            octaveStart = Math.max(0, OCTAVE_START_DEFAULT - Math.floor((3 - numOctavesToDisplay)));
+        } else if (numOctavesToDisplay >= 3) {
+            octaveStart = Math.max(0, OCTAVE_START_DEFAULT - Math.floor((numOctavesToDisplay - 2)/2) );
+        }
+
+        let keysRendered = 0;
+        for (let o = 0; o < MAX_OCTAVES_DISPLAY + 2; o++) { // Iterate a bit beyond max to fill width
+            const currentOctaveReal = octaveStart + o;
+            if (currentOctaveReal > 8) break; // Max MIDI octave
+
+            for (const noteName of notesSharpFlat) {
+                const isBlack = noteName.includes('#');
+                const whiteKeyEquivalentWidth = isBlack ? 0 : whiteKeyWidth; // Black keys don't consume main width in this layout
+
+                if (pianoKeysWrapper.scrollWidth + (isBlack ? 0 : whiteKeyWidth) <= containerWidth + whiteKeyWidth/2) { // Allow slight overflow for last black key
+                    const key = document.createElement('div');
+                    key.classList.add('piano-key', isBlack ? 'black' : 'white');
+                    const fullNoteName = noteName + currentOctaveReal;
+                    key.dataset.note = fullNoteName;
+                    key.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        playPianoKey(fullNoteName, key);
+                    });
+                    pianoKeysWrapper.appendChild(key);
+                    keysRendered++;
+                } else if (!isBlack) { // If a white key can't fit, stop this octave and subsequent ones
+                    return; // Exit createPiano
+                }
+            }
+            if (pianoKeysWrapper.scrollWidth >= containerWidth) break;
+        }
+    }
+
     async function playPianoKey(note, keyElement, velocity = 1) {
-        if (!isAuthReady || Tone.context.state !== 'running') {
+        if (Tone.context.state !== 'running') {
             await Tone.start();
             if (Tone.context.state !== 'running') {
-                showMessage("Audio context not ready. Click again or refresh.", 5000);
+                showMessage("Audio context not ready.", 4000);
                 return;
             }
         }
-        if (selectedChannelIndex < 0 || selectedChannelIndex >= channelAudioNodes.length || !channelAudioNodes[selectedChannelIndex] || !channelAudioNodes[selectedChannelIndex].synth) {
-            console.error("Synth not ready for selected channel:", selectedChannelIndex, channelAudioNodes);
+        if (selectedChannelIndex >= 0 && selectedChannelIndex < channelAudioNodes.length && channelAudioNodes[selectedChannelIndex] && channelAudioNodes[selectedChannelIndex].synth) {
+            channelAudioNodes[selectedChannelIndex].synth.triggerAttack(note, Tone.now(), velocity);
+        } else {
+            console.error("Synth not ready for selected channel:", selectedChannelIndex);
             return;
         }
-        channelAudioNodes[selectedChannelIndex].synth.triggerAttack(note, Tone.now(), velocity);
+
         if (keyElement) keyElement.classList.add('pressed');
 
         if (isRecording && projectData.channels[selectedChannelIndex]) {
-            if (Tone.Transport.state !== "started") {
-                Tone.Transport.start();
-                playBtn.textContent = "Pause";
-                playBtn.classList.add("active");
-            }
-            const time = Tone.Transport.ticks;
+            const stepTicks = Tone.Time('16n').toTicks();
+            const quantizedTimeTicks = manualRecordStep * stepTicks;
             const newNoteId = generateId();
             const newNote = {
-                id: newNoteId, time: time, pitch: note,
+                id: newNoteId, time: quantizedTimeTicks, pitch: note,
                 duration: '8n', velocity: velocity
             };
-            projectData.channels[selectedChannelIndex].notes.push(newNote);
+            const notesArray = projectData.channels[selectedChannelIndex].notes;
+            const existingNoteIndex = notesArray.findIndex(n => n.time === quantizedTimeTicks);
+            if (existingNoteIndex > -1) {
+                notesArray.splice(existingNoteIndex, 1, newNote);
+            } else {
+                notesArray.push(newNote);
+            }
             lastActiveNoteId = newNoteId;
             updateSequencerGridVisuals();
+            updateVisualPlayhead(manualRecordStep, true);
+            manualRecordStep = (manualRecordStep + 1) % TOTAL_STEPS;
+            updateVisualPlayhead(manualRecordStep, true);
+            if (keyElement) {
+                setTimeout(() => keyElement.classList.remove('pressed'), 100);
+            }
         }
     }
 
     function releasePianoKey(note, keyElement) {
-        if (!isAuthReady || Tone.context.state !== 'running') return;
+        if (Tone.context.state !== 'running') return;
         const targetSynth = channelAudioNodes[selectedChannelIndex]?.synth;
         if (!targetSynth) return;
         targetSynth.triggerRelease(note, Tone.now() + 0.05);
@@ -571,7 +565,6 @@
         });
     });
 
-    // --- Sequencer Channels & Grid ---
     function createChannels() {
         combinedSequencerView.innerHTML = '';
         projectData.channels = [];
@@ -580,7 +573,6 @@
             if (nodes.panner) nodes.panner.dispose();
         });
         channelAudioNodes = [];
-
         for (let i = 0; i < NUM_CHANNELS; i++) {
             const channelData = {
                 id: `ch${i}`, name: `MIDI Ch ${i + 1}`, volume: 0.8, pan: 0,
@@ -588,26 +580,21 @@
                 notes: [],
             };
             projectData.channels.push(channelData);
-
             const synth = new Tone[channelData.instrument.type](channelData.instrument.options);
             const panner = new Tone.Panner(channelData.pan).toDestination();
             synth.connect(panner);
             channelAudioNodes.push({ synth, panner });
             synth.volume.value = Tone.gainToDb(channelData.volume);
-
             const trackRowDiv = document.createElement('div');
             trackRowDiv.classList.add('track-row');
             trackRowDiv.dataset.channelIndex = i;
-
             const trackControlsDiv = document.createElement('div');
             trackControlsDiv.classList.add('track-controls');
             if (i === selectedChannelIndex) trackControlsDiv.classList.add('selected');
-
             const nameLabel = document.createElement('h3');
-            nameLabel.classList.add('text-sm', 'font-semibold', 'truncate');
+            nameLabel.classList.add('truncate');
             nameLabel.textContent = channelData.name;
             trackControlsDiv.appendChild(nameLabel);
-
             const volumeFader = document.createElement('input');
             volumeFader.type = 'range';
             volumeFader.min = 0; volumeFader.max = 1; volumeFader.step = 0.01; volumeFader.value = channelData.volume;
@@ -621,7 +608,6 @@
             trackControlsDiv.appendChild(volumeFader);
             trackControlsDiv.addEventListener('click', () => selectChannel(i));
             trackRowDiv.appendChild(trackControlsDiv);
-
             const trackStepsContainerDiv = document.createElement('div');
             trackStepsContainerDiv.classList.add('track-steps-container');
             for (let j = 0; j < TOTAL_STEPS; j++) {
@@ -642,12 +628,25 @@
         document.querySelectorAll('.track-controls').forEach((tc, i) => {
             tc.classList.toggle('selected', i === index);
         });
-        console.log(`UI Selected Channel: ${index + 1}`);
+        // When a channel is selected, set the manualRecordStep to 0 for that channel,
+        // or to where the playhead is if playing.
+        if (isRecording) {
+            manualRecordStep = 0; // Or consider aligning with currentPlaybackStep if desired behavior
+            updateVisualPlayhead(manualRecordStep, true);
+        }
+        console.log(`Switched to Channel: ${index + 1}`);
     }
 
     function handleStepClick(channelIndex, stepIndex) {
-        const channelData = projectData.channels[channelIndex];
+        // If a different track row is clicked to select it, that action is handled by selectChannel.
+        // This function handles clicks directly on a step in the currently selected channel.
+        if (channelIndex !== selectedChannelIndex) {
+            selectChannel(channelIndex); // Ensure the clicked channel becomes the selected one
+        }
+
+        const channelData = projectData.channels[selectedChannelIndex]; // Use selectedChannelIndex
         if (!channelData) return;
+
         const noteTimeInTicks = stepIndex * Tone.Time('16n').toTicks();
         const existingNoteIndex = channelData.notes.findIndex(note => note.time === noteTimeInTicks);
 
@@ -663,9 +662,17 @@
             };
             channelData.notes.push(newNote);
             lastActiveNoteId = newNoteId;
+            if (!isRecording && channelAudioNodes[selectedChannelIndex] && channelAudioNodes[selectedChannelIndex].synth) {
+                channelAudioNodes[selectedChannelIndex].synth.triggerAttackRelease(defaultPitch, '16n', Tone.now());
+            }
         }
         updateSequencerGridVisuals();
-        if (Tone.Transport.state === 'started') setupTransport();
+
+        // Always advance manualRecordStep after a grid click, whether adding or removing.
+        manualRecordStep = (stepIndex + 1) % TOTAL_STEPS;
+        updateVisualPlayhead(manualRecordStep, isRecording);
+
+        if (Tone.Transport.state === 'started' && !isRecording) setupTransport();
     }
 
     function updateSequencerGridVisuals() {
@@ -674,12 +681,10 @@
             if (!channelData) return;
             const stepsContainer = trackRowElement.querySelector('.track-steps-container');
             if (!stepsContainer) return;
-
             stepsContainer.querySelectorAll('.step').forEach((stepDiv, stIndex) => {
                 stepDiv.innerHTML = '';
                 const stepStartTimeTicks = stIndex * Tone.Time('16n').toTicks();
                 const noteAtThisStepStart = channelData.notes.find(note => note.time === stepStartTimeTicks);
-
                 if (noteAtThisStepStart) {
                     const noteIndicator = document.createElement('div');
                     noteIndicator.classList.add('note-indicator');
@@ -696,7 +701,6 @@
         });
     }
 
-    // --- Transport & Playback ---
     function setupTransport() {
         Tone.Transport.bpm.value = parseInt(tempoInput.value);
         Tone.Transport.timeSignature = [BEATS_PER_MEASURE, STEPS_PER_BEAT];
@@ -704,51 +708,38 @@
         Tone.Transport.loopStart = 0;
         Tone.Transport.loopEnd = `${NUM_MEASURES}m`;
         Tone.Transport.cancel();
-
         projectData.channels.forEach((channelData, chIndex) => {
             const audioNodes = channelAudioNodes[chIndex];
             if (!channelData.notes || channelData.notes.length === 0 || !audioNodes || !audioNodes.synth) return;
             channelData.notes.forEach(note => {
                 const noteTimeInSeconds = Tone.Time(note.time, "i").toSeconds();
-                const durationInSeconds = Tone.Time(note.duration).toSeconds();
-                const midiNoteNumber = Tone.Frequency(note.pitch).toMidi();
-                const midiVelocity = Math.round(note.velocity * 127);
-
                 Tone.Transport.schedule(time => {
                     if (channelAudioNodes[chIndex] && channelAudioNodes[chIndex].synth) {
                         channelAudioNodes[chIndex].synth.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
                     }
                     if (currentMIDIOutput) {
+                        const midiNoteNumber = Tone.Frequency(note.pitch).toMidi();
+                        const midiVelocity = Math.round(note.velocity * 127);
                         const midiChannelByte = 0x90 | chIndex;
                         const delayInSeconds = time - Tone.context.currentTime;
                         const midiTimestamp = performance.now() + (delayInSeconds > 0 ? delayInSeconds * 1000 : 0);
                         currentMIDIOutput.send([midiChannelByte, midiNoteNumber, midiVelocity], midiTimestamp);
+                        const durationInSeconds = Tone.Time(note.duration).toSeconds();
+                        currentMIDIOutput.send([0x80 | chIndex, midiNoteNumber, 0], midiTimestamp + durationInSeconds * 1000 - 10);
                     }
                 }, noteTimeInSeconds);
-
-                if (currentMIDIOutput) {
-                    const noteOffTimeContext = noteTimeInSeconds + durationInSeconds;
-                    Tone.Transport.schedule(time => {
-                        const midiChannelByte = 0x80 | chIndex;
-                        const delayInSeconds = time - Tone.context.currentTime;
-                        const midiTimestamp = performance.now() + (delayInSeconds > 0 ? delayInSeconds * 1000 : 0);
-                        currentMIDIOutput.send([midiChannelByte, midiNoteNumber, 0], midiTimestamp);
-                    }, noteOffTimeContext - 0.01);
-                }
             });
         });
-
         if(playheadMarker) playheadMarker.dispose();
         playheadMarker = Tone.Transport.scheduleRepeat(time => {
             Tone.Draw.schedule(() => {
                 const currentTransportTicks = Tone.Transport.ticks;
                 const totalLoopTicks = Tone.Time(Tone.Transport.loopEnd).toTicks();
                 const stepTicks = Tone.Time('16n').toTicks();
-                currentStep = Math.floor((currentTransportTicks % totalLoopTicks) / stepTicks);
-                document.querySelectorAll('.step.active-step').forEach(s => s.classList.remove('active-step'));
-                document.querySelectorAll('.track-steps-container .step').forEach(s => {
-                    if (parseInt(s.dataset.stepIndex) === currentStep) s.classList.add('active-step');
-                });
+                currentPlaybackStep = Math.floor((currentTransportTicks % totalLoopTicks) / stepTicks);
+                if (!isRecording) {
+                    updateVisualPlayhead(currentPlaybackStep, false);
+                }
             }, time);
         }, "16n");
     }
@@ -758,25 +749,47 @@
             await Tone.start();
             showMessage("Audio context started!");
         }
+
+        if (isRecording) {
+            isRecording = false;
+            recordBtn.classList.remove('active');
+            updateVisualPlayhead(manualRecordStep, false);
+            showMessage("Recording stopped. Press Play to hear sequence.", 3000);
+            playBtn.innerHTML = PLAY_SYMBOL;
+            playBtn.classList.remove("active");
+            setupTransport();
+            return;
+        }
+
         if (Tone.Transport.state === 'started') {
             Tone.Transport.pause();
-            playBtn.textContent = "Play";
+            playBtn.innerHTML = PLAY_SYMBOL;
             playBtn.classList.remove("active");
+        } else if (Tone.Transport.state === 'paused') {
+            Tone.Transport.start();
+            playBtn.innerHTML = PAUSE_SYMBOL;
+            playBtn.classList.add("active");
         } else {
             setupTransport();
             Tone.Transport.start();
-            playBtn.textContent = "Pause";
+            playBtn.innerHTML = PAUSE_SYMBOL;
             playBtn.classList.add("active");
         }
     });
 
     stopBtn.addEventListener('click', () => {
-        Tone.Transport.stop();
+        if (Tone.Transport.state === 'started' || Tone.Transport.state === 'paused') {
+            Tone.Transport.stop();
+        }
+        if(isRecording){
+            isRecording = false;
+            recordBtn.classList.remove('active');
+        }
         Tone.Transport.position = 0;
-        currentStep = 0;
-        document.querySelectorAll('.step.active-step').forEach(s => s.classList.remove('active-step'));
-        document.querySelectorAll('.track-steps-container .step[data-step-index="0"]').forEach(s => s.classList.add('active-step'));
-        playBtn.textContent = "Play";
+        currentPlaybackStep = 0;
+        manualRecordStep = 0;
+        updateVisualPlayhead(0, false);
+        playBtn.innerHTML = PLAY_SYMBOL;
         playBtn.classList.remove("active");
         updateSequencerGridVisuals();
     });
@@ -785,10 +798,24 @@
         isRecording = !isRecording;
         recordBtn.classList.toggle('active', isRecording);
         if (isRecording) {
-            showMessage("Recording armed! Select a channel and play/use MIDI.", 3000);
+            if (Tone.Transport.state === 'started' || Tone.Transport.state === 'paused') {
+                Tone.Transport.stop();
+                Tone.Transport.position = 0;
+                currentPlaybackStep = 0;
+                playBtn.innerHTML = PLAY_SYMBOL;
+                playBtn.classList.remove("active");
+            }
+            // When arming record, set record step to 0 OR to current playback step if preferred
+            manualRecordStep = currentPlaybackStep; // Start recording where playback head is
+            updateVisualPlayhead(manualRecordStep, true);
+            showMessage("Recording armed. Play notes to add.", 3000);
         } else {
-            if (Tone.Transport.state === "started") setupTransport();
+            if (Tone.Transport.state !== 'started') {
+                updateVisualPlayhead(currentPlaybackStep, false);
+            }
+            setupTransport();
             updateSequencerGridVisuals();
+            showMessage("Recording disarmed.", 2000);
         }
     });
 
@@ -802,50 +829,96 @@
         Tone.Destination.volume.value = Tone.gainToDb(projectData.masterVolume);
     });
 
-    // --- MIDI Handling ---
     async function handleMIDIMessage(event) {
         if (Tone.context.state !== 'running') {
             await Tone.start();
-            if (Tone.context.state !== 'running') {
-                console.warn("Audio context not started on MIDI message.");
-                return;
-            }
+            if (Tone.context.state !== 'running') { console.warn("Audio context not started."); return; }
         }
         const command = event.data[0] >> 4;
         const midiChannelFromDevice = (event.data[0] & 0xf);
         const noteNumber = event.data[1];
         const velocity = event.data[2];
-        const targetSequencerChannelIndex = midiChannelFromDevice;
+
+        // If MIDI message is for a specific channel, select that channel
+        if (midiChannelFromDevice !== selectedChannelIndex) {
+            selectChannel(midiChannelFromDevice);
+        }
+        // Now selectedChannelIndex is the target for the note
+
         const pitchName = Tone.Frequency(noteNumber, "midi").toNote();
         const scaledVelocity = velocity / 127;
 
-        if (targetSequencerChannelIndex >= 0 && targetSequencerChannelIndex < NUM_CHANNELS) {
+        if (selectedChannelIndex >= 0 && selectedChannelIndex < NUM_CHANNELS) { // Re-check with updated selectedChannelIndex
+            const keyElement = pianoKeysWrapper.querySelector(`.piano-key[data-note="${pitchName}"]`);
             if (command === 9 && velocity > 0) {
-                if (channelAudioNodes[targetSequencerChannelIndex] && channelAudioNodes[targetSequencerChannelIndex].synth) {
-                    channelAudioNodes[targetSequencerChannelIndex].synth.triggerAttack(pitchName, Tone.now(), scaledVelocity);
+                if (channelAudioNodes[selectedChannelIndex] && channelAudioNodes[selectedChannelIndex].synth) {
+                    channelAudioNodes[selectedChannelIndex].synth.triggerAttack(pitchName, Tone.now(), scaledVelocity);
                 }
-                if (isRecording && projectData.channels[targetSequencerChannelIndex]) {
-                    if (Tone.Transport.state !== "started") {
-                        Tone.Transport.start();
-                        playBtn.textContent = "Pause"; playBtn.classList.add("active");
-                    }
-                    const time = Tone.Transport.ticks;
+                if(keyElement) keyElement.classList.add('pressed');
+                if (isRecording && projectData.channels[selectedChannelIndex]) {
+                    const stepTicks = Tone.Time('16n').toTicks();
+                    const quantizedTimeTicks = manualRecordStep * stepTicks;
                     const newNoteId = generateId();
                     const newNote = {
-                        id: newNoteId, time: time, pitch: pitchName,
+                        id: newNoteId, time: quantizedTimeTicks, pitch: pitchName,
                         duration: '8n', velocity: scaledVelocity
                     };
-                    projectData.channels[targetSequencerChannelIndex].notes.push(newNote);
+                    const notesArray = projectData.channels[selectedChannelIndex].notes;
+                    const existingNoteIndex = notesArray.findIndex(n => n.time === quantizedTimeTicks);
+                    if (existingNoteIndex > -1) {
+                        notesArray.splice(existingNoteIndex, 1, newNote);
+                    } else {
+                        notesArray.push(newNote);
+                    }
                     lastActiveNoteId = newNoteId;
                     updateSequencerGridVisuals();
+                    updateVisualPlayhead(manualRecordStep, true);
+                    manualRecordStep = (manualRecordStep + 1) % TOTAL_STEPS;
+                    updateVisualPlayhead(manualRecordStep, true);
+                    if(keyElement) setTimeout(() => keyElement.classList.remove('pressed'), 100);
                 }
             }
             else if (command === 8 || (command === 9 && velocity === 0)) {
-                if (channelAudioNodes[targetSequencerChannelIndex] && channelAudioNodes[targetSequencerChannelIndex].synth) {
-                    channelAudioNodes[targetSequencerChannelIndex].synth.triggerRelease(pitchName, Tone.now());
+                if (channelAudioNodes[selectedChannelIndex] && channelAudioNodes[selectedChannelIndex].synth) {
+                    channelAudioNodes[selectedChannelIndex].synth.triggerRelease(pitchName, Tone.now());
                 }
+                if(keyElement) keyElement.classList.remove('pressed');
             }
         }
+    }
+
+    function refreshMIDIDeviceSelectors(midiAccess) {
+        const previouslySelectedInputId = currentMIDIInput ? currentMIDIInput.id : null;
+        const previouslySelectedOutputId = currentMIDIOutput ? currentMIDIOutput.id : null;
+        midiInputSelect.innerHTML = '<option value="">No MIDI Input</option>';
+        let inputFoundAndRestored = false;
+        midiAccess.inputs.forEach(input => {
+            const option = document.createElement('option');
+            option.value = input.id; option.textContent = input.name;
+            midiInputSelect.appendChild(option);
+            if (input.id === previouslySelectedInputId) {
+                midiInputSelect.value = input.id; inputFoundAndRestored = true;
+            }
+        });
+        if (!inputFoundAndRestored && midiAccess.inputs.size > 0) {
+            midiInputSelect.value = midiAccess.inputs.values().next().value.id;
+        }
+        setMIDIInputDevice(midiInputSelect.value, midiAccess);
+
+        midiOutputSelect.innerHTML = '<option value="">No MIDI Output</option>';
+        let outputFoundAndRestored = false;
+        midiAccess.outputs.forEach(output => {
+            const option = document.createElement('option');
+            option.value = output.id; option.textContent = output.name;
+            midiOutputSelect.appendChild(option);
+            if (output.id === previouslySelectedOutputId) {
+                midiOutputSelect.value = output.id; outputFoundAndRestored = true;
+            }
+        });
+        if (!outputFoundAndRestored && midiAccess.outputs.size > 0) {
+            midiOutputSelect.value = midiAccess.outputs.values().next().value.id;
+        }
+        setMIDIOutputDevice(midiOutputSelect.value, midiAccess);
     }
 
     async function initMIDI() {
@@ -853,238 +926,78 @@
             try {
                 midiAccessGlobal = await navigator.requestMIDIAccess({ sysex: false });
                 console.log("MIDI Access Granted");
-                const inputs = midiAccessGlobal.inputs.values();
-                midiInputSelect.innerHTML = '<option value="">No MIDI Input</option>';
-                let firstInput = null;
-                for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
-                    const option = document.createElement('option');
-                    option.value = input.value.id; option.textContent = input.value.name;
-                    midiInputSelect.appendChild(option);
-                    if (!firstInput) firstInput = input.value;
+                refreshMIDIDeviceSelectors(midiAccessGlobal);
+                if (midiAccessGlobal.inputs.size === 0 && !currentMIDIInput) {
+                    showMessage("No MIDI input devices found.", 3000);
                 }
-                if (firstInput) {
-                    midiInputSelect.value = firstInput.id;
-                    setMIDIInputDevice(firstInput.id, midiAccessGlobal);
-                } else { showMessage("No MIDI input devices found.", 3000); }
-
-                const outputs = midiAccessGlobal.outputs.values();
-                midiOutputSelect.innerHTML = '<option value="">No MIDI Output</option>';
-                let firstOutput = null;
-                for (let output = outputs.next(); output && !output.done; output = outputs.next()) {
-                    const option = document.createElement('option');
-                    option.value = output.value.id; option.textContent = output.value.name;
-                    midiOutputSelect.appendChild(option);
-                    if(!firstOutput) firstOutput = output.value;
+                if (midiAccessGlobal.outputs.size === 0 && !currentMIDIOutput) {
+                    showMessage("No MIDI output devices found.", 3000);
                 }
-                if(firstOutput) {
-                    midiOutputSelect.value = firstOutput.id;
-                    setMIDIOutputDevice(firstOutput.id, midiAccessGlobal);
-                } else { showMessage("No MIDI output devices found.", 3000); }
-
                 midiInputSelect.addEventListener('change', (event) => setMIDIInputDevice(event.target.value, midiAccessGlobal));
                 midiOutputSelect.addEventListener('change', (event) => setMIDIOutputDevice(event.target.value, midiAccessGlobal));
                 midiAccessGlobal.onstatechange = (event) => {
-                    console.log("MIDI state changed:", event.port.name, event.port.state);
-                    showMessage(`MIDI device ${event.port.name} ${event.port.state}. Re-initializing MIDI...`, 3000);
-                    initMIDI();
+                    console.log(`MIDI state change: ${event.port.name}, Type: ${event.port.type}, State: ${event.port.state}`);
+                    showMessage(`MIDI Device: ${event.port.name} ${event.port.state}. Lists refreshed.`, 3000);
+                    refreshMIDIDeviceSelectors(midiAccessGlobal);
                 };
             } catch (error) {
                 console.error("Could not access MIDI devices:", error);
-                showMessage("MIDI Access Denied or Error: " + error.message, 5000);
+                showMessage("MIDI Access Denied/Error. Check browser permissions policy for MIDI.", 6000);
             }
         } else {
             console.warn("Web MIDI API not supported.");
-            showMessage("Web MIDI API not supported in this browser.", 5000);
-            midiInputSelect.innerHTML = '<option value="">MIDI Not Supported</option>'; midiInputSelect.disabled = true;
-            midiOutputSelect.innerHTML = '<option value="">MIDI Not Supported</option>'; midiOutputSelect.disabled = true;
+            showMessage("Web MIDI API not supported.", 4000);
+            midiInputSelect.innerHTML = '<option value="">MIDI N/A</option>'; midiInputSelect.disabled = true;
+            midiOutputSelect.innerHTML = '<option value="">MIDI N/A</option>'; midiOutputSelect.disabled = true;
         }
     }
 
     function setMIDIInputDevice(deviceId, midiAccess) {
+        if (currentMIDIInput && currentMIDIInput.id === deviceId && deviceId !== "") return;
         if (currentMIDIInput) {
             currentMIDIInput.onmidimessage = null;
             console.log(`Stopped listening to ${currentMIDIInput.name}`);
         }
-        if (!deviceId) { currentMIDIInput = null; console.log("MIDI input deselected."); return; }
-        currentMIDIInput = midiAccess.inputs.get(deviceId);
-        if (currentMIDIInput) {
-            currentMIDIInput.onmidimessage = handleMIDIMessage;
+        if (!deviceId) {
+            if (currentMIDIInput) showMessage("MIDI Input deselected.", 2000);
+            currentMIDIInput = null; console.log("MIDI input deselected.");
+            midiInputSelect.value = ""; return;
+        }
+        const newDevice = midiAccess.inputs.get(deviceId);
+        if (newDevice) {
+            currentMIDIInput = newDevice; currentMIDIInput.onmidimessage = handleMIDIMessage;
             console.log(`Listening to MIDI Input: ${currentMIDIInput.name}`);
             showMessage(`MIDI Input: ${currentMIDIInput.name}`, 2000);
-        } else { console.error(`Could not find MIDI input device with ID: ${deviceId}`);}
+        } else {
+            console.error(`Could not find MIDI input: ${deviceId}`);
+            if (currentMIDIInput) showMessage("Selected MIDI Input gone.", 3000);
+            currentMIDIInput = null; midiInputSelect.value = "";
+        }
     }
 
     function setMIDIOutputDevice(deviceId, midiAccess) {
-        if (!deviceId) { currentMIDIOutput = null; console.log("MIDI output deselected."); return; }
-        currentMIDIOutput = midiAccess.outputs.get(deviceId);
-        if (currentMIDIOutput) {
+        if (currentMIDIOutput && currentMIDIOutput.id === deviceId && deviceId !== "") return;
+        if (!deviceId) {
+            if (currentMIDIOutput) showMessage("MIDI Output deselected.", 2000);
+            currentMIDIOutput = null; console.log("MIDI output deselected.");
+            midiOutputSelect.value = ""; return;
+        }
+        const newDevice = midiAccess.outputs.get(deviceId);
+        if (newDevice) {
+            currentMIDIOutput = newDevice;
             console.log(`Selected MIDI Output: ${currentMIDIOutput.name}`);
             showMessage(`MIDI Output: ${currentMIDIOutput.name}`, 2000);
-        } else { console.error(`Could not find MIDI output device with ID: ${deviceId}`);}
-    }
-
-    // --- Firebase Integration ---
-    async function initFirebase() {
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            setLogLevel('debug');
-
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    userId = user.uid;
-                    console.log("User authenticated:", userId);
-                    userIdDisplay.textContent = `UID: ${userId}`;
-                    isAuthReady = true;
-                } else {
-                    console.log("User not authenticated.");
-                    userIdDisplay.textContent = "User: Anonymous";
-                    isAuthReady = true;
-                }
-            });
-
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        } catch (error) {
-            console.error("Firebase initialization error:", error);
-            showMessage(`Firebase init error: ${error.message}`, 5000);
-            isAuthReady = true;
+        } else {
+            console.error(`Could not find MIDI output: ${deviceId}`);
+            if (currentMIDIOutput) showMessage("Selected MIDI Output gone.", 3000);
+            currentMIDIOutput = null; midiOutputSelect.value = "";
         }
     }
 
-    async function saveProject(name) {
-        if (!isAuthReady || !userId) {
-            showMessage("Authentication not ready. Cannot save.", 4000); return;
-        }
-        const channelsToSave = projectData.channels.map(ch => ({
-            ...ch, notes: ch.notes.map(n => ({ ...n, time: Number(n.time) }))
-        }));
-        const currentProjectState = {
-            projectName: name, tempo: projectData.tempo, masterVolume: projectData.masterVolume,
-            channels: channelsToSave, createdAt: serverTimestamp(), appId: appId, userId: userId
-        };
-        try {
-            const projectsCollectionRef = collection(db, "artifacts", appId, "users", userId, "sequencerProjects");
-            // If projectData.projectId exists, it means we are updating an existing project.
-            // However, the original logic was addDoc. To keep it simple for this change, we'll stick to addDoc.
-            // For a true "update" functionality, we'd use setDoc with the existing projectData.projectId.
-            const docRef = await addDoc(projectsCollectionRef, currentProjectState);
-            showMessage(`Project "${currentProjectState.projectName}" saved (ID: ${docRef.id})`, 3000);
-            projectData.projectId = docRef.id; // Update current project ID after saving as new
-            projectData.projectName = currentProjectState.projectName; // Reflect name in current session
-            currentProjectNameInput.value = projectData.projectName; // Update input field
-        } catch (error) {
-            console.error("Error saving project:", error);
-            showMessage(`Error saving: ${error.message}`, 5000);
-        }
-    }
-
-    async function loadProject(projectIdToLoad) {
-        if (!isAuthReady || !userId) {
-            showMessage("Authentication not ready. Cannot load.", 4000); return;
-        }
-        try {
-            const projectDocRef = doc(db, "artifacts", appId, "users", userId, "sequencerProjects", projectIdToLoad);
-            const docSnap = await getDoc(projectDocRef);
-
-            if (docSnap.exists()) {
-                const loaded = docSnap.data();
-                projectData.projectName = loaded.projectName;
-                projectData.tempo = loaded.tempo;
-                tempoInput.value = loaded.tempo;
-                if (Tone.Transport) Tone.Transport.bpm.value = loaded.tempo;
-                projectData.masterVolume = loaded.masterVolume;
-                masterVolumeSlider.value = loaded.masterVolume;
-                Tone.Destination.volume.value = Tone.gainToDb(loaded.masterVolume);
-
-                projectData.channels = [];
-                channelAudioNodes.forEach(nodes => {
-                    if(nodes.synth) nodes.synth.dispose(); if(nodes.panner) nodes.panner.dispose();
-                });
-                channelAudioNodes = [];
-
-                if (loaded.channels && Array.isArray(loaded.channels)) {
-                    for (let i = 0; i < NUM_CHANNELS; i++) {
-                        const chData = loaded.channels[i] || {};
-                        const channel = {
-                            id: chData.id || `ch${i}`, name: chData.name || `MIDI Ch ${i + 1}`,
-                            volume: chData.volume !== undefined ? chData.volume : 0.8,
-                            pan: chData.pan !== undefined ? chData.pan : 0,
-                            instrument: chData.instrument || { type: 'Synth', options: { oscillator: { type: 'triangle' }, envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 0.5 } } },
-                            notes: chData.notes ? chData.notes.map(n => ({...n, time: Number(n.time)})) : [],
-                        };
-                        projectData.channels.push(channel);
-                        const synth = new Tone[channel.instrument.type](channel.instrument.options);
-                        const panner = new Tone.Panner(channel.pan).toDestination();
-                        synth.connect(panner);
-                        channelAudioNodes.push({ synth, panner });
-                        synth.volume.value = Tone.gainToDb(channel.volume);
-                    }
-                }
-
-                createChannelsFromData(projectData);
-                selectChannel(selectedChannelIndex < projectData.channels.length ? selectedChannelIndex : 0);
-                updateSequencerGridVisuals();
-                setupTransport();
-
-                showMessage(`Project "${projectData.projectName}" loaded.`, 3000);
-                projectData.projectId = projectIdToLoad;
-                currentProjectNameInput.value = projectData.projectName; // Update project name input
-                projectIdToLoadInput.value = ''; // Clear the load ID input
-            } else {
-                showMessage("No such project found with that ID!", 3000);
-            }
-        } catch (error) {
-            console.error("Error loading project:", error);
-            showMessage(`Error loading: ${error.message}`, 5000);
-        }
-    }
-
-    function createChannelsFromData(currentProjectData) {
-        combinedSequencerView.innerHTML = '';
-        currentProjectData.channels.forEach((channel, i) => {
-            const trackRowDiv = document.createElement('div');
-            trackRowDiv.classList.add('track-row');
-            trackRowDiv.dataset.channelIndex = i;
-            const trackControlsDiv = document.createElement('div');
-            trackControlsDiv.classList.add('track-controls');
-            if (i === selectedChannelIndex) trackControlsDiv.classList.add('selected');
-
-            const nameLabel = document.createElement('h3');
-            nameLabel.classList.add('text-sm', 'font-semibold', 'truncate');
-            nameLabel.textContent = channel.name;
-            trackControlsDiv.appendChild(nameLabel);
-
-            const volumeFader = document.createElement('input');
-            volumeFader.type = 'range'; volumeFader.min = 0; volumeFader.max = 1; volumeFader.step = 0.01; volumeFader.value = channel.volume;
-            volumeFader.title = "Channel Volume";
-            volumeFader.addEventListener('input', (e) => {
-                projectData.channels[i].volume = parseFloat(e.target.value);
-                if(channelAudioNodes[i] && channelAudioNodes[i].synth) {
-                    channelAudioNodes[i].synth.volume.value = Tone.gainToDb(projectData.channels[i].volume);
-                }
-            });
-            trackControlsDiv.appendChild(volumeFader);
-            trackControlsDiv.addEventListener('click', () => selectChannel(i));
-            trackRowDiv.appendChild(trackControlsDiv);
-
-            const trackStepsContainerDiv = document.createElement('div');
-            trackStepsContainerDiv.classList.add('track-steps-container');
-            for (let j = 0; j < TOTAL_STEPS; j++) {
-                const stepDiv = document.createElement('div');
-                stepDiv.classList.add('step');
-                stepDiv.dataset.stepIndex = j;
-                stepDiv.addEventListener('click', () => handleStepClick(i, j));
-                trackStepsContainerDiv.appendChild(stepDiv);
-            }
-            trackRowDiv.appendChild(trackStepsContainerDiv);
-            combinedSequencerView.appendChild(trackRowDiv);
-        });
-    }
+    currentProjectNameInput.addEventListener('input', () => {
+        projectData.projectName = currentProjectNameInput.value.trim();
+        if (!projectData.projectName) projectData.projectName = "Local Groove";
+    });
 
     function checkAndSetInitialRecordState() {
         const isEmpty = projectData.channels.every(channel => channel.notes.length === 0);
@@ -1092,104 +1005,36 @@
             isRecording = true;
             recordBtn.classList.add('active');
             showMessage("Grid is empty. Recording armed!", 3000);
+            updateVisualPlayhead(manualRecordStep, true);
         }
     }
 
-    // --- Event Handlers for New Save/Load Flow ---
-    currentProjectNameInput.addEventListener('input', () => {
-        projectData.projectName = currentProjectNameInput.value.trim();
-        if (!projectData.projectName) { // If user clears the input, revert to a default to avoid empty name
-            projectData.projectName = "Untitled Groove";
-            // Optionally show a message or handle this state more explicitly on save attempt
-        }
-    });
-
-    saveProjectBtn.addEventListener('click', () => {
-        const nameToSave = projectData.projectName;
-        if (!nameToSave) {
-            showMessage("Project name is empty. Please enter a name.", 3000);
-            currentProjectNameInput.focus();
-            return;
-        }
-        if (nameToSave === "Untitled Groove") { // Or any other default name you want to prevent direct saving of
-            showMessage("Please give your project a unique name before saving.", 3500);
-            currentProjectNameInput.focus();
-            return;
-        }
-        saveProject(nameToSave);
-    });
-
-    loadProjectBtn.addEventListener('click', async () => {
-        if (!isAuthReady || !userId) {
-            showMessage("Authentication not ready. Please wait.", 3000);
-            return;
-        }
-        const projectId = projectIdToLoadInput.value.trim();
-        if (!projectId) {
-            showMessage("Please enter a Project ID to load. You can list projects to console for IDs.", 4000);
-            // Helper: List projects to console if ID is missing
-            console.log("Listing available projects (use ID to load):");
-            try {
-                const q = query(collection(db, "artifacts", appId, "users", userId, "sequencerProjects"));
-                const querySnapshot = await getDocs(q);
-                if (querySnapshot.empty) {
-                    console.log("No saved projects found.");
-                    showMessage("No saved projects found in your account.", 3000);
-                } else {
-                    let projectListMessage = "Available Project IDs (see console):";
-                    querySnapshot.forEach((docSnap) => {
-                        console.log(`- Name: ${docSnap.data().projectName}, ID: ${docSnap.id}`);
-                        projectListMessage += `\n${docSnap.data().projectName.substring(0,15)}... (${docSnap.id.substring(0,5)}...)`;
-                    });
-                    //showMessage(projectListMessage, 5000); // This might be too long for status bar
-                    showMessage("Project list in console. Enter ID and click 'Load ID'.", 5000);
-                }
-            } catch (error) {
-                console.error("Error fetching projects for console listing:", error);
-                showMessage("Error fetching project list.", 3000);
-            }
-            projectIdToLoadInput.focus();
-            return;
-        }
-        loadProject(projectId);
-    });
-
-
-    // --- Application Initialization ---
     async function initializeAppSequence() {
-        await initFirebase();
         await initMIDI();
-
         Tone.Destination.volume.value = Tone.gainToDb(projectData.masterVolume);
-        currentProjectNameInput.value = projectData.projectName; // Initialize project name input
-
-        createPiano();
-        createChannels();
+        currentProjectNameInput.value = projectData.projectName;
+        createPiano(); createChannels();
         updateSequencerGridVisuals();
-        setupTransport();
         checkAndSetInitialRecordState();
+        updateVisualPlayhead(isRecording ? manualRecordStep : currentPlaybackStep, isRecording);
 
-        showMessage("Groovesynth 70 Ready!", 2000);
-
+        showMessage("Groovesynth 70 Ready (Local Mode)!", 2000);
         document.body.addEventListener('click', async () => {
             if (Tone.context.state !== 'running') {
                 try {
                     await Tone.start();
-                    console.log("AudioContext started via user interaction.");
+                    console.log("AudioContext started.");
                 } catch (e) {
                     console.error("Error starting AudioContext:", e);
-                    showMessage("Could not start audio. Please try interacting again.", 4000);
+                    showMessage("Could not start audio.", 4000);
                 }
             }
         }, { once: true });
-
         window.addEventListener('resize', () => {
             createPiano();
         });
     }
-
     initializeAppSequence();
-
 </script>
 </body>
 </html>
