@@ -1,4 +1,4 @@
-\<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +10,7 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
         .custom-select {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
             background-position: right 0.5rem center;
@@ -20,6 +21,7 @@
             -moz-appearance: none;
             appearance: none;
         }
+
         .custom-select:focus {
             outline: 2px solid transparent;
             outline-offset: 2px;
@@ -35,6 +37,7 @@
             gap: 0.75rem;
             flex-wrap: nowrap;
         }
+
         .status-bar-section.status-messages {
             flex-grow: 1;
             flex-shrink: 1;
@@ -43,6 +46,7 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
         .status-bar-section.ignored-note-area {
             flex-shrink: 0;
             text-align: right;
@@ -72,11 +76,13 @@
             justify-content: flex-start;
             flex-wrap: wrap;
         }
+
         .toolbar-group {
             display: flex;
             gap: 0.5rem;
             align-items: center;
         }
+
         .toolbar-group + .toolbar-group {
             margin-left: 0.75rem;
             padding-left: 0.75rem;
@@ -103,6 +109,7 @@
             box-sizing: border-box;
             height: 2rem; /* Consistent height for alignment with indicator */
         }
+
         .available-channels-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -113,6 +120,7 @@
             border: 1px solid #4b5563;
             min-height: 80px;
         }
+
         .drop-zone {
             padding: 0.75rem;
             background-color: #2d3748;
@@ -126,18 +134,22 @@
             gap: 0.25rem;
             transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
         }
+
         .drop-zone.drag-over-enhanced {
             border: 2px solid #60a5fa !important;
             background-color: #374151;
         }
+
         .drop-zone.drag-over-enhanced .drop-zone-placeholder {
             display: none;
         }
+
         .poly-chain-item .item-controls {
             display: flex;
             align-items: center;
             margin-left: 0.5rem;
         }
+
         .poly-chain-item .control-icon-btn {
             background: none;
             border: none;
@@ -147,9 +159,11 @@
             padding: 0 0.2rem;
             line-height: 1;
         }
+
         .poly-chain-item .control-icon-btn:hover {
             color: white;
         }
+
         .drop-zone-placeholder {
             color: #9ca3af;
             font-style: italic;
@@ -192,11 +206,13 @@
             border-color: #2563eb;
             font-weight: 600;
         }
+
         .channel-note-button .channel-num-default {
             font-size: 0.625rem;
             color: #a0aec0;
             line-height: 1;
         }
+
         .channel-note-button .notes-list {
             display: block;
             width: 100%;
@@ -206,21 +222,25 @@
             line-height: 1.1;
             margin-top: 1px;
         }
+
         .channel-note-button.active .channel-num-default {
             font-size: 0.5rem;
             color: #e0e7ff;
             line-height: 1;
             margin-bottom: 1px;
         }
+
         .channel-note-button:not(.active) .notes-list {
             visibility: hidden;
             height: 0;
             overflow: hidden;
         }
+
         .channel-note-button.in-polychain:not(.active) {
             border-color: #60a5fa;
             box-shadow: 0 0 3px 0px #60a5fa;
         }
+
         .control-button {
             background-color: #4f46e5;
             color: white;
@@ -237,18 +257,23 @@
             width: 2.5rem;
             height: 2.5rem;
         }
+
         .control-button:hover {
             background-color: #4338ca;
         }
+
         .control-button.paused {
             background-color: #f59e0b;
             border-color: #d97706;
         }
+
         .control-button.paused:hover {
             background-color: #b45309;
         }
+
         .toolbar-panel .control-button {
         }
+
         .toolbar-panel .checkbox-label {
             display: inline-flex;
             align-items: center;
@@ -262,11 +287,13 @@
             cursor: pointer;
             height: 2.5rem;
         }
+
         .toolbar-panel input[type="checkbox"] {
             width: 0.875rem;
             height: 0.875rem;
             accent-color: #a78bfa;
         }
+
         #dropIndicatorVisual {
             width: 3px; /* Vertical bar width */
             height: 2rem; /* Match poly-chain-item height (approx) */
@@ -282,7 +309,8 @@
 <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl flex flex-col">
     <header class="mb-3 sm:mb-4 text-center p-3 sm:p-4">
         <h1 class="text-2xl sm:text-3xl font-bold text-sky-400">MIDI Polychain Splitter</h1>
-        <p class="text-gray-400 mt-1 text-sm">Define a MIDI poly chain. Notes are routed via the selected MIDI device.</p>
+        <p class="text-gray-400 mt-1 text-sm">Define a MIDI poly chain. Notes are routed via the selected MIDI
+            device.</p>
     </header>
 
     <div id="appToolbar" class="toolbar-panel">
@@ -294,7 +322,9 @@
         <div class="toolbar-group" id="polyChainManagementControls">
             <button id="savePolyChainBtn" class="control-button" title="Save Current Poly Chain">💾</button>
             <button id="loadPolyChainBtn" class="control-button" title="Load Saved Poly Chain">📂</button>
-            <button id="clearPolyChainBtn" class="control-button bg-red-600 hover:bg-red-700" title="Clear Current Poly Chain">🗑️</button>
+            <button id="clearPolyChainBtn" class="control-button bg-red-600 hover:bg-red-700"
+                    title="Clear Current Poly Chain">🗑️
+            </button>
             <input type="file" id="importFileInput" accept=".json" style="display: none;">
         </div>
         <div class="toolbar-group" id="modeControls">
@@ -312,29 +342,39 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
                     <div>
                         <label for="midiIn" class="block text-xs font-medium text-sky-300 mb-0.5">MIDI Device:</label>
-                        <select id="midiIn" title="Select your MIDI interface. This device will be used for receiving notes and sending them out." class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
+                        <select id="midiIn"
+                                title="Select your MIDI interface. This device will be used for receiving notes and sending them out."
+                                class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
                             <option value="">Select MIDI Device</option>
                         </select>
                     </div>
                     <div>
-                        <label for="listeningChannel" class="block text-xs font-medium text-sky-300 mb-0.5">Listening Channel:</label>
-                        <select id="listeningChannel" title="Choose the MIDI channel to listen to on the selected device. 'All Channels' listens to every channel." class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
+                        <label for="listeningChannel" class="block text-xs font-medium text-sky-300 mb-0.5">Listening
+                            Channel:</label>
+                        <select id="listeningChannel"
+                                title="Choose the MIDI channel to listen to on the selected device. 'All Channels' listens to every channel."
+                                class="custom-select w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out text-sm">
                             <option value="all">All Channels</option>
                         </select>
                     </div>
                 </div>
                 <div>
                     <h2 class="text-md font-semibold text-sky-300 mb-1 mt-3">Channel Poly Chain Editor</h2>
-                    <p class="text-xs text-gray-400 mb-1">Drag channels from "Available" to "Current Poly Chain" to define the order.</p>
+                    <p class="text-xs text-gray-400 mb-1">Drag channels from "Available" to "Current Poly Chain" to
+                        define the order.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <h3 class="text-sm font-medium text-sky-300 mb-0.5">Available Channels:</h3>
-                            <div id="availableChannelsForDrag" title="Drag these channels to the 'Current Poly Chain' area to define your routing order." class="available-channels-container">
+                            <div id="availableChannelsForDrag"
+                                 title="Drag these channels to the 'Current Poly Chain' area to define your routing order."
+                                 class="available-channels-container">
                             </div>
                         </div>
                         <div>
                             <h3 class="text-sm font-medium text-sky-300 mb-0.5">Current Poly Chain:</h3>
-                            <div id="polyChainDropZone" title="Drop channels here to build your poly chain. Notes will be routed to these channels in order." class="drop-zone">
+                            <div id="polyChainDropZone"
+                                 title="Drop channels here to build your poly chain. Notes will be routed to these channels in order."
+                                 class="drop-zone">
                                 <p class="drop-zone-placeholder">Drag channels here.</p>
                             </div>
                         </div>
@@ -371,7 +411,7 @@
     let dragSourceElement = null;
     let isPaused = false;
     let isRandomMode = false;
-    let lastStatusMessage = { text: "Initializing...", isError: false, isFlash: false };
+    let lastStatusMessage = {text: "Initializing...", isError: false, isFlash: false};
     let statusTimeoutId = null;
     let ignoredNoteTimeoutId = null;
     let ignoredNotesCount = 0;
@@ -421,7 +461,7 @@
         statusMessagesDiv.appendChild(p);
 
         if (!isFlash) {
-            lastStatusMessage = { text: message, isError: isError, isFlash: false };
+            lastStatusMessage = {text: message, isError: isError, isFlash: false};
         } else {
             statusTimeoutId = setTimeout(() => {
                 const lastP = document.createElement('p');
@@ -569,7 +609,10 @@
         const channelVal = e.target.dataset.channelValue;
         if (channelVal) {
             const newChannelNum = parseInt(channelVal);
-            polyChain.push({ channel: newChannelNum, id: `chanSeq-${Date.now()}-${Math.random().toString(36).substring(2,7)}` });
+            polyChain.push({
+                channel: newChannelNum,
+                id: `chanSeq-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+            });
             renderPolyChain();
             logStatus(`Added Ch ${newChannelNum} to poly chain via double-click.`, false, true);
         }
@@ -690,11 +733,11 @@
                         nextElement = item; // Simplified: find first item below cursor
                     }
                 }
-                if (e.clientY >= rect.top && e.clientY <= rect.bottom && e.clientX < rect.left + rect.width/2) {
+                if (e.clientY >= rect.top && e.clientY <= rect.bottom && e.clientX < rect.left + rect.width / 2) {
                     nextElement = item;
                     break;
                 }
-                if (e.clientY >= rect.top && e.clientY <= rect.bottom && e.clientX >= rect.left + rect.width/2) {
+                if (e.clientY >= rect.top && e.clientY <= rect.bottom && e.clientX >= rect.left + rect.width / 2) {
                     nextElement = item.nextSibling;
                 }
 
@@ -752,10 +795,10 @@
             try {
                 const plainString = e.dataTransfer.getData('text/plain');
                 if (plainString && !isNaN(parseInt(plainString)) && dragSourceElement && dragSourceElement.classList.contains('draggable-channel')) {
-                    data = { type: 'newChannel', channel: plainString };
+                    data = {type: 'newChannel', channel: plainString};
                     dataTypeUsed = 'text/plain (interpreted as newChannel)';
                 } else if (plainString && dragSourceElement && dragSourceElement.classList.contains('poly-chain-item')) {
-                    data = { type: 'polyChainItem', id: plainString };
+                    data = {type: 'polyChainItem', id: plainString};
                     dataTypeUsed = 'text/plain (interpreted as polyChainItem ID)';
                 } else {
                     console.warn('[Drop DropZone] text/plain data received but not a simple channel number or not a poly chain item ID:', plainString);
@@ -773,7 +816,10 @@
 
         const isNew = data.type === 'newChannel';
         const droppedItemData = isNew
-            ? { channel: parseInt(data.channel), id: `chanSeq-${Date.now()}-${Math.random().toString(36).substring(2,7)}` }
+            ? {
+                channel: parseInt(data.channel),
+                id: `chanSeq-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+            }
             : polyChain.find(item => item.id === data.id);
 
         if (!droppedItemData) {
@@ -805,7 +851,7 @@
             let foundSpot = false;
             for (let i = 0; i < currentDisplayedItems.length; i++) {
                 const itemNode = currentDisplayedItems[i];
-                if(itemNode === dragSourceElement) continue;
+                if (itemNode === dragSourceElement) continue;
 
                 const rect = itemNode.getBoundingClientRect();
                 if (e.clientY < rect.top + rect.height / 2) {
@@ -816,7 +862,7 @@
                         foundSpot = true;
                         break;
                     }
-                } else if (e.clientY >= rect.top && e.clientY <= rect.bottom && e.clientX < rect.left + rect.width / 2 ) {
+                } else if (e.clientY >= rect.top && e.clientY <= rect.bottom && e.clientX < rect.left + rect.width / 2) {
                     const itemIdToInsertBefore = itemNode.dataset.polyChainItemId;
                     const indexInCurrentChain = polyChain.findIndex(it => it.id === itemIdToInsertBefore);
                     if (indexInCurrentChain !== -1) {
@@ -983,8 +1029,7 @@
             if (WebMidi.getInputById(previouslySelectedDeviceId)) {
                 midiInSelect.value = previouslySelectedDeviceId;
                 newSelectedDeviceId = previouslySelectedDeviceId;
-            }
-            else if (WebMidi.inputs.length > 0 && !midiInSelect.dataset.userSelected) {
+            } else if (WebMidi.inputs.length > 0 && !midiInSelect.dataset.userSelected) {
                 midiInSelect.value = WebMidi.inputs[0].id;
                 newSelectedDeviceId = WebMidi.inputs[0].id;
             } else {
@@ -1060,7 +1105,7 @@
                 soleOutputDevice = null;
                 activeRoutedNotes.clear();
                 updateActiveNotesDisplay();
-                if(selectedMidiInput) setOutputDeviceFromInput(selectedMidiInput.id);
+                if (selectedMidiInput) setOutputDeviceFromInput(selectedMidiInput.id);
                 return;
             }
 
@@ -1070,7 +1115,7 @@
                 const existingDetailsArray = activeRoutedNotes.get(noteIdentifierForRouting);
                 if (existingDetailsArray && existingDetailsArray.length > 0) {
                     const existingDetail = existingDetailsArray[0];
-                    soleOutputDevice.channels[existingDetail.outputChannel].playNote(e.note.identifier, { rawAttack: e.message.dataBytes[1] });
+                    soleOutputDevice.channels[existingDetail.outputChannel].playNote(e.note.identifier, {rawAttack: e.message.dataBytes[1]});
                     existingDetail.rawVelocity = e.message.dataBytes[1];
                     clearIgnoredNoteDisplay();
                     return;
@@ -1082,8 +1127,8 @@
 
             if (polyChain.length > 0) {
                 let availableSlots = [];
-                for(let i=0; i < polyChainSlotsState.length; i++) {
-                    if(polyChainSlotsState[i] === null) {
+                for (let i = 0; i < polyChainSlotsState.length; i++) {
+                    if (polyChainSlotsState[i] === null) {
                         availableSlots.push(i);
                     }
                 }
@@ -1132,10 +1177,10 @@
             };
             activeRoutedNotes.set(noteIdentifierForRouting, [newNoteDetails]);
 
-            soleOutputDevice.channels[assignedChannel].playNote(e.note.identifier, { rawAttack: e.message.dataBytes[1] });
+            soleOutputDevice.channels[assignedChannel].playNote(e.note.identifier, {rawAttack: e.message.dataBytes[1]});
 
             updateActiveNotesDisplay();
-        }, { channels: targetListeningChannel });
+        }, {channels: targetListeningChannel});
 
         selectedMidiInput.addListener('noteoff', e => {
             if (selectedListeningChannel !== 'all' && e.message.channel !== targetListeningChannel) {
@@ -1173,7 +1218,7 @@
                     clearIgnoredNoteDisplay();
                 }
             }
-        }, { channels: targetListeningChannel });
+        }, {channels: targetListeningChannel});
     }
 
     function togglePauseResume() {
@@ -1207,10 +1252,11 @@
     async function initializeApp() {
         try {
             if (typeof WebMidi === 'undefined') {
-                logStatus("WebMidi.js library not loaded! Cannot initialize.", true); return;
+                logStatus("WebMidi.js library not loaded! Cannot initialize.", true);
+                return;
             }
             statusMessagesDiv.innerHTML = '<p class="text-gray-400">Initializing...</p>';
-            lastStatusMessage = { text: "Initializing...", isError: false, isFlash: false };
+            lastStatusMessage = {text: "Initializing...", isError: false, isFlash: false};
 
             initializeChannelDisplayButtons();
 
@@ -1249,8 +1295,7 @@
                     setupMidiListeners();
                 } else if (selectedMidiInput && !soleOutputDevice) {
                     logStatus("Device selected, but no other device for messages. Select device or check connections.", true);
-                }
-                else {
+                } else {
                     logStatus("Please select a MIDI device first.", true);
                 }
             });
@@ -1270,8 +1315,7 @@
                 statusMessagesDiv.innerHTML += '<p class="text-yellow-400 text-xs mt-1">Web MIDI API requires a secure context (HTTPS or localhost) and user permission. Please ensure you are on HTTPS or localhost and grant permission when prompted.</p>';
             } else if (err.message && err.message.toLowerCase().includes("browser does not support webmidi")) {
                 statusMessagesDiv.innerHTML += '<p class="text-yellow-400 text-xs mt-1">Your browser does not support the Web MIDI API. Try a modern browser like Chrome or Edge.</p>';
-            }
-            else {
+            } else {
                 statusMessagesDiv.innerHTML += '<p class="text-red-400 text-xs mt-1">Ensure MIDI drivers are installed and your browser has permission to access MIDI devices. Check browser settings.</p>';
             }
         }
