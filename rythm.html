@@ -28,12 +28,12 @@
             align-items: center;
             gap: 0.3rem;
         }
-        .number-input-container { /* For Number of Tracks +/- */
+        .number-input-container {
             display: flex;
             align-items: center;
             gap: 0.3rem;
         }
-        .slider-button, .number-input-button { /* Combined for +/- buttons */
+        .slider-button, .number-input-button {
             background-color: #7a6a5a;
             color: #f0e6d2;
             border: 1px solid #5a4a3a;
@@ -241,22 +241,14 @@
             opacity: 1;
             pointer-events: auto;
         }
-        .explanation-text-header { /* Keep original style for header if needed */
-            font-size: 0.7rem;
-            line-height: 1.3;
-            color: #d0c6b2;
-            margin-top: 0.25rem;
-            margin-bottom: 0.5rem;
-            text-align: left;
-        }
-        .explanation-text-footer { /* Style for footer explanation */
+        .explanation-text-footer {
             font-size: 0.75rem;
             line-height: 1.4;
-            color: #c0b090; /* Slightly different color for footer */
+            color: #c0b090;
             text-align: center;
             padding: 1rem 0.5rem;
             max-width: 600px;
-            margin: 1rem auto 0 auto; /* Margin for spacing from content above */
+            margin: 1rem auto 0 auto;
         }
     </style>
 </head>
@@ -265,11 +257,9 @@
 <header class="text-center mb-3">
     <h1 class="text-2xl md:text-3xl font-bold" style="font-family: 'Orbitron', sans-serif; color: #f0ad4e;">Rhythm King 77</h1>
     <p class="text-xs md:text-sm">Euclidean MIDI Sequencer</p>
-    <!-- Explanation text moved from here -->
 </header>
 
 <div class="flex flex-col md:flex-row gap-3">
-    <!-- Global Controls & MIDI Settings Panel -->
     <div class="md:flex-none md:max-w-xs synth-panel flex flex-col gap-2 master-control-panel">
         <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
 
@@ -322,7 +312,6 @@
         <div class="control-group">
             <label for="midiChannelSelect">Global MIDI Ch:</label>
             <select id="midiChannelSelect" title="Select global MIDI channel (1-16)">
-                <!-- Options 1-16 will be populated by JS -->
             </select>
         </div>
         <div class="mt-auto pt-1">
@@ -330,11 +319,9 @@
         </div>
     </div>
 
-    <!-- Sequencer Tracks Panel -->
     <div class="flex-grow synth-panel">
         <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer</h2>
         <div id="sequencerTracksContainer">
-            <!-- Tracks will be generated here by JS -->
         </div>
     </div>
 </div>
@@ -348,7 +335,6 @@
 <div id="statusBar">Status Message Here</div>
 
 <script>
-    // --- DOM Elements ---
     const playStopButton = document.getElementById('playStopButton');
     const defaultSettingsButton = document.getElementById('defaultSettingsButton');
     const masterRandomizeButton = document.getElementById('masterRandomizeButton');
@@ -363,7 +349,6 @@
     const sequencerTracksContainer = document.getElementById('sequencerTracksContainer');
     const userIdDisplay = document.getElementById('userIdDisplay');
     const statusBar = document.getElementById('statusBar');
-    // Explanation container moved to the bottom, not strictly a script-controlled element but part of DOM.
 
     let midiAccess = null;
     let midiOutput = null;
@@ -380,11 +365,10 @@
     let stepsLocked = false;
     let globalLockedSteps = 16;
 
-    // Variables for auto-repeat functionality
     let autoRepeatTimeoutId = null;
     let autoRepeatIntervalId = null;
-    const AUTO_REPEAT_DELAY = 500; // ms
-    const AUTO_REPEAT_INTERVAL = 100; // ms
+    const AUTO_REPEAT_DELAY = 500;
+    const AUTO_REPEAT_INTERVAL = 100;
 
 
     function showStatusMessage(message, duration = 3000) {
@@ -456,7 +440,19 @@
         return pattern.slice(r).concat(pattern.slice(0, r));
     }
 
-    // --- Settings Persistence ---
+    function updateLearnButtonTooltip(buttonElement, paramId) {
+        const mapping = midiCcMap[paramId];
+        let baseTitle = buttonElement.dataset.baseTitle || buttonElement.title || `Map ${paramId.replace(/([A-Z])/g, ' $1').replace(/(\d+)/g, '')} to MIDI CC`;
+        if (!buttonElement.dataset.baseTitle) buttonElement.dataset.baseTitle = baseTitle;
+
+        if (mapping) {
+            buttonElement.title = `${baseTitle} (Mapped: CC#${mapping.cc} Ch${mapping.channel})`;
+        } else {
+            buttonElement.title = baseTitle;
+        }
+    }
+
+
     function saveSettings() {
         const settings = {
             numTracks: numTracks,
@@ -556,14 +552,13 @@
                 sendAllNotesOff(i);
             }
         }
-        // Stop transport and clear sequences before MIDI re-init
         if (Tone.Transport.state === 'started') {
-            playStopButton.click(); // Simulate a stop click
+            playStopButton.click();
         }
-        Tone.Transport.cancel(0); // Extra measure to clear any scheduled events
+        Tone.Transport.cancel(0);
         transportLoops.forEach(loop => { if (loop) { loop.stop(0); loop.dispose(); } });
         transportLoops = [];
-        sequencerTracks.forEach(track => { // Reset UI of tracks
+        sequencerTracks.forEach(track => {
             track.currentStep = 0;
             track.stepCounterForUI = 0;
             renderPatternDisplay(track);
@@ -665,6 +660,7 @@
                 console.log(`Mapped ${paramId} to CC#${ccNumber} on Ch ${midiChannel}`);
                 currentLearningControl.button.classList.remove('learning');
                 currentLearningControl.button.textContent = 'Learn';
+                updateLearnButtonTooltip(currentLearningControl.button, paramId);
                 currentLearningControl = null;
                 const readableParamId = paramId
                     .replace(/([A-Z])/g, ' $1')
@@ -706,6 +702,7 @@
         if (currentLearningControl) {
             currentLearningControl.button.classList.remove('learning');
             currentLearningControl.button.textContent = 'Learn';
+            updateLearnButtonTooltip(currentLearningControl.button, currentLearningControl.paramId);
         }
         currentLearningControl = { paramId, button: buttonElement };
         buttonElement.classList.add('learning');
@@ -721,7 +718,6 @@
         Tone.Transport.bpm.value = parseInt(bpmSlider.value);
     }
 
-    // Auto-repeat logic for +/- buttons
     function startAutoRepeat(targetId, action) {
         stopAutoRepeat();
         adjustControlValue(targetId, action);
@@ -927,6 +923,7 @@
 
         const trackDiv = document.createElement('div');
         trackDiv.className = 'synth-panel p-2';
+        trackDiv.id = `track-panel-${trackIndex}`; // Add ID for easier removal
         trackDiv.innerHTML = `
             <div class="flex justify-between items-center mb-1">
                 <h3 class="text-xs font-semibold" style="font-family: 'Orbitron', sans-serif;">Track ${trackIndex + 1}</h3>
@@ -1095,6 +1092,7 @@
 
         trackDiv.querySelectorAll('.learn-cc-button').forEach(btn => {
             btn.addEventListener('click', () => startLearnCc(btn.dataset.paramId, btn));
+            updateLearnButtonTooltip(btn, btn.dataset.paramId);
         });
 
         sequencerTracks.push(track);
@@ -1160,35 +1158,33 @@
     }
 
     function regenerateAllTracks(newCount) {
-        if (Tone.Transport.state === 'started') {
-            playStopButton.click(); // Simulate a stop to clear everything properly
-        } else { // If already stopped, still need to clear loops and UI
-            transportLoops.forEach(loop => {
-                if (loop) { loop.stop(0); loop.dispose(); }
-            });
-            Tone.Transport.cancel(0);
-            sendAllNotesOff(selectedMidiChannel);
-        }
-        transportLoops = [];
-        sequencerTracks = [];
-        sequencerTracksContainer.innerHTML = '';
-
+        const oldTrackCount = sequencerTracks.length;
         numTracks = parseInt(newCount);
         if (isNaN(numTracks) || numTracks < 1) numTracks = 1;
         if (numTracks > MAX_TRACKS) numTracks = MAX_TRACKS;
         numTracksInput.value = numTracks;
 
-        for (let i = 0; i < numTracks; i++) {
-            createSequencerTrackUI(i);
+        if (newCount > oldTrackCount) { // Adding tracks
+            for (let i = oldTrackCount; i < newCount; i++) {
+                createSequencerTrackUI(i);
+                updateTrackPattern(sequencerTracks[i]);
+            }
+        } else if (newCount < oldTrackCount) { // Removing tracks
+            for (let i = oldTrackCount - 1; i >= newCount; i--) {
+                if (transportLoops[i]) {
+                    transportLoops[i].stop(0).dispose();
+                }
+                const trackPanel = document.getElementById(`track-panel-${i}`);
+                if (trackPanel) trackPanel.remove();
+            }
+            sequencerTracks.length = newCount;
+            transportLoops.length = newCount;
         }
 
-        if (stepsLocked) {
-            synchronizeAllTrackSteps(globalLockedSteps);
-        } else {
-            sequencerTracks.forEach(track => updateTrackPattern(track));
-        }
+        if (stepsLocked) synchronizeAllTrackSteps(globalLockedSteps);
         saveSettings();
     }
+
 
     numTracksInput.addEventListener('change', (e) => {
         let newCount = parseInt(e.target.value);
@@ -1319,6 +1315,14 @@
             });
         }
 
+        // Update tooltips for all learn buttons based on loaded midiCcMap
+        if (bpmSliderLearnCc) updateLearnButtonTooltip(bpmSliderLearnCc, 'bpmSlider');
+        sequencerTracks.forEach(track => {
+            track.ui.randomizeButton.parentElement.parentElement.querySelectorAll('.learn-cc-button').forEach(btn => {
+                updateLearnButtonTooltip(btn, btn.dataset.paramId);
+            });
+        });
+
         sequencerTracks.forEach(track => updateTrackPattern(track));
         await setupMIDI();
 
@@ -1344,5 +1348,5 @@
     }
     window.onload = init;
 </script>
-</body>  <!--- comment --->
+</body>
 </html>
