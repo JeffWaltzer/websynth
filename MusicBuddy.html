@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Permissions-Policy" content="midi=*">
+    <title>AI Music Buddy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/webmidi@latest/dist/iife/webmidi.iife.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chat-bubble-ai {
+            background-color: #1e3a8a; /* A deep blue */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            align-self: flex-start;
+            word-wrap: break-word;
+        }
+        .chat-bubble-system {
+            background-color: #4b5563; /* Gray */
+            color: white;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-style: italic;
+            text-align: center;
+            width: 100%;
+        }
+        #chat-log::-webkit-scrollbar { width: 8px; }
+        #chat-log::-webkit-scrollbar-track { background: #1f2937; }
+        #chat-log::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 10px; border: 2px solid #1f2937; }
+
+        #status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #1e3a8a;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none;
+        }
+        #status-bar.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Toggle Switch Styles */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #2563eb; /* blue-600 */
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #2563eb; /* blue-600 */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col md:flex-row h-screen antialiased">
+
+<!-- Controls Panel -->
+<div class="w-full md:w-1/3 lg:w-1/4 bg-gray-800 p-6 shadow-2xl overflow-y-auto">
+    <h1 class="text-3xl font-bold mb-2">AI Music Buddy</h1>
+    <p class="text-gray-400 mb-6">Play a melody, and your buddy will follow and comment.</p>
+
+    <!-- MIDI Setup -->
+    <div class="bg-gray-900 p-4 rounded-lg mb-6">
+        <h2 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-2">MIDI Setup</h2>
+        <div class="space-y-4">
+            <div>
+                <label for="midi-input" class="block text-sm font-medium text-gray-300 mb-1">MIDI Input Device</label>
+                <select id="midi-input" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+            </div>
+            <div>
+                <label for="midi-output" class="block text-sm font-medium text-gray-300 mb-1">MIDI Output Device</label>
+                <select id="midi-output" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+            </div>
+            <div>
+                <label for="midi-input-channel" class="block text-sm font-medium text-gray-300 mb-1">Melody Channel (Input)</label>
+                <select id="midi-input-channel" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+            </div>
+            <button id="disconnect-midi-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 hidden">
+                Disconnect MIDI
+            </button>
+            <p id="midi-status" class="text-center text-sm text-gray-400 mt-2">Status: Disconnected</p>
+        </div>
+    </div>
+
+    <!-- Accompaniment Controls -->
+    <div class="bg-gray-900 p-4 rounded-lg">
+        <h2 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-2">Accompaniment Settings</h2>
+        <div class="space-y-4">
+            <div>
+                <label for="accomp-channel" class="block text-sm font-medium text-gray-300 mb-1">Accompaniment Channel (Output)</label>
+                <select id="accomp-channel" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+            </div>
+            <div>
+                <label for="accomp-style" class="block text-sm font-medium text-gray-300 mb-1">Accompaniment Style</label>
+                <select id="accomp-style" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="chords">Block Chords</option>
+                    <option value="arpeggio-up">Arpeggio (Up)</option>
+                    <option value="arpeggio-down">Arpeggio (Down)</option>
+                    <option value="arpeggio-updown">Arpeggio (Up-Down)</option>
+                </select>
+            </div>
+            <div class="flex items-center justify-between pt-2">
+                <label for="accomp-toggle" class="text-sm font-medium text-gray-300">Enable Accompaniment</label>
+                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="accomp-toggle" id="accomp-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                    <label for="accomp-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                </div>
+            </div>
+            <div class="pt-2">
+                <label for="key-display" class="block text-sm font-medium text-gray-300 mb-1">Detected Key</label>
+                <div id="key-display" class="w-full bg-gray-700 rounded-md py-2 px-3 text-lg font-mono text-center">--</div>
+            </div>
+            <div class="pt-2">
+                <label for="accomp-notes-display" class="block text-sm font-medium text-gray-300 mb-1">Last Chord Played</label>
+                <div id="accomp-notes-display" class="w-full bg-gray-700 rounded-md py-2 px-3 text-lg font-mono text-center">--</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Panel -->
+<div class="w-full md:w-2/3 lg:w-3/4 flex flex-col p-6 h-full">
+    <h2 class="text-2xl font-bold mb-4 flex items-center">
+        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+        Buddy's Commentary
+    </h2>
+    <div id="chat-log" class="flex-grow bg-gray-800 rounded-lg p-4 overflow-y-auto flex flex-col space-y-4"></div>
+</div>
+
+<div id="status-bar"></div>
+
+<script type="module">
+    // --- DOM Element References ---
+    const ui = {
+        inputSelect: document.getElementById('midi-input'),
+        outputSelect: document.getElementById('midi-output'),
+        inputChannelSelect: document.getElementById('midi-input-channel'),
+        accompChannelSelect: document.getElementById('accomp-channel'),
+        disconnectBtn: document.getElementById('disconnect-midi-btn'),
+        statusText: document.getElementById('midi-status'),
+        keyDisplay: document.getElementById('key-display'),
+        chatLog: document.getElementById('chat-log'),
+        styleSelect: document.getElementById('accomp-style'),
+        statusBar: document.getElementById('status-bar'),
+        accompToggle: document.getElementById('accomp-toggle'),
+        accompNotesDisplay: document.getElementById('accomp-notes-display')
+    };
+
+    // --- Music Theory Definitions ---
+    const theory = {
+        notes: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        majorScaleIntervals: [0, 2, 4, 5, 7, 9, 11],
+        minorScaleIntervals: [0, 2, 3, 5, 7, 8, 10],
+        diatonicChordsMajor: ['maj7', 'm7', 'm7', 'maj7', '7', 'm7', 'm7b5'],
+        diatonicChordsMinor: ['m7', 'm7b5', 'maj7', 'm7', 'm7', 'maj7', '7']
+    };
+
+    // --- Application State ---
+    let state = {
+        activeInput: null,
+        currentKey: null,
+        recentNotes: [],
+        noteCounterForAI: 0,
+        isAIThinking: false,
+        statusTimeout: null,
+        isAccompanimentEnabled: true
+    };
+    const KEY_DETECTION_BUFFER_SIZE = 8;
+    const AI_COMMENT_THRESHOLD = 5;
+
+    // --- UI & Initialization ---
+    function populateChannelSelectors() {
+        [ui.inputChannelSelect, ui.accompChannelSelect].forEach(select => {
+            select.innerHTML = '';
+            for (let i = 1; i <= 16; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Channel ${i}`;
+                select.appendChild(option);
+            }
+        });
+        ui.inputChannelSelect.value = 1;
+        ui.accompChannelSelect.value = 2;
+    }
+
+    function addChatMessage(message, sender = 'ai') {
+        const bubble = document.createElement('div');
+        bubble.textContent = message;
+        bubble.className = sender === 'ai' ? 'chat-bubble-ai' : 'chat-bubble-system';
+        ui.chatLog.appendChild(bubble);
+        ui.chatLog.scrollTop = ui.chatLog.scrollHeight;
+    }
+
+    function showStatusMessage(message, duration = 3000) {
+        clearTimeout(state.statusTimeout);
+        ui.statusBar.textContent = message;
+        ui.statusBar.classList.add('visible');
+        state.statusTimeout = setTimeout(() => {
+            ui.statusBar.classList.remove('visible');
+        }, duration);
+    }
+
+    function connectMidiDevices() {
+        if (WebMidi.inputs.length === 0 || WebMidi.outputs.length === 0) {
+            ui.statusText.textContent = 'No MIDI devices for auto-connection.';
+            addChatMessage("Please connect a MIDI input and output device.", "system");
+            return;
+        }
+
+        state.activeInput = WebMidi.getInputById(ui.inputSelect.value);
+        if (state.activeInput) {
+            const outputName = WebMidi.getOutputById(ui.outputSelect.value).name;
+            const inputChannel = parseInt(ui.inputChannelSelect.value);
+            state.activeInput.addListener('noteon', handleNoteOn, { channels: inputChannel });
+
+            ui.statusText.textContent = `In: ${state.activeInput.name} | Out: ${outputName}`;
+            addChatMessage(`Auto-connected to ${state.activeInput.name} and ${outputName}.`, "system");
+            ui.disconnectBtn.classList.remove('hidden');
+            Tone.start();
+        }
+    }
+
+    function disconnectMidi() {
+        if (state.activeInput) {
+            state.activeInput.removeListener('noteon');
+            state.activeInput = null;
+            ui.statusText.textContent = 'Status: Disconnected';
+            ui.disconnectBtn.classList.add('hidden');
+            addChatMessage("MIDI Disconnected. Select new devices and refresh to reconnect.", "system");
+        }
+    }
+
+    async function setupMidi() {
+        try {
+            await WebMidi.enable();
+            addChatMessage("Web MIDI ready. Attempting to auto-connect...", "system");
+
+            WebMidi.inputs.forEach(input => ui.inputSelect.add(new Option(input.name, input.id)));
+            WebMidi.outputs.forEach(output => ui.outputSelect.add(new Option(output.name, output.id)));
+
+            connectMidiDevices();
+
+            ui.disconnectBtn.onclick = disconnectMidi;
+            ui.accompToggle.onchange = (e) => { state.isAccompanimentEnabled = e.target.checked; };
+
+        } catch (err) {
+            console.error("Could not enable WebMIDI.", err);
+            ui.statusText.textContent = "Error: MIDI access blocked.";
+            addChatMessage("Error: MIDI access is blocked by browser permissions.", "system");
+        }
+    }
+
+    function handleNoteOn(e) {
+        const noteNumber = e.note.number;
+
+        state.recentNotes.push(noteNumber % 12);
+        if (state.recentNotes.length > KEY_DETECTION_BUFFER_SIZE) {
+            state.recentNotes.shift();
+        }
+
+        detectKey();
+
+        if (state.currentKey) {
+            playAccompaniment(noteNumber);
+            state.noteCounterForAI++;
+        }
+
+        if (state.noteCounterForAI >= AI_COMMENT_THRESHOLD && !state.isAIThinking) {
+            const isDissonant = state.currentKey ? !isNoteInKey(noteNumber, state.currentKey) : false;
+            getAICommentary(e.note, isDissonant);
+            state.noteCounterForAI = 0;
+        }
+    }
+
+    // --- Core Music Logic ---
+    function detectKey() {
+        if (state.recentNotes.length < 5) return;
+
+        let bestMatch = { key: null, score: -1 };
+        for (let i = 0; i < 12; i++) {
+            ['major', 'minor'].forEach(type => {
+                const scaleNotes = getScaleNotes(i, type);
+                const score = state.recentNotes.filter(n => scaleNotes.includes(n)).length;
+                if (score > bestMatch.score) {
+                    bestMatch = { key: { root: i, type, notes: scaleNotes }, score };
+                }
+            });
+        }
+
+        if (bestMatch.key && (!state.currentKey || state.currentKey.root !== bestMatch.key.root || state.currentKey.type !== bestMatch.key.type)) {
+            state.currentKey = bestMatch.key;
+            const keyName = `${theory.notes[state.currentKey.root]} ${state.currentKey.type}`;
+            ui.keyDisplay.textContent = keyName;
+            showStatusMessage(`Harmony shifted to: ${keyName}`);
+        }
+    }
+
+    function getScaleNotes(rootNote, type) {
+        const intervals = type === 'major' ? theory.majorScaleIntervals : theory.minorScaleIntervals;
+        return intervals.map(i => (rootNote + i) % 12);
+    }
+
+    function getChordNotes(rootMidi, key, degree) {
+        const chordQuality = key.type === 'major' ? theory.diatonicChordsMajor[degree] : theory.diatonicChordsMinor[degree];
+        const root = rootMidi;
+        let third, fifth, seventh;
+
+        switch (chordQuality) {
+            case 'maj7': third = root + 4; fifth = root + 7; seventh = root + 11; break;
+            case 'm7': third = root + 3; fifth = root + 7; seventh = root + 10; break;
+            case '7': third = root + 4; fifth = root + 7; seventh = root + 10; break;
+            case 'm7b5': third = root + 3; fifth = root + 6; seventh = root + 10; break;
+            default: third = root + 4; fifth = root + 7; seventh = root + 11;
+        }
+        return [root, third, fifth, seventh];
+    }
+
+    function playAccompaniment(noteNumber) {
+        if (!state.currentKey || !state.isAccompanimentEnabled) return;
+
+        const output = WebMidi.getOutputById(ui.outputSelect.value);
+        if (!output) return;
+
+        const scale = state.currentKey.notes;
+        const degree = scale.indexOf(noteNumber % 12);
+        if (degree === -1) {
+            ui.accompNotesDisplay.textContent = 'Out of Key';
+            return;
+        }
+
+        const chordRootMidi = Tone.Frequency(theory.notes[scale[degree]] + "3").toMidi();
+        const chordNoteNumbers = getChordNotes(chordRootMidi, state.currentKey, degree);
+
+        // Display played notes
+        ui.accompNotesDisplay.textContent = chordNoteNumbers.map(n => Tone.Frequency(n, 'midi').toNote()).join(', ');
+
+        const style = ui.styleSelect.value;
+        const channel = parseInt(ui.accompChannelSelect.value);
+        const noteDuration = 500;
+
+        switch(style) {
+            case 'chords':
+                output.playNote(chordNoteNumbers, { channels: channel, duration: noteDuration });
+                break;
+            case 'arpeggio-up':
+                chordNoteNumbers.forEach((note, i) => output.playNote(note, { channels: channel, time: `+${i * 125}`, duration: 100 }));
+                break;
+            case 'arpeggio-down':
+                [...chordNoteNumbers].reverse().forEach((note, i) => output.playNote(note, { channels: channel, time: `+${i * 125}`, duration: 100 }));
+                break;
+            case 'arpeggio-updown':
+                const pattern = chordNoteNumbers.concat(chordNoteNumbers.slice(1, -1).reverse());
+                pattern.forEach((note, i) => output.playNote(note, { channels: channel, time: `+${i * 100}`, duration: 90 }));
+                break;
+        }
+    }
+
+    function isNoteInKey(noteNumber, key) {
+        return key.notes.includes(noteNumber % 12);
+    }
+
+    async function getAICommentary(note, isDissonant) {
+        state.isAIThinking = true;
+        addChatMessage("Buddy is thinking...", "system");
+
+        const noteName = note.name + (note.accidental || '');
+        const keyName = `${theory.notes[state.currentKey.root]} ${state.currentKey.type}`;
+
+        let prompt;
+        if (isDissonant) {
+            prompt = `You are an AI music theory tutor. A musician playing in the key of ${keyName} just played a ${noteName}, which is dissonant. Explain in a single, concise sentence WHY that note clashes with the harmony and suggest a better note from the scale. Be specific and educational, but keep it friendly. For example: 'That F# clashes with the C major chord. Try landing on a G, the fifth of the chord, for a stronger sound.'`;
+        } else {
+            prompt = `You are a friendly and encouraging AI music buddy. A musician playing in the key of ${keyName} just played a lovely ${noteName}. Write a short, single-sentence, positive comment about their great note choice. Be upbeat and supportive. For example: 'Great note!' or 'The ${noteName} sounds perfect there!'`;
+        }
+
+        try {
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+            const apiKey = "AIzaSyC0LEoXIAHFHe3I5oj0TGhF87g-V63RY-g";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            const result = await response.json();
+
+            const thinkingMsg = Array.from(ui.chatLog.children).find(c => c.textContent.includes('thinking'));
+            if (thinkingMsg) ui.chatLog.removeChild(thinkingMsg);
+
+            if (result.candidates?.[0]?.content?.parts?.[0]) {
+                addChatMessage(result.candidates[0].content.parts[0].text.trim(), 'ai');
+            } else {
+                throw new Error("No content in API response.");
+            }
+
+        } catch (error) {
+            console.error("Error fetching AI commentary:", error);
+            const thinkingMsg = Array.from(ui.chatLog.children).find(c => c.textContent.includes('thinking'));
+            if (thinkingMsg) ui.chatLog.removeChild(thinkingMsg);
+
+            if (error.message.includes("403")) {
+                addChatMessage("Buddy's commentary service is unavailable due to a permissions error (403).", "system");
+            } else {
+                addChatMessage("Your buddy is... taking a little nap. My apologies.", "ai");
+            }
+        } finally {
+            state.isAIThinking = false;
+        }
+    }
+
+    // --- Initial Load ---
+    populateChannelSelectors();
+    setupMidi();
+    addChatMessage("Welcome! I'm your AI Music Buddy. Let's make some music!", "ai");
+</script>
+</body>
+</html>
