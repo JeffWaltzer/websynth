@@ -12,35 +12,76 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            padding-bottom: 180px; /* Space for the larger keyboard */
-            overflow: hidden; /* Prevent body scroll */
         }
-        .chat-bubble-ai { background-color: #1e3a8a; color: white; padding: 10px 15px; border-radius: 15px; max-width: 80%; align-self: flex-start; word-wrap: break-word; }
-        .chat-bubble-system { background-color: #4b5563; color: white; padding: 8px 12px; border-radius: 15px; font-size: 0.9em; font-style: italic; text-align: center; width: 100%; }
+        .chat-bubble-ai {
+            background-color: #1e3a8a;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            align-self: flex-start;
+            word-wrap: break-word;
+        }
+        .chat-bubble-system {
+            background-color: #4b5563;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-style: italic;
+            text-align: center;
+            width: 100%;
+        }
         #chat-log::-webkit-scrollbar { width: 8px; }
         #chat-log::-webkit-scrollbar-track { background: #1f2937; }
         #chat-log::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 10px; border: 2px solid #1f2937; }
 
-        #status-bar { position: fixed; bottom: 180px; /* Position above larger keyboard */ left: 0; width: 100%; background-color: #1e3a8a; color: white; padding: 12px; text-align: center; z-index: 50; opacity: 0; transition: opacity 0.5s ease-in-out; pointer-events: none; }
-        #status-bar.visible { opacity: 1; pointer-events: auto; }
+        #status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #1e3a8a;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none;
+        }
+        #status-bar.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
 
         .toggle-checkbox:checked { right: 0; border-color: #2563eb; }
         .toggle-checkbox:checked + .toggle-label { background-color: #2563eb; }
 
-        #keyboard-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 180px; /* Increased keyboard height */ background-color: #111827; padding: 10px; box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06); z-index: 100; }
-        #keyboard { position: relative; height: 100%;}
-        .key { border: 1px solid #1f2937; border-radius: 0 0 5px 5px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 3px rgba(0,0,0,0.4); box-sizing: border-box; transition: background-color 0.1s; cursor: pointer; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px;}
-        .key.white { height: 100%; background: linear-gradient(to bottom, #fff 0%, #e8e8e8 100%); float: left; color: #111827; font-size: 12px; }
-        .key.black { height: 60%; background: linear-gradient(to bottom, #4a4a4a 0%, #222 100%); position: absolute; z-index: 2; color: #d1d5db; font-size: 11px; border-width: 1px 2px 5px;}
+        #keyboard { position: relative; height: 80px; margin-top: 5px; }
+        .key { border: 1px solid #374151; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); box-sizing: border-box; }
+        .key.white { width: 7.14%; height: 100%; background-color: #d1d5db; float: left; }
+        .key.black { width: 4.5%; height: 60%; background-color: #1f2937; position: absolute; z-index: 2; }
 
-        .key.suggested { background: #3b82f6; border-color: #93c5fd; }
-        .key.playing { background: #f59e0b; border-color: #fcd34d; }
-        .key.active { background: #fbbf24; }
+        /* Octave 1 */
+        .key.black[data-note="C#4"] { left: 5.14%; }
+        .key.black[data-note="D#4"] { left: 12.28%; }
+        .key.black[data-note="F#4"] { left: 26.56%; }
+        .key.black[data-note="G#4"] { left: 33.7%; }
+        .key.black[data-note="A#4"] { left: 40.84%; }
+
+        /* Octave 2 */
+        .key.black[data-note="C#5"] { left: 55.14%; }
+        .key.black[data-note="D#5"] { left: 62.28%; }
+        .key.black[data-note="F#5"] { left: 76.56%; }
+        .key.black[data-note="G#5"] { left: 83.7%; }
+        .key.black[data-note="A#5"] { left: 90.84%; }
+
+        .key.suggested { background-color: #3b82f6; border: 2px solid #93c5fd; }
     </style>
 </head>
-<body class="bg-gray-900 text-white flex flex-col h-screen antialiased">
+<body class="bg-gray-900 text-white flex flex-col md:flex-row h-screen antialiased">
 
-<<<<<<< HEAD
 <!-- Controls Panel -->
 
         <div>
@@ -65,99 +106,21 @@
         </div>
         <div class="pt-2">
         </div>
-=======
-<!-- Top Toolbar -->
-<div class="w-full bg-gray-800 p-2 flex items-center justify-between shadow-md z-10 flex-shrink-0">
-    <h1 class="text-xl font-bold ml-2">AI Music Buddy</h1>
-    <div class="flex items-center space-x-2">
-        <button id="play-pause-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg transition-colors duration-200 text-lg">▶️</button>
-        <button id="play-with-me-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 text-sm">Play with Me</button>
-        <button id="reconnect-midi-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 text-sm">Connect MIDI</button>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="flex flex-grow overflow-hidden">
-    <!-- Left Controls Panel -->
-    <div class="w-1/4 lg:w-1/5 bg-gray-800 p-2 shadow-2xl overflow-y-auto">
-        <div class="bg-gray-900 p-2 rounded-lg space-y-2">
-            <h2 class="text-lg font-semibold border-b border-gray-700 pb-2">Settings</h2>
-            <div>
-                <label for="midi-input" class="block text-xs font-medium text-gray-300 mb-1">Input Device</label>
-                <select id="midi-input" class="w-full bg-gray-700 border border-gray-600 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
-            </div>
-            <div>
-                <label for="midi-output" class="block text-xs font-medium text-gray-300 mb-1">Output Device</label>
-                <select id="midi-output" class="w-full bg-gray-700 border border-gray-600 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label for="midi-input-channel" class="block text-xs font-medium text-gray-300 mb-1">In Ch.</label>
-                    <select id="midi-input-channel" class="w-full bg-gray-700 border border-gray-600 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
-                </div>
-                <div>
-                    <label for="accomp-channel" class="block text-xs font-medium text-gray-300 mb-1">Out Ch.</label>
-                    <select id="accomp-channel" class="w-full bg-gray-700 border border-gray-600 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
-                </div>
-            </div>
-
-            <div>
-                <label for="accomp-style" class="block text-xs font-medium text-gray-300 mb-1">Accompaniment Style</label>
-                <select id="accomp-style" class="w-full bg-gray-700 border border-gray-600 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="chords">Block Chords</option>
-                    <option value="arpeggio-up">Arpeggio (Up)</option>
-                    <option value="arpeggio-down">Arpeggio (Down)</option>
-                    <option value="arpeggio-updown">Arpeggio (Up-Down)</option>
-                    <option value="ai">AI Mode</option>
-                </select>
-            </div>
-            <div class="flex items-center justify-between pt-1">
-                <label for="accomp-toggle" class="text-sm font-medium text-gray-300">Accompaniment</label>
-                <input type="checkbox" name="accomp-toggle" id="accomp-toggle" class="form-checkbox h-5 w-5 bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500 rounded" checked/>
-            </div>
-            <p id="midi-status" class="text-center text-xs text-gray-400 pt-1">Status: Disconnected</p>
-        </div>
-    </div>
-
-    <!-- Center Chat Panel -->
-    <div class="flex-grow flex flex-col p-2 overflow-hidden lg:w-5/12">
-        <h2 class="text-xl font-bold mb-2 flex items-center">
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-            Buddy's Commentary
-        </h2>
-        <div id="chat-log" class="flex-grow bg-gray-800 rounded-lg p-2 overflow-y-auto flex flex-col space-y-2"></div>
-    </div>
-
-    <!-- Right Info Panel -->
-    <div class="w-full md:w-1/3 lg:w-3/12 bg-gray-800 p-2 shadow-2xl overflow-y-auto">
-        <div class="bg-gray-900 p-2 rounded-lg space-y-2">
-            <h2 class="text-lg font-semibold border-b border-gray-700 pb-2">Analysis</h2>
-            <div class="pt-2">
-                <label for="key-display" class="block text-xs font-medium text-gray-300 mb-1">Detected Key</label>
-                <div id="key-display" class="w-full bg-gray-700 rounded-md py-1 px-3 text-base font-mono text-center">--</div>
-            </div>
-            <div class="pt-1">
-                <label for="genre-display" class="block text-xs font-medium text-gray-300 mb-1">Detected Genre</label>
-                <div id="genre-display" class="w-full bg-gray-700 rounded-md py-1 px-3 text-base font-mono text-center">--</div>
-            </div>
-            <div class="pt-1">
-                <label for="detected-chord-display" class="block text-xs font-medium text-gray-300 mb-1">Detected Chord</label>
-                <div id="detected-chord-display" class="w-full bg-gray-700 rounded-md py-1 px-3 text-base font-mono text-center">--</div>
-            </div>
-            <div class="pt-1">
-                <label for="accomp-notes-display" class="block text-xs font-medium text-gray-300 mb-1">Last Chord Played</label>
-                <div id="accomp-notes-display" class="w-full bg-gray-700 rounded-md py-1 px-3 text-base font-mono text-center">--</div>
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
-            </div>
-        </div>
-    </div>
+<!-- Chat Panel -->
+<div class="w-full md:w-2/3 lg:w-3/4 flex flex-col p-6 h-full">
+    <h2 class="text-2xl font-bold mb-4 flex items-center">
+        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+        Buddy's Commentary
+    </h2>
+    <div id="chat-log" class="flex-grow bg-gray-800 rounded-lg p-4 overflow-y-auto flex flex-col space-y-4"></div>
 </div>
 
 <div id="status-bar"></div>
-<div id="keyboard-container">
-    <div id="keyboard"></div>
-</div>
-
 
 <script type="module">
     // --- DOM Element References ---
@@ -166,12 +129,9 @@
         outputSelect: document.getElementById('midi-output'),
         inputChannelSelect: document.getElementById('midi-input-channel'),
         accompChannelSelect: document.getElementById('accomp-channel'),
-        reconnectBtn: document.getElementById('reconnect-midi-btn'),
-        playPauseBtn: document.getElementById('play-pause-btn'),
-        playWithMeBtn: document.getElementById('play-with-me-btn'),
+        disconnectBtn: document.getElementById('disconnect-midi-btn'),
         statusText: document.getElementById('midi-status'),
         keyDisplay: document.getElementById('key-display'),
-        genreDisplay: document.getElementById('genre-display'),
         chatLog: document.getElementById('chat-log'),
         styleSelect: document.getElementById('accomp-style'),
         statusBar: document.getElementById('status-bar'),
@@ -180,56 +140,17 @@
 
     // --- Music Theory Definitions ---
     const theory = {
-<<<<<<< HEAD
         majorScaleIntervals: [0, 2, 4, 5, 7, 9, 11],
         minorScaleIntervals: [0, 2, 3, 5, 7, 8, 10],
         diatonicChordsMajor: ['maj7', 'm7', 'm7', 'maj7', '7', 'm7', 'm7b5'],
         diatonicChordsMinor: ['m7', 'm7b5', 'maj7', 'm7', 'm7', 'maj7', '7']
-=======
-        notes: ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'],
-        notes_sharp: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
-        circleOfFifths: [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5],
-        scales: {
-            major: { intervals: [0, 2, 4, 5, 7, 9, 11], chords: ['maj7', 'm7', 'm7', 'maj7', '7', 'm7', 'm7b5'] },
-            minor: { intervals: [0, 2, 3, 5, 7, 8, 10], chords: ['m7', 'm7b5', 'maj7', 'm7', 'm7', 'maj7', '7'] }
-        },
-        secondaryDominants: {
-            major: { 2: 6, 3: 7, 4: 8, 5: 9, 6: 11 },
-            minor: { 5: 11, 6: 0 }
-        },
-        borrowedChords: {
-            major: { 1: 'm7', 3: 'm7b5', 8: 'maj7', 10: '7' },
-            minor: { 4: 'maj7', 9: '7'}
-        },
-        blueNotes: {
-            major: { b3: 3, b5: 6, b7: 10 },
-            minor: { b3: 2, b5: 6, b7: 9 } // relative to minor scale intervals
-        }
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
     };
 
     // --- Application State ---
     let state = {
-<<<<<<< HEAD
-=======
-        activeInput: null, currentKey: null, recentNotes: [], noteCounterForAI: 0,
-        isAIThinking: false, statusTimeout: null, isAccompanimentEnabled: true,
-        isAIAccompanimentThinking: false, suggestionTimeout: null, noteActivityTimeout: null,
-        isAIMelodyPlaying: false, aiMelodyPart: null, isPaused: false,
-        noteHistory: [], detectedGenre: 'N/A', isApiCoolingDown: false, midiEnabled: false, appStarted: false,
-        isDragging: false, lastDraggedKey: null,
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
     };
-    const GENRE_DETECTION_BUFFER = 16;
     const KEY_DETECTION_BUFFER_SIZE = 8;
     const AI_COMMENT_THRESHOLD = 5;
-
-    // --- Local Synth ---
-    const localSynth = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: "fatsawtooth", count: 2, spread: 40 },
-        envelope: { attack: 0.01, decay: 0.1, sustain: 0.5, release: 0.8, attackCurve: 'exponential' }
-    }).toDestination();
-    localSynth.volume.value = -10;
 
     // --- Settings Persistence ---
     function saveSettings() {
@@ -255,7 +176,6 @@
     }
 
     // --- UI & Initialization ---
-<<<<<<< HEAD
     function populateChannelSelectors() {
         [ui.inputChannelSelect, ui.accompChannelSelect].forEach(select => {
             select.innerHTML = '';
@@ -270,49 +190,6 @@
         ui.accompChannelSelect.value = 2;
     }
 
-=======
-    function createKeyboard() {
-        ui.keyboard.innerHTML = '';
-        const startMidi = 36; // C2
-        const endMidi = 84;   // C6
-        const noteIsBlack = (midi) => !([0, 2, 4, 5, 7, 9, 11].includes(midi % 12));
-
-        const totalWhiteKeys = Array.from({length: endMidi - startMidi + 1}, (_, i) => i + startMidi)
-            .filter(midi => !noteIsBlack(midi)).length;
-        const whiteKeyWidth = 100 / totalWhiteKeys;
-        let whiteKeyCounter = 0;
-
-        for (let i = startMidi; i <= endMidi; i++) {
-            const note = new Note(i);
-            if (!noteIsBlack(i)) {
-                const key = document.createElement('div');
-                key.className = 'key white';
-                key.dataset.note = theory.notes_sharp[i % 12] + note.octave;
-                key.style.width = `${whiteKeyWidth}%`;
-                key.style.left = `${whiteKeyCounter * whiteKeyWidth}%`;
-                key.textContent = note.name === 'C' ? theory.notes[i % 12] + note.octave : theory.notes[i % 12];
-                ui.keyboard.appendChild(key);
-                whiteKeyCounter++;
-            }
-        }
-        for (let i = startMidi; i <= endMidi; i++) {
-            const note = new Note(i);
-            if (noteIsBlack(i)) {
-                const key = document.createElement('div');
-                key.className = 'key black';
-                key.dataset.note = theory.notes_sharp[i % 12] + note.octave;
-                const whiteKeysBefore = Array.from({length: i - startMidi}, (_, j) => j + startMidi)
-                    .filter(m => !noteIsBlack(m)).length;
-                key.style.left = `${(whiteKeysBefore - 0.35) * whiteKeyWidth}%`;
-                key.style.width = `${whiteKeyWidth * 0.7}%`;
-                key.textContent = theory.notes[i % 12];
-                ui.keyboard.appendChild(key);
-            }
-        }
-    }
-
-
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
     function addChatMessage(message, sender = 'ai') {
         const bubble = document.createElement('div');
         bubble.textContent = message;
@@ -327,41 +204,24 @@
         ui.statusBar.classList.add('visible');
     }
 
-    function highlightKey(noteIdentifier, className, duration) {
-        const keyElement = document.querySelector(`#keyboard .key[data-note="${noteIdentifier.replace('♯', '#')}"]`);
-        if (keyElement) {
-            keyElement.classList.add(className);
-            setTimeout(() => keyElement.classList.remove(className), duration);
-        }
-    }
+    function highlightSuggestedNotes(notesToHighlight) {
+        clearTimeout(state.suggestionTimeout);
+        document.querySelectorAll('#keyboard .key').forEach(key => key.classList.remove('suggested'));
 
-    function highlightNotes(notes, className, duration) {
-        notes.forEach(note => {
-            const noteName = (typeof note === 'number') ? new Note(note).name + new Note(note).octave : note.replace('♯', '#');
-            highlightKey(noteName, className, duration);
+        if (!notesToHighlight || notesToHighlight.length === 0) return;
+
+        notesToHighlight.forEach(noteName => {
+            const noteWithOctave = noteName.replace('♯', '#');
+            const keyElement = document.querySelector(`#keyboard .key[data-note="${noteWithOctave}"]`);
+            if (keyElement) keyElement.classList.add('suggested');
         });
-    }
 
-    function enterApiCooldown() {
-        if (state.isApiCoolingDown) return;
-        state.isApiCoolingDown = true;
-        showStatusMessage("API rate limit reached. Taking a 10 second break...", 10000);
-        setTimeout(() => {
-            state.isApiCoolingDown = false;
-            showStatusMessage("API is ready again.", 3000);
-        }, 10000);
-    }
-
-    async function startAudio() {
-        if (Tone.context.state !== 'running') {
-            await Tone.start();
-        }
-        console.log("Audio Context Started/Resumed");
-        showStatusMessage("Audio Initialized", 2000);
+        state.suggestionTimeout = setTimeout(() => {
+            document.querySelectorAll('#keyboard .key').forEach(key => key.classList.remove('suggested'));
+        }, 4000);
     }
 
     // --- MIDI Handling ---
-<<<<<<< HEAD
     function connectMidiDevices() {
         if (WebMidi.inputs.length === 0 || WebMidi.outputs.length === 0) {
             return;
@@ -374,50 +234,21 @@
             addChatMessage(`Auto-connected to ${state.activeInput.name} and ${outputName}.`, "system");
             ui.disconnectBtn.classList.remove('hidden');
             Tone.start();
-=======
-    function connectMidiDevices(isReconnect = false) {
-        if (!state.midiEnabled || (state.activeInput && !isReconnect)) return;
-
-        if (WebMidi.inputs.length === 0) {
-            ui.statusText.textContent = 'No MIDI Input.';
-            return;
-        }
-
-        disconnectMidi(true); // Disconnect silently
-
-        state.activeInput = WebMidi.getInputById(ui.inputSelect.value);
-        if (state.activeInput) {
-            const outputName = WebMidi.outputs.length > 0 ? WebMidi.getOutputById(ui.outputSelect.value)?.name : 'None';
-            state.activeInput.addListener('noteon', handleNoteOn, { channels: parseInt(ui.inputChannelSelect.value) });
-            ui.statusText.textContent = `Connected`;
-            if(isReconnect) showStatusMessage(`Reconnected to ${state.activeInput.name}`, 3000);
-            else showStatusMessage(`Connected to ${state.activeInput.name}`, 3000);
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
         }
     }
 
-    function disconnectMidi(isSilent = false) {
+    function disconnectMidi() {
         if (state.activeInput) {
             state.activeInput.removeListener('noteon');
             state.activeInput = null;
             ui.statusText.textContent = 'Status: Disconnected';
-<<<<<<< HEAD
             ui.disconnectBtn.classList.add('hidden');
-=======
-            clearChordDisplays();
-            clearTimeout(state.noteActivityTimeout);
-            if (!isSilent) showStatusMessage("MIDI Disconnected", 3000);
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
         }
     }
 
         try {
             await WebMidi.enable();
-<<<<<<< HEAD
             addChatMessage("Web MIDI ready. Attempting to auto-connect...", "system");
-=======
-            state.midiEnabled = true;
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
 
             WebMidi.inputs.forEach(input => ui.inputSelect.add(new Option(input.name, input.id)));
             WebMidi.outputs.forEach(output => ui.outputSelect.add(new Option(output.name, output.id)));
@@ -428,7 +259,6 @@
             }
 
             connectMidiDevices();
-<<<<<<< HEAD
 
             ui.disconnectBtn.onclick = disconnectMidi;
             ui.accompToggle.onchange = (e) => { state.isAccompanimentEnabled = e.target.checked; };
@@ -437,46 +267,12 @@
             console.error("Could not enable WebMIDI.", err);
             ui.statusText.textContent = "Error: MIDI access blocked.";
             addChatMessage("Error: MIDI access is blocked by browser permissions.", "system");
-=======
-            ui.reconnectBtn.onclick = () => connectMidiDevices(true);
-
-        } catch (err) {
-            console.error("Could not enable WebMIDI.", err);
-            ui.statusText.textContent = "MIDI Blocked";
-            showStatusMessage("MIDI permissions denied. Using local synth.", 4000);
-            ui.reconnectBtn.disabled = true;
-        }
-    }
-
-    function togglePause() {
-        state.isPaused = !state.isPaused;
-        ui.playPauseBtn.innerHTML = state.isPaused ? '▶️' : '⏸️';
-        if(state.isPaused) {
-            if(state.midiEnabled) {
-                const output = WebMidi.getOutputById(ui.outputSelect.value);
-                if(output) output.turnNotesOff();
-            }
-            localSynth.releaseAll();
-            if(state.isAIMelodyPlaying) stopAIMelody(true);
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
         }
     }
 
     function handleNoteOn(e) {
-<<<<<<< HEAD
-=======
-        clearTimeout(state.noteActivityTimeout);
-        const noteEvent = { midi: e.note.number, time: state.midiEnabled ? WebMidi.time : performance.now() };
-        state.noteHistory.push(noteEvent);
-        if(state.noteHistory.length > GENRE_DETECTION_BUFFER) state.noteHistory.shift();
 
-        state.recentNotes.push(e.note.number % 12);
-        if (state.recentNotes.length > KEY_DETECTION_BUFFER_SIZE) state.recentNotes.shift();
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
-
-        highlightKey(e.note.name + e.note.octave, 'playing', 300);
         detectKey();
-        detectGenre();
 
         if (state.currentKey) {
             state.noteCounterForAI++;
@@ -489,43 +285,6 @@
         state.noteActivityTimeout = setTimeout(clearChordDisplays, 3000);
     }
 
-<<<<<<< HEAD
-=======
-    function playVirtualKey(e) {
-        if (state.isPaused) return;
-        startAudio();
-        const noteName = e.target.dataset.note;
-        const note = new Note(noteName);
-
-        highlightKey(noteName, 'active', 200);
-
-        if (state.midiEnabled && WebMidi.outputs.length > 0 && WebMidi.getOutputById(ui.outputSelect.value)) {
-            WebMidi.getOutputById(ui.outputSelect.value).playNote(noteName, { channels: parseInt(ui.inputChannelSelect.value) });
-        } else {
-            localSynth.triggerAttack(noteName);
-        }
-
-        const simulatedEvent = {
-            note: { number: note.midi, name: note.name, octave: note.octave, accidental: note.accidental }
-        };
-        handleNoteOn(simulatedEvent);
-        e.stopPropagation();
-    }
-
-    function stopVirtualKey(e) {
-        const noteName = e.target.dataset.note;
-        const output = state.midiEnabled && WebMidi.outputs.length > 0 ? WebMidi.getOutputById(ui.outputSelect.value) : null;
-        if (output) {
-            output.stopNote(noteName, { channels: parseInt(ui.inputChannelSelect.value) });
-        } else {
-            localSynth.triggerRelease(noteName);
-        }
-        e.stopPropagation();
-    }
-
-
-    // --- Core Music & AI Logic ---
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
     function detectKey() {
         if (state.recentNotes.length < 5) return;
 
@@ -543,7 +302,6 @@
         }
     }
 
-<<<<<<< HEAD
     function getScaleNotes(rootNote, type) {
     }
 
@@ -552,64 +310,11 @@
     }
 
         if (!state.currentKey || !state.isAccompanimentEnabled) return;
-=======
-    function detectGenre() {
-        if (state.noteHistory.length < GENRE_DETECTION_BUFFER || !state.currentKey) return;
-
-        let jazzBluesScore = 0;
-        let classicalPopScore = 0;
-
-        const timeDiffs = [];
-        for(let i = 1; i < state.noteHistory.length; i++) timeDiffs.push(state.noteHistory[i].time - state.noteHistory[i-1].time);
-        const avgTime = timeDiffs.reduce((a,b) => a+b, 0) / timeDiffs.length;
-        const bpm = 60000 / avgTime;
-
-        let blueNoteCount = 0;
-        const bluesyIntervals = theory.blueNotes[state.currentKey.type];
-        state.noteHistory.forEach(noteEvent => {
-            const interval = (noteEvent.midi - state.currentKey.root + 12) % 12;
-            if(Object.values(bluesyIntervals).includes(interval)) blueNoteCount++;
-        });
-
-        if(blueNoteCount / state.noteHistory.length > 0.1) jazzBluesScore += 2;
-
-        if(bpm > 100 && bpm < 160) jazzBluesScore++; else classicalPopScore++;
-
-        if(new Set(timeDiffs.map(t => Math.round(t/50) * 50)).size > 4) jazzBluesScore++; else classicalPopScore++;
-
-        const newGenre = jazzBluesScore > classicalPopScore ? (bpm < 120 ? 'Blues' : 'Jazz') : (bpm < 120 ? 'Classical' : 'Pop');
-        if(newGenre !== state.detectedGenre) {
-            state.detectedGenre = newGenre;
-            ui.genreDisplay.textContent = state.detectedGenre;
-        }
-    }
-
-    function getScaleNotes(rootNote, type) {
-        return theory.scales[type].intervals.map(i => (rootNote + i) % 12);
-    }
-
-    function getChordFromTones(rootMidi, quality) {
-        const [r,t,f,s] = [rootMidi, rootMidi+4, rootMidi+7, rootMidi+11];
-        switch (quality) {
-            case 'm7':   return [r, t-1, f, s-1];
-            case '7':    return [r, t,   f, s-1];
-            case 'm7b5': return [r, t-1, f-1, s-1];
-            case 'maj7': default: return [r, t, f, s];
-        }
-    }
-
-    async function getAIAccompaniment(note) {
-        // This function remains the same as before...
-    }
-
-    function playAccompaniment(note) {
-        if (!state.currentKey || !state.isAccompanimentEnabled || state.isPaused) return;
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
         if (ui.styleSelect.value === 'ai') { getAIAccompaniment(note); return; }
 
-        const output = state.midiEnabled ? WebMidi.getOutputById(ui.outputSelect.value) : null;
+        const output = WebMidi.getOutputById(ui.outputSelect.value);
+        if (!output) return;
 
-<<<<<<< HEAD
         if (degree === -1) {
             ui.accompNotesDisplay.textContent = 'Out of Key';
             ui.detectedChordDisplay.textContent = 'N/A';
@@ -618,78 +323,9 @@
 
         const chordNoteNumbers = getChordNotes(chordRootMidi, state.currentKey, degree);
         ui.accompNotesDisplay.textContent = chordNoteNumbers.map(n => Tone.Frequency(n, 'midi').toNote().replace('#','♯')).join(', ');
-=======
-        const melodyNote = note.number % 12;
-        const degree = state.currentKey.notes.indexOf(melodyNote);
-
-        let chordRootMidi, chordNoteNumbers, chordName;
-
-        let secondaryDominantTarget = null;
-        if (state.currentKey && theory.secondaryDominants[state.currentKey.type]) {
-            for (const targetDegree of Object.keys(theory.secondaryDominants[state.currentKey.type])) {
-                const targetChordRoot = (state.currentKey.root + theory.scales[state.currentKey.type].intervals[targetDegree - 1]) % 12;
-                const secondaryDominantRoot = (targetChordRoot + 7) % 12;
-                const leadingTone = (secondaryDominantRoot + 11) % 12;
-                if (melodyNote === leadingTone) {
-                    secondaryDominantTarget = { root: secondaryDominantRoot, degree: targetDegree };
-                    break;
-                }
-            }
-        }
-
-        if (secondaryDominantTarget) {
-            chordRootMidi = Tone.Frequency(theory.notes_sharp[secondaryDominantTarget.root] + "3").toMidi();
-            chordNoteNumbers = getChordFromTones(chordRootMidi, '7');
-            const rootName = theory.notes[secondaryDominantTarget.root];
-            chordName = `${rootName}7 (V7/${['i','ii','iii','iv','v','vi','vii'][secondaryDominantTarget.degree - 1]})`;
-        } else if (degree === -1) {
-            const parallelKeyType = state.currentKey.type === 'major' ? 'minor' : 'major';
-            const parallelScale = getScaleNotes(state.currentKey.root, parallelKeyType);
-            const parallelDegree = parallelScale.indexOf(melodyNote);
-            if (parallelDegree !== -1) {
-                const rootNoteName = theory.notes[parallelScale[parallelDegree]];
-                const chordQuality = theory.scales[parallelKeyType].chords[parallelDegree];
-                chordName = `Borrowed: ${rootNoteName}${chordQuality}`;
-                chordRootMidi = Tone.Frequency(theory.notes_sharp[parallelScale[parallelDegree]] + "3").toMidi();
-                chordNoteNumbers = getChordFromTones(chordRootMidi, chordQuality);
-            } else {
-                ui.accompNotesDisplay.textContent = 'Out of Key';
-                ui.detectedChordDisplay.textContent = 'N/A';
-                return;
-            }
-        } else {
-            const rootNoteName = theory.notes[state.currentKey.notes[degree]];
-            const chordQuality = theory.scales[state.currentKey.type].chords[degree];
-            chordName = `${rootNoteName}${chordQuality}`;
-            chordRootMidi = Tone.Frequency(theory.notes_sharp[state.currentKey.notes[degree]] + "3").toMidi();
-            chordNoteNumbers = getChordFromTones(chordRootMidi, chordQuality);
-        }
-
-        if (!chordNoteNumbers) return;
-
-        ui.detectedChordDisplay.textContent = chordName;
-        const chordNoteNames = chordNoteNumbers.map(n => Tone.Frequency(n, 'midi').toNote());
-        ui.accompNotesDisplay.textContent = chordNoteNames.join(', ').replace(/#/g, '♯');
-        highlightNotes(chordNoteNumbers, 'playing', 500);
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
 
         const style = ui.styleSelect.value;
-<<<<<<< HEAD
 
-=======
-        const duration = style === 'chords' ? '4n' : '16n';
-        const timeStep = style === 'chords' ? 0 : (style === 'arpeggio-updown' ? 100 : 125);
-
-        let notesToPlay = chordNoteNames;
-        if (style === 'arpeggio-down') notesToPlay = [...chordNoteNames].reverse();
-        if (style === 'arpeggio-updown') notesToPlay = chordNoteNumbers.concat([...chordNoteNames].slice(1,-1).reverse());
-
-        if(output) {
-            notesToPlay.forEach((n, i) => output.playNote(n, { channels: channel, time: `+${i * timeStep}`, duration: duration === '4n' ? 500 : 100}));
-        } else {
-            notesToPlay.forEach((n, i) => localSynth.triggerAttackRelease(n, duration, `+${i * (timeStep / 1000)}`));
-        }
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
     }
 
     function isNoteInKey(noteNumber, key) {
@@ -697,21 +333,14 @@
     }
 
     async function getAICommentary(note, isDissonant) {
-        if (state.isAIThinking || state.isApiCoolingDown) return;
         state.isAIThinking = true;
-        addChatMessage("...", "ai");
+        addChatMessage("Buddy is thinking...", "system");
 
         const keyName = `${theory.notes[state.currentKey.root]} ${state.currentKey.type}`;
 
         let prompt;
         if (isDissonant) {
-<<<<<<< HEAD
         } else {
-=======
-            prompt = `You are an AI music theory tutor. In ${keyName}, the note ${noteName} is dissonant. In one very short sentence, explain why and suggest a better note from the scale. Example: 'That F♯ clashes with the Cmaj7 chord; try G4 instead.' In your response, include a JSON object with your suggested notes like: {"suggestion": ["G4"]}`;
-        } else {
-            prompt = `You are an AI music theory coach. In ${keyName}, ${noteName} works well. In one very short sentence, suggest a next note or a related chord to make it more interesting, using music theory like the Circle of Fifths. Example: 'Good note. Now, try a D7 to lead to the G chord.' In your response, include a JSON object with suggested notes for the D7 chord: {"suggestion": ["D4", "F#4", "A4", "C5"]}`;
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
         }
 
         try {
@@ -719,7 +348,6 @@
             const apiKey = "AIzaSyC0LEoXIAHFHe3I5oj0TGhF87g-V63RY-g";
             });
             const result = await response.json();
-<<<<<<< HEAD
 
             const thinkingMsg = Array.from(ui.chatLog.children).find(c => c.textContent.includes('thinking'));
             if (thinkingMsg) ui.chatLog.removeChild(thinkingMsg);
@@ -728,129 +356,10 @@
             console.error("Error fetching AI commentary:", error);
             const thinkingMsg = Array.from(ui.chatLog.children).find(c => c.textContent.includes('thinking'));
             if (thinkingMsg) ui.chatLog.removeChild(thinkingMsg);
-=======
-            const thinkingMsg = Array.from(ui.chatLog.children).find(c => c.textContent === '...');
-            if (thinkingMsg) ui.chatLog.removeChild(thinkingMsg);
-
-            const textPart = result.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (textPart) {
-                const textOnly = textPart.replace(/```json[\s\S]*```/g, '').trim();
-                addChatMessage(textOnly, 'ai');
-                const suggestionMatch = textPart.match(/\{.*\}/s);
-                if (suggestionMatch) {
-                    try {
-                        highlightNotes(JSON.parse(suggestionMatch[0]).suggestion, 'suggested', 4000);
-                    } catch (e) { console.error("Could not parse suggestion JSON", e); }
-                }
-            } else { throw new Error("No content in API response."); }
-        } catch (error) {
-            const thinkingMsg = Array.from(ui.chatLog.children).find(c => c.textContent === '...');
-            if (thinkingMsg) ui.chatLog.removeChild(thinkingMsg);
-            if(error.message.includes("429")) {
-                enterApiCooldown();
-            } else if (error.message.includes("403")) {
-                addChatMessage("Buddy's commentary service is unavailable (403).", "system");
-            } else {
-                addChatMessage("Your buddy is... taking a little nap.", "ai");
-            }
-        } finally { state.isAIThinking = false; }
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
-    }
-
-    // --- Play With Me ---
-    async function handlePlayWithMeToggle() {
-        // This function remains the same as before...
-    }
-
-    function playAIMelody(melody) {
-        // This function remains the same as before...
-    }
-
-    function stopAIMelody(isPaused = false) {
-        if (state.aiMelodyPart) {
-            state.aiMelodyPart.stop(0);
-            state.aiMelodyPart.dispose();
-            state.aiMelodyPart = null;
-            Tone.Transport.stop();
-            if(state.midiEnabled && WebMidi.getOutputById(ui.outputSelect.value)) {
-                WebMidi.getOutputById(ui.outputSelect.value).turnNotesOff();
-            }
-            localSynth.releaseAll();
-        }
-        if(!isPaused) {
-            showStatusMessage("Playback stopped.", 3000);
-            resetPlayWithMeButton();
-        }
-    }
-
-    function resetPlayWithMeButton() {
-        // This function remains the same as before...
     }
 
     // --- Initial Load ---
-<<<<<<< HEAD
         addChatMessage("Welcome! I'm your AI Music Buddy. Let's make some music!", "ai");
-=======
-    function main() {
-        createKeyboard();
-
-        const initApp = async () => {
-            await startAudio();
-
-            [ui.inputChannelSelect, ui.accompChannelSelect].forEach(select => {
-                select.innerHTML = '';
-                for (let i = 1; i <= 16; i++) select.add(new Option(`${i}`, i));
-            });
-            const loadedSettings = loadSettings();
-            if (!loadedSettings) ui.styleSelect.value = 'ai';
-
-            setupMidi(loadedSettings);
-
-            const welcomeMsg = document.querySelector("#chat-log .chat-bubble-system");
-            if (welcomeMsg && welcomeMsg.textContent.includes("Click anywhere")) {
-                welcomeMsg.textContent = "Welcome! I'm your AI Music Buddy. Let's make some music!";
-            } else {
-                addChatMessage("Welcome! I'm your AI Music Buddy. Let's make some music!", "ai");
-            }
-
-            ui.accompToggle.onchange = () => {
-                state.isAccompanimentEnabled = ui.accompToggle.checked;
-                saveSettings();
-            };
-            [ui.inputSelect, ui.outputSelect, ui.inputChannelSelect, ui.accompChannelSelect, ui.styleSelect].forEach(element => {
-                element.onchange = saveSettings;
-            });
-            // Add keyboard listeners
-            document.querySelectorAll('#keyboard .key').forEach(key => {
-                key.addEventListener('mousedown', (e) => playVirtualKey(e));
-                key.addEventListener('mouseup', (e) => stopVirtualKey(e));
-                key.addEventListener('mouseleave', (e) => stopVirtualKey(e));
-                key.addEventListener('touchstart', (e) => playVirtualKey(e));
-                key.addEventListener('touchend', (e) => stopVirtualKey(e));
-            });
-            ui.playWithMeBtn.onclick = handlePlayWithMeToggle;
-            ui.playPauseBtn.onclick = togglePause;
-        };
-
-        const startupListener = () => {
-            if(!state.appStarted) {
-                initApp();
-                state.appStarted = true;
-                document.body.removeEventListener('mousedown', startupListener);
-                document.body.removeEventListener('touchstart', startupListener);
-                document.body.removeEventListener('keydown', startupListener);
-            }
-        };
-
-        document.body.addEventListener('mousedown', startupListener);
-        document.body.addEventListener('touchstart', startupListener);
-        document.body.addEventListener('keydown', startupListener);
-
-        addChatMessage("Click anywhere or press a key to start...", "system");
-    }
-
-    main();
->>>>>>> 87ad6d8 (enhanced features for rhytm king)
 </script>
 </body>
 </html>
