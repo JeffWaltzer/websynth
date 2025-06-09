@@ -22,7 +22,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.1);
             padding: 0.5rem;
             margin-bottom: 0.75rem;
-            transition: opacity 0.4s ease-in-out;
+            transition: opacity 0.4s ease-in-out, filter 0.4s ease-in-out;
         }
         .control-slider-container {
             display: flex;
@@ -138,7 +138,7 @@
             border-radius: 50%;
             background-color: #7a6a5a;
             margin: 0 1.5px;
-            transition: background-color 0.1s;
+            transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s;
         }
         .pattern-step.active { background-color: #f0ad4e; }
         .pattern-step.current {
@@ -219,9 +219,17 @@
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 0.75rem;
         }
-        #sequencerTracksContainer.stopped .synth-panel {
-            opacity: 0.65;
+        #sequencerWrapperPanel.stopped {
+            opacity: 0.5;
+            filter: saturate(0.5);
         }
+        #sequencerWrapperPanel.stopped .pattern-step.active,
+        #sequencerWrapperPanel.stopped .pattern-step.current {
+            background-color: #7a6a5a;
+            transform: scale(1);
+            box-shadow: none;
+        }
+
         @media (min-width: 1400px) {
             #sequencerTracksContainer {
                 grid-template-columns: repeat(4, 1fr);
@@ -279,24 +287,25 @@
     <p class="text-xs md:text-sm">Euclidean MIDI Sequencer</p>
 </header>
 
-<div class="flex flex-col xl:flex-row gap-3">
-    <div class="flex flex-col md:flex-row xl:flex-col gap-3">
-        <!-- Global Controls & MIDI Settings Panel -->
-        <div class="md:flex-none md:max-w-xs synth-panel flex flex-col gap-2 master-control-panel">
-            <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
+<div class="flex justify-center items-center gap-2 flex-wrap mb-4 px-2">
+    <button id="playStopButton" class="push-button w-full sm:w-auto" title="Start or stop all sequences">Play</button>
+    <button id="defaultSettingsButton" class="push-button default-settings-button" title="Load default patterns for all tracks">Defaults</button>
+    <button id="masterRandomizeButton" class="push-button master-randomize-button" title="Randomize all active tracks">Rnd All</button>
+    <button id="reInitMidiButton" class="push-button re-init-midi-button" title="Re-initialize MIDI devices and send All Notes Off">Re-Init MIDI</button>
+</div>
 
-            <button id="playStopButton" class="push-button w-full" title="Start or stop all sequences">Play</button>
-            <div class="flex gap-1 mt-1">
-                <button id="defaultSettingsButton" class="push-button w-1/2 default-settings-button" title="Load default patterns for all tracks">Defaults</button>
-                <button id="masterRandomizeButton" class="push-button w-1/2 master-randomize-button" title="Randomize all active tracks">Rnd All</button>
-            </div>
-            <button id="reInitMidiButton" class="push-button w-full mt-1 re-init-midi-button" title="Re-initialize MIDI devices and send All Notes Off">Re-Init MIDI</button>
+
+<div class="flex flex-col gap-3">
+    <div class="flex flex-col lg:flex-row gap-3">
+        <!-- Global Controls & MIDI Settings Panel -->
+        <div class="lg:max-w-xs synth-panel flex flex-col gap-2 master-control-panel">
+            <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
 
             <div class="control-group">
                 <div><label for="numTracksInput">Number of Tracks:</label></div>
                 <div class="number-input-container">
                     <button class="number-input-button" data-target="numTracksInput" data-action="decrement" title="Decrease number of tracks">-</button>
-                    <input type="number" id="numTracksInput" min="1" max="8" value="4" title="Set number of sequencer tracks (1-8)">
+                    <input type="number" id="numTracksInput" min="1" max="12" value="4" title="Set number of sequencer tracks (1-12)">
                     <button class="number-input-button" data-target="numTracksInput" data-action="increment" title="Increase number of tracks">+</button>
                 </div>
             </div>
@@ -350,24 +359,24 @@
             </div>
         </div>
 
-        <!-- Channel Volumes Panel -->
-        <div class="flex-grow synth-panel">
-            <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
-            <div id="channelVolumesContainer" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-2 gap-x-3 gap-y-1">
-                <!-- Channel volumes will be generated here -->
+        <!-- Sequencer Tracks Panel -->
+        <div id="sequencerWrapperPanel" class="flex-grow synth-panel">
+            <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer</h2>
+            <div id="sequencerTracksContainer">
+                <!-- Tracks will be generated here by JS -->
             </div>
         </div>
     </div>
 
-
-    <!-- Sequencer Tracks Panel -->
-    <div class="flex-grow synth-panel">
-        <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer</h2>
-        <div id="sequencerTracksContainer" class="stopped">
-            <!-- Tracks will be generated here by JS -->
+    <!-- Channel Volumes Panel -->
+    <div class="w-full synth-panel">
+        <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
+        <div id="channelVolumesContainer" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 lg:grid-cols-4 xl:grid-cols-8 gap-x-3 gap-y-1">
+            <!-- Channel volumes will be generated here -->
         </div>
     </div>
 </div>
+
 
 <div id="explanationContainer" class="explanation-text-footer">
     <p>
@@ -393,6 +402,7 @@
     const masterVolumeLearnCc = document.getElementById('masterVolumeLearnCc');
     const midiOutSelect = document.getElementById('midiOutSelect');
     const midiChannelSelect = document.getElementById('midiChannelSelect');
+    const sequencerWrapperPanel = document.getElementById('sequencerWrapperPanel');
     const sequencerTracksContainer = document.getElementById('sequencerTracksContainer');
     const channelVolumesContainer = document.getElementById('channelVolumesContainer');
     const userIdDisplay = document.getElementById('userIdDisplay');
@@ -402,13 +412,13 @@
     let midiOutput = null;
     let selectedMidiChannel = 1;
     let numTracks = 4;
-    const MAX_TRACKS = 8;
+    const MAX_TRACKS = 12; // Updated max tracks
     let sequencerTracks = [];
     let transportLoops = [];
     let currentLearningControl = null;
     let noteLearningTrack = null;
     let midiCcMap = {};
-    const SETTINGS_KEY = 'rhythmKing77Settings_v10'; // Incremented version
+    const SETTINGS_KEY = 'rhythmKing77Settings_v11'; // Incremented version
     let statusTimeout = null;
     let stepsLocked = false;
     let globalLockedSteps = 16;
@@ -530,13 +540,12 @@
 
     reInitMidiButton.addEventListener('click', async () => {
         showStatusMessage("Re-initializing MIDI...", 1500);
-        if (midiOutput) for (let i = 1; i <= 16; i++) sendAllNotesOff(i);
-        if (Tone.Transport.state === 'started') playStopButton.click();
-        Tone.Transport.cancel(0);
-        transportLoops.forEach(l => l && l.stop(0).dispose());
-        transportLoops = [];
-        sequencerTracks.forEach(t => { t.currentStep = 0; t.stepCounterForUI = 0; renderPatternDisplay(t); });
+        if (Tone.Transport.state === 'started') {
+            await playStopButton.click(); // Stop transport first
+        }
+        for (let i = 1; i <= 16; i++) sendAllNotesOff(i); // Send All Notes Off
         await setupMIDI();
+        sequencerTracks.forEach(updateTrackPattern); // Rebuild sequences after MIDI re-init
     });
 
     function populateMidiDeviceList() {
@@ -976,7 +985,10 @@
     }
 
     function setupTrackLoop(track) {
-        if (transportLoops[track.id]) transportLoops[track.id].stop(0).dispose();
+        if (transportLoops[track.id]) {
+            transportLoops[track.id].stop(0).dispose();
+            transportLoops[track.id] = null;
+        }
         if (track.steps === 0 || !track.pattern.length) { renderPatternDisplay(track); return; }
 
         transportLoops[track.id] = new Tone.Sequence((time, value) => {
@@ -996,12 +1008,32 @@
                 track.currentStep = (track.currentStep + 1) % track.steps;
                 renderPatternDisplay(track);
             }, time);
-        }, track.pattern, `${track.steps}n`).start(0);
+        }, track.pattern, `${track.steps}n`);
+
+        if (Tone.Transport.state === 'started') {
+            transportLoops[track.id].start(0);
+        }
     }
 
-    Tone.Transport.on('start', () => sequencerTracksContainer.classList.remove('stopped'));
+    Tone.Transport.on('start', () => {
+        sequencerWrapperPanel.classList.remove('stopped');
+        playStopButton.textContent = 'Stop';
+        playStopButton.classList.add('active');
+    });
     Tone.Transport.on('stop', () => {
-        sequencerTracksContainer.classList.add('stopped');
+        sequencerWrapperPanel.classList.add('stopped');
+        playStopButton.textContent = 'Play';
+        playStopButton.classList.remove('active');
+
+        const allChannelsInUse = new Set([selectedMidiChannel]);
+        sequencerTracks.forEach(t => {
+            const ch = (t.channelOverride !== 'global') ? parseInt(t.channelOverride) : selectedMidiChannel;
+            sendMidiNoteOff(t.note, ch);
+            if (t.channelOverride !== 'global') {
+                allChannelsInUse.add(parseInt(t.channelOverride));
+            }
+        });
+        allChannelsInUse.forEach(ch => sendAllNotesOff(ch));
         sequencerTracks.forEach(t => { t.currentStep = 0; renderPatternDisplay(t); });
     });
 
@@ -1042,17 +1074,15 @@
     });
 
     playStopButton.addEventListener('click', async () => {
+        if (Tone.context.state !== 'running') {
+            await Tone.start();
+        }
+
         if (Tone.Transport.state === 'started') {
             Tone.Transport.stop();
-            const allChs = new Set([selectedMidiChannel, ...sequencerTracks.map(t => parseInt(t.channelOverride)).filter(c => !isNaN(c))]);
-            allChs.forEach(sendAllNotesOff);
-            playStopButton.textContent = 'Play';
-            playStopButton.classList.remove('active');
         } else {
-            if (Tone.context.state !== 'running') await Tone.start();
+            transportLoops.forEach(loop => loop && loop.start(0));
             Tone.Transport.start();
-            playStopButton.textContent = 'Stop';
-            playStopButton.classList.add('active');
         }
     });
 
@@ -1112,6 +1142,7 @@
         if (!loaded) defaultSettingsButton.click();
         else if (stepsLocked) synchronizeAllTrackSteps(globalLockedSteps);
 
+        sequencerWrapperPanel.classList.add('stopped');
         showStatusMessage("Rhythm King 77 Initialized!", 3000);
     }
     window.onload = init;
