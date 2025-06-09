@@ -13,37 +13,34 @@
             background-color: #3a3a3a;
             color: #f0e6d2;
             overscroll-behavior: none;
-            font-size: 12px;
+            font-size: 13px;
         }
         .synth-panel {
             background-color: #5a4a3a;
             border: 2px solid #7a6a5a;
-            border-radius: 10px;
+            border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.1);
             padding: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-        .toolbar {
-            background-color: #2a2a2a;
-            border: 2px solid #4a4a4a;
+            margin-bottom: 0.75rem;
+            transition: opacity 0.4s ease-in-out;
         }
         .control-slider-container {
             display: flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.3rem;
         }
         .number-input-container {
             display: flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.3rem;
         }
         .slider-button, .number-input-button {
             background-color: #7a6a5a;
             color: #f0e6d2;
             border: 1px solid #5a4a3a;
             border-radius: 4px;
-            padding: 0.05rem 0.25rem;
-            font-size: 0.75rem;
+            padding: 0.1rem 0.3rem;
+            font-size: 0.8rem;
             font-weight: bold;
             line-height: 1;
             cursor: pointer;
@@ -86,62 +83,53 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .master-control-panel .control-slider {
-            height: 24px;
+            height: 30px;
         }
         .master-control-panel .control-slider::-webkit-slider-thumb {
-            width: 30px;
-            height: 30px;
+            width: 37.5px;
+            height: 37.5px;
         }
         .master-control-panel .control-slider::-moz-range-thumb {
-            width: 30px;
-            height: 30px;
+            width: 37.5px;
+            height: 37.5px;
         }
         .push-button {
             font-family: 'Orbitron', sans-serif;
             background-color: #7a6a5a;
             color: #f0e6d2;
             border: 2px solid #5a4a3a;
-            padding: 0.4rem 0.8rem;
+            padding: 0.5rem 1rem;
             border-radius: 6px;
             text-transform: uppercase;
             font-weight: bold;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.2);
             transition: all 0.1s ease-in-out;
         }
-        .push-button:disabled {
-            background-color: #4a3a2a;
-            color: #7a6a5a;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-        }
-
         .push-button:active, .push-button.active {
             background-color: #9a8a7a;
             box-shadow: 0 1px 2px rgba(0,0,0,0.4), inset 0 2px 3px rgba(0,0,0,0.2);
             transform: translateY(1px);
         }
-        .utility-button {
+        .learn-cc-button, .note-learn-button, .randomize-button, .default-settings-button, .master-randomize-button, .re-init-midi-button {
             color: white;
             padding: 0.15rem 0.35rem;
             font-size: 0.6rem;
             border-radius: 3px;
-            margin-left: 0.2rem;
         }
-        .learn-cc-button { background-color: #D84315; }
+        .learn-cc-button { background-color: #4CAF50; flex-shrink: 0; }
+        .note-learn-button { background-color: #f44336; }
         .randomize-button { background-color: #2196F3; }
         .default-settings-button { background-color: #607D8B; }
         .master-randomize-button { background-color: #FFC107; color: #333; }
         .re-init-midi-button { background-color: #9C27B0; }
-        .pattern-button { background-color: #009688; }
-        .learn-cc-button.learning { background-color: #FF9800; }
+        .learn-cc-button.learning, .note-learn-button.learning { background-color: #FF9800; }
 
         .pattern-display {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 0.5rem auto;
+            margin-top: 0.2rem;
             height: 24px;
         }
         .pattern-step {
@@ -154,8 +142,8 @@
         }
         .pattern-step.active { background-color: #f0ad4e; }
         .pattern-step.current {
-            transform: scale(1.5);
-            box-shadow: 0 0 8px #f0ad4e;
+            transform: scale(1.25);
+            box-shadow: 0 0 5px #f0ad4e;
         }
         label {
             display: block;
@@ -163,17 +151,10 @@
             font-size: 0.65rem;
             text-transform: uppercase;
             font-family: 'Orbitron', sans-serif;
+            white-space: nowrap;
+            margin-right: 0.5rem;
         }
-        .label-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .label-text {
-            flex-grow: 1;
-        }
-
-        select, input[type="number"], input[type="text"] {
+        select, input[type="number"] {
             background-color: #4a3a2a;
             border: 1px solid #7a6a5a;
             color: #f0e6d2;
@@ -183,15 +164,22 @@
             font-size: 0.75rem;
         }
         .master-control-panel select, .master-control-panel input[type="number"] {
-            padding: 0.5rem 0.3rem;
+            padding: 0.6rem 0.3rem;
         }
         .master-control-panel .number-input-container input[type="number"] {
             padding: 0.3rem;
             text-align: center;
             flex-grow: 1;
         }
-        .note-input-container {
-            width: 33%;
+
+        input[type="text"] {
+            background-color: #4a3a2a;
+            border: 1px solid #7a6a5a;
+            color: #f0e6d2;
+            padding: 0.3rem;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 0.75rem;
         }
         .value-display {
             font-family: 'Orbitron', sans-serif;
@@ -199,34 +187,48 @@
             font-size: 0.75rem;
             min-width: 25px;
             text-align: right;
+            flex-grow: 1;
         }
         .control-group {
             display: flex;
             flex-direction: column;
-            margin-bottom: 0.4rem;
+            margin-bottom: 0.2rem;
         }
-        .control-group > div:first-child {
+        .control-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.05rem;
+            margin-bottom: 0.1rem;
+        }
+        .checkbox-label-container {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.7rem;
+            margin-top: 0.2rem;
+            cursor: pointer;
+        }
+        .checkbox-label-container input[type="checkbox"] {
+            width: 12px;
+            height: 12px;
+            accent-color: #f0ad4e;
         }
 
         #sequencerTracksContainer {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            justify-content: flex-start;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 0.75rem;
         }
-        #sequencerTracksContainer.disabled {
-            opacity: 0.5;
-            pointer-events: none;
+        #sequencerTracksContainer.stopped .synth-panel {
+            opacity: 0.65;
+        }
+        @media (min-width: 1400px) {
+            #sequencerTracksContainer {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
         #sequencerTracksContainer > .synth-panel {
-            flex: 1 1 260px;
-            min-width: 250px;
-            max-width: 380px;
             margin-bottom: 0;
         }
         #statusBar {
@@ -237,9 +239,7 @@
             background-color: #2a2a2a;
             color: #f0e6d2;
             padding: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            text-align: center;
             font-size: 0.8rem;
             z-index: 1001;
             opacity: 0;
@@ -250,17 +250,6 @@
             opacity: 1;
             pointer-events: auto;
         }
-        #statusBar > span {
-            flex-grow: 1;
-            text-align: center;
-        }
-        #noteDisplay {
-            font-family: 'Orbitron', sans-serif;
-            color: #f0ad4e;
-            padding: 0 1rem;
-            min-width: 100px;
-            text-align: right;
-        }
         .explanation-text-footer {
             font-size: 0.75rem;
             line-height: 1.4;
@@ -270,121 +259,114 @@
             max-width: 600px;
             margin: 1rem auto 0 auto;
         }
-        #animalDancerContainer {
+        .note-input-group {
             display: flex;
-            justify-content: space-around;
             align-items: center;
-            width: 100%;
-            min-height: 100px;
-            background-color: #1a1a1a;
-            border-radius: 10px;
+            gap: 0.25rem;
         }
-        .animal-dancer {
-            font-size: 2.5rem;
-            transition: transform 0.1s ease-out;
+        .note-input-group > input {
+            flex-grow: 1;
         }
-        .animal-dancer.dance {
-            transform: translateY(-15px) scale(1.2);
+        .disco-flash {
+            transition: background-color 0.05s ease-in-out !important;
         }
     </style>
 </head>
 <body class="p-1 md:p-2 pb-12">
 
-<header class="text-center mb-2">
+<header class="text-center mb-3">
     <h1 class="text-2xl md:text-3xl font-bold" style="font-family: 'Orbitron', sans-serif; color: #f0ad4e;">Rhythm King 77</h1>
     <p class="text-xs md:text-sm">Euclidean MIDI Sequencer</p>
 </header>
 
-<div class="synth-panel toolbar mb-2">
-    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <div class="flex items-center gap-x-2">
-            <button id="playStopButton" class="push-button text-lg" title="Start or stop all sequences">▶</button>
-            <button id="lockStepsToggleButton" class="push-button" title="When active, all tracks share the same 'Steps' value">Lock Steps</button>
-            <button id="masterRandomizeButton" class="push-button master-randomize-button" title="Randomize all active tracks">Rnd All</button>
-            <button id="defaultSettingsButton" class="push-button default-settings-button" title="Load default patterns for all tracks">Defaults</button>
-            <button id="reInitMidiButton" class="push-button re-init-midi-button text-lg" title="Re-initialize MIDI devices and send All Notes Off">🔌</button>
-        </div>
-        <div class="flex items-end gap-x-2 flex-wrap">
-            <div class="control-group mb-0 flex-grow min-w-[150px]">
-                <label for="patternNameInput">Pattern Name</label>
-                <input type="text" id="patternNameInput" title="Enter a name to save the current pattern">
-            </div>
-            <button id="savePatternButton" class="push-button pattern-button text-lg" title="Save all current track settings as a new pattern">💾</button>
-            <div class="control-group mb-0 flex-grow min-w-[150px]">
-                <label for="savedPatternsSelect">Load/Delete Pattern</label>
-                <select id="savedPatternsSelect" title="Select a saved pattern"></select>
-            </div>
-            <button id="loadPatternButton" class="push-button pattern-button text-lg" title="Load the selected pattern">📂</button>
-            <button id="deletePatternButton" class="push-button chain-button text-lg" title="Delete the selected pattern">🗑️</button>
-        </div>
-    </div>
-</div>
+<div class="flex flex-col xl:flex-row gap-3">
+    <div class="flex flex-col md:flex-row xl:flex-col gap-3">
+        <!-- Global Controls & MIDI Settings Panel -->
+        <div class="md:flex-none md:max-w-xs synth-panel flex flex-col gap-2 master-control-panel">
+            <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
 
-
-<div class="flex flex-col md:flex-row gap-2">
-    <div class="md:flex-none md:max-w-xs synth-panel flex flex-col gap-2 master-control-panel">
-        <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
-
-        <div class="control-group">
-            <div>
-                <label for="swingSlider">Swing:</label>
-                <span id="swingValue" class="value-display">0</span>%
+            <button id="playStopButton" class="push-button w-full" title="Start or stop all sequences">Play</button>
+            <div class="flex gap-1 mt-1">
+                <button id="defaultSettingsButton" class="push-button w-1/2 default-settings-button" title="Load default patterns for all tracks">Defaults</button>
+                <button id="masterRandomizeButton" class="push-button w-1/2 master-randomize-button" title="Randomize all active tracks">Rnd All</button>
             </div>
-            <input type="range" id="swingSlider" min="0" max="75" value="0" step="1" class="control-slider" title="Adjust master swing amount">
-        </div>
+            <button id="reInitMidiButton" class="push-button w-full mt-1 re-init-midi-button" title="Re-initialize MIDI devices and send All Notes Off">Re-Init MIDI</button>
 
-        <div class="control-group">
-            <div>
-                <label for="numTracksInput">Number of Tracks:</label>
-            </div>
-            <div class="number-input-container">
-                <button class="number-input-button" data-target="numTracksInput" data-action="decrement" title="Decrease number of tracks">-</button>
-                <input type="number" id="numTracksInput" min="1" max="8" value="4" title="Set number of sequencer tracks (1-8)">
-                <button class="number-input-button" data-target="numTracksInput" data-action="increment" title="Increase number of tracks">+</button>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <div class="label-container">
-                <label for="bpmSlider">Tempo:</label>
-                <div>
-                    <span id="bpmValue" class="value-display">55</span>
-                    <button id="bpmSliderLearnCc" class="learn-cc-button utility-button" data-param-id="bpmSlider" title="Map Master Tempo to a MIDI CC">LRN</button>
+            <div class="control-group">
+                <div><label for="numTracksInput">Number of Tracks:</label></div>
+                <div class="number-input-container">
+                    <button class="number-input-button" data-target="numTracksInput" data-action="decrement" title="Decrease number of tracks">-</button>
+                    <input type="number" id="numTracksInput" min="1" max="8" value="4" title="Set number of sequencer tracks (1-8)">
+                    <button class="number-input-button" data-target="numTracksInput" data-action="increment" title="Increase number of tracks">+</button>
                 </div>
             </div>
-            <div class="control-slider-container">
-                <button class="slider-button" data-target="bpmSlider" data-action="decrement" title="Decrease Tempo">-</button>
-                <input type="range" id="bpmSlider" min="20" max="240" value="55" class="control-slider" title="Adjust master tempo (20-240 BPM)">
-                <button class="slider-button" data-target="bpmSlider" data-action="increment" title="Increase Tempo">+</button>
+
+            <div class="control-group">
+                <label class="checkbox-label-container" title="When checked, all tracks share the same 'Steps' value">
+                    <input type="checkbox" id="lockStepsCheckbox"> Lock All Steps
+                </label>
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <label for="bpmSlider">Tempo:</label>
+                    <span id="bpmValue" class="value-display">120</span>
+                    <button id="bpmSliderLearnCc" class="learn-cc-button ml-2" data-param-id="bpmSlider" title="Map Master Tempo to a MIDI CC">Learn</button>
+                </div>
+                <div class="control-slider-container">
+                    <button class="slider-button" data-target="bpmSlider" data-action="decrement" title="Decrease Tempo">-</button>
+                    <input type="range" id="bpmSlider" min="20" max="240" value="120" class="control-slider" title="Adjust master tempo (20-240 BPM)">
+                    <button class="slider-button" data-target="bpmSlider" data-action="increment" title="Increase Tempo">+</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <label for="masterVolumeSlider">Volume:</label>
+                    <span id="masterVolumeValue" class="value-display">100</span>
+                    <button id="masterVolumeLearnCc" class="learn-cc-button ml-2" data-param-id="masterVolumeSlider" title="Map Master Volume to MIDI CC #7">Learn</button>
+                </div>
+                <div class="control-slider-container">
+                    <button class="slider-button" data-target="masterVolumeSlider" data-action="decrement" title="Decrease Volume">-</button>
+                    <input type="range" id="masterVolumeSlider" min="0" max="127" value="100" class="control-slider" title="Adjust master volume (MIDI CC #7)">
+                    <button class="slider-button" data-target="masterVolumeSlider" data-action="increment" title="Increase Volume">+</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="midiOutSelect">MIDI Output:</label>
+                <select id="midiOutSelect" title="Select MIDI output device">
+                    <option value="">No MIDI Devices Found</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="midiChannelSelect">Global MIDI Ch:</label>
+                <select id="midiChannelSelect" title="Select global MIDI channel (1-16)">
+                    <!-- Options 1-16 will be populated by JS -->
+                </select>
+            </div>
+            <div class="mt-auto pt-1">
+                <p class="text-xs text-center">User ID: <span id="userIdDisplay" class="font-mono"></span></p>
             </div>
         </div>
 
-        <div class="control-group">
-            <label for="midiOutSelect">MIDI Output:</label>
-            <select id="midiOutSelect" title="Select MIDI output device">
-                <option value="">No MIDI Devices Found</option>
-            </select>
-        </div>
-        <div class="control-group">
-            <label for="midiChannelSelect">Global MIDI Ch:</label>
-            <select id="midiChannelSelect" title="Select global MIDI channel (1-16)">
-            </select>
-        </div>
-        <div class="mt-auto pt-1">
-            <p class="text-xs text-center">User ID: <span id="userIdDisplay" class="font-mono"></span></p>
+        <!-- Channel Volumes Panel -->
+        <div class="flex-grow synth-panel">
+            <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
+            <div id="channelVolumesContainer" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-2 gap-x-3 gap-y-1">
+                <!-- Channel volumes will be generated here -->
+            </div>
         </div>
     </div>
 
+
+    <!-- Sequencer Tracks Panel -->
     <div class="flex-grow synth-panel">
         <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer</h2>
-        <div id="sequencerTracksContainer">
+        <div id="sequencerTracksContainer" class="stopped">
+            <!-- Tracks will be generated here by JS -->
         </div>
     </div>
-</div>
-
-<div class="synth-panel">
-    <h3 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Animal Disco</h3>
-    <div id="animalDancerContainer"></div>
 </div>
 
 <div id="explanationContainer" class="explanation-text-footer">
@@ -393,39 +375,28 @@
         This creates natural-sounding, often complex polyrhythms found in various world music traditions.
     </p>
 </div>
-<div id="statusBar">
-    <span id="statusMessage">Status Message Here</span>
-    <span id="noteDisplay">--</span>
-</div>
+<div id="statusBar">Status Message Here</div>
 
 <script>
+    // --- DOM Elements ---
     const playStopButton = document.getElementById('playStopButton');
     const defaultSettingsButton = document.getElementById('defaultSettingsButton');
     const masterRandomizeButton = document.getElementById('masterRandomizeButton');
     const reInitMidiButton = document.getElementById('reInitMidiButton');
     const numTracksInput = document.getElementById('numTracksInput');
-    const lockStepsToggleButton = document.getElementById('lockStepsToggleButton');
+    const lockStepsCheckbox = document.getElementById('lockStepsCheckbox');
     const bpmSlider = document.getElementById('bpmSlider');
     const bpmValue = document.getElementById('bpmValue');
-    const swingSlider = document.getElementById('swingSlider');
-    const swingValue = document.getElementById('swingValue');
     const bpmSliderLearnCc = document.getElementById('bpmSliderLearnCc');
+    const masterVolumeSlider = document.getElementById('masterVolumeSlider');
+    const masterVolumeValue = document.getElementById('masterVolumeValue');
+    const masterVolumeLearnCc = document.getElementById('masterVolumeLearnCc');
     const midiOutSelect = document.getElementById('midiOutSelect');
     const midiChannelSelect = document.getElementById('midiChannelSelect');
     const sequencerTracksContainer = document.getElementById('sequencerTracksContainer');
+    const channelVolumesContainer = document.getElementById('channelVolumesContainer');
     const userIdDisplay = document.getElementById('userIdDisplay');
     const statusBar = document.getElementById('statusBar');
-    const statusMessage = document.getElementById('statusMessage');
-    const noteDisplay = document.getElementById('noteDisplay');
-
-    const patternNameInput = document.getElementById('patternNameInput');
-    const savePatternButton = document.getElementById('savePatternButton');
-    const savedPatternsSelect = document.getElementById('savedPatternsSelect');
-    const loadPatternButton = document.getElementById('loadPatternButton');
-    const deletePatternButton = document.getElementById('deletePatternButton');
-
-    const animalDancerContainer = document.getElementById('animalDancerContainer');
-
 
     let midiAccess = null;
     let midiOutput = null;
@@ -435,18 +406,25 @@
     let sequencerTracks = [];
     let transportLoops = [];
     let currentLearningControl = null;
+    let noteLearningTrack = null;
     let midiCcMap = {};
-    const NOTE_RANGE_FOR_RANDOM = Array.from({length: (72-36)+1}, (_, i) => 36 + i);
-    const SETTINGS_KEY = 'rhythmKing77Settings_v11';
-    const PATTERNS_KEY = 'rhythmKing77Patterns_v3';
+    const SETTINGS_KEY = 'rhythmKing77Settings_v10'; // Incremented version
     let statusTimeout = null;
     let stepsLocked = false;
     let globalLockedSteps = 16;
-    let savedPatterns = {};
+    let currentRandomizationScale = [];
+    let channelVolumes = new Array(16).fill(100);
 
-    const DANCING_ANIMALS = ['🐒', '🐘', '🐅', '🦒', '🦓', '🐪', '🦘', '🐊'];
-    let animalDancers = [];
-    let currentDancerIndex = 0;
+    // --- Harmony Engine ---
+    const SCALES = {
+        'Major': [0, 2, 4, 5, 7, 9, 11], 'Minor': [0, 2, 3, 5, 7, 8, 10],
+        'Dorian': [0, 2, 3, 5, 7, 9, 10], 'Phrygian': [0, 1, 3, 5, 7, 8, 10],
+        'Lydian': [0, 2, 4, 6, 7, 9, 11], 'Mixolydian': [0, 2, 4, 5, 7, 9, 10],
+        'Locrian': [0, 1, 3, 5, 6, 8, 10], 'Major Pentatonic': [0, 2, 4, 7, 9],
+        'Minor Pentatonic': [0, 3, 5, 7, 10], 'Blues': [0, 3, 5, 6, 7, 10],
+        'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11]
+    };
+    const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
 
     let autoRepeatTimeoutId = null;
@@ -454,9 +432,8 @@
     const AUTO_REPEAT_DELAY = 500;
     const AUTO_REPEAT_INTERVAL = 100;
 
-
     function showStatusMessage(message, duration = 3000) {
-        statusMessage.textContent = message;
+        statusBar.textContent = message;
         statusBar.classList.add('visible');
         if (statusTimeout) clearTimeout(statusTimeout);
         statusTimeout = setTimeout(() => {
@@ -464,81 +441,31 @@
         }, duration);
     }
 
-    function getRhythmSuggestion() {
-        const activeTracks = sequencerTracks.filter(t => t.active);
-        if (activeTracks.length < 2) return "Activate more tracks for interesting polyrhythms!";
-
-        const allStepsSame = activeTracks.every(t => t.steps === activeTracks[0].steps);
-        if (allStepsSame) {
-            return "Suggestion: Try using different 'Steps' on each track for a polymetric feel.";
-        }
-
-        const swingAtZero = Tone.Transport.swing === 0;
-        if (swingAtZero) {
-            return "Suggestion: Add some 'Swing' to give your rhythm a groove.";
-        }
-
-        const allRotationsZero = activeTracks.every(t => t.rotation === 0);
-        if (allRotationsZero) {
-            return "Suggestion: 'Rotate' a pattern to shift its starting point and create variation.";
-        }
-
-        return "Sounds great! Keep experimenting.";
-    }
-
-
     function generateEuclideanPattern(pulses, steps) {
-        if (pulses > steps || pulses <= 0 || steps <= 0) {
-            return Array(steps).fill(0);
-        }
-        let pattern = [];
+        if (pulses > steps || pulses <= 0 || steps <= 0) return Array(steps).fill(0);
         let groups = [];
-        for (let i = 0; i < steps; i++) {
-            groups.push(i < pulses ? [1] : [0]);
-        }
-
-        let remainder = pulses;
-        let divisor = steps - pulses;
-
+        for (let i = 0; i < steps; i++) groups.push(i < pulses ? [1] : [0]);
+        let remainder = pulses, divisor = steps - pulses;
         while (true) {
             if (divisor === 0 || remainder === 0) break;
             if (divisor > remainder) {
                 [remainder, divisor] = [divisor, remainder];
-                let onesGroups = [];
-                let zerosGroups = [];
-                groups.forEach(group => {
-                    if(group.length > 0 && group[0] === 1) onesGroups.push(group); else zerosGroups.push(group);
-                });
-                groups = zerosGroups.concat(onesGroups);
+                let ones = [], zeros = [];
+                groups.forEach(g => (g[0] === 1 ? ones : zeros).push(g));
+                groups = zeros.concat(ones);
             }
             if (remainder === 0) break;
-
             for (let i = 0; i < divisor; i++) {
-                if (groups[i] && groups[remainder + i]) {
-                    groups[i] = groups[i].concat(groups[remainder + i]);
-                } else {
-                    break;
-                }
+                if (groups[i] && groups[remainder + i]) groups[i].push(...groups[remainder + i]);
+                else break;
             }
             groups.splice(remainder, divisor);
-            remainder = remainder - divisor;
-            if (remainder === 0 && divisor > 0 && groups.length > divisor) {
-                break;
-            }
-            if (divisor === 0) break;
+            remainder -= divisor;
         }
-        pattern = [].concat(...groups);
-
-        if (pattern.length !== steps) {
-            if (pattern.length < steps) {
-                pattern = pattern.concat(Array(steps - pattern.length).fill(0));
-            } else {
-                pattern = pattern.slice(0, steps);
-            }
-        }
+        let pattern = [].concat(...groups);
+        if (pattern.length !== steps) pattern = pattern.length < steps ? pattern.concat(Array(steps - pattern.length).fill(0)) : pattern.slice(0, steps);
         return pattern;
     }
-
 
     function rotatePattern(pattern, rotation) {
         const len = pattern.length;
@@ -547,357 +474,197 @@
         return pattern.slice(r).concat(pattern.slice(0, r));
     }
 
-    function updateLearnButtonTooltip(buttonElement, paramId) {
-        if (!buttonElement) return;
-        const mapping = midiCcMap[paramId];
-        let baseTitle = buttonElement.dataset.baseTitle || buttonElement.title || `Map ${paramId.replace(/([A-Z])/g, ' $1').replace(/(\d+)/g, '')} to MIDI CC`;
-        if (!buttonElement.dataset.baseTitle) buttonElement.dataset.baseTitle = baseTitle;
-
-        if (mapping) {
-            buttonElement.title = `${baseTitle} (Mapped: CC#${mapping.cc} Ch${mapping.channel})`;
-        } else {
-            buttonElement.title = baseTitle;
-        }
-    }
-
-
     function saveSettings() {
         const settings = {
             numTracks: numTracks,
             bpm: parseInt(bpmSlider.value),
-            swing: parseFloat(swingSlider.value),
+            masterVolume: parseInt(masterVolumeSlider.value),
+            channelVolumes: channelVolumes,
             midiOutputId: midiOutput ? midiOutput.id : null,
             globalMidiChannel: selectedMidiChannel,
             stepsLocked: stepsLocked,
             globalLockedSteps: globalLockedSteps,
-            tracks: sequencerTracks.slice(0, numTracks).map(track => ({
-                pulses: track.pulses,
-                steps: track.steps,
-                rotation: track.rotation,
-                note: track.note,
-                velocity: track.velocity,
-                active: track.active
+            tracks: sequencerTracks.map(t => ({
+                pulses: t.pulses, steps: t.steps, rotation: t.rotation, note: t.note,
+                velocity: t.velocity, active: t.active, channelOverride: t.channelOverride
             })),
             midiCcMap: midiCcMap
         };
-        try {
-            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-        } catch (e) {
-            console.error("Error saving settings to localStorage:", e);
-            showStatusMessage("Error: Could not save settings.", 5000);
-        }
+        try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+        catch (e) { showStatusMessage("Error saving settings.", 5000); }
     }
 
     function loadSettings() {
-        const savedSettings = localStorage.getItem(SETTINGS_KEY);
-        if (savedSettings) {
+        const saved = localStorage.getItem(SETTINGS_KEY);
+        if (saved) {
             try {
-                const settings = JSON.parse(savedSettings);
-
-                if (settings.numTracks !== undefined && settings.numTracks >= 1 && settings.numTracks <= MAX_TRACKS) {
-                    numTracks = settings.numTracks;
-                } else {
-                    numTracks = 4;
-                }
-                if (settings.bpm !== undefined) bpmSlider.value = settings.bpm;
-                if (settings.swing !== undefined) swingSlider.value = settings.swing;
-                if (settings.globalMidiChannel !== undefined) selectedMidiChannel = settings.globalMidiChannel;
-                if (settings.stepsLocked !== undefined) stepsLocked = settings.stepsLocked;
-                if (settings.globalLockedSteps !== undefined) globalLockedSteps = settings.globalLockedSteps;
-                if (settings.midiCcMap) midiCcMap = settings.midiCcMap;
-
-                return settings;
+                const s = JSON.parse(saved);
+                if (s.numTracks !== undefined && s.numTracks > 0) numTracks = s.numTracks;
+                if (s.bpm !== undefined) bpmSlider.value = s.bpm;
+                if (s.masterVolume !== undefined) masterVolumeSlider.value = s.masterVolume;
+                if (s.channelVolumes && s.channelVolumes.length === 16) channelVolumes = s.channelVolumes;
+                if (s.globalMidiChannel !== undefined) selectedMidiChannel = s.globalMidiChannel;
+                if (s.stepsLocked !== undefined) stepsLocked = s.stepsLocked;
+                if (s.globalLockedSteps !== undefined) globalLockedSteps = s.globalLockedSteps;
+                if (s.midiCcMap) midiCcMap = s.midiCcMap;
+                return s;
             } catch (e) {
-                console.error("Error parsing saved settings:", e);
                 localStorage.removeItem(SETTINGS_KEY);
-                numTracks = 4;
-                showStatusMessage("Error: Corrupted settings cleared. Defaults loaded.", 5000);
+                showStatusMessage("Corrupted settings cleared.", 5000);
             }
         }
-        numTracks = 4;
         return null;
     }
 
-
     async function setupMIDI() {
         try {
-            if (!navigator.requestMIDIAccess) {
-                showStatusMessage('Web MIDI API is not supported.');
-                return;
-            }
-            if (midiAccess) {
-                midiAccess.inputs.forEach(input => input.onmidimessage = null);
-            }
-
+            if (!navigator.requestMIDIAccess) { showStatusMessage('Web MIDI API not supported.'); return; }
+            if (midiAccess) midiAccess.inputs.forEach(i => i.onmidimessage = null);
             midiAccess = await navigator.requestMIDIAccess({ sysex: false });
             populateMidiDeviceList();
             midiAccess.addEventListener('statechange', populateMidiDeviceList);
-
-            const inputs = midiAccess.inputs.values();
-            for (let input of inputs) {
-                input.onmidimessage = handleMidiMessage;
-            }
+            midiAccess.inputs.forEach(i => i.onmidimessage = handleMidiMessage);
             showStatusMessage("MIDI re-initialized.", 2000);
-        } catch (err) {
-            console.error('MIDI Access Error:', err);
-            if (err.name === 'SecurityError') showStatusMessage('MIDI Access disabled by page security policy.');
-            else showStatusMessage('MIDI Access Denied/Not Supported.');
-        }
+        } catch (err) { showStatusMessage('MIDI Access Denied/Not Supported.'); }
     }
 
     reInitMidiButton.addEventListener('click', async () => {
         showStatusMessage("Re-initializing MIDI...", 1500);
-        if (midiOutput) {
-            for (let i = 1; i <= 16; i++) {
-                sendAllNotesOff(i);
-            }
-        }
-        if (Tone.Transport.state === 'started') {
-            playStopButton.click();
-        }
+        if (midiOutput) for (let i = 1; i <= 16; i++) sendAllNotesOff(i);
+        if (Tone.Transport.state === 'started') playStopButton.click();
         Tone.Transport.cancel(0);
-        transportLoops.forEach(loop => { if (loop) { loop.stop(0); loop.dispose(); } });
+        transportLoops.forEach(l => l && l.stop(0).dispose());
         transportLoops = [];
-        sequencerTracks.forEach(track => {
-            track.currentStep = 0;
-            track.stepCounterForUI = 0;
-            renderPatternDisplay(track);
-        });
-
+        sequencerTracks.forEach(t => { t.currentStep = 0; t.stepCounterForUI = 0; renderPatternDisplay(t); });
         await setupMIDI();
     });
 
-
     function populateMidiDeviceList() {
         if (!midiAccess) return;
-
-        const loadedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
-        const preferredOutputId = loadedSettings.midiOutputId || (midiOutput ? midiOutput.id : null);
-
+        const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+        const prefId = saved.midiOutputId || (midiOutput ? midiOutput.id : null);
         midiOutSelect.innerHTML = '';
-        const outputs = midiAccess.outputs.values();
-        let firstOutput = null;
-        let count = 0;
-        let foundPreferred = false;
-
-        for (let output of outputs) {
-            const option = document.createElement('option');
-            option.value = output.id;
-            option.textContent = output.name;
-            midiOutSelect.appendChild(option);
-            if (!firstOutput) firstOutput = output;
-            if (output.id === preferredOutputId) {
-                foundPreferred = true;
-            }
+        let count = 0, firstOut = null, foundPref = false;
+        midiAccess.outputs.forEach(out => {
+            const opt = new Option(out.name, out.id);
+            midiOutSelect.add(opt);
+            if (!firstOut) firstOut = out;
+            if (out.id === prefId) foundPref = true;
             count++;
-        }
-
-        if (count === 0) {
-            midiOutSelect.innerHTML = '<option value="">No MIDI Devices Found</option>';
-            midiOutput = null;
-        } else {
-            if (foundPreferred && preferredOutputId) {
-                midiOutSelect.value = preferredOutputId;
-            } else if (firstOutput) {
-                midiOutSelect.value = firstOutput.id;
-            }
-        }
+        });
+        if (count === 0) midiOutSelect.add(new Option("No MIDI Devices Found", ""));
+        else midiOutSelect.value = (foundPref && prefId) ? prefId : (firstOut ? firstOut.id : '');
         updateMidiOutput();
     }
-
-    function updateUiForMidiStatus() {
-        const hasValidOutput = midiOutput !== null;
-        playStopButton.disabled = !hasValidOutput;
-        if (hasValidOutput) {
-            sequencerTracksContainer.classList.remove('disabled', 'opacity-50', 'pointer-events-none');
-        } else {
-            sequencerTracksContainer.classList.add('disabled', 'opacity-50', 'pointer-events-none');
-            showStatusMessage("No MIDI output selected. Playback is disabled.", 5000);
-        }
-    }
-
 
     function updateMidiOutput() {
-        if (!midiAccess || !midiOutSelect.value || midiOutSelect.value === "") {
-            midiOutput = null;
-        } else {
-            midiOutput = midiAccess.outputs.get(midiOutSelect.value);
-        }
-        updateUiForMidiStatus();
+        midiOutput = (!midiAccess || !midiOutSelect.value) ? null : midiAccess.outputs.get(midiOutSelect.value);
     }
-    midiOutSelect.addEventListener('change', () => {
-        const oldMidiOutputId = midiOutput ? midiOutput.id : null;
-        updateMidiOutput();
-        if (oldMidiOutputId && oldMidiOutputId !== (midiOutput ? midiOutput.id : null)) {
-            const oldOutputDevice = midiAccess.outputs.get(oldMidiOutputId);
-            if (oldOutputDevice) {
-                setTimeout(() => {
-                    const allNotesOffMessage = [0xB0 + (selectedMidiChannel - 1), 123, 0];
-                    oldOutputDevice.send(allNotesOffMessage);
-                }, 50);
-            }
-        }
-        saveSettings();
-    });
+    midiOutSelect.addEventListener('change', () => { updateMidiOutput(); saveSettings(); });
 
-    function triggerAnimalDance() {
-        if (animalDancers.length > 0) {
-            const dancer = animalDancers[currentDancerIndex];
-            dancer.classList.add('dance');
-            setTimeout(() => {
-                dancer.classList.remove('dance');
-            }, 150);
-            currentDancerIndex = (currentDancerIndex + 1) % animalDancers.length;
-        }
+    function sendMidiCC(cc, value, channel) {
+        if (midiOutput) midiOutput.send([0xB0 + (channel - 1), cc, value]);
     }
-
-    function sendMidiNoteOn(note, velocity, channel) {
-        if (!midiOutput) return;
-        midiOutput.send([0x90 + (channel - 1), note, velocity]);
-        noteDisplay.textContent = Tone.Frequency(note, 'midi').toNote();
-        triggerAnimalDance();
-    }
-
-    function sendMidiNoteOff(note, channel) {
-        if (!midiOutput) return;
-        midiOutput.send([0x80 + (channel - 1), note, 0]);
-    }
-
-    function sendAllNotesOff(channel) {
-        if (!midiOutput) return;
-        midiOutput.send([0xB0 + (channel - 1), 123, 0]);
-    }
-
+    function sendMidiNoteOn(note, vel, ch) { if (midiOutput) midiOutput.send([0x90 + (ch - 1), note, vel]); }
+    function sendMidiNoteOff(note, ch) { if (midiOutput) midiOutput.send([0x80 + (ch - 1), note, 0]); }
+    function sendAllNotesOff(ch) { if (midiOutput) midiOutput.send([0xB0 + (ch - 1), 123, 0]); }
 
     function handleMidiMessage(event) {
-        const [command, ccNumber, ccValue] = event.data;
-        if (command >= 0xB0 && command <= 0xBF) {
-            const midiChannel = (command & 0x0F) + 1;
+        const cmd = event.data[0] & 0xF0, ch = (event.data[0] & 0x0F) + 1;
+        if (cmd === 0x90 && event.data[2] > 0 && noteLearningTrack) {
+            const { track, button } = noteLearningTrack;
+            track.note = event.data[1];
+            track.channelOverride = ch;
+            track.ui.noteInput.value = Tone.Frequency(track.note, "midi").toNote();
+            track.ui.channelOverrideSelect.value = ch;
+            button.classList.remove('learning');
+            button.textContent = 'Learn';
+            showStatusMessage(`Track ${track.id + 1} set to Note: ${track.ui.noteInput.value} on Ch: ${ch}.`);
+            noteLearningTrack = null;
+            saveSettings();
+            return;
+        }
+        if (cmd === 0xB0) {
+            const cc = event.data[1], val = event.data[2];
             if (currentLearningControl) {
-                const paramId = currentLearningControl.paramId;
-                midiCcMap[paramId] = { cc: ccNumber, channel: midiChannel };
-                currentLearningControl.button.classList.remove('learning');
-                currentLearningControl.button.textContent = 'LRN';
-                updateLearnButtonTooltip(currentLearningControl.button, paramId);
+                const { paramId, button, originalText } = currentLearningControl;
+                midiCcMap[paramId] = { cc, channel: ch };
+                button.classList.remove('learning');
+                button.textContent = originalText;
+                showStatusMessage(`Control mapped to CC#${cc} on Ch ${ch}.`);
                 currentLearningControl = null;
-                const readableParamId = paramId
-                    .replace(/([A-Z])/g, ' $1')
-                    .replace(/(\d+)/g, ' Track $1')
-                    .replace(/^./, str => str.toUpperCase());
-                showStatusMessage(`${readableParamId} mapped to CC#${ccNumber} on Ch ${midiChannel}.`);
                 saveSettings();
             } else {
-                for (const paramId in midiCcMap) {
-                    const mapping = midiCcMap[paramId];
-                    if (mapping.cc === ccNumber && mapping.channel === midiChannel) {
-                        const controlElement = document.getElementById(paramId);
-                        if (controlElement) {
-                            const min = parseFloat(controlElement.min) || 0;
-                            const max = parseFloat(controlElement.max) || 127;
-                            const step = parseFloat(controlElement.step) || 1;
-                            let newValue;
-                            if (controlElement.type === 'range' || controlElement.type === 'number') {
-                                newValue = min + ( ( (max - min) * ccValue ) / 127 );
-                                newValue = Math.round(newValue / step) * step;
-                                newValue = Math.max(min, Math.min(max, newValue));
-                                controlElement.value = newValue;
-                            } else if (controlElement.tagName === 'SELECT') {
-                                const numOptions = controlElement.options.length;
-                                const optionIndex = Math.floor((ccValue / 127) * (numOptions -1));
-                                controlElement.selectedIndex = Math.max(0, Math.min(numOptions -1, optionIndex));
-                                newValue = controlElement.value;
-                            }
-                            const eventType = (controlElement.tagName === 'SELECT') ? 'change' : 'input';
-                            controlElement.dispatchEvent(new Event(eventType, { bubbles: true }));
-                        }
+                for (const pId in midiCcMap) {
+                    const map = midiCcMap[pId];
+                    if (map.cc === cc && map.channel === ch) {
+                        const el = document.getElementById(pId);
+                        if (!el) continue;
+                        const min = parseFloat(el.min) || 0;
+                        const max = parseFloat(el.max) || 127;
+                        const step = parseFloat(el.step) || 1;
+                        const newValue = min + (((max - min) * val) / 127);
+                        el.value = Math.round(newValue / step) * step;
+
+                        el.dispatchEvent(new Event('input', { bubbles: true }));
                     }
                 }
             }
         }
     }
 
-    function startLearnCc(paramId, buttonElement) {
+    function cancelAllLearnModes(notify = true) {
         if (currentLearningControl) {
             currentLearningControl.button.classList.remove('learning');
-            currentLearningControl.button.textContent = 'LRN';
-            updateLearnButtonTooltip(currentLearningControl.button, currentLearningControl.paramId);
+            currentLearningControl.button.textContent = currentLearningControl.originalText;
+            currentLearningControl = null;
+            if(notify) showStatusMessage("MIDI CC Learn cancelled.");
         }
-        currentLearningControl = { paramId, button: buttonElement };
-        buttonElement.classList.add('learning');
-        buttonElement.textContent = '...';
-        const readableParamId = paramId
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/(\d+)/g, ' Track $1')
-            .replace(/^./, str => str.toUpperCase());
-        showStatusMessage(`Listening for MIDI CC for ${readableParamId}. Move a control.`);
+        if (noteLearningTrack) {
+            noteLearningTrack.button.classList.remove('learning');
+            noteLearningTrack.button.textContent = 'Learn';
+            noteLearningTrack = null;
+            if(notify) showStatusMessage("Note Learn cancelled.");
+        }
     }
 
-    function setupTransport() {
-        Tone.Transport.bpm.value = parseInt(bpmSlider.value);
-        Tone.Transport.swing = parseFloat(swingSlider.value) / 100;
-        Tone.Transport.swingSubdivision = "16n";
+    function startNoteLearn(track, button) {
+        const wasLearning = noteLearningTrack && noteLearningTrack.track === track;
+        cancelAllLearnModes(false);
+        if (wasLearning) return;
+        noteLearningTrack = { track, button };
+        button.classList.add('learning');
+        button.textContent = '...';
+        showStatusMessage(`Listening for MIDI Note for Track ${track.id + 1}...`);
     }
 
-    function startAutoRepeat(targetId, action) {
-        stopAutoRepeat();
-        adjustControlValue(targetId, action);
-        autoRepeatTimeoutId = setTimeout(() => {
-            autoRepeatIntervalId = setInterval(() => {
-                adjustControlValue(targetId, action);
-            }, AUTO_REPEAT_INTERVAL);
-        }, AUTO_REPEAT_DELAY);
-    }
-
-    function stopAutoRepeat() {
-        if (autoRepeatTimeoutId) clearTimeout(autoRepeatTimeoutId);
-        if (autoRepeatIntervalId) clearInterval(autoRepeatIntervalId);
-        autoRepeatTimeoutId = null;
-        autoRepeatIntervalId = null;
+    function startLearnCc(paramId, button) {
+        const wasLearning = currentLearningControl && currentLearningControl.button === button;
+        const readableParamId = paramId.replace(/([A-Z])/g, ' $1').replace(/(\d+)/g, ' Track $1').replace(/^./, str => str.toUpperCase());
+        cancelAllLearnModes(false);
+        if (wasLearning) return;
+        currentLearningControl = { paramId, button, originalText: button.textContent };
+        button.classList.add('learning');
+        button.textContent = '...';
+        showStatusMessage(`Listening for MIDI CC for ${readableParamId}...`);
     }
 
     function adjustControlValue(targetId, action) {
-        const control = document.getElementById(targetId);
-        if (!control) return;
-        let currentValue = parseFloat(control.value);
-        const step = parseFloat(control.step) || 1;
-        const min = parseFloat(control.min);
-        const max = parseFloat(control.max);
-
-        if (action === 'increment') {
-            currentValue = Math.min(max, currentValue + step);
-        } else if (action === 'decrement') {
-            currentValue = Math.max(min, currentValue - step);
-        }
-        control.value = currentValue;
-        const eventType = (targetId === 'numTracksInput') ? 'change' : 'input';
-        control.dispatchEvent(new Event(eventType, { bubbles: true }));
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        let val = parseFloat(el.value), step = parseFloat(el.step) || 1;
+        const min = parseFloat(el.min), max = parseFloat(el.max);
+        val += (action === 'increment' ? step : -step);
+        el.value = Math.max(min, Math.min(max, val));
+        el.dispatchEvent(new Event(el.id === 'numTracksInput' ? 'change' : 'input', { bubbles: true }));
     }
-
-    document.addEventListener('mousedown', (event) => {
-        if (event.target.matches('.slider-button') || event.target.matches('.number-input-button')) {
-            const targetId = event.target.dataset.target;
-            const action = event.target.dataset.action;
-            startAutoRepeat(targetId, action);
-        }
-    });
+    document.addEventListener('mousedown', (e) => { if (e.target.matches('.slider-button, .number-input-button')) startAutoRepeat(e.target.dataset.target, e.target.dataset.action); });
     document.addEventListener('mouseup', stopAutoRepeat);
-    document.addEventListener('mouseleave', (event) => {
-        if (event.target.matches('.slider-button') || event.target.matches('.number-input-button')) {
-            stopAutoRepeat();
-        }
-    });
-    document.addEventListener('touchstart', (event) => {
-        if (event.target.matches('.slider-button') || event.target.matches('.number-input-button')) {
-            event.preventDefault();
-            const targetId = event.target.dataset.target;
-            const action = event.target.dataset.action;
-            startAutoRepeat(targetId, action);
-        }
-    }, { passive: false });
+    document.addEventListener('mouseleave', (e) => { if (e.target.matches('.slider-button, .number-input-button')) stopAutoRepeat(); });
+    document.addEventListener('touchstart', (e) => { if (e.target.matches('.slider-button, .number-input-button')) { e.preventDefault(); startAutoRepeat(e.target.dataset.target, e.target.dataset.action); } }, { passive: false });
     document.addEventListener('touchend', stopAutoRepeat);
-    document.addEventListener('touchcancel', stopAutoRepeat);
-
-
+    function startAutoRepeat(target, action) { stopAutoRepeat(); adjustControlValue(target, action); autoRepeatTimeoutId = setTimeout(() => { autoRepeatIntervalId = setInterval(() => adjustControlValue(target, action), AUTO_REPEAT_INTERVAL); }, AUTO_REPEAT_DELAY); }
+    function stopAutoRepeat() { clearTimeout(autoRepeatTimeoutId); clearInterval(autoRepeatIntervalId); }
 
     bpmSlider.addEventListener('input', (e) => {
         const newBpm = parseInt(e.target.value);
@@ -905,624 +672,445 @@
         bpmValue.textContent = newBpm;
         saveSettings();
     });
+    if (bpmSliderLearnCc) bpmSliderLearnCc.addEventListener('click', () => startLearnCc('bpmSlider', bpmSliderLearnCc));
 
-    if (bpmSliderLearnCc) {
-        bpmSliderLearnCc.addEventListener('click', () => startLearnCc('bpmSlider', bpmSliderLearnCc));
-    }
-
-    swingSlider.addEventListener('input', (e) => {
-        const newSwing = parseFloat(e.target.value);
-        Tone.Transport.swing = newSwing / 100;
-        swingValue.textContent = Math.round(newSwing);
+    masterVolumeSlider.addEventListener('input', (e) => {
+        const newVolume = parseInt(e.target.value);
+        masterVolumeValue.textContent = newVolume;
+        // Update all individual channel volumes and send MIDI CC
+        for (let i = 0; i < 16; i++) {
+            channelVolumes[i] = newVolume;
+            const slider = document.getElementById(`channelVolume${i+1}`);
+            const valueDisplay = document.getElementById(`channelVolumeValue${i+1}`);
+            if(slider) slider.value = newVolume;
+            if(valueDisplay) valueDisplay.textContent = newVolume;
+            sendMidiCC(7, newVolume, i + 1);
+        }
         saveSettings();
     });
+    if(masterVolumeLearnCc) masterVolumeLearnCc.addEventListener('click', () => startLearnCc('masterVolumeSlider', masterVolumeLearnCc));
 
 
-    function randomizeTrackParameters(track) {
-        track.pulses = Math.floor(Math.random() * track.steps) + 1;
-        if (track.pulses > track.steps) track.pulses = track.steps;
-        if (track.pulses === 0 && track.steps > 0) track.pulses = 1;
+    function setHarmoniousRandomizationScale() {
+        const scaleNames = Object.keys(SCALES);
+        const randomScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
+        const randomRootNote = Math.floor(Math.random() * 12);
+        const scaleIntervals = SCALES[randomScaleName];
 
-        track.rotation = track.steps > 0 ? Math.floor(Math.random() * track.steps) : 0;
-
-        const randomNoteIndex = Math.floor(Math.random() * NOTE_RANGE_FOR_RANDOM.length);
-        track.note = NOTE_RANGE_FOR_RANDOM[randomNoteIndex];
-
-        updateTrackUI(track);
-        updateTrackPattern(track);
+        currentRandomizationScale = [];
+        for (let octave = 2; octave <= 5; octave++) {
+            for (const interval of scaleIntervals) {
+                const midiNote = 12 * octave + randomRootNote + interval;
+                if (midiNote <= 127) {
+                    currentRandomizationScale.push(midiNote);
+                }
+            }
+        }
+        const rootNoteName = NOTE_NAMES[randomRootNote];
+        showStatusMessage(`Randomizing with ${rootNoteName} ${randomScaleName} scale.`);
     }
 
     masterRandomizeButton.addEventListener('click', () => {
-        sequencerTracks.forEach(track => {
-            if(track.active) {
-                randomizeTrackParameters(track);
-            }
-        });
+        setHarmoniousRandomizationScale();
+        sequencerTracks.forEach(t => t.active && randomizeTrackParameters(t));
         saveSettings();
-        showStatusMessage("All active tracks randomized!");
     });
 
+    function randomizeTrackParameters(track) {
+        if (currentRandomizationScale.length === 0) {
+            setHarmoniousRandomizationScale();
+        }
+        track.pulses = Math.floor(Math.random() * (track.steps * 2/3)) + 1;
+        track.rotation = track.steps > 0 ? Math.floor(Math.random() * track.steps) : 0;
+        track.note = currentRandomizationScale[Math.floor(Math.random() * currentRandomizationScale.length)];
+        track.ui.pulsesSlider.value = track.ui.pulsesValue.textContent = track.pulses;
+        track.ui.rotationSlider.value = track.ui.rotationValue.textContent = track.rotation;
+        track.ui.noteInput.value = Tone.Frequency(track.note, "midi").toNote();
+        updateTrackPattern(track);
+    }
 
-    function applyDefaultSettings() {
-        const defaultTrackSettings = [
-            { pulses: 4, steps: 16, rotation: 0, note: Tone.Frequency("C3").toMidi(), velocity: 100, active: true },
-            { pulses: 3, steps: 16, rotation: 2, note: Tone.Frequency("E3").toMidi(), velocity: 100, active: true },
-            { pulses: 5, steps: 16, rotation: 1, note: Tone.Frequency("G#3").toMidi(), velocity: 90, active: true },
-            { pulses: 7, steps: 16, rotation: 3, note: Tone.Frequency("B3").toMidi(), velocity: 80, active: true }
-        ];
-
-        const defaultSteps = stepsLocked ? globalLockedSteps : 16;
-
-
-        sequencerTracks.forEach((track, index) => {
-            const defaults = defaultTrackSettings[index % defaultTrackSettings.length];
-            track.pulses = defaults.pulses;
-            track.steps = defaultSteps;
-            track.rotation = defaults.rotation % track.steps;
-            track.note = defaults.note;
-            track.velocity = defaults.velocity;
-            track.active = defaults.active;
-
-            updateTrackUI(track);
-            updateTrackPattern(track);
+    defaultSettingsButton.addEventListener('click', () => {
+        const defaults = [ {p:4,s:16,r:0,n:"C3"}, {p:3,s:16,r:2,n:"E3"}, {p:5,s:16,r:1,n:"G#3"}, {p:7,s:16,r:3,n:"B3"} ];
+        sequencerTracks.forEach((t, i) => {
+            const d = defaults[i % defaults.length];
+            t.steps = stepsLocked ? globalLockedSteps : d.s;
+            t.pulses = d.p > t.steps ? t.steps : d.p;
+            t.rotation = d.r % t.steps;
+            t.note = Tone.Frequency(d.n).toMidi();
+            t.active = true; t.channelOverride = 'global'; t.velocity = 100;
+            Object.assign(t.ui.stepsSlider, { value: t.steps, min: t.pulses }); t.ui.stepsValue.textContent = t.steps;
+            Object.assign(t.ui.pulsesSlider, { value: t.pulses }); t.ui.pulsesValue.textContent = t.pulses;
+            Object.assign(t.ui.rotationSlider, { value: t.rotation, max: t.steps > 0 ? t.steps - 1 : 0 }); t.ui.rotationValue.textContent = t.rotation;
+            t.ui.noteInput.value = Tone.Frequency(t.note, "midi").toNote();
+            t.ui.velocitySlider.value = t.ui.velocityValue.textContent = t.velocity;
+            t.ui.toggleButton.classList.add('active'); t.ui.toggleButton.textContent = 'ON';
+            t.ui.channelOverrideSelect.value = t.channelOverride;
+            updateTrackPattern(t);
         });
         saveSettings();
-        showStatusMessage("Default patterns loaded for all tracks.");
-    }
-    defaultSettingsButton.addEventListener('click', applyDefaultSettings);
+        showStatusMessage("Defaults loaded.");
+    });
 
-    lockStepsToggleButton.addEventListener('click', () => {
-        stepsLocked = !stepsLocked;
-        lockStepsToggleButton.classList.toggle('active', stepsLocked);
+    lockStepsCheckbox.addEventListener('change', (e) => {
+        stepsLocked = e.target.checked;
         if (stepsLocked) {
-            lockStepsToggleButton.textContent = "Steps Locked";
             globalLockedSteps = sequencerTracks.length > 0 ? sequencerTracks[0].steps : 16;
             synchronizeAllTrackSteps(globalLockedSteps);
         } else {
-            lockStepsToggleButton.textContent = "Lock Steps";
-            sequencerTracks.forEach(track => {
-                if (track.ui && track.ui.stepsSlider) track.ui.stepsSlider.disabled = false;
-                track.ui.stepsSlider.min = track.pulses;
-                track.ui.rotationSlider.max = track.steps > 0 ? track.steps - 1 : 0;
-            });
+            sequencerTracks.forEach(t => t.ui && (t.ui.stepsSlider.disabled = false));
         }
         saveSettings();
         showStatusMessage(stepsLocked ? `Steps Locked to ${globalLockedSteps}` : "Steps Unlocked");
     });
 
-    function synchronizeAllTrackSteps(newStepsValue) {
-        globalLockedSteps = newStepsValue;
-        sequencerTracks.forEach(track => {
-            track.steps = newStepsValue;
-            if (track.ui && track.ui.stepsSlider) {
-                track.ui.stepsSlider.value = newStepsValue;
-                track.ui.stepsValue.textContent = newStepsValue;
-                track.ui.stepsSlider.disabled = stepsLocked;
-
-                if (track.pulses > track.steps) {
-                    track.pulses = track.steps > 0 ? track.steps : 1;
-                    track.ui.pulsesSlider.value = track.pulses;
-                    track.ui.pulsesValue.textContent = track.pulses;
-                }
-                track.ui.stepsSlider.min = track.pulses;
-
-                track.ui.rotationSlider.max = track.steps > 0 ? track.steps - 1 : 0;
-                if (track.rotation >= track.steps) {
-                    track.rotation = track.steps > 0 ? track.rotation % track.steps : 0;
-                    track.ui.rotationSlider.value = track.rotation;
-                    track.ui.rotationValue.textContent = track.rotation;
-                }
-                updateTrackPattern(track);
-            }
+    function synchronizeAllTrackSteps(newSteps) {
+        globalLockedSteps = newSteps;
+        sequencerTracks.forEach(t => {
+            t.steps = newSteps;
+            if (!t.ui) return;
+            Object.assign(t.ui.stepsSlider, { value: newSteps, disabled: stepsLocked });
+            t.ui.stepsValue.textContent = newSteps;
+            if (t.pulses > t.steps) { t.ui.pulsesSlider.value = t.ui.pulsesValue.textContent = t.pulses = t.steps > 0 ? t.steps : 1; }
+            t.ui.stepsSlider.min = t.pulses;
+            t.ui.rotationSlider.max = t.steps > 0 ? t.steps - 1 : 0;
+            if (t.rotation >= t.steps) { t.ui.rotationSlider.value = t.ui.rotationValue.textContent = t.rotation = t.steps > 0 ? t.rotation % t.steps : 0; }
+            updateTrackPattern(t);
         });
         saveSettings();
     }
 
-    function updateTrackUI(track) {
-        if (!track || !track.ui) return;
-        track.ui.pulsesSlider.value = track.pulses;
-        track.ui.pulsesValue.textContent = track.pulses;
-        track.ui.stepsSlider.value = track.steps;
-        track.ui.stepsValue.textContent = track.steps;
-        track.ui.stepsSlider.min = track.pulses;
-        track.ui.rotationSlider.max = track.steps > 0 ? track.steps - 1 : 0;
-        track.ui.rotationSlider.value = track.rotation;
-        track.ui.rotationValue.textContent = track.rotation;
-        track.ui.noteInput.value = Tone.Frequency(track.note, "midi").toNote();
-        track.ui.toggleButton.textContent = track.active ? 'ON' : 'OFF';
-        track.ui.toggleButton.classList.toggle('active', track.active);
-        track.ui.stepsSlider.disabled = stepsLocked;
-    }
-
-
     function createSequencerTrackUI(trackIndex) {
         let initialSteps = stepsLocked ? globalLockedSteps : 16;
-        let initialRotation = Math.floor(Math.random() * initialSteps);
         let initialPulses = Math.floor(Math.random() * initialSteps / 2) + 1;
-        if (initialPulses === 0 && initialSteps > 0) initialPulses = 1;
-        if (initialPulses > initialSteps) initialPulses = initialSteps;
-
+        let initialRotation = Math.floor(Math.random() * initialSteps);
 
         const trackDiv = document.createElement('div');
-        trackDiv.className = 'synth-panel p-2';
-        trackDiv.id = `track-panel-${trackIndex}`;
+        trackDiv.className = 'synth-panel p-2 flex flex-col disco-flash';
         trackDiv.innerHTML = `
-            <div class="flex justify-between items-center mb-1">
-                <h3 class="text-xs font-semibold" style="font-family: 'Orbitron', sans-serif;">Track ${trackIndex + 1}</h3>
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-sm font-semibold" style="font-family: 'Orbitron', sans-serif;">Track ${trackIndex + 1}</h3>
                 <div>
-                    <button id="randomizeTrack${trackIndex}" class="randomize-button utility-button" title="Randomize Pulses, Rotate, and Note for this track">Rnd</button>
-                    <button id="trackToggle${trackIndex}" class="push-button text-xs py-1 px-2 ml-1" title="Toggle this track ON or OFF">ON</button>
+                    <button id="randomizeTrack${trackIndex}" class="randomize-button" title="Randomize Pulses, Rotate, and Note">Random</button>
+                    <button id="trackToggle${trackIndex}" class="push-button text-xs py-1 px-2 ml-1 active" title="Toggle this track ON or OFF">ON</button>
                 </div>
             </div>
-            <div class="pattern-display my-1" id="patternDisplay${trackIndex}"></div>
-            <div class="grid grid-cols-2 gap-x-2 gap-y-1">
-                <div class="control-group mb-0">
-                    <div class="label-container"><label for="steps${trackIndex}">☷ Steps:</label><div class="flex items-center"><span id="stepsValue${trackIndex}" class="value-display">${initialSteps}</span><button class="learn-cc-button utility-button" data-param-id="steps${trackIndex}" title="Map Steps to MIDI CC">LRN</button></div></div>
-                    <div class="control-slider-container">
-                        <button class="slider-button" data-target="steps${trackIndex}" data-action="decrement" title="Decrease Steps">-</button>
-                        <input type="range" id="steps${trackIndex}" min="1" max="32" value="${initialSteps}" class="control-slider" title="Total steps in the sequence">
-                        <button class="slider-button" data-target="steps${trackIndex}" data-action="increment" title="Increase Steps">+</button>
+            <div class="grid grid-cols-2 gap-x-3 gap-y-1 mb-2">
+                <div class="control-group">
+                    <div class="control-header">
+                        <label for="pulses${trackIndex}">Pulses:</label>
+                        <span id="pulsesValue${trackIndex}" class="value-display">${initialPulses}</span>
+                        <button class="learn-cc-button ml-2" data-param-id="pulses${trackIndex}" title="Map Pulses to MIDI CC">Learn</button>
                     </div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="pulses${trackIndex}" data-action="decrement">-</button><input type="range" id="pulses${trackIndex}" min="1" max="32" value="${initialPulses}" class="control-slider"><button class="slider-button" data-target="pulses${trackIndex}" data-action="increment">+</button></div>
                 </div>
-                <div class="control-group mb-0">
-                    <div class="label-container"><label for="pulses${trackIndex}">♫ Pulses:</label><div class="flex items-center"><span id="pulsesValue${trackIndex}" class="value-display">${initialPulses}</span><button class="learn-cc-button utility-button" data-param-id="pulses${trackIndex}" title="Map Pulses to MIDI CC">LRN</button></div></div>
-                    <div class="control-slider-container">
-                        <button class="slider-button" data-target="pulses${trackIndex}" data-action="decrement" title="Decrease Pulses">-</button>
-                        <input type="range" id="pulses${trackIndex}" min="1" max="32" value="${initialPulses}" class="control-slider" title="Number of active beats (pulses)">
-                        <button class="slider-button" data-target="pulses${trackIndex}" data-action="increment" title="Increase Pulses">+</button>
+                <div class="control-group">
+                    <div class="control-header">
+                        <label for="steps${trackIndex}">Steps:</label>
+                        <span id="stepsValue${trackIndex}" class="value-display">${initialSteps}</span>
+                        <button class="learn-cc-button ml-2" data-param-id="steps${trackIndex}" title="Map Steps to MIDI CC">Learn</button>
                     </div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="steps${trackIndex}" data-action="decrement">-</button><input type="range" id="steps${trackIndex}" min="1" max="32" value="${initialSteps}" class="control-slider"><button class="slider-button" data-target="steps${trackIndex}" data-action="increment">+</button></div>
                 </div>
-                <div class="control-group mb-0">
-                    <div class="label-container"><label for="rotation${trackIndex}">↻ Rotate:</label><div class="flex items-center"><span id="rotationValue${trackIndex}" class="value-display">${initialRotation}</span><button class="learn-cc-button utility-button" data-param-id="rotation${trackIndex}" title="Map Rotate to MIDI CC">LRN</button></div></div>
-                    <div class="control-slider-container">
-                        <button class="slider-button" data-target="rotation${trackIndex}" data-action="decrement" title="Decrease Rotation">-</button>
-                        <input type="range" id="rotation${trackIndex}" min="0" max="${initialSteps > 0 ? initialSteps -1 : 0}" value="${initialRotation}" class="control-slider" title="Rotate the pattern offset">
-                        <button class="slider-button" data-target="rotation${trackIndex}" data-action="increment" title="Increase Rotation">+</button>
+                <div class="control-group">
+                    <div class="control-header">
+                        <label for="rotation${trackIndex}">Rotate:</label>
+                        <span id="rotationValue${trackIndex}" class="value-display">${initialRotation}</span>
+                        <button class="learn-cc-button ml-2" data-param-id="rotation${trackIndex}" title="Map Rotation to MIDI CC">Learn</button>
                     </div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="rotation${trackIndex}" data-action="decrement">-</button><input type="range" id="rotation${trackIndex}" min="0" max="${initialSteps-1}" value="${initialRotation}" class="control-slider"><button class="slider-button" data-target="rotation${trackIndex}" data-action="increment">+</button></div>
                 </div>
-                 <div class="control-group mb-0">
-                    <div class="label-container"><label for="note${trackIndex}">♪ Note:</label><button class="learn-cc-button utility-button" data-param-id="note${trackIndex}" title="Map Note to MIDI CC">LRN</button></div>
-                    <div class="note-input-container">
-                       <input type="text" id="note${trackIndex}" value="${['C3', 'E3', 'G3', 'B3'][trackIndex % 4]}" class="text-xs p-1" title="MIDI note for this track (e.g., C4, F#3)">
+                <div class="control-group">
+                    <div class="control-header">
+                        <label for="velocity${trackIndex}">Vel:</label>
+                        <span id="velocityValue${trackIndex}" class="value-display">100</span>
+                        <button class="learn-cc-button ml-2" data-param-id="velocity${trackIndex}" title="Map Velocity to MIDI CC">Learn</button>
                     </div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="velocity${trackIndex}" data-action="decrement">-</button><input type="range" id="velocity${trackIndex}" min="1" max="127" value="100" class="control-slider"><button class="slider-button" data-target="velocity${trackIndex}" data-action="increment">+</button></div>
+                </div>
+                <div class="control-group">
+                    <label for="channelOverride${trackIndex}" class="mb-1">Channel:</label>
+                    <select id="channelOverride${trackIndex}" class="text-xs p-1 h-full" title="MIDI Channel Override"><option value="global">Global</option>${Array.from({length:16},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select>
+                </div>
+                <div class="control-group">
+                    <label for="note${trackIndex}" class="mb-1">Note:</label>
+                    <div class="note-input-group"><input type="text" id="note${trackIndex}" value="C3" class="text-xs p-1"><button id="noteLearn${trackIndex}" class="note-learn-button">Learn</button></div>
                 </div>
             </div>
+            <div id="patternDisplay${trackIndex}" class="pattern-display my-1"></div>
         `;
         sequencerTracksContainer.appendChild(trackDiv);
 
         const track = {
             id: trackIndex, active: true, pulses: initialPulses, steps: initialSteps, rotation: initialRotation,
-            note: Tone.Frequency(['C3', 'E3', 'G3', 'B3'][trackIndex % 4]).toMidi(),
-            velocity: 100, pattern: [], currentStep: 0,
-            stepCounterForUI: 0,
+            note: Tone.Frequency("C3").toMidi(), velocity: 100, channelOverride: 'global',
+            pattern: [], currentStep: 0,
             ui: {
+                panel: trackDiv,
                 toggleButton: document.getElementById(`trackToggle${trackIndex}`),
                 randomizeButton: document.getElementById(`randomizeTrack${trackIndex}`),
-                pulsesSlider: document.getElementById(`pulses${trackIndex}`),
-                pulsesValue: document.getElementById(`pulsesValue${trackIndex}`),
-                stepsSlider: document.getElementById(`steps${trackIndex}`),
-                stepsValue: document.getElementById(`stepsValue${trackIndex}`),
-                rotationSlider: document.getElementById(`rotation${trackIndex}`),
-                rotationValue: document.getElementById(`rotationValue${trackIndex}`),
-                noteInput: document.getElementById(`note${trackIndex}`),
+                pulsesSlider: document.getElementById(`pulses${trackIndex}`), pulsesValue: document.getElementById(`pulsesValue${trackIndex}`),
+                stepsSlider: document.getElementById(`steps${trackIndex}`), stepsValue: document.getElementById(`stepsValue${trackIndex}`),
+                rotationSlider: document.getElementById(`rotation${trackIndex}`), rotationValue: document.getElementById(`rotationValue${trackIndex}`),
+                noteInput: document.getElementById(`note${trackIndex}`), noteLearnButton: document.getElementById(`noteLearn${trackIndex}`),
+                velocitySlider: document.getElementById(`velocity${trackIndex}`), velocityValue: document.getElementById(`velocityValue${trackIndex}`),
+                channelOverrideSelect: document.getElementById(`channelOverride${trackIndex}`),
                 patternDisplay: document.getElementById(`patternDisplay${trackIndex}`),
             }
         };
-        const randomNoteIndex = Math.floor(Math.random() * NOTE_RANGE_FOR_RANDOM.length);
-        track.note = NOTE_RANGE_FOR_RANDOM[randomNoteIndex];
+
+        if (currentRandomizationScale.length > 0) {
+            track.note = currentRandomizationScale[Math.floor(Math.random() * currentRandomizationScale.length)];
+        } else {
+            track.note = 48 + Math.floor(Math.random() * 24); // C3 to B4
+        }
         track.ui.noteInput.value = Tone.Frequency(track.note, "midi").toNote();
 
-
         track.ui.randomizeButton.addEventListener('click', () => randomizeTrackParameters(track));
-
         track.ui.toggleButton.addEventListener('click', () => {
             track.active = !track.active;
-            track.ui.toggleButton.textContent = track.active ? 'ON' : 'OFF';
             track.ui.toggleButton.classList.toggle('active', track.active);
+            track.ui.toggleButton.textContent = track.active ? 'ON' : 'OFF';
             if (!track.active) {
-                sendMidiNoteOff(track.note, selectedMidiChannel);
-                track.currentStep = 0;
-                track.stepCounterForUI = 0;
-                renderPatternDisplay(track);
+                const ch = (track.channelOverride !== 'global') ? track.channelOverride : selectedMidiChannel;
+                sendMidiNoteOff(track.note, ch);
             }
             saveSettings();
         });
-        track.ui.pulsesSlider.addEventListener('input', (e) => {
+        track.ui.pulsesSlider.addEventListener('input', e => {
             track.pulses = parseInt(e.target.value);
             track.ui.pulsesValue.textContent = track.pulses;
-
-            const currentTrackSteps = stepsLocked ? globalLockedSteps : track.steps;
-            if (track.pulses > currentTrackSteps) {
-                track.pulses = currentTrackSteps > 0 ? currentTrackSteps : 1;
-                e.target.value = track.pulses;
-                track.ui.pulsesValue.textContent = track.pulses;
-            }
             track.ui.stepsSlider.min = track.pulses;
-            updateTrackPattern(track);
-            saveSettings();
+            updateTrackPattern(track); saveSettings();
         });
-        track.ui.stepsSlider.addEventListener('input', (e) => {
+        track.ui.stepsSlider.addEventListener('input', e => {
             const newSteps = parseInt(e.target.value);
-            if (stepsLocked) {
-                synchronizeAllTrackSteps(newSteps);
-            } else {
+            if (stepsLocked) synchronizeAllTrackSteps(newSteps);
+            else {
                 track.steps = newSteps;
-                if (track.steps < track.pulses) {
-                    track.steps = track.pulses;
-                    e.target.value = track.steps;
-                }
+                if (track.steps < track.pulses) track.steps = e.target.value = track.pulses;
                 track.ui.stepsValue.textContent = track.steps;
-                track.ui.rotationSlider.max = track.steps > 0 ? track.steps -1 : 0;
-                if (track.rotation >= track.steps && track.steps > 0) {
-                    track.rotation = 0;
-                    track.ui.rotationSlider.value = 0;
-                    track.ui.rotationValue.textContent = 0;
-                } else if (track.steps === 0) {
-                    track.rotation = 0;
-                    track.ui.rotationSlider.value = 0;
-                    track.ui.rotationValue.textContent = 0;
-                }
+                track.ui.rotationSlider.max = track.steps > 0 ? track.steps - 1 : 0;
+                if (track.rotation >= track.steps) track.ui.rotationSlider.value = track.ui.rotationValue.textContent = track.rotation = 0;
                 updateTrackPattern(track);
             }
             saveSettings();
         });
-        track.ui.rotationSlider.addEventListener('input', (e) => {
+        track.ui.rotationSlider.addEventListener('input', e => {
             track.rotation = parseInt(e.target.value);
             track.ui.rotationValue.textContent = track.rotation;
-            updateTrackPattern(track);
+            updateTrackPattern(track); saveSettings();
+        });
+        track.ui.noteInput.addEventListener('change', e => {
+            try { track.note = Tone.Frequency(e.target.value.toUpperCase()).toMidi(); saveSettings(); }
+            catch { e.target.value = Tone.Frequency(track.note, "midi").toNote(); }
+        });
+        track.ui.velocitySlider.addEventListener('input', e => {
+            track.velocity = parseInt(e.target.value);
+            track.ui.velocityValue.textContent = track.velocity;
             saveSettings();
         });
-        track.ui.noteInput.addEventListener('change', (e) => {
-            try {
-                track.note = Tone.Frequency(e.target.value.toUpperCase()).toMidi();
-            } catch {
-                showStatusMessage(`Invalid note: ${e.target.value}. Using previous.`);
-                e.target.value = Tone.Frequency(track.note, "midi").toNote();
-            }
+        track.ui.noteLearnButton.addEventListener('click', () => startNoteLearn(track, track.ui.noteLearnButton));
+        track.ui.channelOverrideSelect.addEventListener('change', e => {
+            track.channelOverride = e.target.value;
             saveSettings();
         });
 
         trackDiv.querySelectorAll('.learn-cc-button').forEach(btn => {
-            btn.addEventListener('click', () => startLearnCc(btn.dataset.paramId, btn));
-            updateLearnButtonTooltip(btn, btn.dataset.paramId);
+            btn.textContent = 'Learn';
+            btn.addEventListener('click', () => startLearnCc(btn.dataset.paramId, btn))
         });
-
         sequencerTracks.push(track);
+    }
+
+    function createChannelVolumeUI() {
+        channelVolumesContainer.innerHTML = '';
+        for(let i=1; i<=16; i++) {
+            const volDiv = document.createElement('div');
+            volDiv.className = 'control-group';
+            volDiv.innerHTML = `
+                 <div class="control-header">
+                    <label for="channelVolume${i}">Ch ${i}:</label>
+                    <span id="channelVolumeValue${i}" class="value-display">${channelVolumes[i-1]}</span>
+                    <button class="learn-cc-button ml-2" data-param-id="channelVolume${i}">L</button>
+                </div>
+                <div class="control-slider-container">
+                    <input type="range" id="channelVolume${i}" min="0" max="127" value="${channelVolumes[i-1]}" class="control-slider">
+                </div>
+            `;
+            channelVolumesContainer.appendChild(volDiv);
+
+            const slider = volDiv.querySelector(`#channelVolume${i}`);
+            const valueDisplay = volDiv.querySelector(`#channelVolumeValue${i}`);
+            const learnBtn = volDiv.querySelector('.learn-cc-button');
+
+            slider.addEventListener('input', e => {
+                const newVolume = parseInt(e.target.value);
+                valueDisplay.textContent = newVolume;
+                channelVolumes[i-1] = newVolume;
+                sendMidiCC(7, newVolume, i);
+                saveSettings();
+            });
+            learnBtn.addEventListener('click', () => startLearnCc(`channelVolume${i}`, learnBtn));
+        }
     }
 
     function updateTrackPattern(track) {
         track.pattern = generateEuclideanPattern(track.pulses, track.steps);
         track.pattern = rotatePattern(track.pattern, track.rotation);
-        track.stepCounterForUI = 0;
         track.currentStep = 0;
         renderPatternDisplay(track);
         setupTrackLoop(track);
     }
 
     function renderPatternDisplay(track) {
-        if (!track || !track.ui || !track.ui.patternDisplay) return;
-        const display = track.ui.patternDisplay;
-        display.innerHTML = '';
+        if (!track || !track.ui.patternDisplay) return;
+        track.ui.patternDisplay.innerHTML = '';
         if (track.steps === 0 || !track.pattern) return;
-
         for (let i = 0; i < track.steps; i++) {
-            const stepDiv = document.createElement('div');
-            stepDiv.className = 'pattern-step';
-
-            if (track.pattern && i < track.pattern.length && track.pattern[i] === 1) {
-                stepDiv.classList.add('active');
-            }
-            if (i === track.currentStep && Tone.Transport.state === "started" && track.active) {
-                stepDiv.classList.add('current');
-            }
-            display.appendChild(stepDiv);
+            const step = document.createElement('div');
+            step.className = 'pattern-step';
+            if (track.pattern[i] === 1) step.classList.add('active');
+            if (i === track.currentStep && Tone.Transport.state === "started" && track.active) step.classList.add('current');
+            track.ui.patternDisplay.appendChild(step);
         }
     }
 
     function setupTrackLoop(track) {
-        if (transportLoops[track.id]) {
-            transportLoops[track.id].stop(0);
-            transportLoops[track.id].dispose();
-        }
-        if (track.steps === 0 || !track.pattern || track.pattern.length === 0) {
-            renderPatternDisplay(track);
-            return;
-        }
+        if (transportLoops[track.id]) transportLoops[track.id].stop(0).dispose();
+        if (track.steps === 0 || !track.pattern.length) { renderPatternDisplay(track); return; }
 
-        track.stepCounterForUI = 0;
-        track.currentStep = 0;
-
-        const subdivision = "16n";
-        const stepDurationSeconds = Tone.Time(subdivision).toSeconds();
-
-        const sequence = new Tone.Sequence((time, value) => {
+        transportLoops[track.id] = new Tone.Sequence((time, value) => {
+            const ch = (track.channelOverride !== 'global') ? parseInt(track.channelOverride) : selectedMidiChannel;
             if (track.active && value === 1) {
-                sendMidiNoteOn(track.note, track.velocity, selectedMidiChannel);
-                Tone.Transport.scheduleOnce(() => {
-                    sendMidiNoteOff(track.note, selectedMidiChannel);
-                }, time + stepDurationSeconds * 0.80);
+                sendMidiNoteOn(track.note, track.velocity, ch);
+                Tone.Transport.scheduleOnce(() => sendMidiNoteOff(track.note, ch), time + Tone.Time(`${track.steps}n`).toSeconds() * 0.8);
+
+                Tone.Draw.schedule(() => {
+                    const panel = track.ui.panel;
+                    if (!panel) return;
+                    panel.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 85%)`; // Pastel colors
+                    setTimeout(() => { panel.style.backgroundColor = ''; }, 90);
+                }, time);
             }
-            track.currentStep = track.stepCounterForUI;
-            renderPatternDisplay(track);
-            track.stepCounterForUI = (track.stepCounterForUI + 1) % track.steps;
-        }, track.pattern, subdivision).start(0);
-
-        sequence.loop = true;
-
-        transportLoops[track.id] = sequence;
+            Tone.Draw.schedule(() => {
+                track.currentStep = (track.currentStep + 1) % track.steps;
+                renderPatternDisplay(track);
+            }, time);
+        }, track.pattern, `${track.steps}n`).start(0);
     }
 
-    function regenerateAllTracks(newCount) {
-        const oldTrackCount = sequencerTracks.length;
-        numTracks = parseInt(newCount);
-        if (isNaN(numTracks) || numTracks < 1) numTracks = 1;
-        if (numTracks > MAX_TRACKS) numTracks = MAX_TRACKS;
-        numTracksInput.value = numTracks;
+    Tone.Transport.on('start', () => sequencerTracksContainer.classList.remove('stopped'));
+    Tone.Transport.on('stop', () => {
+        sequencerTracksContainer.classList.add('stopped');
+        sequencerTracks.forEach(t => { t.currentStep = 0; renderPatternDisplay(t); });
+    });
 
-        if (newCount > oldTrackCount) {
-            for (let i = oldTrackCount; i < newCount; i++) {
+
+    function updateTrackCount(newCount) {
+        const oldCount = numTracks;
+
+        if (newCount > oldCount) {
+            for (let i = oldCount; i < newCount; i++) {
                 createSequencerTrackUI(i);
                 updateTrackPattern(sequencerTracks[i]);
             }
-        } else if (newCount < oldTrackCount) {
-            for (let i = oldTrackCount - 1; i >= newCount; i--) {
+        } else if (newCount < oldCount) {
+            for (let i = oldCount - 1; i >= newCount; i--) {
+                const trackToRemove = sequencerTracks[i];
+                if (trackToRemove && trackToRemove.ui && trackToRemove.ui.panel) {
+                    trackToRemove.ui.panel.remove();
+                }
                 if (transportLoops[i]) {
                     transportLoops[i].stop(0).dispose();
                 }
-                const trackPanel = document.getElementById(`track-panel-${i}`);
-                if (trackPanel) trackPanel.remove();
             }
             sequencerTracks.length = newCount;
             transportLoops.length = newCount;
         }
 
-        setupAnimalDancers();
-        if (stepsLocked) synchronizeAllTrackSteps(globalLockedSteps);
+        numTracks = newCount;
         saveSettings();
     }
 
 
     numTracksInput.addEventListener('change', (e) => {
-        let newCount = parseInt(e.target.value);
-        if (isNaN(newCount) || newCount < 1) newCount = 1;
-        if (newCount > MAX_TRACKS) newCount = MAX_TRACKS;
-        e.target.value = newCount;
-
-        if (newCount !== numTracks) {
-            regenerateAllTracks(newCount);
+        let count = Math.max(1, Math.min(MAX_TRACKS, parseInt(e.target.value) || numTracks));
+        e.target.value = count;
+        if (count !== numTracks) {
+            updateTrackCount(count);
         }
     });
-
 
     playStopButton.addEventListener('click', async () => {
-        if (playStopButton.disabled) return;
         if (Tone.Transport.state === 'started') {
-            transportLoops.forEach(loop => {
-                if (loop) loop.stop(0);
-            });
             Tone.Transport.stop();
-            Tone.Transport.cancel(0);
-            sendAllNotesOff(selectedMidiChannel);
-
-            sequencerTracks.forEach(t => {
-                t.currentStep = 0;
-                t.stepCounterForUI = 0;
-                renderPatternDisplay(t);
-            });
-            playStopButton.textContent = '▶';
+            const allChs = new Set([selectedMidiChannel, ...sequencerTracks.map(t => parseInt(t.channelOverride)).filter(c => !isNaN(c))]);
+            allChs.forEach(sendAllNotesOff);
+            playStopButton.textContent = 'Play';
             playStopButton.classList.remove('active');
-            showStatusMessage(getRhythmSuggestion(), 5000);
         } else {
-            try {
-                if (Tone.context.state !== 'running') {
-                    await Tone.start();
-                }
-                sequencerTracks.forEach(t => {
-                    t.currentStep = 0;
-                    t.stepCounterForUI = 0;
-                    if (transportLoops[t.id]) {
-                        transportLoops[t.id].progress = 0;
-                        transportLoops[t.id].start(0);
-                    }
-                    renderPatternDisplay(t);
-                });
-                Tone.Transport.start();
-                playStopButton.textContent = '■';
-                playStopButton.classList.add('active');
-            } catch (e) {
-                console.error("Error starting Tone.js transport: ", e);
-                showStatusMessage("Error starting audio/transport.", 5000);
-            }
+            if (Tone.context.state !== 'running') await Tone.start();
+            Tone.Transport.start();
+            playStopButton.textContent = 'Stop';
+            playStopButton.classList.add('active');
         }
     });
 
-    midiChannelSelect.addEventListener('change', (e) => {
-        const oldChannel = selectedMidiChannel;
-        const newChannel = parseInt(e.target.value);
+    midiChannelSelect.addEventListener('change', e => { selectedMidiChannel = parseInt(e.target.value); saveSettings(); });
 
-        if (oldChannel !== newChannel) {
-            sendAllNotesOff(oldChannel);
-            selectedMidiChannel = newChannel;
-            saveSettings();
-        }
-    });
-
-    for (let i = 1; i <= 16; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = `Ch ${i}`;
-        midiChannelSelect.appendChild(option);
-    }
-
-    function loadPatterns() {
-        const storedPatterns = localStorage.getItem(PATTERNS_KEY);
-        if (storedPatterns) {
-            savedPatterns = JSON.parse(storedPatterns);
-        }
-        updatePatternLists();
-    }
-
-    function saveCurrentPattern() {
-        const name = patternNameInput.value.trim();
-        if (!name) {
-            showStatusMessage("Please enter a pattern name.", 3000);
-            return;
-        }
-        savedPatterns[name] = sequencerTracks.map(track => ({
-            pulses: track.pulses,
-            steps: track.steps,
-            rotation: track.rotation,
-            note: track.note,
-            velocity: track.velocity,
-            active: track.active
-        }));
-        localStorage.setItem(PATTERNS_KEY, JSON.stringify(savedPatterns));
-        updatePatternLists();
-        showStatusMessage(`Pattern "${name}" saved!`, 3000);
-    }
-
-    function loadSelectedPattern() {
-        const name = savedPatternsSelect.value;
-        if (name && savedPatterns[name]) {
-            const patternData = savedPatterns[name];
-            if (patternData.length !== numTracks) {
-                regenerateAllTracks(patternData.length);
-            }
-
-            sequencerTracks.forEach((track, index) => {
-                const savedTrack = patternData[index];
-                if (savedTrack) {
-                    track.pulses = savedTrack.pulses;
-                    track.steps = savedTrack.steps;
-                    track.rotation = savedTrack.rotation;
-                    track.note = savedTrack.note;
-                    track.velocity = savedTrack.velocity;
-                    track.active = savedTrack.active;
-
-                    updateTrackUI(track);
-
-                    updateTrackPattern(track);
-                }
-            });
-            showStatusMessage(`Pattern "${name}" loaded.`, 3000);
-            patternNameInput.value = name;
-            saveSettings();
-        }
-    }
-
-    function deleteSelectedPattern() {
-        const name = savedPatternsSelect.value;
-        if (name && savedPatterns[name]) {
-            delete savedPatterns[name];
-            localStorage.setItem(PATTERNS_KEY, JSON.stringify(savedPatterns));
-            updatePatternLists();
-            showStatusMessage(`Pattern "${name}" deleted.`, 3000);
-        }
-    }
-
-    function updatePatternLists() {
-        savedPatternsSelect.innerHTML = '';
-        Object.keys(savedPatterns).sort().forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            savedPatternsSelect.appendChild(option);
-        });
-    }
-
-    savePatternButton.addEventListener('click', saveCurrentPattern);
-    loadPatternButton.addEventListener('click', loadSelectedPattern);
-    deletePatternButton.addEventListener('click', deleteSelectedPattern);
-
-    function setupAnimalDancers() {
-        animalDancerContainer.innerHTML = '';
-        animalDancers = [];
-        let shuffledAnimals = [...DANCING_ANIMALS].sort(() => 0.5 - Math.random());
-        for (let i = 0; i < numTracks; i++) {
-            const dancer = document.createElement('div');
-            dancer.className = 'animal-dancer';
-            dancer.textContent = shuffledAnimals[i % shuffledAnimals.length];
-            animalDancerContainer.appendChild(dancer);
-            animalDancers.push(dancer);
-        }
-    }
+    for (let i = 1; i <= 16; i++) midiChannelSelect.add(new Option(`Ch ${i}`, i));
 
     async function init() {
-        const userId = crypto.randomUUID();
-        userIdDisplay.textContent = userId.substring(0,8);
+        userIdDisplay.textContent = crypto.randomUUID().substring(0,8);
+        const loaded = loadSettings();
 
-        bpmSlider.value = 55;
-        bpmValue.textContent = '55';
+        numTracks = (loaded && loaded.numTracks > 0) ? loaded.numTracks : 4;
 
-        const loadedSettings = loadSettings();
-
-        numTracksInput.value = numTracks;
-        bpmSlider.value = parseInt(bpmSlider.value);
-        swingValue.textContent = Math.round(swingSlider.value);
-        Tone.Transport.bpm.value = parseInt(bpmSlider.value);
-        bpmValue.textContent = bpmSlider.value;
-        lockStepsToggleButton.classList.toggle('active', stepsLocked);
-        lockStepsToggleButton.textContent = stepsLocked ? "Steps Locked" : "Lock Steps";
-        midiChannelSelect.value = selectedMidiChannel;
-
-
-        sequencerTracks = [];
-        sequencerTracksContainer.innerHTML = '';
+        createChannelVolumeUI();
         for (let i = 0; i < numTracks; i++) {
             createSequencerTrackUI(i);
         }
 
-        if (loadedSettings && loadedSettings.tracks) {
-            loadedSettings.tracks.forEach((savedTrack, index) => {
-                if (index < numTracks && sequencerTracks[index]) {
-                    const track = sequencerTracks[index];
-                    track.pulses = savedTrack.pulses ?? track.pulses;
-                    track.steps = stepsLocked ? globalLockedSteps : (savedTrack.steps ?? globalLockedSteps);
+        numTracksInput.value = numTracks;
+        if(loaded && loaded.bpm) bpmSlider.value = loaded.bpm;
+        if(loaded && loaded.masterVolume) masterVolumeSlider.value = loaded.masterVolume;
 
-                    if (track.pulses > track.steps) track.pulses = track.steps > 0 ? track.steps : 1;
+        Tone.Transport.bpm.value = parseInt(bpmSlider.value);
+        bpmValue.textContent = bpmSlider.value;
+        masterVolumeValue.textContent = masterVolumeSlider.value;
+        lockStepsCheckbox.checked = stepsLocked;
+        midiChannelSelect.value = selectedMidiChannel;
 
-                    track.rotation = savedTrack.rotation ?? track.rotation;
-                    if (track.steps > 0) track.rotation %= track.steps; else track.rotation = 0;
+        if (loaded && loaded.tracks) {
+            loaded.tracks.forEach((saved, i) => {
+                if (i >= sequencerTracks.length) return;
+                const t = sequencerTracks[i];
+                Object.assign(t, saved);
+                t.steps = stepsLocked ? globalLockedSteps : (saved.steps ?? globalLockedSteps);
 
-                    track.note = savedTrack.note ?? track.note;
-                    track.velocity = savedTrack.velocity ?? 100;
-                    track.active = savedTrack.active ?? track.active;
-
-                    updateTrackUI(track);
-                }
+                t.ui.stepsSlider.value = t.steps; t.ui.stepsValue.textContent = t.steps;
+                t.ui.pulsesSlider.value = t.pulses; t.ui.pulsesValue.textContent = t.pulses;
+                t.ui.rotationSlider.max = t.steps > 0 ? t.steps - 1 : 0;
+                t.ui.rotationSlider.value = t.rotation; t.ui.rotationValue.textContent = t.rotation;
+                t.ui.noteInput.value = Tone.Frequency(t.note, "midi").toNote();
+                t.ui.velocitySlider.value = t.velocity; t.ui.velocityValue.textContent = t.velocity;
+                t.ui.toggleButton.classList.toggle('active', t.active);
+                t.ui.toggleButton.textContent = t.active ? 'ON' : 'OFF';
+                t.ui.channelOverrideSelect.value = t.channelOverride;
             });
         }
 
-        if (bpmSliderLearnCc) updateLearnButtonTooltip(bpmSliderLearnCc, 'bpmSlider');
-        sequencerTracks.forEach(track => {
-            track.ui.randomizeButton.parentElement.parentElement.querySelectorAll('.learn-cc-button').forEach(btn => {
-                updateLearnButtonTooltip(btn, btn.dataset.paramId);
-            });
-        });
-
-        sequencerTracks.forEach(track => updateTrackPattern(track));
-        setupAnimalDancers();
+        setHarmoniousRandomizationScale();
+        sequencerTracks.forEach(updateTrackPattern);
         await setupMIDI();
 
-        if (loadedSettings && loadedSettings.midiOutputId) {
-            if (Array.from(midiOutSelect.options).some(opt => opt.value === loadedSettings.midiOutputId)) {
-                midiOutSelect.value = loadedSettings.midiOutputId;
-            }
-            updateMidiOutput();
-        } else if (midiOutSelect.options.length > 0 && midiOutSelect.options[0].value !== "") {
-            midiOutSelect.value = midiOutSelect.options[0].value;
+        if (loaded && loaded.midiOutputId && Array.from(midiOutSelect.options).some(o => o.value === loaded.midiOutputId)) {
+            midiOutSelect.value = loaded.midiOutputId;
             updateMidiOutput();
         }
 
-        setupTransport();
-
-        loadPatterns();
-
-        if (!loadedSettings) {
-            applyDefaultSettings();
-        } else if (stepsLocked) {
-            synchronizeAllTrackSteps(globalLockedSteps);
-        }
+        if (!loaded) defaultSettingsButton.click();
+        else if (stepsLocked) synchronizeAllTrackSteps(globalLockedSteps);
 
         showStatusMessage("Rhythm King 77 Initialized!", 3000);
     }
