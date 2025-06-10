@@ -72,8 +72,8 @@
         .control-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 30px;
-            height: 30px;
+            width: 26px;
+            height: 26px;
             background: #c0b090;
             border-radius: 6.25px;
             border: 2px solid #3a2a1a;
@@ -81,8 +81,8 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .control-slider::-moz-range-thumb {
-            width: 30px;
-            height: 30px;
+            width: 26px;
+            height: 26px;
             background: #c0b090;
             border-radius: 6.25px;
             border: 2px solid #3a2a1a;
@@ -90,36 +90,36 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .master-control-panel .control-slider {
-            height: 24px;
+            height: 20px;
         }
         .master-control-panel .control-slider::-webkit-slider-thumb {
-            width: 30px;
-            height: 30px;
+            width: 28px;
+            height: 28px;
         }
         .master-control-panel .control-slider::-moz-range-thumb {
-            width: 30px;
-            height: 30px;
+            width: 28px;
+            height: 28px;
         }
         .push-button {
             font-family: 'Orbitron', sans-serif;
             background-color: #7a6a5a;
             color: #f0e6d2;
             border: 2px solid #5a4a3a;
-            padding: 0.3rem 0.6rem;
+            padding: 0.2rem 0.5rem;
             border-radius: 6px;
             text-transform: uppercase;
             font-weight: bold;
             font-size: 0.6rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.2);
             transition: all 0.1s ease-in-out;
-            height: 28px;
+            height: 26px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
         }
         .push-button.icon-button {
             font-size: 0.9rem;
-            padding: 0.4rem;
+            padding: 0.3rem;
         }
         .push-button:active, .push-button.active {
             background-color: #9a8a7a;
@@ -128,8 +128,8 @@
         }
 
         #playStopButton {
-            width: 28px;
-            height: 28px;
+            width: 26px;
+            height: 26px;
             padding: 0;
             flex-shrink: 0;
             font-size: 1rem;
@@ -236,7 +236,7 @@
         .control-group {
             display: flex;
             flex-direction: column;
-            margin-bottom: 0.2rem;
+            margin-bottom: 0.1rem;
         }
         .control-header {
             display: flex;
@@ -259,8 +259,9 @@
         }
 
         #sequencerTracksContainer {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(336px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 0.75rem;
         }
         #sequencerWrapperPanel {
@@ -280,36 +281,7 @@
 
         #sequencerTracksContainer > .synth-panel {
             margin-bottom: 0;
-            flex: 1 1 auto;
-        }
-        #statusBar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: #2a2a2a;
-            color: #f0e6d2;
-            padding: 0.5rem;
-            text-align: center;
-            font-size: 0.8rem;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-            pointer-events: none;
-            font-family: 'Inter', sans-serif;
-            text-transform: none;
-            white-space: nowrap;
-            overflow: hidden;
-            z-index: 1001;
-        }
-        #statusBar.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        #statusBar-content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem;
+            flex: 0 1 320px;
         }
 
         .explanation-text-footer {
@@ -334,7 +306,7 @@
         }
         .control-flash {
             transition: background-color 0.1s ease-out;
-            background-color: #f0ad4e !important;
+            background-color: #a1887f !important;
         }
 
         /* Music Mode Styles */
@@ -391,17 +363,25 @@
         #channelVolumesContainer label {
             font-size: 0.6rem;
         }
-
-        #bottom-panels-container {
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
+        #hintsPanel {
+            height: auto;
+            min-height: 10rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f0ad4e;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 1rem;
+        }
+        #bottom-panels-container > * {
+            flex: 1;
         }
     </style>
 </head>
 <body class="p-1 md:p-2">
 
-<header class="text-center mb-3">
+<header class="text-center mb-2">
     <h1 class="text-2xl md:text-3xl font-bold" style="font-family: 'Orbitron', sans-serif; color: #f0ad4e;">Rhythm King 77</h1>
     <p class="text-xs md:text-sm">Euclidean MIDI Sequencer</p>
 </header>
@@ -410,26 +390,23 @@
     <!-- Main App Content -->
     <div id="mainContent" class="flex-grow">
         <div class="flex flex-col gap-3 main-container">
+            <div id="toolbar" class="flex flex-wrap items-center justify-start gap-2 mb-2">
+                <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences">&#x25B6;</button>
+                <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save the current state of all tracks, tempo, and MIDI settings to your browser's local storage.">&#128190;</button>
+                <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load the last saved state from your browser's local storage.">&#128193;</button>
+                <button id="defaultSettingsButton" class="push-button default-settings-button" title="Reset all tracks to a default starting pattern.">DEFAULTS</button>
+                <button id="masterRandomizeButton" class="push-button master-randomize-button" title="Randomize the parameters for all currently active tracks.">RANDOM</button>
+            </div>
             <div id="sequencerWrapperPanel" class="w-full synth-panel">
                 <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer</h2>
                 <div id="sequencerTracksContainer">
                 </div>
             </div>
 
-            <div id="bottom-panels-container" class="flex flex-col lg:flex-row gap-3">
+            <div class="flex flex-col lg:flex-row gap-3">
+                <div class="hidden lg:block flex-grow"></div>
                 <div id="masterControlPanel" class="lg:w-1/4 synth-panel flex flex-col gap-2 master-control-panel">
                     <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
-
-                    <div class="flex justify-center items-center gap-2 flex-wrap mb-2 px-2">
-                        <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences">&#x25B6;</button>
-                        <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save the current state of all tracks, tempo, and MIDI settings to your browser's local storage.">&#128190;</button>
-                        <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load the last saved state from your browser's local storage.">&#128193;</button>
-                    </div>
-                    <div class="flex justify-center items-center gap-2 flex-wrap mb-2 px-2">
-                        <button id="defaultSettingsButton" class="push-button default-settings-button flex-grow" title="Reset all tracks to a default starting pattern.">DEFAULTS</button>
-                        <button id="masterRandomizeButton" class="push-button master-randomize-button flex-grow" title="Randomize the parameters for all currently active tracks.">RANDOM</button>
-                        <button id="reInitMidiButton" class="push-button re-init-midi-button flex-grow" title="Rescan for available MIDI output devices.">RESET MIDI</button>
-                    </div>
 
                     <div class="control-group">
                         <div><label for="numTracksInput">Number of Tracks:</label></div>
@@ -477,7 +454,12 @@
                             <input type="checkbox" id="musicModeToggle"> Music Mode
                         </label>
                     </div>
-
+                </div>
+                <div id="midiPanel" class="lg:w-1/4 synth-panel flex flex-col gap-2">
+                    <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">MIDI Setup</h2>
+                    <div class="control-group">
+                        <button id="reInitMidiButton" class="push-button re-init-midi-button w-full" title="Rescan for available MIDI output devices.">RESET MIDI</button>
+                    </div>
                     <div class="control-group">
                         <label for="midiOutSelect">MIDI Output:</label>
                         <select id="midiOutSelect" title="Select MIDI output device">
@@ -487,9 +469,6 @@
                         <label for="midiChannelSelect">Global MIDI Ch:</label>
                         <select id="midiChannelSelect" title="Select global MIDI channel (1-16)">
                         </select>
-                    </div>
-                    <div class="mt-auto pt-1">
-                        <p class="text-xs text-center">User ID: <span id="userIdDisplay" class="font-mono"></span></p>
                     </div>
                 </div>
 
@@ -530,6 +509,9 @@
                     <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
                     <div id="channelVolumesContainer" class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-x-3 gap-y-1">
                     </div>
+                </div>
+                <div id="hintsPanel" class="synth-panel lg:w-1/4 hidden lg:flex">
+                    <div id="hintContent" class="m-auto"></div>
                 </div>
             </div>
         </div>
@@ -582,6 +564,7 @@
     const multiTrackRandomToggle = document.getElementById('multiTrackRandomToggle');
     const musicModeNextButton = document.getElementById('musicModeNextButton');
     const musicModeLog = document.getElementById('musicModeLog');
+    const hintContent = document.getElementById('hintContent');
 
     let midiAccess = null;
     let midiOutput = null;
@@ -597,7 +580,7 @@
     let statusTimeout = null;
     let statusMessageActive = false;
     let stepsLocked = false;
-    let globalLockedSteps = 8;
+    let globalLockedSteps = 16;
     let currentRandomizationScale = [];
     let currentScaleName = '';
     let channelVolumes = new Array(16).fill(100);
@@ -634,22 +617,9 @@
     const AUTO_REPEAT_DELAY = 500;
     const AUTO_REPEAT_INTERVAL = 100;
 
-    function updateStatusBar() {
-        if (statusMessageActive) return;
-
-        let statusText = ``;
-        if (Tone.Transport.state === 'started' && currentScaleName) {
-            statusText = `Current Scale: ${currentScaleName}`;
-        }
-
-        statusBarContent.textContent = statusText;
-        statusBar.classList.toggle('visible', !!statusText);
-    }
-
-    function showHelpfulMessage() {
-        if (Tone.Transport.state === 'stopped') return;
+    function showHint() {
         const randomIndex = Math.floor(Math.random() * helpfulMessages.length);
-        showStatusMessage(helpfulMessages[randomIndex], 4000);
+        hintContent.textContent = helpfulMessages[randomIndex];
     }
 
     function showStatusMessage(message, duration = 3000) {
@@ -659,7 +629,7 @@
         statusBar.classList.add('visible');
         statusTimeout = setTimeout(() => {
             statusMessageActive = false;
-            updateStatusBar();
+            statusBar.classList.remove('visible');
         }, duration);
     }
 
@@ -668,7 +638,6 @@
             noteHistory.pop();
         }
         noteHistory.unshift(noteName);
-        // Note display removed from status bar, but history is kept for potential future use
     }
 
 
@@ -759,9 +728,10 @@
         channelVolumes = (state && state.channelVolumes) || new Array(16).fill(100);
         selectedMidiChannel = (state && state.globalMidiChannel) || 1;
         stepsLocked = (state && state.stepsLocked) || false;
-        globalLockedSteps = (state && state.globalLockedSteps) || 8;
+        globalLockedSteps = (state && state.globalLockedSteps) || 16;
         midiCcMap = (state && state.midiCcMap) || {};
         currentScaleName = (state && state.currentScaleName) || '';
+        regenerateScaleFromName();
 
         numTracksInput.value = numTracks;
         bpmValue.textContent = bpmSlider.value;
@@ -814,7 +784,6 @@
             updateMidiOutput();
         }
         setupTimedRandomization();
-        updateStatusBar();
     }
 
     async function loadStateAndRebuild() {
@@ -1033,21 +1002,34 @@
         const scaleNames = Object.keys(SCALES);
         const randomScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
         const randomRootNote = Math.floor(Math.random() * 12);
-        const scaleIntervals = SCALES[randomScaleName];
+        currentScaleName = `${NOTE_NAMES[randomRootNote]} ${randomScaleName}`;
+        regenerateScaleFromName();
+        logChange(`Scale -> ${currentScaleName}`);
+    }
+
+    function regenerateScaleFromName() {
+        if (!currentScaleName) return;
+        const parts = currentScaleName.split(' ');
+        const rootNoteName = parts[0];
+        const scaleName = parts.slice(1).join(' ');
+
+        const rootNote = NOTE_NAMES.indexOf(rootNoteName);
+        const scaleIntervals = SCALES[scaleName];
+
+        if (rootNote === -1 || !scaleIntervals) {
+            currentRandomizationScale = [];
+            return;
+        }
 
         currentRandomizationScale = [];
         for (let octave = 2; octave <= 5; octave++) {
             for (const interval of scaleIntervals) {
-                const midiNote = 12 * octave + randomRootNote + interval;
+                const midiNote = 12 * octave + rootNote + interval;
                 if (midiNote <= 127) {
                     currentRandomizationScale.push(midiNote);
                 }
             }
         }
-        const rootNoteName = NOTE_NAMES[randomRootNote];
-        currentScaleName = `${rootNoteName} ${randomScaleName}`;
-        logChange(`Scale -> ${currentScaleName}`);
-        updateStatusBar();
     }
 
     masterRandomizeButton.addEventListener('click', () => {
@@ -1101,9 +1083,9 @@
             const defaults = {
                 bpm: 120,
                 tracks: [
-                    {p:4,s:8,r:0,n:"C3", v: 100, a: true, c: 'global'},
-                    {p:3,s:8,r:2,n:"E3", v: 100, a: true, c: 'global'},
-                    {p:5,s:8,r:4,n:"G3", v: 100, a: true, c: 'global'},
+                    {p:4,s:16,r:0,n:"C3", v: 100, a: true, c: 'global'},
+                    {p:3,s:16,r:2,n:"E3", v: 100, a: true, c: 'global'},
+                    {p:5,s:16,r:4,n:"G3", v: 100, a: true, c: 'global'},
                     {p:7,s:16,r:0,n:"B3", v: 90, a: true, c: 'global'}
                 ],
                 musicMode: {
@@ -1157,7 +1139,7 @@
     }
 
     function createSequencerTrackUI(trackIndex) {
-        let initialSteps = stepsLocked ? globalLockedSteps : 8;
+        let initialSteps = stepsLocked ? globalLockedSteps : 16;
         let initialPulses = Math.floor(Math.random() * initialSteps / 2) + 1;
         let initialRotation = Math.floor(Math.random() * initialSteps);
 
@@ -1178,7 +1160,7 @@
                         <span id="pulsesValue${trackIndex}" class="value-display">${initialPulses}</span>
                         <button class="learn-cc-button ml-2" data-param-id="pulses${trackIndex}" title="Map Pulses to MIDI CC">L</button>
                     </div>
-                    <div class="control-slider-container"><button class="slider-button" data-target="pulses${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="pulses${trackIndex}" min="1" max="32" value="${initialPulses}" class="control-slider"><button class="slider-button" data-target="pulses${trackIndex}" data-action="increment">+</button></div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="pulses${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="pulses${trackIndex}" min="1" max="32" value="${initialPulses}" class="control-slider" title="Number of active pulses (beats) in the sequence."><button class="slider-button" data-target="pulses${trackIndex}" data-action="increment">+</button></div>
                 </div>
                 <div class="control-group">
                     <div class="control-header">
@@ -1186,7 +1168,7 @@
                         <span id="stepsValue${trackIndex}" class="value-display">${initialSteps}</span>
                         <button class="learn-cc-button ml-2" data-param-id="steps${trackIndex}" title="Map Steps to MIDI CC">L</button>
                     </div>
-                    <div class="control-slider-container"><button class="slider-button" data-target="steps${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="steps${trackIndex}" min="1" max="32" value="${initialSteps}" class="control-slider"><button class="slider-button" data-target="steps${trackIndex}" data-action="increment">+</button></div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="steps${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="steps${trackIndex}" min="1" max="32" value="${initialSteps}" class="control-slider" title="Total number of time divisions in the sequence."><button class="slider-button" data-target="steps${trackIndex}" data-action="increment">+</button></div>
                 </div>
                 <div class="control-group">
                     <div class="control-header">
@@ -1194,7 +1176,7 @@
                         <span id="rotationValue${trackIndex}" class="value-display">${initialRotation}</span>
                         <button class="learn-cc-button ml-2" data-param-id="rotation${trackIndex}" title="Map Rotation to MIDI CC">L</button>
                     </div>
-                    <div class="control-slider-container"><button class="slider-button" data-target="rotation${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="rotation${trackIndex}" min="0" max="${initialSteps-1}" value="${initialRotation}" class="control-slider"><button class="slider-button" data-target="rotation${trackIndex}" data-action="increment">+</button></div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="rotation${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="rotation${trackIndex}" min="0" max="${initialSteps-1}" value="${initialRotation}" class="control-slider" title="Shift the entire pattern forward or backward in time."><button class="slider-button" data-target="rotation${trackIndex}" data-action="increment">+</button></div>
                 </div>
                 <div class="control-group">
                     <div class="control-header">
@@ -1202,11 +1184,11 @@
                         <span id="velocityValue${trackIndex}" class="value-display">100</span>
                         <button class="learn-cc-button ml-2" data-param-id="velocity${trackIndex}" title="Map Velocity to MIDI CC">L</button>
                     </div>
-                    <div class="control-slider-container"><button class="slider-button" data-target="velocity${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="velocity${trackIndex}" min="1" max="127" value="100" class="control-slider"><button class="slider-button" data-target="velocity${trackIndex}" data-action="increment">+</button></div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="velocity${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="velocity${trackIndex}" min="1" max="127" value="100" class="control-slider" title="Set the MIDI velocity (volume) for the notes on this track."><button class="slider-button" data-target="velocity${trackIndex}" data-action="increment">+</button></div>
                 </div>
                 <div class="control-group">
                     <label for="channelOverride${trackIndex}" class="mb-1">Channel:</label>
-                    <select id="channelOverride${trackIndex}" class="text-xs p-1 h-full" title="MIDI Channel Override"><option value="global">Global</option>${Array.from({length:16},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select>
+                    <select id="channelOverride${trackIndex}" class="text-xs p-1 h-full" title="Override the global MIDI channel for this track."><option value="global">Global</option>${Array.from({length:16},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select>
                 </div>
                 <div class="control-group">
                     <label for="note${trackIndex}" class="mb-1">Note:</label>
@@ -1559,7 +1541,9 @@
     for (let i = 1; i <= 16; i++) midiChannelSelect.add(new Option(`Ch ${i}`, i));
 
     async function init() {
-        userIdDisplay.textContent = crypto.randomUUID().substring(0,8);
+        if (userIdDisplay) {
+            userIdDisplay.textContent = crypto.randomUUID().substring(0,8);
+        }
         playStopButton.classList.add('play-state');
         const savedStateJSON = localStorage.getItem(STATE_STORAGE_KEY);
 
@@ -1577,7 +1561,7 @@
 
         sequencerWrapperPanel.classList.add('stopped');
         showStatusMessage("Rhythm King 77 Initialized!", 3000);
-        setInterval(showHelpfulMessage, 15000); // Start showing helpful tips
+        setInterval(showHint, 15000); // Start showing helpful tips
     }
     window.onload = init;
 </script>
