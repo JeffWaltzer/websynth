@@ -342,21 +342,18 @@
             display: none;
             flex-direction: column;
             gap: 0.5rem;
-            width: 250px;
-            flex-shrink: 0;
         }
         body.music-mode-active #musicModePanel {
             display: flex;
         }
         #appContainer {
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             gap: 0.75rem;
-            align-items: flex-start;
         }
         #mainContent {
             flex-grow: 1;
-            min-width: 0; /* Important for flex-grow to work correctly in a flex container */
+            min-width: 0;
         }
         #musicModeLog {
             height: 6.5rem;
@@ -373,23 +370,32 @@
         #musicModeLog > div {
             padding: 0 0.25rem;
         }
+        #channelVolumesContainer .control-group {
+            padding: 0 0.2rem;
+            margin-bottom: 0.1rem;
+        }
+        #channelVolumesContainer .control-header {
+            margin-bottom: 0;
+        }
+        #channelVolumesContainer .control-slider {
+            height: 12px;
+        }
+        #channelVolumesContainer .control-slider::-webkit-slider-thumb {
+            width: 20px;
+            height: 20px;
+        }
+        #channelVolumesContainer .control-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+        }
+        #channelVolumesContainer label {
+            font-size: 0.6rem;
+        }
 
-        /* Responsive Layout for smaller screens */
-        @media (max-width: 1024px) {
-            #appContainer {
-                flex-direction: column-reverse;
-            }
-            #musicModePanel {
-                width: 100%;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: space-around;
-                align-items: flex-start;
-            }
-            #musicModePanel > .control-group {
-                flex-basis: 45%; /* Two columns on smaller screens */
-                min-width: 180px;
-            }
+        #bottom-panels-container {
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
         }
     </style>
 </head>
@@ -404,9 +410,14 @@
     <!-- Main App Content -->
     <div id="mainContent" class="flex-grow">
         <div class="flex flex-col gap-3 main-container">
-            <div class="flex flex-col lg:flex-row gap-3">
-                <!-- Global Controls & MIDI Settings Panel -->
-                <div id="masterControlPanel" class="lg:max-w-xs synth-panel flex flex-col gap-2 master-control-panel">
+            <div id="sequencerWrapperPanel" class="w-full synth-panel">
+                <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer</h2>
+                <div id="sequencerTracksContainer">
+                </div>
+            </div>
+
+            <div id="bottom-panels-container" class="flex flex-col lg:flex-row gap-3">
+                <div id="masterControlPanel" class="lg:w-1/4 synth-panel flex flex-col gap-2 master-control-panel">
                     <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
 
                     <div class="flex justify-center items-center gap-2 flex-wrap mb-2 px-2">
@@ -482,16 +493,43 @@
                     </div>
                 </div>
 
-                <div id="sequencerWrapperPanel" class="flex-grow synth-panel">
-                    <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer</h2>
-                    <div id="sequencerTracksContainer">
+                <div id="musicModePanel" class="synth-panel lg:w-1/4">
+                    <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Music Mode</h2>
+                    <div class="control-group">
+                        <div class="control-header">
+                            <label for="randomIntervalSlider">Interval (Bars):</label>
+                            <span id="randomIntervalValue" class="value-display">4</span>
+                        </div>
+                        <div class="control-slider-container">
+                            <button class="slider-button" data-target="randomIntervalSlider" data-action="decrement" title="Decrease Interval">&minus;</button>
+                            <input type="range" id="randomIntervalSlider" min="1" max="16" value="4" class="control-slider" title="Set the interval in bars for automatic randomization.">
+                            <button class="slider-button" data-target="randomIntervalSlider" data-action="increment" title="Increase Interval">+</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Randomize:</label>
+                        <label class="checkbox-label-container"><input type="checkbox" id="randomizeNoteCheck" checked title="Allow Music Mode to randomize track notes."> Notes</label>
+                        <label class="checkbox-label-container"><input type="checkbox" id="randomizePulsesCheck" title="Allow Music Mode to randomize track pulses."> Pulses</label>
+                        <label class="checkbox-label-container"><input type="checkbox" id="randomizeRotationCheck" title="Allow Music Mode to randomize track rotation."> Rotation</label>
+                        <label class="checkbox-label-container"><input type="checkbox" id="randomizeScaleCheck" title="Allow Music Mode to change the musical scale."> Scale</label>
+                    </div>
+                    <div class="control-group">
+                        <label class="checkbox-label-container" title="When checked, Music Mode randomizes all active tracks at once. When unchecked, it randomizes one track at a time.">
+                            <input type="checkbox" id="multiTrackRandomToggle"> Multi-Track Random
+                        </label>
+                    </div>
+                    <div class="control-group mt-2">
+                        <button id="musicModeNextButton" class="push-button w-full" title="Manually trigger the next generative step.">Next</button>
+                    </div>
+                    <div class="control-group mt-2">
+                        <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Log</label>
+                        <div id="musicModeLog"></div>
                     </div>
                 </div>
-            </div>
-
-            <div id="channelVolumesWrapper" class="w-full synth-panel">
-                <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
-                <div id="channelVolumesContainer" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 lg:grid-cols-4 xl:grid-cols-8 gap-x-3 gap-y-1">
+                <div id="channelVolumesWrapper" class="synth-panel flex-grow">
+                    <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
+                    <div id="channelVolumesContainer" class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-x-3 gap-y-1">
+                    </div>
                 </div>
             </div>
         </div>
@@ -503,41 +541,6 @@
             </p>
         </div>
 
-    </div>
-
-    <!-- Music Mode Panel (Generative Controls) -->
-    <div id="musicModePanel" class="synth-panel">
-        <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Music Mode</h2>
-        <div class="control-group">
-            <div class="control-header">
-                <label for="randomIntervalSlider">Interval (Bars):</label>
-                <span id="randomIntervalValue" class="value-display">4</span>
-            </div>
-            <div class="control-slider-container">
-                <button class="slider-button" data-target="randomIntervalSlider" data-action="decrement" title="Decrease Interval">&minus;</button>
-                <input type="range" id="randomIntervalSlider" min="1" max="16" value="4" class="control-slider" title="Set the interval in bars for automatic randomization.">
-                <button class="slider-button" data-target="randomIntervalSlider" data-action="increment" title="Increase Interval">+</button>
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Randomize:</label>
-            <label class="checkbox-label-container"><input type="checkbox" id="randomizeNoteCheck" checked title="Allow Music Mode to randomize track notes."> Notes</label>
-            <label class="checkbox-label-container"><input type="checkbox" id="randomizePulsesCheck" title="Allow Music Mode to randomize track pulses."> Pulses</label>
-            <label class="checkbox-label-container"><input type="checkbox" id="randomizeRotationCheck" title="Allow Music Mode to randomize track rotation."> Rotation</label>
-            <label class="checkbox-label-container"><input type="checkbox" id="randomizeScaleCheck" title="Allow Music Mode to change the musical scale."> Scale</label>
-        </div>
-        <div class="control-group">
-            <label class="checkbox-label-container" title="When checked, Music Mode randomizes all active tracks at once. When unchecked, it randomizes one track at a time.">
-                <input type="checkbox" id="multiTrackRandomToggle"> Multi-Track Random
-            </label>
-        </div>
-        <div class="control-group mt-2">
-            <button id="musicModeNextButton" class="push-button w-full" title="Manually trigger the next generative step.">Next</button>
-        </div>
-        <div class="control-group mt-2">
-            <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Log</label>
-            <div id="musicModeLog"></div>
-        </div>
     </div>
 </div>
 <div id="statusBar"><div id="statusBar-content"></div></div>
@@ -1364,7 +1367,10 @@
             if (track.active && value === 1) {
                 sendMidiNoteOn(track.note, track.velocity, ch);
                 addNoteToHistory(Tone.Frequency(track.note, "midi").toNote());
-                Tone.Transport.scheduleOnce(() => sendMidiNoteOff(track.note, ch), time + Tone.Time("16n").toSeconds() * 0.8);
+
+                Tone.Transport.scheduleOnce(() => {
+                    sendMidiNoteOff(track.note, ch);
+                }, time + Tone.Time("16n").toSeconds() * 0.8);
 
                 Tone.Draw.schedule(() => {
                     const panel = track.ui.panel;
