@@ -140,6 +140,7 @@
         .master-randomize-button { background-color: #FFC107; color: #333; }
         .re-init-midi-button { background-color: #9C27B0; }
         .save-load-button { background-color: #8E44AD; }
+        .midi-utility-button { background-color: #f39c12; } /* New style for All Notes Off button */
 
         .pattern-display {
             display: flex;
@@ -147,7 +148,31 @@
             align-items: center;
             margin-top: 0.2rem;
             height: 24px;
+            gap: 2px; /* Spacing between dots */
         }
+
+        /* --- NEW CSS FOR PATTERN DOTS --- */
+        .pattern-step {
+            width: 10px; /* Size of the dot */
+            height: 10px; /* Size of the dot */
+            background-color: #4a3a2a; /* Default color of inactive steps */
+            border-radius: 50%; /* Make it a circle */
+            transition: background-color 0.1s ease-out, transform 0.1s ease-out;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .pattern-step.active {
+            background-color: #f0ad4e; /* Color for active pulses */
+        }
+
+        .pattern-step.current {
+            background-color: #fff; /* Color for the currently playing step */
+            border: 1px solid #3a2a1a;
+            transform: scale(1.2); /* Slightly enlarge current step */
+            box-shadow: 0 0 5px rgba(255,255,255,0.7);
+        }
+        /* --- END NEW CSS --- */
+
 
         label {
             display: block;
@@ -400,6 +425,8 @@
                     <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">MIDI Setup</h2>
                     <div class="control-group">
                         <button id="reInitMidiButton" class="push-button re-init-midi-button w-full" title="Rescan for available MIDI output devices.">RESET MIDI</button>
+                        <!-- NEW: All Notes Off Button -->
+                        <button id="allNotesOffButton" class="push-button midi-utility-button w-full mt-2" title="Send 'All Notes Off' message to all MIDI channels.">ALL NOTES OFF</button>
                     </div>
                     <div class="control-group">
                         <label for="midiOutSelect">MIDI Output:</label>
@@ -480,6 +507,8 @@
     const saveStateButton = document.getElementById('saveStateButton');
     const loadStateButton = document.getElementById('loadStateButton');
     const reInitMidiButton = document.getElementById('reInitMidiButton');
+    // NEW: All Notes Off Button
+    const allNotesOffButton = document.getElementById('allNotesOffButton');
     const numTracksInput = document.getElementById('numTracksInput');
     const lockStepsCheckbox = document.getElementById('lockStepsCheckbox');
     const bpmSlider = document.getElementById('bpmSlider');
@@ -767,13 +796,21 @@
         }
         for (let i = 1; i <= 16; i++) {
             if (midiOutput) {
-                // All Sound Off
+                // All Sound Off (CC 120)
                 midiOutput.send([0xB0 + (i - 1), 120, 0]);
-                // All Notes Off
+                // All Notes Off (CC 123)
                 midiOutput.send([0xB0 + (i - 1), 123, 0]);
             }
         }
         await setupMIDI();
+    });
+
+    // NEW: Event listener for All Notes Off button
+    allNotesOffButton.addEventListener('click', () => {
+        showStatusMessage("Sending All Notes Off to all channels...", 1500);
+        for (let i = 1; i <= 16; i++) {
+            sendAllNotesOff(i);
+        }
     });
 
     function populateMidiDeviceList() {
@@ -1201,14 +1238,14 @@
             const volDiv = document.createElement('div');
             volDiv.className = 'control-group';
             volDiv.innerHTML = `
-                 <div class="control-header">
-                     <label for="channelVolume${i}">Ch ${i}:</label>
-                     <span id="channelVolumeValue${i}" class="value-display">${channelVolumes[i-1]}</span>
-                     <button class="learn-cc-button ml-2" data-param-id="channelVolume${i}">L</button>
-                 </div>
-                 <div class="control-slider-container">
-                     <input type="range" id="channelVolume${i}" min="0" max="127" value="${channelVolumes[i-1]}" class="control-slider">
-                 </div>
+                   <div class="control-header">
+                       <label for="channelVolume${i}">Ch ${i}:</label>
+                       <span id="channelVolumeValue${i}" class="value-display">${channelVolumes[i-1]}</span>
+                       <button class="learn-cc-button ml-2" data-param-id="channelVolume${i}">L</button>
+                   </div>
+                   <div class="control-slider-container">
+                       <input type="range" id="channelVolume${i}" min="0" max="127" value="${channelVolumes[i-1]}" class="control-slider">
+                   </div>
             `;
             channelVolumesContainer.appendChild(volDiv);
 
@@ -1397,7 +1434,7 @@
                 allChannelsInUse.add(parseInt(t.channelOverride));
             }
         });
-        allChannelsInUse.forEach(ch => sendAllNotesOff(ch));
+        allChannelsInUse.forEach(ch => sendAllNotesOff(ch)); // Ensure All Notes Off is sent for all channels in use
         sequencerTracks.forEach(t => { t.currentStep = 0; renderPatternDisplay(t); });
         transportLoops.forEach(loop => loop && loop.stop(0));
     });
