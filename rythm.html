@@ -13,16 +13,23 @@
             background-color: #3a3a3a;
             color: #f0e6d2;
             overscroll-behavior: none;
-            font-size: 13px;
+            font-size: 12px;
+        }
+        .main-container {
+            margin-bottom: 2rem;
         }
         .synth-panel {
             background-color: #5a4a3a;
             border: 2px solid #7a6a5a;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.1);
-            padding: 0.5rem;
-            margin-bottom: 0.75rem;
-            transition: opacity 0.4s ease-in-out, filter 0.4s ease-in-out;
+            padding: 0.4rem;
+            margin-bottom: 0.5rem;
+            transition: opacity 0.4s ease-in-out, filter 0.4s ease-in-out, border-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+        }
+        select.no-midi-error {
+            border-color: #ef4444 !important; /* Tailwind's red-500 */
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
         }
         .control-slider-container {
             display: flex;
@@ -83,46 +90,83 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .master-control-panel .control-slider {
-            height: 30px;
+            height: 24px;
         }
         .master-control-panel .control-slider::-webkit-slider-thumb {
-            width: 37.5px;
-            height: 37.5px;
+            width: 30px;
+            height: 30px;
         }
         .master-control-panel .control-slider::-moz-range-thumb {
-            width: 37.5px;
-            height: 37.5px;
+            width: 30px;
+            height: 30px;
         }
         .push-button {
             font-family: 'Orbitron', sans-serif;
             background-color: #7a6a5a;
             color: #f0e6d2;
             border: 2px solid #5a4a3a;
-            padding: 0.5rem 1rem;
+            padding: 0.3rem 0.6rem;
             border-radius: 6px;
             text-transform: uppercase;
             font-weight: bold;
-            font-size: 0.75rem;
+            font-size: 0.6rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.2);
             transition: all 0.1s ease-in-out;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .push-button.icon-button {
+            font-size: 0.9rem;
+            padding: 0.4rem;
         }
         .push-button:active, .push-button.active {
             background-color: #9a8a7a;
             box-shadow: 0 1px 2px rgba(0,0,0,0.4), inset 0 2px 3px rgba(0,0,0,0.2);
             transform: translateY(1px);
         }
-        .learn-cc-button, .note-learn-button, .randomize-button, .default-settings-button, .master-randomize-button, .re-init-midi-button {
+
+        #playStopButton {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            flex-shrink: 0;
+            font-size: 1rem;
+            border-radius: 6px;
+        }
+
+        #playStopButton.play-state {
+            background-color: #9b59b6; /* Purple */
+            color: white;
+            border-color: #8e44ad;
+        }
+        #playStopButton.play-state:hover {
+            background-color: #8e44ad;
+        }
+
+        #playStopButton.stop-state {
+            background-color: #e74c3c; /* Red */
+            color: white;
+            border-color: #c0392b;
+        }
+        #playStopButton.stop-state:hover {
+            background-color: #c0392b;
+        }
+
+        .learn-cc-button, .note-learn-button, .randomize-button, .default-settings-button, .master-randomize-button, .re-init-midi-button, .save-load-button {
             color: white;
             padding: 0.15rem 0.35rem;
             font-size: 0.6rem;
             border-radius: 3px;
         }
-        .learn-cc-button { background-color: #4CAF50; flex-shrink: 0; }
-        .note-learn-button { background-color: #f44336; }
+        .learn-cc-button { background-color: #4CAF50; flex-shrink: 0; padding: 0.1rem 0.4rem; font-size: 0.75rem;}
+        .note-learn-button { background-color: #f44336; padding: 0.1rem 0.4rem; font-size: 0.75rem;}
         .randomize-button { background-color: #2196F3; }
         .default-settings-button { background-color: #607D8B; }
         .master-randomize-button { background-color: #FFC107; color: #333; }
         .re-init-midi-button { background-color: #9C27B0; }
+        .save-load-button { background-color: #8E44AD; }
         .learn-cc-button.learning, .note-learn-button.learning { background-color: #FF9800; }
 
         .pattern-display {
@@ -164,7 +208,7 @@
             font-size: 0.75rem;
         }
         .master-control-panel select, .master-control-panel input[type="number"] {
-            padding: 0.6rem 0.3rem;
+            padding: 0.4rem 0.3rem;
         }
         .master-control-panel .number-input-container input[type="number"] {
             padding: 0.3rem;
@@ -216,48 +260,48 @@
 
         #sequencerTracksContainer {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
             gap: 0.75rem;
         }
         #sequencerWrapperPanel.stopped {
             opacity: 0.5;
-            filter: saturate(0.5);
+            filter: saturate(0.2);
         }
         #sequencerWrapperPanel.stopped .pattern-step.active,
         #sequencerWrapperPanel.stopped .pattern-step.current {
-            background-color: #7a6a5a;
-            transform: scale(1);
-            box-shadow: none;
-        }
-
-        @media (min-width: 1400px) {
-            #sequencerTracksContainer {
-                grid-template-columns: repeat(4, 1fr);
-            }
+            background-color: #7a6a5a !important;
+            transform: scale(1) !important;
+            box-shadow: none !important;
         }
 
         #sequencerTracksContainer > .synth-panel {
             margin-bottom: 0;
         }
         #statusBar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
             background-color: #2a2a2a;
             color: #f0e6d2;
             padding: 0.5rem;
             text-align: center;
             font-size: 0.8rem;
-            z-index: 1001;
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
             pointer-events: none;
+            font-family: 'Orbitron', monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            margin-top: 1rem;
         }
         #statusBar.visible {
             opacity: 1;
             pointer-events: auto;
         }
+        #statusBar-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+
         .explanation-text-footer {
             font-size: 0.75rem;
             line-height: 1.4;
@@ -278,119 +322,217 @@
         .disco-flash {
             transition: background-color 0.05s ease-in-out !important;
         }
+
+        /* Music Mode Styles */
+        #musicModePanel {
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 250px;
+            flex-shrink: 0;
+        }
+        body.music-mode-active #musicModePanel {
+            display: flex;
+        }
+        #appContainer {
+            display: flex;
+            flex-direction: row;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+        #mainContent {
+            flex-grow: 1;
+        }
+        #musicModeLog {
+            height: 4.5rem;
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            padding: 0.25rem;
+            font-size: 0.65rem;
+            line-height: 1.3;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column-reverse;
+            color: #f0ad4e;
+        }
+        #musicModeLog > div {
+            padding: 0 0.25rem;
+        }
+
+        /* Responsive Layout for smaller screens */
+        @media (max-width: 1024px) {
+            #appContainer {
+                flex-direction: column-reverse;
+            }
+            #musicModePanel {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-around;
+                align-items: flex-start;
+            }
+            #musicModePanel > .control-group {
+                flex-basis: 45%; /* Two columns on smaller screens */
+                min-width: 180px;
+            }
+        }
     </style>
 </head>
-<body class="p-1 md:p-2 pb-12">
+<body class="p-1 md:p-2">
 
 <header class="text-center mb-3">
     <h1 class="text-2xl md:text-3xl font-bold" style="font-family: 'Orbitron', sans-serif; color: #f0ad4e;">Rhythm King 77</h1>
     <p class="text-xs md:text-sm">Euclidean MIDI Sequencer</p>
 </header>
 
-<div class="flex justify-center items-center gap-2 flex-wrap mb-4 px-2">
-    <button id="playStopButton" class="push-button w-full sm:w-auto" title="Start or stop all sequences">Play</button>
-    <button id="defaultSettingsButton" class="push-button default-settings-button" title="Load default patterns for all tracks">Defaults</button>
-    <button id="masterRandomizeButton" class="push-button master-randomize-button" title="Randomize all active tracks">Rnd All</button>
-    <button id="reInitMidiButton" class="push-button re-init-midi-button" title="Re-initialize MIDI devices and send All Notes Off">Re-Init MIDI</button>
-</div>
+<div id="appContainer">
+    <!-- Main App Content -->
+    <div id="mainContent" class="flex-grow">
+        <div class="flex flex-col gap-3 main-container">
+            <div class="flex flex-col lg:flex-row gap-3">
+                <!-- Global Controls & MIDI Settings Panel -->
+                <div id="masterControlPanel" class="lg:max-w-xs synth-panel flex flex-col gap-2 master-control-panel">
+                    <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
 
+                    <div class="flex justify-center items-center gap-2 flex-wrap mb-2 px-2">
+                        <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences">&#x25B6;</button>
+                        <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save current state">&#128190;</button>
+                        <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load saved state">&#128193;</button>
+                    </div>
+                    <div class="flex justify-center items-center gap-2 flex-wrap mb-2 px-2">
+                        <button id="defaultSettingsButton" class="push-button default-settings-button flex-grow" title="Load default patterns">DEFAULTS</button>
+                        <button id="masterRandomizeButton" class="push-button master-randomize-button flex-grow" title="Randomize all active tracks">RANDOM</button>
+                        <button id="reInitMidiButton" class="push-button re-init-midi-button flex-grow" title="Re-initialize MIDI devices">RESET MIDI</button>
+                    </div>
 
-<div class="flex flex-col gap-3">
-    <div class="flex flex-col lg:flex-row gap-3">
-        <!-- Global Controls & MIDI Settings Panel -->
-        <div class="lg:max-w-xs synth-panel flex flex-col gap-2 master-control-panel">
-            <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
+                    <div class="control-group">
+                        <div><label for="numTracksInput">Number of Tracks:</label></div>
+                        <div class="number-input-container">
+                            <button class="number-input-button" data-target="numTracksInput" data-action="decrement" title="Decrease number of tracks">&minus;</button>
+                            <input type="number" id="numTracksInput" min="1" max="12" value="4" title="Set number of sequencer tracks (1-12)">
+                            <button class="number-input-button" data-target="numTracksInput" data-action="increment" title="Increase number of tracks">+</button>
+                        </div>
+                    </div>
 
-            <div class="control-group">
-                <div><label for="numTracksInput">Number of Tracks:</label></div>
-                <div class="number-input-container">
-                    <button class="number-input-button" data-target="numTracksInput" data-action="decrement" title="Decrease number of tracks">-</button>
-                    <input type="number" id="numTracksInput" min="1" max="12" value="4" title="Set number of sequencer tracks (1-12)">
-                    <button class="number-input-button" data-target="numTracksInput" data-action="increment" title="Increase number of tracks">+</button>
+                    <div class="control-group">
+                        <div class="control-header">
+                            <label for="bpmSlider">Tempo:</label>
+                            <span id="bpmValue" class="value-display">35</span>
+                            <button id="bpmSliderLearnCc" class="learn-cc-button ml-2" data-param-id="bpmSlider" title="Map Master Tempo to a MIDI CC">L</button>
+                        </div>
+                        <div class="control-slider-container">
+                            <button class="slider-button" data-target="bpmSlider" data-action="decrement" title="Decrease Tempo">&minus;</button>
+                            <input type="range" id="bpmSlider" min="20" max="240" value="35" class="control-slider" title="Adjust master tempo (20-240 BPM)">
+                            <button class="slider-button" data-target="bpmSlider" data-action="increment" title="Increase Volume">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-header">
+                            <label for="masterVolumeSlider">Volume:</label>
+                            <span id="masterVolumeValue" class="value-display">100</span>
+                            <button id="masterVolumeLearnCc" class="learn-cc-button ml-2" data-param-id="masterVolumeSlider" title="Map Master Volume to MIDI CC #7">L</button>
+                        </div>
+                        <div class="control-slider-container">
+                            <button class="slider-button" data-target="masterVolumeSlider" data-action="decrement" title="Decrease Volume">&minus;</button>
+                            <input type="range" id="masterVolumeSlider" min="0" max="127" value="100" class="control-slider" title="Adjust master volume (MIDI CC #7)">
+                            <button class="slider-button" data-target="masterVolumeSlider" data-action="increment" title="Increase Volume">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="checkbox-label-container" title="When checked, all tracks share the same 'Steps' value">
+                            <input type="checkbox" id="lockStepsCheckbox"> Lock All Steps
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="checkbox-label-container" title="Enable generative music mode panel">
+                            <input type="checkbox" id="musicModeToggle"> Music Mode
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="midiOutSelect">MIDI Output:</label>
+                        <select id="midiOutSelect" title="Select MIDI output device">
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="midiChannelSelect">Global MIDI Ch:</label>
+                        <select id="midiChannelSelect" title="Select global MIDI channel (1-16)">
+                        </select>
+                    </div>
+                    <div class="mt-auto pt-1">
+                        <p class="text-xs text-center">User ID: <span id="userIdDisplay" class="font-mono"></span></p>
+                    </div>
+                </div>
+
+                <div id="sequencerWrapperPanel" class="flex-grow synth-panel">
+                    <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer</h2>
+                    <div id="sequencerTracksContainer">
+                    </div>
                 </div>
             </div>
 
-            <div class="control-group">
-                <label class="checkbox-label-container" title="When checked, all tracks share the same 'Steps' value">
-                    <input type="checkbox" id="lockStepsCheckbox"> Lock All Steps
-                </label>
-            </div>
-
-            <div class="control-group">
-                <div class="control-header">
-                    <label for="bpmSlider">Tempo:</label>
-                    <span id="bpmValue" class="value-display">120</span>
-                    <button id="bpmSliderLearnCc" class="learn-cc-button ml-2" data-param-id="bpmSlider" title="Map Master Tempo to a MIDI CC">Learn</button>
+            <div id="channelVolumesWrapper" class="w-full synth-panel">
+                <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
+                <div id="channelVolumesContainer" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 lg:grid-cols-4 xl:grid-cols-8 gap-x-3 gap-y-1">
                 </div>
-                <div class="control-slider-container">
-                    <button class="slider-button" data-target="bpmSlider" data-action="decrement" title="Decrease Tempo">-</button>
-                    <input type="range" id="bpmSlider" min="20" max="240" value="120" class="control-slider" title="Adjust master tempo (20-240 BPM)">
-                    <button class="slider-button" data-target="bpmSlider" data-action="increment" title="Increase Tempo">+</button>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <div class="control-header">
-                    <label for="masterVolumeSlider">Volume:</label>
-                    <span id="masterVolumeValue" class="value-display">100</span>
-                    <button id="masterVolumeLearnCc" class="learn-cc-button ml-2" data-param-id="masterVolumeSlider" title="Map Master Volume to MIDI CC #7">Learn</button>
-                </div>
-                <div class="control-slider-container">
-                    <button class="slider-button" data-target="masterVolumeSlider" data-action="decrement" title="Decrease Volume">-</button>
-                    <input type="range" id="masterVolumeSlider" min="0" max="127" value="100" class="control-slider" title="Adjust master volume (MIDI CC #7)">
-                    <button class="slider-button" data-target="masterVolumeSlider" data-action="increment" title="Increase Volume">+</button>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <label for="midiOutSelect">MIDI Output:</label>
-                <select id="midiOutSelect" title="Select MIDI output device">
-                    <option value="">No MIDI Devices Found</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label for="midiChannelSelect">Global MIDI Ch:</label>
-                <select id="midiChannelSelect" title="Select global MIDI channel (1-16)">
-                    <!-- Options 1-16 will be populated by JS -->
-                </select>
-            </div>
-            <div class="mt-auto pt-1">
-                <p class="text-xs text-center">User ID: <span id="userIdDisplay" class="font-mono"></span></p>
             </div>
         </div>
 
-        <!-- Sequencer Tracks Panel -->
-        <div id="sequencerWrapperPanel" class="flex-grow synth-panel">
-            <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer</h2>
-            <div id="sequencerTracksContainer">
-                <!-- Tracks will be generated here by JS -->
-            </div>
+
+        <div id="explanationContainer" class="explanation-text-footer">
+            <p>
+                Euclidean rhythms are generated by distributing beats (pulses) as evenly as possible over a set number of time steps, creating natural, complex polyrhythms.
+            </p>
         </div>
+        <div id="statusBar"><div id="statusBar-content"></div></div>
     </div>
 
-    <!-- Channel Volumes Panel -->
-    <div class="w-full synth-panel">
-        <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
-        <div id="channelVolumesContainer" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 lg:grid-cols-4 xl:grid-cols-8 gap-x-3 gap-y-1">
-            <!-- Channel volumes will be generated here -->
+    <!-- Music Mode Panel (Generative Controls) -->
+    <div id="musicModePanel" class="synth-panel">
+        <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Music Mode</h2>
+        <div class="control-group">
+            <div class="control-header">
+                <label for="randomIntervalSlider">Interval (Bars):</label>
+                <span id="randomIntervalValue" class="value-display">4</span>
+            </div>
+            <input type="range" id="randomIntervalSlider" min="1" max="16" value="4" class="control-slider">
+        </div>
+        <div class="control-group">
+            <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Randomize:</label>
+            <label class="checkbox-label-container"><input type="checkbox" id="randomizeNoteCheck" checked> Notes</label>
+            <label class="checkbox-label-container"><input type="checkbox" id="randomizePulsesCheck"> Pulses</label>
+            <label class="checkbox-label-container"><input type="checkbox" id="randomizeRotationCheck"> Rotation</label>
+            <label class="checkbox-label-container"><input type="checkbox" id="randomizeScaleCheck"> Scale</label>
+        </div>
+        <div class="control-group">
+            <label class="checkbox-label-container" title="Randomize all active tracks at once">
+                <input type="checkbox" id="multiTrackRandomToggle"> Multi-Track Random
+            </label>
+        </div>
+        <div class="control-group mt-2">
+            <button id="musicModeNextButton" class="push-button w-full">Next</button>
+        </div>
+        <div class="control-group mt-2">
+            <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Countdown</label>
+            <div id="countdownDisplay" class="text-center font-mono text-lg text-amber-300 p-1 bg-black/20 rounded">--:--</div>
+        </div>
+        <div class="control-group mt-2">
+            <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Log</label>
+            <div id="musicModeLog"></div>
         </div>
     </div>
 </div>
-
-
-<div id="explanationContainer" class="explanation-text-footer">
-    <p>
-        Euclidean rhythms are musical rhythms generated by distributing a number of beats (pulses) as evenly as possible over a set number of time steps.
-        This creates natural-sounding, often complex polyrhythms found in various world music traditions.
-    </p>
-</div>
-<div id="statusBar">Status Message Here</div>
 
 <script>
     // --- DOM Elements ---
     const playStopButton = document.getElementById('playStopButton');
     const defaultSettingsButton = document.getElementById('defaultSettingsButton');
     const masterRandomizeButton = document.getElementById('masterRandomizeButton');
+    const saveStateButton = document.getElementById('saveStateButton');
+    const loadStateButton = document.getElementById('loadStateButton');
     const reInitMidiButton = document.getElementById('reInitMidiButton');
     const numTracksInput = document.getElementById('numTracksInput');
     const lockStepsCheckbox = document.getElementById('lockStepsCheckbox');
@@ -407,23 +549,47 @@
     const channelVolumesContainer = document.getElementById('channelVolumesContainer');
     const userIdDisplay = document.getElementById('userIdDisplay');
     const statusBar = document.getElementById('statusBar');
+    const statusBarContent = document.getElementById('statusBar-content');
+    const masterControlPanel = document.getElementById('masterControlPanel');
+    const channelVolumesWrapper = document.getElementById('channelVolumesWrapper');
+    // Music Mode Elements
+    const musicModeToggle = document.getElementById('musicModeToggle');
+    const randomIntervalSlider = document.getElementById('randomIntervalSlider');
+    const randomIntervalValue = document.getElementById('randomIntervalValue');
+    const randomizeNoteCheck = document.getElementById('randomizeNoteCheck');
+    const randomizePulsesCheck = document.getElementById('randomizePulsesCheck');
+    const randomizeRotationCheck = document.getElementById('randomizeRotationCheck');
+    const randomizeScaleCheck = document.getElementById('randomizeScaleCheck');
+    const multiTrackRandomToggle = document.getElementById('multiTrackRandomToggle');
+    const musicModeNextButton = document.getElementById('musicModeNextButton');
+    const musicModeLog = document.getElementById('musicModeLog');
+    const countdownDisplay = document.getElementById('countdownDisplay');
 
     let midiAccess = null;
     let midiOutput = null;
     let selectedMidiChannel = 1;
     let numTracks = 4;
-    const MAX_TRACKS = 12; // Updated max tracks
+    const MAX_TRACKS = 12;
     let sequencerTracks = [];
     let transportLoops = [];
     let currentLearningControl = null;
     let noteLearningTrack = null;
     let midiCcMap = {};
-    const SETTINGS_KEY = 'rhythmKing77Settings_v11'; // Incremented version
+    const STATE_STORAGE_KEY = 'rhythmKing77_state_v3';
     let statusTimeout = null;
+    let statusMessageActive = false;
     let stepsLocked = false;
-    let globalLockedSteps = 16;
+    let globalLockedSteps = 8;
     let currentRandomizationScale = [];
+    let currentScaleName = '';
     let channelVolumes = new Array(16).fill(100);
+    let noteHistory = [];
+    const MAX_NOTE_HISTORY = 30;
+    let timedRandomEvent = null;
+    let countdownAnimationId = null;
+    let autosaveTimeout = null;
+    let allowAutosave = true;
+
 
     // --- Harmony Engine ---
     const SCALES = {
@@ -442,14 +608,37 @@
     const AUTO_REPEAT_DELAY = 500;
     const AUTO_REPEAT_INTERVAL = 100;
 
-    function showStatusMessage(message, duration = 3000) {
-        statusBar.textContent = message;
+    function updateStatusBar() {
+        if (statusMessageActive) return;
+
+        let statusText = `♫ ${noteHistory.join(' ')}`;
+        if (Tone.Transport.state === 'started' && currentScaleName) {
+            statusText = `[${currentScaleName}]  |  ${statusText}`;
+        }
+
+        statusBarContent.textContent = statusText;
         statusBar.classList.add('visible');
-        if (statusTimeout) clearTimeout(statusTimeout);
+    }
+
+    function showStatusMessage(message, duration = 3000) {
+        if(statusTimeout) clearTimeout(statusTimeout);
+        statusMessageActive = true;
+        statusBarContent.textContent = message;
+        statusBar.classList.add('visible');
         statusTimeout = setTimeout(() => {
-            statusBar.classList.remove('visible');
+            statusMessageActive = false;
+            updateStatusBar();
         }, duration);
     }
+
+    function addNoteToHistory(noteName) {
+        if (noteHistory.length > MAX_NOTE_HISTORY) {
+            noteHistory.pop();
+        }
+        noteHistory.unshift(noteName);
+        updateStatusBar();
+    }
+
 
     function generateEuclideanPattern(pulses, steps) {
         if (pulses > steps || pulses <= 0 || steps <= 0) return Array(steps).fill(0);
@@ -484,8 +673,14 @@
         return pattern.slice(r).concat(pattern.slice(0, r));
     }
 
-    function saveSettings() {
-        const settings = {
+    function requestSaveState() {
+        if (!allowAutosave) return;
+        if (autosaveTimeout) clearTimeout(autosaveTimeout);
+        autosaveTimeout = setTimeout(saveState, 500); // Debounce save requests
+    }
+
+    function saveState() {
+        const state = {
             numTracks: numTracks,
             bpm: parseInt(bpmSlider.value),
             masterVolume: parseInt(masterVolumeSlider.value),
@@ -498,33 +693,118 @@
                 pulses: t.pulses, steps: t.steps, rotation: t.rotation, note: t.note,
                 velocity: t.velocity, active: t.active, channelOverride: t.channelOverride
             })),
-            midiCcMap: midiCcMap
+            midiCcMap: midiCcMap,
+            musicMode: {
+                enabled: musicModeToggle.checked,
+                interval: randomIntervalSlider.value,
+                randomize: {
+                    note: randomizeNoteCheck.checked,
+                    pulses: randomizePulsesCheck.checked,
+                    rotation: randomizeRotationCheck.checked,
+                    scale: randomizeScaleCheck.checked,
+                },
+                multiTrack: multiTrackRandomToggle.checked
+            },
+            currentScaleName: currentScaleName
         };
-        try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
-        catch (e) { showStatusMessage("Error saving settings.", 5000); }
+        try {
+            localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(state));
+        }
+        catch (e) { console.error("Save failed:", e); showStatusMessage("Error saving state.", 5000); }
     }
 
-    function loadSettings() {
-        const saved = localStorage.getItem(SETTINGS_KEY);
-        if (saved) {
-            try {
-                const s = JSON.parse(saved);
-                if (s.numTracks !== undefined && s.numTracks > 0) numTracks = s.numTracks;
-                if (s.bpm !== undefined) bpmSlider.value = s.bpm;
-                if (s.masterVolume !== undefined) masterVolumeSlider.value = s.masterVolume;
-                if (s.channelVolumes && s.channelVolumes.length === 16) channelVolumes = s.channelVolumes;
-                if (s.globalMidiChannel !== undefined) selectedMidiChannel = s.globalMidiChannel;
-                if (s.stepsLocked !== undefined) stepsLocked = s.stepsLocked;
-                if (s.globalLockedSteps !== undefined) globalLockedSteps = s.globalLockedSteps;
-                if (s.midiCcMap) midiCcMap = s.midiCcMap;
-                return s;
-            } catch (e) {
-                localStorage.removeItem(SETTINGS_KEY);
-                showStatusMessage("Corrupted settings cleared.", 5000);
+    async function applyState(state, isPlaying) {
+        if (!isPlaying && Tone.Transport.state === 'started') {
+            await Tone.Transport.stop();
+        }
+
+        numTracks = (state && state.numTracks) || 4;
+
+        bpmSlider.value = (state && state.bpm) || 120;
+        Tone.Transport.bpm.value = bpmSlider.value;
+
+        masterVolumeSlider.value = (state && state.masterVolume) || 100;
+        channelVolumes = (state && state.channelVolumes) || new Array(16).fill(100);
+        selectedMidiChannel = (state && state.globalMidiChannel) || 1;
+        stepsLocked = (state && state.stepsLocked) || false;
+        globalLockedSteps = (state && state.globalLockedSteps) || 8;
+        midiCcMap = (state && state.midiCcMap) || {};
+        currentScaleName = (state && state.currentScaleName) || '';
+
+        numTracksInput.value = numTracks;
+        bpmValue.textContent = bpmSlider.value;
+        masterVolumeValue.textContent = masterVolumeSlider.value;
+        lockStepsCheckbox.checked = stepsLocked;
+        midiChannelSelect.value = selectedMidiChannel;
+
+        const musicModeState = state ? state.musicMode : null;
+        musicModeToggle.checked = musicModeState ? musicModeState.enabled : false;
+        document.body.classList.toggle('music-mode-active', musicModeToggle.checked);
+        randomIntervalSlider.value = musicModeState ? musicModeState.interval : 4;
+        randomIntervalValue.textContent = randomIntervalSlider.value;
+        randomizeNoteCheck.checked = musicModeState ? musicModeState.randomize.note : true;
+        randomizePulsesCheck.checked = musicModeState ? musicModeState.randomize.pulses : false;
+        randomizeRotationCheck.checked = musicModeState ? musicModeState.randomize.rotation : false;
+        randomizeScaleCheck.checked = musicModeState ? musicModeState.randomize.scale : false;
+        multiTrackRandomToggle.checked = musicModeState ? musicModeState.multiTrack : false;
+
+        createChannelVolumeUI();
+        sequencerTracksContainer.innerHTML = '';
+        musicModeLog.innerHTML = '';
+
+        transportLoops.forEach(l => l && l.dispose());
+        transportLoops = [];
+        sequencerTracks = [];
+
+        for (let i = 0; i < numTracks; i++) {
+            createSequencerTrackUI(i);
+            if (state && state.tracks && state.tracks[i]) {
+                const savedTrack = state.tracks[i];
+                const track = sequencerTracks[i];
+                Object.assign(track, savedTrack);
+
+                track.ui.pulsesSlider.value = track.pulses; track.ui.pulsesValue.textContent = track.pulses;
+                track.ui.stepsSlider.value = track.steps; track.ui.stepsValue.textContent = track.steps;
+                track.ui.rotationSlider.max = track.steps > 0 ? track.steps - 1 : 0;
+                track.ui.rotationSlider.value = track.rotation; track.ui.rotationValue.textContent = track.rotation;
+                track.ui.noteInput.value = Tone.Frequency(track.note, "midi").toNote();
+                track.ui.velocitySlider.value = track.velocity; track.ui.velocityValue.textContent = track.velocity;
+                track.ui.toggleButton.classList.toggle('active', track.active);
+                track.ui.toggleButton.textContent = track.active ? 'ON' : 'OFF';
+                track.ui.channelOverrideSelect.value = track.channelOverride;
             }
         }
-        return null;
+
+        sequencerTracks.forEach(updateTrackPattern);
+
+        if (state && state.midiOutputId && Array.from(midiOutSelect.options).some(o => o.value === state.midiOutputId)) {
+            midiOutSelect.value = state.midiOutputId;
+            updateMidiOutput();
+        }
+        setupTimedRandomization();
+        updateStatusBar();
     }
+
+    async function loadStateAndRebuild() {
+        allowAutosave = false;
+        try {
+            const savedStateJSON = localStorage.getItem(STATE_STORAGE_KEY);
+            if (!savedStateJSON) {
+                showStatusMessage("No saved state found.");
+                return;
+            }
+            const state = JSON.parse(savedStateJSON);
+            const isPlaying = Tone.Transport.state === 'started';
+            await applyState(state, isPlaying);
+            showStatusMessage("State Loaded Successfully!");
+        } catch(e) {
+            showStatusMessage("Error loading state. Data might be corrupt.", 5000);
+            console.error("Failed to load state:", e);
+        } finally {
+            setTimeout(() => { allowAutosave = true; }, 100);
+        }
+    }
+
 
     async function setupMIDI() {
         try {
@@ -534,23 +814,29 @@
             populateMidiDeviceList();
             midiAccess.addEventListener('statechange', populateMidiDeviceList);
             midiAccess.inputs.forEach(i => i.onmidimessage = handleMidiMessage);
-            showStatusMessage("MIDI re-initialized.", 2000);
         } catch (err) { showStatusMessage('MIDI Access Denied/Not Supported.'); }
     }
 
     reInitMidiButton.addEventListener('click', async () => {
-        showStatusMessage("Re-initializing MIDI...", 1500);
+        showStatusMessage("Resetting all MIDI channels...", 1500);
         if (Tone.Transport.state === 'started') {
-            await playStopButton.click(); // Stop transport first
+            await Tone.Transport.stop();
         }
-        for (let i = 1; i <= 16; i++) sendAllNotesOff(i); // Send All Notes Off
+        for (let i = 1; i <= 16; i++) {
+            if (midiOutput) {
+                // All Sound Off
+                midiOutput.send([0xB0 + (i - 1), 120, 0]);
+                // All Notes Off
+                midiOutput.send([0xB0 + (i - 1), 123, 0]);
+            }
+        }
         await setupMIDI();
-        sequencerTracks.forEach(updateTrackPattern); // Rebuild sequences after MIDI re-init
     });
 
     function populateMidiDeviceList() {
         if (!midiAccess) return;
-        const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+        const savedStateJSON = localStorage.getItem(STATE_STORAGE_KEY);
+        const saved = savedStateJSON ? JSON.parse(savedStateJSON) : {};
         const prefId = saved.midiOutputId || (midiOutput ? midiOutput.id : null);
         midiOutSelect.innerHTML = '';
         let count = 0, firstOut = null, foundPref = false;
@@ -567,9 +853,11 @@
     }
 
     function updateMidiOutput() {
-        midiOutput = (!midiAccess || !midiOutSelect.value) ? null : midiAccess.outputs.get(midiOutSelect.value);
+        const noMidi = !midiAccess || !midiOutSelect.value || (midiOutSelect.options.length > 0 && midiOutSelect.options[0].text === "No MIDI Devices Found");
+        midiOutput = noMidi ? null : midiAccess.outputs.get(midiOutSelect.value);
+        midiOutSelect.classList.toggle('no-midi-error', !midiOutput);
     }
-    midiOutSelect.addEventListener('change', () => { updateMidiOutput(); saveSettings(); });
+    midiOutSelect.addEventListener('change', () => { requestSaveState(); });
 
     function sendMidiCC(cc, value, channel) {
         if (midiOutput) midiOutput.send([0xB0 + (channel - 1), cc, value]);
@@ -590,7 +878,7 @@
             button.textContent = 'Learn';
             showStatusMessage(`Track ${track.id + 1} set to Note: ${track.ui.noteInput.value} on Ch: ${ch}.`);
             noteLearningTrack = null;
-            saveSettings();
+            requestSaveState();
             return;
         }
         if (cmd === 0xB0) {
@@ -602,7 +890,7 @@
                 button.textContent = originalText;
                 showStatusMessage(`Control mapped to CC#${cc} on Ch ${ch}.`);
                 currentLearningControl = null;
-                saveSettings();
+                requestSaveState();
             } else {
                 for (const pId in midiCcMap) {
                     const map = midiCcMap[pId];
@@ -667,11 +955,24 @@
         el.value = Math.max(min, Math.min(max, val));
         el.dispatchEvent(new Event(el.id === 'numTracksInput' ? 'change' : 'input', { bubbles: true }));
     }
-    document.addEventListener('mousedown', (e) => { if (e.target.matches('.slider-button, .number-input-button')) startAutoRepeat(e.target.dataset.target, e.target.dataset.action); });
+
+    document.addEventListener('mousedown', (e) => {
+        const button = e.target.closest('.slider-button, .number-input-button');
+        if (button) {
+            startAutoRepeat(button.dataset.target, button.dataset.action);
+        }
+    });
     document.addEventListener('mouseup', stopAutoRepeat);
-    document.addEventListener('mouseleave', (e) => { if (e.target.matches('.slider-button, .number-input-button')) stopAutoRepeat(); });
-    document.addEventListener('touchstart', (e) => { if (e.target.matches('.slider-button, .number-input-button')) { e.preventDefault(); startAutoRepeat(e.target.dataset.target, e.target.dataset.action); } }, { passive: false });
+    document.addEventListener('mouseleave', stopAutoRepeat);
+    document.addEventListener('touchstart', (e) => {
+        const button = e.target.closest('.slider-button, .number-input-button');
+        if (button) {
+            e.preventDefault();
+            startAutoRepeat(button.dataset.target, button.dataset.action);
+        }
+    }, { passive: false });
     document.addEventListener('touchend', stopAutoRepeat);
+
     function startAutoRepeat(target, action) { stopAutoRepeat(); adjustControlValue(target, action); autoRepeatTimeoutId = setTimeout(() => { autoRepeatIntervalId = setInterval(() => adjustControlValue(target, action), AUTO_REPEAT_INTERVAL); }, AUTO_REPEAT_DELAY); }
     function stopAutoRepeat() { clearTimeout(autoRepeatTimeoutId); clearInterval(autoRepeatIntervalId); }
 
@@ -679,14 +980,12 @@
         const newBpm = parseInt(e.target.value);
         Tone.Transport.bpm.value = newBpm;
         bpmValue.textContent = newBpm;
-        saveSettings();
+        requestSaveState();
     });
-    if (bpmSliderLearnCc) bpmSliderLearnCc.addEventListener('click', () => startLearnCc('bpmSlider', bpmSliderLearnCc));
 
     masterVolumeSlider.addEventListener('input', (e) => {
         const newVolume = parseInt(e.target.value);
         masterVolumeValue.textContent = newVolume;
-        // Update all individual channel volumes and send MIDI CC
         for (let i = 0; i < 16; i++) {
             channelVolumes[i] = newVolume;
             const slider = document.getElementById(`channelVolume${i+1}`);
@@ -695,10 +994,8 @@
             if(valueDisplay) valueDisplay.textContent = newVolume;
             sendMidiCC(7, newVolume, i + 1);
         }
-        saveSettings();
+        requestSaveState();
     });
-    if(masterVolumeLearnCc) masterVolumeLearnCc.addEventListener('click', () => startLearnCc('masterVolumeSlider', masterVolumeLearnCc));
-
 
     function setHarmoniousRandomizationScale() {
         const scaleNames = Object.keys(SCALES);
@@ -716,60 +1013,83 @@
             }
         }
         const rootNoteName = NOTE_NAMES[randomRootNote];
-        showStatusMessage(`Randomizing with ${rootNoteName} ${randomScaleName} scale.`);
+        currentScaleName = `${rootNoteName} ${randomScaleName}`;
+        logChange(`Scale -> ${currentScaleName}`);
+        updateStatusBar();
     }
 
     masterRandomizeButton.addEventListener('click', () => {
         setHarmoniousRandomizationScale();
         sequencerTracks.forEach(t => t.active && randomizeTrackParameters(t));
-        saveSettings();
     });
 
-    function randomizeTrackParameters(track) {
+    function randomizeTrackParameters(track, options = { note: true, pulses: true, rotation: true }, shouldLog = true) {
+        let changes = [];
         if (currentRandomizationScale.length === 0) {
             setHarmoniousRandomizationScale();
         }
-        track.pulses = Math.floor(Math.random() * (track.steps * 2/3)) + 1;
-        track.rotation = track.steps > 0 ? Math.floor(Math.random() * track.steps) : 0;
-        track.note = currentRandomizationScale[Math.floor(Math.random() * currentRandomizationScale.length)];
-        track.ui.pulsesSlider.value = track.ui.pulsesValue.textContent = track.pulses;
-        track.ui.rotationSlider.value = track.ui.rotationValue.textContent = track.rotation;
-        track.ui.noteInput.value = Tone.Frequency(track.note, "midi").toNote();
+        if (options.pulses) {
+            const oldPulses = track.pulses;
+            track.pulses = Math.floor(Math.random() * (track.steps * 2/3)) + 1;
+            track.ui.pulsesSlider.value = track.ui.pulsesValue.textContent = track.pulses;
+            changes.push(`P: ${oldPulses}→${track.pulses}`);
+        }
+        if (options.rotation) {
+            const oldRotation = track.rotation;
+            track.rotation = track.steps > 0 ? Math.floor(Math.random() * track.steps) : 0;
+            track.ui.rotationSlider.value = track.ui.rotationValue.textContent = track.rotation;
+            changes.push(`R: ${oldRotation}→${track.rotation}`);
+        }
+        if (options.note) {
+            const oldNote = Tone.Frequency(track.note, "midi").toNote();
+            track.note = currentRandomizationScale[Math.floor(Math.random() * currentRandomizationScale.length)];
+            const newNote = Tone.Frequency(track.note, "midi").toNote();
+            track.ui.noteInput.value = newNote;
+            changes.push(`N: ${oldNote}→${newNote}`);
+        }
+        if (shouldLog && changes.length > 0) {
+            logChange(`T${track.id + 1}: ${changes.join(', ')}`);
+        }
         updateTrackPattern(track);
     }
 
-    defaultSettingsButton.addEventListener('click', () => {
-        const defaults = [ {p:4,s:16,r:0,n:"C3"}, {p:3,s:16,r:2,n:"E3"}, {p:5,s:16,r:1,n:"G#3"}, {p:7,s:16,r:3,n:"B3"} ];
-        sequencerTracks.forEach((t, i) => {
-            const d = defaults[i % defaults.length];
-            t.steps = stepsLocked ? globalLockedSteps : d.s;
-            t.pulses = d.p > t.steps ? t.steps : d.p;
-            t.rotation = d.r % t.steps;
-            t.note = Tone.Frequency(d.n).toMidi();
-            t.active = true; t.channelOverride = 'global'; t.velocity = 100;
-            Object.assign(t.ui.stepsSlider, { value: t.steps, min: t.pulses }); t.ui.stepsValue.textContent = t.steps;
-            Object.assign(t.ui.pulsesSlider, { value: t.pulses }); t.ui.pulsesValue.textContent = t.pulses;
-            Object.assign(t.ui.rotationSlider, { value: t.rotation, max: t.steps > 0 ? t.steps - 1 : 0 }); t.ui.rotationValue.textContent = t.rotation;
-            t.ui.noteInput.value = Tone.Frequency(t.note, "midi").toNote();
-            t.ui.velocitySlider.value = t.ui.velocityValue.textContent = t.velocity;
-            t.ui.toggleButton.classList.add('active'); t.ui.toggleButton.textContent = 'ON';
-            t.ui.channelOverrideSelect.value = t.channelOverride;
-            updateTrackPattern(t);
-        });
-        saveSettings();
-        showStatusMessage("Defaults loaded.");
+    defaultSettingsButton.addEventListener('click', async () => {
+        allowAutosave = false;
+        try {
+            const defaults = {
+                bpm: 120,
+                tracks: [
+                    {p:4,s:8,r:0,n:"C3", v: 100, a: true, c: 'global'},
+                    {p:3,s:8,r:2,n:"E3", v: 100, a: true, c: 'global'},
+                    {p:5,s:8,r:4,n:"G3", v: 100, a: true, c: 'global'},
+                    {p:7,s:16,r:0,n:"B3", v: 90, a: true, c: 'global'}
+                ]
+            };
+            const defaultState = {
+                numTracks: defaults.tracks.length,
+                bpm: defaults.bpm,
+                tracks: defaults.tracks.map(d => ({
+                    pulses: d.p, steps: d.s, rotation: d.r, note: Tone.Frequency(d.n).toMidi(),
+                    velocity: d.v, active: d.a, channelOverride: d.c
+                }))
+            };
+            await applyState(defaultState, Tone.Transport.state === 'started');
+            showStatusMessage("Defaults loaded.");
+        } finally {
+            setTimeout(() => { allowAutosave = true; }, 100);
+        }
     });
+
 
     lockStepsCheckbox.addEventListener('change', (e) => {
         stepsLocked = e.target.checked;
         if (stepsLocked) {
-            globalLockedSteps = sequencerTracks.length > 0 ? sequencerTracks[0].steps : 16;
+            globalLockedSteps = sequencerTracks.length > 0 ? sequencerTracks[0].steps : 8;
             synchronizeAllTrackSteps(globalLockedSteps);
         } else {
             sequencerTracks.forEach(t => t.ui && (t.ui.stepsSlider.disabled = false));
         }
-        saveSettings();
-        showStatusMessage(stepsLocked ? `Steps Locked to ${globalLockedSteps}` : "Steps Unlocked");
+        requestSaveState();
     });
 
     function synchronizeAllTrackSteps(newSteps) {
@@ -785,11 +1105,10 @@
             if (t.rotation >= t.steps) { t.ui.rotationSlider.value = t.ui.rotationValue.textContent = t.rotation = t.steps > 0 ? t.rotation % t.steps : 0; }
             updateTrackPattern(t);
         });
-        saveSettings();
     }
 
     function createSequencerTrackUI(trackIndex) {
-        let initialSteps = stepsLocked ? globalLockedSteps : 16;
+        let initialSteps = stepsLocked ? globalLockedSteps : 8;
         let initialPulses = Math.floor(Math.random() * initialSteps / 2) + 1;
         let initialRotation = Math.floor(Math.random() * initialSteps);
 
@@ -808,33 +1127,33 @@
                     <div class="control-header">
                         <label for="pulses${trackIndex}">Pulses:</label>
                         <span id="pulsesValue${trackIndex}" class="value-display">${initialPulses}</span>
-                        <button class="learn-cc-button ml-2" data-param-id="pulses${trackIndex}" title="Map Pulses to MIDI CC">Learn</button>
+                        <button class="learn-cc-button ml-2" data-param-id="pulses${trackIndex}" title="Map Pulses to MIDI CC">L</button>
                     </div>
-                    <div class="control-slider-container"><button class="slider-button" data-target="pulses${trackIndex}" data-action="decrement">-</button><input type="range" id="pulses${trackIndex}" min="1" max="32" value="${initialPulses}" class="control-slider"><button class="slider-button" data-target="pulses${trackIndex}" data-action="increment">+</button></div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="pulses${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="pulses${trackIndex}" min="1" max="32" value="${initialPulses}" class="control-slider"><button class="slider-button" data-target="pulses${trackIndex}" data-action="increment">+</button></div>
                 </div>
                 <div class="control-group">
                     <div class="control-header">
                         <label for="steps${trackIndex}">Steps:</label>
                         <span id="stepsValue${trackIndex}" class="value-display">${initialSteps}</span>
-                        <button class="learn-cc-button ml-2" data-param-id="steps${trackIndex}" title="Map Steps to MIDI CC">Learn</button>
+                        <button class="learn-cc-button ml-2" data-param-id="steps${trackIndex}" title="Map Steps to MIDI CC">L</button>
                     </div>
-                    <div class="control-slider-container"><button class="slider-button" data-target="steps${trackIndex}" data-action="decrement">-</button><input type="range" id="steps${trackIndex}" min="1" max="32" value="${initialSteps}" class="control-slider"><button class="slider-button" data-target="steps${trackIndex}" data-action="increment">+</button></div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="steps${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="steps${trackIndex}" min="1" max="32" value="${initialSteps}" class="control-slider"><button class="slider-button" data-target="steps${trackIndex}" data-action="increment">+</button></div>
                 </div>
                 <div class="control-group">
                     <div class="control-header">
                         <label for="rotation${trackIndex}">Rotate:</label>
                         <span id="rotationValue${trackIndex}" class="value-display">${initialRotation}</span>
-                        <button class="learn-cc-button ml-2" data-param-id="rotation${trackIndex}" title="Map Rotation to MIDI CC">Learn</button>
+                        <button class="learn-cc-button ml-2" data-param-id="rotation${trackIndex}" title="Map Rotation to MIDI CC">L</button>
                     </div>
-                    <div class="control-slider-container"><button class="slider-button" data-target="rotation${trackIndex}" data-action="decrement">-</button><input type="range" id="rotation${trackIndex}" min="0" max="${initialSteps-1}" value="${initialRotation}" class="control-slider"><button class="slider-button" data-target="rotation${trackIndex}" data-action="increment">+</button></div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="rotation${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="rotation${trackIndex}" min="0" max="${initialSteps-1}" value="${initialRotation}" class="control-slider"><button class="slider-button" data-target="rotation${trackIndex}" data-action="increment">+</button></div>
                 </div>
                 <div class="control-group">
                     <div class="control-header">
                         <label for="velocity${trackIndex}">Vel:</label>
                         <span id="velocityValue${trackIndex}" class="value-display">100</span>
-                        <button class="learn-cc-button ml-2" data-param-id="velocity${trackIndex}" title="Map Velocity to MIDI CC">Learn</button>
+                        <button class="learn-cc-button ml-2" data-param-id="velocity${trackIndex}" title="Map Velocity to MIDI CC">L</button>
                     </div>
-                    <div class="control-slider-container"><button class="slider-button" data-target="velocity${trackIndex}" data-action="decrement">-</button><input type="range" id="velocity${trackIndex}" min="1" max="127" value="100" class="control-slider"><button class="slider-button" data-target="velocity${trackIndex}" data-action="increment">+</button></div>
+                    <div class="control-slider-container"><button class="slider-button" data-target="velocity${trackIndex}" data-action="decrement">&minus;</button><input type="range" id="velocity${trackIndex}" min="1" max="127" value="100" class="control-slider"><button class="slider-button" data-target="velocity${trackIndex}" data-action="increment">+</button></div>
                 </div>
                 <div class="control-group">
                     <label for="channelOverride${trackIndex}" class="mb-1">Channel:</label>
@@ -842,7 +1161,7 @@
                 </div>
                 <div class="control-group">
                     <label for="note${trackIndex}" class="mb-1">Note:</label>
-                    <div class="note-input-group"><input type="text" id="note${trackIndex}" value="C3" class="text-xs p-1"><button id="noteLearn${trackIndex}" class="note-learn-button">Learn</button></div>
+                    <div class="note-input-group"><input type="text" id="note${trackIndex}" value="C3" class="text-xs p-1"><button id="noteLearn${trackIndex}" class="note-learn-button">L</button></div>
                 </div>
             </div>
             <div id="patternDisplay${trackIndex}" class="pattern-display my-1"></div>
@@ -874,7 +1193,7 @@
         }
         track.ui.noteInput.value = Tone.Frequency(track.note, "midi").toNote();
 
-        track.ui.randomizeButton.addEventListener('click', () => randomizeTrackParameters(track));
+        track.ui.randomizeButton.addEventListener('click', () => {randomizeTrackParameters(track); requestSaveState()});
         track.ui.toggleButton.addEventListener('click', () => {
             track.active = !track.active;
             track.ui.toggleButton.classList.toggle('active', track.active);
@@ -883,13 +1202,14 @@
                 const ch = (track.channelOverride !== 'global') ? track.channelOverride : selectedMidiChannel;
                 sendMidiNoteOff(track.note, ch);
             }
-            saveSettings();
+            requestSaveState();
         });
         track.ui.pulsesSlider.addEventListener('input', e => {
             track.pulses = parseInt(e.target.value);
             track.ui.pulsesValue.textContent = track.pulses;
             track.ui.stepsSlider.min = track.pulses;
-            updateTrackPattern(track); saveSettings();
+            updateTrackPattern(track);
+            requestSaveState();
         });
         track.ui.stepsSlider.addEventListener('input', e => {
             const newSteps = parseInt(e.target.value);
@@ -902,30 +1222,32 @@
                 if (track.rotation >= track.steps) track.ui.rotationSlider.value = track.ui.rotationValue.textContent = track.rotation = 0;
                 updateTrackPattern(track);
             }
-            saveSettings();
+            requestSaveState();
         });
         track.ui.rotationSlider.addEventListener('input', e => {
             track.rotation = parseInt(e.target.value);
             track.ui.rotationValue.textContent = track.rotation;
-            updateTrackPattern(track); saveSettings();
+            updateTrackPattern(track);
+            requestSaveState();
         });
         track.ui.noteInput.addEventListener('change', e => {
-            try { track.note = Tone.Frequency(e.target.value.toUpperCase()).toMidi(); saveSettings(); }
+            try { track.note = Tone.Frequency(e.target.value.toUpperCase()).toMidi(); }
             catch { e.target.value = Tone.Frequency(track.note, "midi").toNote(); }
+            requestSaveState();
         });
         track.ui.velocitySlider.addEventListener('input', e => {
             track.velocity = parseInt(e.target.value);
             track.ui.velocityValue.textContent = track.velocity;
-            saveSettings();
+            requestSaveState();
         });
         track.ui.noteLearnButton.addEventListener('click', () => startNoteLearn(track, track.ui.noteLearnButton));
         track.ui.channelOverrideSelect.addEventListener('change', e => {
             track.channelOverride = e.target.value;
-            saveSettings();
+            requestSaveState();
         });
 
         trackDiv.querySelectorAll('.learn-cc-button').forEach(btn => {
-            btn.textContent = 'Learn';
+            btn.textContent = 'L';
             btn.addEventListener('click', () => startLearnCc(btn.dataset.paramId, btn))
         });
         sequencerTracks.push(track);
@@ -938,13 +1260,13 @@
             volDiv.className = 'control-group';
             volDiv.innerHTML = `
                  <div class="control-header">
-                    <label for="channelVolume${i}">Ch ${i}:</label>
-                    <span id="channelVolumeValue${i}" class="value-display">${channelVolumes[i-1]}</span>
-                    <button class="learn-cc-button ml-2" data-param-id="channelVolume${i}">L</button>
-                </div>
-                <div class="control-slider-container">
-                    <input type="range" id="channelVolume${i}" min="0" max="127" value="${channelVolumes[i-1]}" class="control-slider">
-                </div>
+                     <label for="channelVolume${i}">Ch ${i}:</label>
+                     <span id="channelVolumeValue${i}" class="value-display">${channelVolumes[i-1]}</span>
+                     <button class="learn-cc-button ml-2" data-param-id="channelVolume${i}">L</button>
+                 </div>
+                 <div class="control-slider-container">
+                     <input type="range" id="channelVolume${i}" min="0" max="127" value="${channelVolumes[i-1]}" class="control-slider">
+                 </div>
             `;
             channelVolumesContainer.appendChild(volDiv);
 
@@ -957,7 +1279,7 @@
                 valueDisplay.textContent = newVolume;
                 channelVolumes[i-1] = newVolume;
                 sendMidiCC(7, newVolume, i);
-                saveSettings();
+                requestSaveState();
             });
             learnBtn.addEventListener('click', () => startLearnCc(`channelVolume${i}`, learnBtn));
         }
@@ -995,7 +1317,8 @@
             const ch = (track.channelOverride !== 'global') ? parseInt(track.channelOverride) : selectedMidiChannel;
             if (track.active && value === 1) {
                 sendMidiNoteOn(track.note, track.velocity, ch);
-                Tone.Transport.scheduleOnce(() => sendMidiNoteOff(track.note, ch), time + Tone.Time(`${track.steps}n`).toSeconds() * 0.8);
+                addNoteToHistory(Tone.Frequency(track.note, "midi").toNote());
+                Tone.Transport.scheduleOnce(() => sendMidiNoteOff(track.note, ch), time + Tone.Time("16n").toSeconds() * 0.8);
 
                 Tone.Draw.schedule(() => {
                     const panel = track.ui.panel;
@@ -1015,15 +1338,101 @@
         }
     }
 
+    function logChange(message) {
+        const entry = document.createElement('div');
+        entry.textContent = message;
+        musicModeLog.prepend(entry);
+        while (musicModeLog.children.length > 4) {
+            musicModeLog.removeChild(musicModeLog.lastChild);
+        }
+    }
+
+    function triggerGenerativeStep() {
+        if (randomizeScaleCheck.checked) {
+            setHarmoniousRandomizationScale();
+        }
+
+        const activeTracks = sequencerTracks.filter(t => t.active);
+        if (activeTracks.length === 0) return;
+
+        const options = {
+            note: randomizeNoteCheck.checked,
+            pulses: randomizePulsesCheck.checked,
+            rotation: randomizeRotationCheck.checked
+        };
+
+        if (multiTrackRandomToggle.checked) {
+            logChange("Multi-track randomize");
+            activeTracks.forEach(track => randomizeTrackParameters(track, options, false));
+        } else {
+            const trackToRandomize = activeTracks[Math.floor(Math.random() * activeTracks.length)];
+            randomizeTrackParameters(trackToRandomize, options, true);
+        }
+        requestSaveState();
+    }
+
+    function setupTimedRandomization() {
+        if (timedRandomEvent) {
+            timedRandomEvent.stop(0).dispose();
+            timedRandomEvent = null;
+        }
+        if (musicModeToggle.checked) {
+            const interval = `${randomIntervalSlider.value}m`;
+            timedRandomEvent = Tone.Transport.scheduleRepeat((time) => {
+                Tone.Draw.schedule(() => {
+                    triggerGenerativeStep();
+                }, time);
+            }, interval, "1m");
+        }
+    }
+
+    function updateCountdown() {
+        if (Tone.Transport.state === 'started' && timedRandomEvent && musicModeToggle.checked) {
+            const nextEventTime = timedRandomEvent.nextEvent;
+            const timeRemaining = nextEventTime - Tone.Transport.seconds;
+
+            if (isFinite(timeRemaining) && timeRemaining >= 0) {
+                countdownDisplay.textContent = timeRemaining.toFixed(1);
+            } else {
+                countdownDisplay.textContent = '--:--';
+            }
+        } else {
+            countdownDisplay.textContent = '--:--';
+        }
+        countdownAnimationId = requestAnimationFrame(updateCountdown);
+    }
+
+    musicModeToggle.addEventListener('change', (e) => {
+        document.body.classList.toggle('music-mode-active', e.target.checked);
+        setupTimedRandomization();
+        requestSaveState();
+    });
+
+    randomIntervalSlider.addEventListener('input', e => {
+        randomIntervalValue.textContent = e.target.value;
+    });
+    randomIntervalSlider.addEventListener('change', ()=> {setupTimedRandomization(); requestSaveState();});
+    musicModeNextButton.addEventListener('click', triggerGenerativeStep);
+
+    [randomizeNoteCheck, randomizePulsesCheck, randomizeRotationCheck, randomizeScaleCheck, multiTrackRandomToggle].forEach(el => {
+        el.addEventListener('change', requestSaveState);
+    });
+
     Tone.Transport.on('start', () => {
         sequencerWrapperPanel.classList.remove('stopped');
-        playStopButton.textContent = 'Stop';
-        playStopButton.classList.add('active');
+        playStopButton.innerHTML = '&#x25A0;';
+        playStopButton.classList.add('active', 'stop-state');
+        playStopButton.classList.remove('play-state');
+        transportLoops.forEach(loop => loop && loop.start(0));
+        if (countdownAnimationId) cancelAnimationFrame(countdownAnimationId);
+        countdownAnimationId = requestAnimationFrame(updateCountdown);
     });
+
     Tone.Transport.on('stop', () => {
         sequencerWrapperPanel.classList.add('stopped');
-        playStopButton.textContent = 'Play';
-        playStopButton.classList.remove('active');
+        playStopButton.innerHTML = '&#x25B6;';
+        playStopButton.classList.remove('active', 'stop-state');
+        playStopButton.classList.add('play-state');
 
         const allChannelsInUse = new Set([selectedMidiChannel]);
         sequencerTracks.forEach(t => {
@@ -1035,6 +1444,11 @@
         });
         allChannelsInUse.forEach(ch => sendAllNotesOff(ch));
         sequencerTracks.forEach(t => { t.currentStep = 0; renderPatternDisplay(t); });
+        transportLoops.forEach(loop => loop && loop.stop(0));
+
+        if (countdownAnimationId) cancelAnimationFrame(countdownAnimationId);
+        countdownAnimationId = null;
+        countdownDisplay.textContent = '--:--';
     });
 
 
@@ -1061,7 +1475,7 @@
         }
 
         numTracks = newCount;
-        saveSettings();
+        requestSaveState();
     }
 
 
@@ -1076,71 +1490,46 @@
     playStopButton.addEventListener('click', async () => {
         if (Tone.context.state !== 'running') {
             await Tone.start();
+            showStatusMessage("Audio Context Started.");
         }
 
         if (Tone.Transport.state === 'started') {
             Tone.Transport.stop();
         } else {
-            transportLoops.forEach(loop => loop && loop.start(0));
+            sequencerTracks.forEach(t => setupTrackLoop(t));
             Tone.Transport.start();
         }
     });
 
-    midiChannelSelect.addEventListener('change', e => { selectedMidiChannel = parseInt(e.target.value); saveSettings(); });
+    midiChannelSelect.addEventListener('change', e => {
+        selectedMidiChannel = parseInt(e.target.value);
+        requestSaveState();
+    });
+
+    saveStateButton.addEventListener('click', ()=>{
+        saveState();
+        showStatusMessage("State Saved!", 2000);
+    });
+    loadStateButton.addEventListener('click', loadStateAndRebuild);
 
     for (let i = 1; i <= 16; i++) midiChannelSelect.add(new Option(`Ch ${i}`, i));
 
     async function init() {
         userIdDisplay.textContent = crypto.randomUUID().substring(0,8);
-        const loaded = loadSettings();
+        playStopButton.classList.add('play-state');
+        const savedStateJSON = localStorage.getItem(STATE_STORAGE_KEY);
 
-        numTracks = (loaded && loaded.numTracks > 0) ? loaded.numTracks : 4;
+        let isFirstLoad = !savedStateJSON;
 
-        createChannelVolumeUI();
-        for (let i = 0; i < numTracks; i++) {
-            createSequencerTrackUI(i);
+        if (!isFirstLoad) {
+            await applyState(JSON.parse(savedStateJSON), false);
+        } else {
+            setHarmoniousRandomizationScale(); // Set an initial scale
+            await applyState({}, false);
+            await defaultSettingsButton.click();
         }
 
-        numTracksInput.value = numTracks;
-        if(loaded && loaded.bpm) bpmSlider.value = loaded.bpm;
-        if(loaded && loaded.masterVolume) masterVolumeSlider.value = loaded.masterVolume;
-
-        Tone.Transport.bpm.value = parseInt(bpmSlider.value);
-        bpmValue.textContent = bpmSlider.value;
-        masterVolumeValue.textContent = masterVolumeSlider.value;
-        lockStepsCheckbox.checked = stepsLocked;
-        midiChannelSelect.value = selectedMidiChannel;
-
-        if (loaded && loaded.tracks) {
-            loaded.tracks.forEach((saved, i) => {
-                if (i >= sequencerTracks.length) return;
-                const t = sequencerTracks[i];
-                Object.assign(t, saved);
-                t.steps = stepsLocked ? globalLockedSteps : (saved.steps ?? globalLockedSteps);
-
-                t.ui.stepsSlider.value = t.steps; t.ui.stepsValue.textContent = t.steps;
-                t.ui.pulsesSlider.value = t.pulses; t.ui.pulsesValue.textContent = t.pulses;
-                t.ui.rotationSlider.max = t.steps > 0 ? t.steps - 1 : 0;
-                t.ui.rotationSlider.value = t.rotation; t.ui.rotationValue.textContent = t.rotation;
-                t.ui.noteInput.value = Tone.Frequency(t.note, "midi").toNote();
-                t.ui.velocitySlider.value = t.velocity; t.ui.velocityValue.textContent = t.velocity;
-                t.ui.toggleButton.classList.toggle('active', t.active);
-                t.ui.toggleButton.textContent = t.active ? 'ON' : 'OFF';
-                t.ui.channelOverrideSelect.value = t.channelOverride;
-            });
-        }
-
-        setHarmoniousRandomizationScale();
-        sequencerTracks.forEach(updateTrackPattern);
         await setupMIDI();
-
-        if (loaded && loaded.midiOutputId && Array.from(midiOutSelect.options).some(o => o.value === loaded.midiOutputId)) {
-            midiOutSelect.value = loaded.midiOutputId;
-            updateMidiOutput();
-        }
-
-        if (!loaded) defaultSettingsButton.click();
-        else if (stepsLocked) synchronizeAllTrackSteps(globalLockedSteps);
 
         sequencerWrapperPanel.classList.add('stopped');
         showStatusMessage("Rhythm King 77 Initialized!", 3000);
