@@ -260,9 +260,13 @@
 
         #sequencerTracksContainer {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(336px, 1fr));
             gap: 0.75rem;
         }
+        #sequencerWrapperPanel {
+            flex-grow: 1;
+        }
+
         #sequencerWrapperPanel.stopped {
             opacity: 0.5;
             filter: saturate(0.2);
@@ -276,8 +280,13 @@
 
         #sequencerTracksContainer > .synth-panel {
             margin-bottom: 0;
+            flex: 1 1 auto;
         }
         #statusBar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
             background-color: #2a2a2a;
             color: #f0e6d2;
             padding: 0.5rem;
@@ -286,10 +295,11 @@
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
             pointer-events: none;
-            font-family: 'Orbitron', monospace;
+            font-family: 'Inter', sans-serif;
+            text-transform: none;
             white-space: nowrap;
             overflow: hidden;
-            margin-top: 1rem;
+            z-index: 1001;
         }
         #statusBar.visible {
             opacity: 1;
@@ -322,6 +332,10 @@
         .disco-flash {
             transition: background-color 0.05s ease-in-out !important;
         }
+        .control-flash {
+            transition: background-color 0.1s ease-out;
+            background-color: #f0ad4e !important;
+        }
 
         /* Music Mode Styles */
         #musicModePanel {
@@ -342,9 +356,10 @@
         }
         #mainContent {
             flex-grow: 1;
+            min-width: 0; /* Important for flex-grow to work correctly in a flex container */
         }
         #musicModeLog {
-            height: 4.5rem;
+            height: 6.5rem;
             background-color: rgba(0,0,0,0.2);
             border-radius: 6px;
             padding: 0.25rem;
@@ -396,20 +411,20 @@
 
                     <div class="flex justify-center items-center gap-2 flex-wrap mb-2 px-2">
                         <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences">&#x25B6;</button>
-                        <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save current state">&#128190;</button>
-                        <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load saved state">&#128193;</button>
+                        <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save the current state of all tracks, tempo, and MIDI settings to your browser's local storage.">&#128190;</button>
+                        <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load the last saved state from your browser's local storage.">&#128193;</button>
                     </div>
                     <div class="flex justify-center items-center gap-2 flex-wrap mb-2 px-2">
-                        <button id="defaultSettingsButton" class="push-button default-settings-button flex-grow" title="Load default patterns">DEFAULTS</button>
-                        <button id="masterRandomizeButton" class="push-button master-randomize-button flex-grow" title="Randomize all active tracks">RANDOM</button>
-                        <button id="reInitMidiButton" class="push-button re-init-midi-button flex-grow" title="Re-initialize MIDI devices">RESET MIDI</button>
+                        <button id="defaultSettingsButton" class="push-button default-settings-button flex-grow" title="Reset all tracks to a default starting pattern.">DEFAULTS</button>
+                        <button id="masterRandomizeButton" class="push-button master-randomize-button flex-grow" title="Randomize the parameters for all currently active tracks.">RANDOM</button>
+                        <button id="reInitMidiButton" class="push-button re-init-midi-button flex-grow" title="Rescan for available MIDI output devices.">RESET MIDI</button>
                     </div>
 
                     <div class="control-group">
                         <div><label for="numTracksInput">Number of Tracks:</label></div>
                         <div class="number-input-container">
                             <button class="number-input-button" data-target="numTracksInput" data-action="decrement" title="Decrease number of tracks">&minus;</button>
-                            <input type="number" id="numTracksInput" min="1" max="12" value="4" title="Set number of sequencer tracks (1-12)">
+                            <input type="number" id="numTracksInput" min="1" max="12" value="4" title="Set the total number of sequencer tracks (1-12).">
                             <button class="number-input-button" data-target="numTracksInput" data-action="increment" title="Increase number of tracks">+</button>
                         </div>
                     </div>
@@ -441,13 +456,13 @@
                     </div>
 
                     <div class="control-group">
-                        <label class="checkbox-label-container" title="When checked, all tracks share the same 'Steps' value">
+                        <label class="checkbox-label-container" title="Lock all 'Steps' sliders together. Changing one will change all.">
                             <input type="checkbox" id="lockStepsCheckbox"> Lock All Steps
                         </label>
                     </div>
 
                     <div class="control-group">
-                        <label class="checkbox-label-container" title="Enable generative music mode panel">
+                        <label class="checkbox-label-container" title="Toggle the Music Mode panel for generative, automatic randomization.">
                             <input type="checkbox" id="musicModeToggle"> Music Mode
                         </label>
                     </div>
@@ -487,7 +502,7 @@
                 Euclidean rhythms are generated by distributing beats (pulses) as evenly as possible over a set number of time steps, creating natural, complex polyrhythms.
             </p>
         </div>
-        <div id="statusBar"><div id="statusBar-content"></div></div>
+
     </div>
 
     <!-- Music Mode Panel (Generative Controls) -->
@@ -498,26 +513,26 @@
                 <label for="randomIntervalSlider">Interval (Bars):</label>
                 <span id="randomIntervalValue" class="value-display">4</span>
             </div>
-            <input type="range" id="randomIntervalSlider" min="1" max="16" value="4" class="control-slider">
+            <div class="control-slider-container">
+                <button class="slider-button" data-target="randomIntervalSlider" data-action="decrement" title="Decrease Interval">&minus;</button>
+                <input type="range" id="randomIntervalSlider" min="1" max="16" value="4" class="control-slider" title="Set the interval in bars for automatic randomization.">
+                <button class="slider-button" data-target="randomIntervalSlider" data-action="increment" title="Increase Interval">+</button>
+            </div>
         </div>
         <div class="control-group">
             <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Randomize:</label>
-            <label class="checkbox-label-container"><input type="checkbox" id="randomizeNoteCheck" checked> Notes</label>
-            <label class="checkbox-label-container"><input type="checkbox" id="randomizePulsesCheck"> Pulses</label>
-            <label class="checkbox-label-container"><input type="checkbox" id="randomizeRotationCheck"> Rotation</label>
-            <label class="checkbox-label-container"><input type="checkbox" id="randomizeScaleCheck"> Scale</label>
+            <label class="checkbox-label-container"><input type="checkbox" id="randomizeNoteCheck" checked title="Allow Music Mode to randomize track notes."> Notes</label>
+            <label class="checkbox-label-container"><input type="checkbox" id="randomizePulsesCheck" title="Allow Music Mode to randomize track pulses."> Pulses</label>
+            <label class="checkbox-label-container"><input type="checkbox" id="randomizeRotationCheck" title="Allow Music Mode to randomize track rotation."> Rotation</label>
+            <label class="checkbox-label-container"><input type="checkbox" id="randomizeScaleCheck" title="Allow Music Mode to change the musical scale."> Scale</label>
         </div>
         <div class="control-group">
-            <label class="checkbox-label-container" title="Randomize all active tracks at once">
+            <label class="checkbox-label-container" title="When checked, Music Mode randomizes all active tracks at once. When unchecked, it randomizes one track at a time.">
                 <input type="checkbox" id="multiTrackRandomToggle"> Multi-Track Random
             </label>
         </div>
         <div class="control-group mt-2">
-            <button id="musicModeNextButton" class="push-button w-full">Next</button>
-        </div>
-        <div class="control-group mt-2">
-            <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Countdown</label>
-            <div id="countdownDisplay" class="text-center font-mono text-lg text-amber-300 p-1 bg-black/20 rounded">--:--</div>
+            <button id="musicModeNextButton" class="push-button w-full" title="Manually trigger the next generative step.">Next</button>
         </div>
         <div class="control-group mt-2">
             <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Log</label>
@@ -525,6 +540,7 @@
         </div>
     </div>
 </div>
+<div id="statusBar"><div id="statusBar-content"></div></div>
 
 <script>
     // --- DOM Elements ---
@@ -563,7 +579,6 @@
     const multiTrackRandomToggle = document.getElementById('multiTrackRandomToggle');
     const musicModeNextButton = document.getElementById('musicModeNextButton');
     const musicModeLog = document.getElementById('musicModeLog');
-    const countdownDisplay = document.getElementById('countdownDisplay');
 
     let midiAccess = null;
     let midiOutput = null;
@@ -586,9 +601,10 @@
     let noteHistory = [];
     const MAX_NOTE_HISTORY = 30;
     let timedRandomEvent = null;
-    let countdownAnimationId = null;
     let autosaveTimeout = null;
     let allowAutosave = true;
+    let logClearTimeout = null;
+    let messageInterval = null;
 
 
     // --- Harmony Engine ---
@@ -602,6 +618,13 @@
     };
     const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
+    const helpfulMessages = [
+        "Use the 'L' buttons to map your MIDI controller's knobs and faders.",
+        "Try 'Music Mode' for a generative, ambient experience.",
+        "Click the 'Random' button on a track for instant inspiration.",
+        "You can save your entire session to the browser with the save icon.",
+        "Holding +/- buttons will quickly change slider values."
+    ];
 
     let autoRepeatTimeoutId = null;
     let autoRepeatIntervalId = null;
@@ -611,13 +634,19 @@
     function updateStatusBar() {
         if (statusMessageActive) return;
 
-        let statusText = `♫ ${noteHistory.join(' ')}`;
+        let statusText = ``;
         if (Tone.Transport.state === 'started' && currentScaleName) {
-            statusText = `[${currentScaleName}]  |  ${statusText}`;
+            statusText = `Current Scale: ${currentScaleName}`;
         }
 
         statusBarContent.textContent = statusText;
-        statusBar.classList.add('visible');
+        statusBar.classList.toggle('visible', !!statusText);
+    }
+
+    function showHelpfulMessage() {
+        if (Tone.Transport.state === 'stopped') return;
+        const randomIndex = Math.floor(Math.random() * helpfulMessages.length);
+        showStatusMessage(helpfulMessages[randomIndex], 4000);
     }
 
     function showStatusMessage(message, duration = 3000) {
@@ -636,7 +665,7 @@
             noteHistory.pop();
         }
         noteHistory.unshift(noteName);
-        updateStatusBar();
+        // Note display removed from status bar, but history is kept for potential future use
     }
 
 
@@ -1032,12 +1061,14 @@
             const oldPulses = track.pulses;
             track.pulses = Math.floor(Math.random() * (track.steps * 2/3)) + 1;
             track.ui.pulsesSlider.value = track.ui.pulsesValue.textContent = track.pulses;
+            flashControl(track.ui.pulsesSlider);
             changes.push(`P: ${oldPulses}→${track.pulses}`);
         }
         if (options.rotation) {
             const oldRotation = track.rotation;
             track.rotation = track.steps > 0 ? Math.floor(Math.random() * track.steps) : 0;
             track.ui.rotationSlider.value = track.ui.rotationValue.textContent = track.rotation;
+            flashControl(track.ui.rotationSlider);
             changes.push(`R: ${oldRotation}→${track.rotation}`);
         }
         if (options.note) {
@@ -1045,12 +1076,20 @@
             track.note = currentRandomizationScale[Math.floor(Math.random() * currentRandomizationScale.length)];
             const newNote = Tone.Frequency(track.note, "midi").toNote();
             track.ui.noteInput.value = newNote;
+            flashControl(track.ui.noteInput);
             changes.push(`N: ${oldNote}→${newNote}`);
         }
         if (shouldLog && changes.length > 0) {
             logChange(`T${track.id + 1}: ${changes.join(', ')}`);
         }
         updateTrackPattern(track);
+    }
+
+    function flashControl(element) {
+        element.classList.add('control-flash');
+        setTimeout(() => {
+            element.classList.remove('control-flash');
+        }, 500);
     }
 
     defaultSettingsButton.addEventListener('click', async () => {
@@ -1063,7 +1102,13 @@
                     {p:3,s:8,r:2,n:"E3", v: 100, a: true, c: 'global'},
                     {p:5,s:8,r:4,n:"G3", v: 100, a: true, c: 'global'},
                     {p:7,s:16,r:0,n:"B3", v: 90, a: true, c: 'global'}
-                ]
+                ],
+                musicMode: {
+                    enabled: true,
+                    interval: 4,
+                    randomize: { note: true, pulses: true, rotation: true, scale: true },
+                    multiTrack: true
+                }
             };
             const defaultState = {
                 numTracks: defaults.tracks.length,
@@ -1071,7 +1116,8 @@
                 tracks: defaults.tracks.map(d => ({
                     pulses: d.p, steps: d.s, rotation: d.r, note: Tone.Frequency(d.n).toMidi(),
                     velocity: d.v, active: d.a, channelOverride: d.c
-                }))
+                })),
+                musicMode: defaults.musicMode
             };
             await applyState(defaultState, Tone.Transport.state === 'started');
             showStatusMessage("Defaults loaded.");
@@ -1339,16 +1385,21 @@
     }
 
     function logChange(message) {
+        if (logClearTimeout) clearTimeout(logClearTimeout);
         const entry = document.createElement('div');
         entry.textContent = message;
         musicModeLog.prepend(entry);
-        while (musicModeLog.children.length > 4) {
+        while (musicModeLog.children.length > 6) {
             musicModeLog.removeChild(musicModeLog.lastChild);
         }
+        logClearTimeout = setTimeout(() => {
+            musicModeLog.innerHTML = '';
+        }, 5000);
     }
 
     function triggerGenerativeStep() {
-        if (randomizeScaleCheck.checked) {
+        const randomizeScale = randomizeScaleCheck.checked;
+        if (randomizeScale) {
             setHarmoniousRandomizationScale();
         }
 
@@ -1362,7 +1413,9 @@
         };
 
         if (multiTrackRandomToggle.checked) {
-            logChange("Multi-track randomize");
+            if (!randomizeScale) {
+                logChange("Multi-track randomize");
+            }
             activeTracks.forEach(track => randomizeTrackParameters(track, options, false));
         } else {
             const trackToRandomize = activeTracks[Math.floor(Math.random() * activeTracks.length)];
@@ -1373,7 +1426,7 @@
 
     function setupTimedRandomization() {
         if (timedRandomEvent) {
-            timedRandomEvent.stop(0).dispose();
+            Tone.Transport.clear(timedRandomEvent);
             timedRandomEvent = null;
         }
         if (musicModeToggle.checked) {
@@ -1386,24 +1439,15 @@
         }
     }
 
-    function updateCountdown() {
-        if (Tone.Transport.state === 'started' && timedRandomEvent && musicModeToggle.checked) {
-            const nextEventTime = timedRandomEvent.nextEvent;
-            const timeRemaining = nextEventTime - Tone.Transport.seconds;
-
-            if (isFinite(timeRemaining) && timeRemaining >= 0) {
-                countdownDisplay.textContent = timeRemaining.toFixed(1);
-            } else {
-                countdownDisplay.textContent = '--:--';
-            }
-        } else {
-            countdownDisplay.textContent = '--:--';
-        }
-        countdownAnimationId = requestAnimationFrame(updateCountdown);
-    }
-
     musicModeToggle.addEventListener('change', (e) => {
         document.body.classList.toggle('music-mode-active', e.target.checked);
+        if (e.target.checked) {
+            randomizeNoteCheck.checked = true;
+            randomizePulsesCheck.checked = true;
+            randomizeRotationCheck.checked = true;
+            randomizeScaleCheck.checked = true;
+            multiTrackRandomToggle.checked = true;
+        }
         setupTimedRandomization();
         requestSaveState();
     });
@@ -1424,8 +1468,6 @@
         playStopButton.classList.add('active', 'stop-state');
         playStopButton.classList.remove('play-state');
         transportLoops.forEach(loop => loop && loop.start(0));
-        if (countdownAnimationId) cancelAnimationFrame(countdownAnimationId);
-        countdownAnimationId = requestAnimationFrame(updateCountdown);
     });
 
     Tone.Transport.on('stop', () => {
@@ -1445,10 +1487,6 @@
         allChannelsInUse.forEach(ch => sendAllNotesOff(ch));
         sequencerTracks.forEach(t => { t.currentStep = 0; renderPatternDisplay(t); });
         transportLoops.forEach(loop => loop && loop.stop(0));
-
-        if (countdownAnimationId) cancelAnimationFrame(countdownAnimationId);
-        countdownAnimationId = null;
-        countdownDisplay.textContent = '--:--';
     });
 
 
@@ -1533,6 +1571,7 @@
 
         sequencerWrapperPanel.classList.add('stopped');
         showStatusMessage("Rhythm King 77 Initialized!", 3000);
+        setInterval(showHelpfulMessage, 15000); // Start showing helpful tips
     }
     window.onload = init;
 </script>
