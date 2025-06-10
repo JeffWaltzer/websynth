@@ -27,10 +27,7 @@
             margin-bottom: 0.5rem;
             transition: opacity 0.4s ease-in-out, filter 0.4s ease-in-out, border-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
         }
-        select.no-midi-error {
-            border-color: #ef4444 !important; /* Tailwind's red-500 */
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-        }
+
         .control-slider-container {
             display: flex;
             align-items: center;
@@ -136,38 +133,13 @@
             border-radius: 6px;
         }
 
-        #playStopButton.play-state {
-            background-color: #9b59b6; /* Purple */
-            color: white;
-            border-color: #8e44ad;
-        }
-        #playStopButton.play-state:hover {
-            background-color: #8e44ad;
-        }
-
-        #playStopButton.stop-state {
-            background-color: #e74c3c; /* Red */
-            color: white;
-            border-color: #c0392b;
-        }
-        #playStopButton.stop-state:hover {
-            background-color: #c0392b;
-        }
-
-        .learn-cc-button, .note-learn-button, .randomize-button, .default-settings-button, .master-randomize-button, .re-init-midi-button, .save-load-button {
-            color: white;
-            padding: 0.15rem 0.35rem;
-            font-size: 0.6rem;
-            border-radius: 3px;
-        }
         .learn-cc-button { background-color: #4CAF50; flex-shrink: 0; padding: 0.1rem 0.4rem; font-size: 0.75rem;}
         .note-learn-button { background-color: #f44336; padding: 0.1rem 0.4rem; font-size: 0.75rem;}
         .randomize-button { background-color: #2196F3; }
-        .default-settings-button { background-color: #607D8B; }
+
         .master-randomize-button { background-color: #FFC107; color: #333; }
         .re-init-midi-button { background-color: #9C27B0; }
         .save-load-button { background-color: #8E44AD; }
-        .learn-cc-button.learning, .note-learn-button.learning { background-color: #FF9800; }
 
         .pattern-display {
             display: flex;
@@ -176,19 +148,7 @@
             margin-top: 0.2rem;
             height: 24px;
         }
-        .pattern-step {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #7a6a5a;
-            margin: 0 1.5px;
-            transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s;
-        }
-        .pattern-step.active { background-color: #f0ad4e; }
-        .pattern-step.current {
-            transform: scale(1.25);
-            box-shadow: 0 0 5px #f0ad4e;
-        }
+
         label {
             display: block;
             margin-bottom: 0.1rem;
@@ -268,17 +228,6 @@
             flex-grow: 1;
         }
 
-        #sequencerWrapperPanel.stopped {
-            opacity: 0.5;
-            filter: saturate(0.2);
-        }
-        #sequencerWrapperPanel.stopped .pattern-step.active,
-        #sequencerWrapperPanel.stopped .pattern-step.current {
-            background-color: #7a6a5a !important;
-            transform: scale(1) !important;
-            box-shadow: none !important;
-        }
-
         #sequencerTracksContainer > .synth-panel {
             margin-bottom: 0;
             flex: 0 1 320px;
@@ -301,13 +250,6 @@
         .note-input-group > input {
             flex-grow: 1;
         }
-        .disco-flash {
-            transition: background-color 0.05s ease-in-out !important;
-        }
-        .control-flash {
-            transition: background-color 0.1s ease-out;
-            background-color: #a1887f !important;
-        }
 
         /* Music Mode Styles */
         #musicModePanel {
@@ -328,7 +270,7 @@
             min-width: 0;
         }
         #musicModeLog {
-            height: 6.5rem;
+            height: 100%; /* Make log fill available space in its container */
             background-color: rgba(0,0,0,0.2);
             border-radius: 6px;
             padding: 0.25rem;
@@ -364,15 +306,13 @@
             font-size: 0.6rem;
         }
         #hintsPanel {
-            height: auto;
-            min-height: 10rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #f0ad4e;
-            font-size: 0.8rem;
-            text-align: center;
-            padding: 1rem;
+            justify-content: flex-start;
+        }
+        #logSection {
+            display: none; /* Hidden by default */
+        }
+        body.music-mode-active #logSection {
+            display: flex; /* Shown only when music mode is active */
         }
         #bottom-panels-container > * {
             flex: 1;
@@ -390,13 +330,6 @@
     <!-- Main App Content -->
     <div id="mainContent" class="flex-grow">
         <div class="flex flex-col gap-3 main-container">
-            <div id="toolbar" class="flex flex-wrap items-center justify-start gap-2 mb-2">
-                <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences">&#x25B6;</button>
-                <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save the current state of all tracks, tempo, and MIDI settings to your browser's local storage.">&#128190;</button>
-                <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load the last saved state from your browser's local storage.">&#128193;</button>
-                <button id="defaultSettingsButton" class="push-button default-settings-button" title="Reset all tracks to a default starting pattern.">DEFAULTS</button>
-                <button id="masterRandomizeButton" class="push-button master-randomize-button" title="Randomize the parameters for all currently active tracks.">RANDOM</button>
-            </div>
             <div id="sequencerWrapperPanel" class="w-full synth-panel">
                 <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer</h2>
                 <div id="sequencerTracksContainer">
@@ -407,6 +340,14 @@
                 <div class="hidden lg:block flex-grow"></div>
                 <div id="masterControlPanel" class="lg:w-1/4 synth-panel flex flex-col gap-2 master-control-panel">
                     <h2 class="text-base font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
+
+                    <!-- TOOLBAR -->
+                    <div id="toolbar" class="flex flex-wrap items-center justify-center gap-2 mb-2">
+                        <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences">&#x25B6;</button>
+                        <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save the current state of all tracks, tempo, and MIDI settings to your browser's local storage.">&#128190;</button>
+                        <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load the last saved state from your browser's local storage.">&#128193;</button>
+                        <button id="masterRandomizeButton" class="push-button master-randomize-button" title="Randomize the parameters for all currently active tracks.">RANDOM</button>
+                    </div>
 
                     <div class="control-group">
                         <div><label for="numTracksInput">Number of Tracks:</label></div>
@@ -500,18 +441,23 @@
                     <div class="control-group mt-2">
                         <button id="musicModeNextButton" class="push-button w-full" title="Manually trigger the next generative step.">Next</button>
                     </div>
-                    <div class="control-group mt-2">
-                        <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Log</label>
-                        <div id="musicModeLog"></div>
-                    </div>
                 </div>
                 <div id="channelVolumesWrapper" class="synth-panel flex-grow">
                     <h2 class="text-base font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
                     <div id="channelVolumesContainer" class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-x-3 gap-y-1">
                     </div>
                 </div>
-                <div id="hintsPanel" class="synth-panel lg:w-1/4 hidden lg:flex">
-                    <div id="hintContent" class="m-auto"></div>
+                <div id="hintsPanel" class="synth-panel lg:w-1/4 hidden lg:flex flex-col p-2">
+                    <div class="control-group">
+                        <label class="font-bold text-xs uppercase mb-1" style="font-family: 'Orbitron', sans-serif;">Helpful Hint</label>
+                        <div id="hintContent" class="p-2 text-center text-xs h-24 bg-black bg-opacity-20 rounded flex items-center justify-center">
+                            <!-- Hint text goes here -->
+                        </div>
+                    </div>
+                    <div id="logSection" class="control-group mt-2 flex-grow flex flex-col">
+                        <label class="font-bold text-xs uppercase mb-1" style="font-family: 'Orbitron', sans-serif;">Music Mode Log</label>
+                        <div id="musicModeLog"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -530,7 +476,6 @@
 <script>
     // --- DOM Elements ---
     const playStopButton = document.getElementById('playStopButton');
-    const defaultSettingsButton = document.getElementById('defaultSettingsButton');
     const masterRandomizeButton = document.getElementById('masterRandomizeButton');
     const saveStateButton = document.getElementById('saveStateButton');
     const loadStateButton = document.getElementById('loadStateButton');
@@ -539,10 +484,10 @@
     const lockStepsCheckbox = document.getElementById('lockStepsCheckbox');
     const bpmSlider = document.getElementById('bpmSlider');
     const bpmValue = document.getElementById('bpmValue');
-    const bpmSliderLearnCc = document.getElementById('bpmSliderLearnCc');
+    document.getElementById('bpmSliderLearnCc');
     const masterVolumeSlider = document.getElementById('masterVolumeSlider');
     const masterVolumeValue = document.getElementById('masterVolumeValue');
-    const masterVolumeLearnCc = document.getElementById('masterVolumeLearnCc');
+    document.getElementById('masterVolumeLearnCc');
     const midiOutSelect = document.getElementById('midiOutSelect');
     const midiChannelSelect = document.getElementById('midiChannelSelect');
     const sequencerWrapperPanel = document.getElementById('sequencerWrapperPanel');
@@ -551,8 +496,8 @@
     const userIdDisplay = document.getElementById('userIdDisplay');
     const statusBar = document.getElementById('statusBar');
     const statusBarContent = document.getElementById('statusBar-content');
-    const masterControlPanel = document.getElementById('masterControlPanel');
-    const channelVolumesWrapper = document.getElementById('channelVolumesWrapper');
+    document.getElementById('masterControlPanel');
+    document.getElementById('channelVolumesWrapper');
     // Music Mode Elements
     const musicModeToggle = document.getElementById('musicModeToggle');
     const randomIntervalSlider = document.getElementById('randomIntervalSlider');
@@ -590,9 +535,6 @@
     let autosaveTimeout = null;
     let allowAutosave = true;
     let logClearTimeout = null;
-    let messageInterval = null;
-
-
     // --- Harmony Engine ---
     const SCALES = {
         'Major': [0, 2, 4, 5, 7, 9, 11], 'Minor': [0, 2, 3, 5, 7, 8, 10],
@@ -752,7 +694,7 @@
 
         createChannelVolumeUI();
         sequencerTracksContainer.innerHTML = '';
-        musicModeLog.innerHTML = '';
+        if (musicModeLog) musicModeLog.innerHTML = '';
 
         transportLoops.forEach(l => l && l.dispose());
         transportLoops = [];
@@ -1064,10 +1006,14 @@
             flashControl(track.ui.noteInput);
             changes.push(`N: ${oldNote}→${newNote}`);
         }
-        if (shouldLog && changes.length > 0) {
-            logChange(`T${track.id + 1}: ${changes.join(', ')}`);
+
+        const changesString = changes.length > 0 ? `T${track.id + 1}: ${changes.join(', ')}` : null;
+
+        if (shouldLog && changesString) {
+            logChange(changesString);
         }
         updateTrackPattern(track);
+        return changesString;
     }
 
     function flashControl(element) {
@@ -1076,41 +1022,6 @@
             element.classList.remove('control-flash');
         }, 500);
     }
-
-    defaultSettingsButton.addEventListener('click', async () => {
-        allowAutosave = false;
-        try {
-            const defaults = {
-                bpm: 120,
-                tracks: [
-                    {p:4,s:16,r:0,n:"C3", v: 100, a: true, c: 'global'},
-                    {p:3,s:16,r:2,n:"E3", v: 100, a: true, c: 'global'},
-                    {p:5,s:16,r:4,n:"G3", v: 100, a: true, c: 'global'},
-                    {p:7,s:16,r:0,n:"B3", v: 90, a: true, c: 'global'}
-                ],
-                musicMode: {
-                    enabled: true,
-                    interval: 4,
-                    randomize: { note: true, pulses: true, rotation: true, scale: true },
-                    multiTrack: true
-                }
-            };
-            const defaultState = {
-                numTracks: defaults.tracks.length,
-                bpm: defaults.bpm,
-                tracks: defaults.tracks.map(d => ({
-                    pulses: d.p, steps: d.s, rotation: d.r, note: Tone.Frequency(d.n).toMidi(),
-                    velocity: d.v, active: d.a, channelOverride: d.c
-                })),
-                musicMode: defaults.musicMode
-            };
-            await applyState(defaultState, Tone.Transport.state === 'started');
-            showStatusMessage("Defaults loaded.");
-        } finally {
-            setTimeout(() => { allowAutosave = true; }, 100);
-        }
-    });
-
 
     lockStepsCheckbox.addEventListener('change', (e) => {
         stepsLocked = e.target.checked;
@@ -1374,15 +1285,16 @@
 
     function logChange(message) {
         if (logClearTimeout) clearTimeout(logClearTimeout);
+        if (!musicModeLog) return;
         const entry = document.createElement('div');
         entry.textContent = message;
         musicModeLog.prepend(entry);
-        while (musicModeLog.children.length > 6) {
+        while (musicModeLog.children.length > 10) {
             musicModeLog.removeChild(musicModeLog.lastChild);
         }
         logClearTimeout = setTimeout(() => {
-            musicModeLog.innerHTML = '';
-        }, 5000);
+            if(musicModeLog) musicModeLog.innerHTML = '';
+        }, 8000);
     }
 
     function triggerGenerativeStep() {
@@ -1401,11 +1313,24 @@
         };
 
         if (multiTrackRandomToggle.checked) {
+            // For multi-track, we log only if the scale wasn't changed, to avoid double-logging.
             if (!randomizeScale) {
-                logChange("Multi-track randomize");
+                let allChanges = [];
+                activeTracks.forEach(track => {
+                    const changes = randomizeTrackParameters(track, options, false); // Log is handled here, so pass false
+                    if (changes) {
+                        allChanges.push(changes);
+                    }
+                });
+                if (allChanges.length > 0) {
+                    logChange(`Multi-Rand: ${allChanges.join(' | ')}`);
+                }
+            } else {
+                // If scale was changed, the scale change itself is the log entry. Just randomize tracks.
+                activeTracks.forEach(track => randomizeTrackParameters(track, options, false));
             }
-            activeTracks.forEach(track => randomizeTrackParameters(track, options, false));
         } else {
+            // For single track, the internal logging is fine.
             const trackToRandomize = activeTracks[Math.floor(Math.random() * activeTracks.length)];
             randomizeTrackParameters(trackToRandomize, options, true);
         }
@@ -1553,8 +1478,37 @@
             await applyState(JSON.parse(savedStateJSON), false);
         } else {
             setHarmoniousRandomizationScale(); // Set an initial scale
-            await applyState({}, false);
-            await defaultSettingsButton.click();
+            // Manually apply default state on first load since button is removed
+            allowAutosave = false;
+            try {
+                const defaults = {
+                    bpm: 120,
+                    tracks: [
+                        {p:4,s:16,r:0,n:"C3", v: 100, a: true, c: 'global'},
+                        {p:3,s:16,r:2,n:"E3", v: 100, a: true, c: 'global'},
+                        {p:5,s:16,r:4,n:"G3", v: 100, a: true, c: 'global'},
+                        {p:7,s:16,r:0,n:"B3", v: 90, a: true, c: 'global'}
+                    ],
+                    musicMode: {
+                        enabled: true,
+                        interval: 4,
+                        randomize: { note: true, pulses: true, rotation: true, scale: true },
+                        multiTrack: true
+                    }
+                };
+                const defaultState = {
+                    numTracks: defaults.tracks.length,
+                    bpm: defaults.bpm,
+                    tracks: defaults.tracks.map(d => ({
+                        pulses: d.p, steps: d.s, rotation: d.r, note: Tone.Frequency(d.n).toMidi(),
+                        velocity: d.v, active: d.a, channelOverride: d.c
+                    })),
+                    musicMode: defaults.musicMode
+                };
+                await applyState(defaultState, Tone.Transport.state === 'started');
+            } finally {
+                setTimeout(() => { allowAutosave = true; }, 100);
+            }
         }
 
         await setupMIDI();
