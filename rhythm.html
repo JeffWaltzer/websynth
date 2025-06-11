@@ -960,6 +960,11 @@
         // Apply Music Mode settings
         const musicModeState = state ? state.musicMode : null;
         musicModeToggle.checked = musicModeState ? musicModeState.enabled : false;
+
+        // --- FIX ---
+        // Also toggle the body class to ensure the panel visibility is correct on load
+        document.body.classList.toggle('music-mode-active', musicModeToggle.checked);
+
         // Update background class based on music mode state
         appBackground.classList.toggle('bg-music-mode', musicModeToggle.checked);
         appBackground.classList.toggle('bg-default', !musicModeToggle.checked);
