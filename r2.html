@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhythm King 77</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        :root {
+            --primary-bg: #2a2a2a;
+            --secondary-bg: #1c1c1c;
+            --panel-bg: #3a3a3a;
+            --accent-color: #f0ad4e;
+            --accent-color-darker: #d99834;
+            --text-color: #e0e0e0;
+            --text-muted: #999;
+            --led-off: #4a4a4a;
+            --led-on: #f0ad4e;
+            --led-active: #ffffff;
+            --green-accent: #5cb85c;
+            --red-accent: #d9534f;
+            --blue-accent: #4e95f0;
+        }
+
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0 rgba(240, 173, 78, 0.6); }
+            70% { box-shadow: 0 0 10px 15px rgba(240, 173, 78, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(240, 173, 78, 0); }
+        }
+
+        @keyframes subtle-pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            overscroll-behavior: none;
+        }
+
+        .music-mode-bg {
+            background: linear-gradient(-45deg, #2a2a2a, #3a2a3a, #2a2a3a, #2a3a3a);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #appContainer {
+            border: 2px solid var(--secondary-bg);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            background-color: var(--secondary-bg);
+        }
+
+        h1, h2 {
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+        }
+
+        .synth-panel {
+            background-color: var(--panel-bg);
+            border: 1px solid #111;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .synth-panel.pulsing {
+            animation: pulse-animation 0.5s ease-out;
+        }
+
+        .control-panel {
+            background-color: var(--panel-bg);
+            border: 1px solid #111;
+        }
+
+        .slider-container input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: var(--primary-bg);
+            outline: none;
+            border-radius: 4px;
+            border: 1px solid #111;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 24px;
+            background: var(--accent-color);
+            cursor: pointer;
+            border-radius: 2px;
+            border: 1px solid var(--secondary-bg);
+        }
+
+        .slider-container input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 24px;
+            background: var(--accent-color);
+            cursor: pointer;
+            border-radius: 2px;
+            border: 1px solid var(--secondary-bg);
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: var(--primary-bg);
+            font-weight: bold;
+            border: 1px solid var(--accent-color-darker);
+            transition: all 0.1s ease-in;
+        }
+        .btn:hover { background-color: var(--accent-color-darker); }
+        .btn:active { transform: translateY(1px); }
+
+        .btn-small {
+            padding: 2px 6px;
+            font-size: 0.8rem;
+        }
+
+        .btn-toggle.active { background-color: var(--green-accent); border-color: #4a9a4a; color: white; }
+        .btn-play.active { background-color: var(--red-accent); border-color: #a9433f; }
+        .btn-learn { background-color: #555; border-color: #333; color: white; width: 24px; height: 24px; }
+        .btn-learn.learning { background-color: var(--blue-accent); animation: subtle-pulse 1.5s infinite; }
+        .btn-learn.mapped { background-color: var(--green-accent); border-color: #4a9a4a;}
+
+        input[type="text"], input[type="number"], select {
+            background-color: var(--primary-bg);
+            border: 1px solid #111;
+            color: var(--text-color);
+            padding: 4px;
+            border-radius: 2px;
+        }
+
+        input:focus, select:focus {
+            outline: 1px solid var(--accent-color);
+        }
+
+        .pattern-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: var(--led-off);
+            border: 1px solid #111;
+            transition: all 0.1s;
+        }
+        .pattern-dot.on { background-color: var(--led-on); }
+        .pattern-dot.active {
+            background-color: var(--led-active);
+            transform: scale(1.2);
+            box-shadow: 0 0 8px var(--led-active);
+        }
+
+        #statusBar {
+            background-color: #1a1a1a;
+            color: var(--text-muted);
+            border-top: 1px solid #111;
+        }
+
+        .num-input-wrapper button {
+            background-color: #444;
+            color: var(--text-color);
+            border: 1px solid #111;
+        }
+
+        .num-input-wrapper button:hover { background-color: #555; }
+    </style>
+</head>
+
+<body class="p-2 md:p-4">
+
+<!-- Main Application Container -->
+<div id="appContainer" class="max-w-7xl mx-auto rounded-lg overflow-hidden">
+
+    <!-- Header -->
+    <header class="p-4 text-center bg-black bg-opacity-20">
+        <h1 class="text-4xl text-accent-color tracking-widest">RHYTHM KING 77</h1>
+        <p class="text-text-muted text-sm">EUCLIDEAN MIDI SEQUENCER</p>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="mainContent" class="p-2 md:p-4">
+
+        <!-- Sequencer Tracks Panel -->
+        <div id="sequencerTracksPanel" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
+            <!-- Track Panels will be dynamically inserted here -->
+        </div>
+
+        <!-- Bottom Panels Container -->
+        <div id="bottomPanelsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+
+            <!-- Master Control Panel (Spans 2 cols on lg screens) -->
+            <div class="control-panel p-4 rounded-md lg:col-span-2">
+                <h2 class="text-lg text-accent-color mb-3">MASTER</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Toolbar -->
+                    <div class="flex items-center space-x-2">
+                        <button id="playStopBtn" class="btn text-2xl px-4 py-2" title="Play/Stop">&#x25B6;</button>
+                        <button id="saveStateBtn" class="btn text-2xl px-4 py-2" title="Save State">&#128190;</button>
+                        <button id="loadStateBtn" class="btn text-2xl px-4 py-2" title="Load State">&#128193;</button>
+                    </div>
+
+                    <!-- Track Count -->
+                    <div class="flex flex-col items-center num-input-wrapper">
+                        <label class="text-xs text-text-muted">TRACKS</label>
+                        <div class="flex items-center space-x-0">
+                            <button id="numTracksDecrement" class="px-3 py-1 rounded-l">-</button>
+                            <input type="number" id="numTracksInput" class="w-16 text-center appearance-none" min="1" max="12">
+                            <button id="numTracksIncrement" class="px-3 py-1 rounded-r">+</button>
+                        </div>
+                    </div>
+
+                    <!-- BPM -->
+                    <div class="slider-container col-span-2">
+                        <div class="flex justify-between items-center text-xs text-text-muted">
+                            <label>BPM</label>
+                            <div class="flex items-center space-x-2">
+                                <button class="btn-learn" data-learn-target="bpm">L</button>
+                                <span id="bpmValue">120</span>
+                            </div>
+                        </div>
+                        <input type="range" id="bpmSlider" min="20" max="240" value="45">
+                    </div>
+
+                    <!-- Master Volume -->
+                    <div class="slider-container col-span-2">
+                        <div class="flex justify-between items-center text-xs text-text-muted">
+                            <label>MASTER VOL (CC#7)</label>
+                            <div class="flex items-center space-x-2">
+                                <button class="btn-learn" data-learn-target="masterVolume">L</button>
+                                <span id="masterVolumeValue">100</span>
+                            </div>
+                        </div>
+                        <input type="range" id="masterVolumeSlider" min="0" max="127" value="100">
+                    </div>
+
+                    <!-- Global Toggles -->
+                    <div class="space-y-2">
+                        <h3 class="text-sm text-text-muted mt-2">GLOBAL</h3>
+                        <label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="musicModeToggle"><span>Music Mode</span></label>
+                        <label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="lockAllStepsToggle"><span>Lock All Steps</span></label>
+                    </div>
+
+                    <!-- View Toggles -->
+                    <div class="space-y-2">
+                        <h3 class="text-sm text-text-muted mt-2">VIEWS</h3>
+                        <label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="viewMidiToggle" data-panel="midiPanel" checked> <span>MIDI</span></label>
+                        <label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="viewRandomizationToggle" data-panel="randomizationSettingsContainer" checked> <span>Random</span></label>
+                        <label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="viewVolumesToggle" data-panel="channelVolumesWrapper" checked> <span>Volumes</span></label>
+                        <label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="viewHintsToggle" data-panel="hintsPanel"> <span>Hints</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MIDI Setup Panel -->
+            <div id="midiPanel" class="control-panel p-4 rounded-md">
+                <h2 class="text-lg text-accent-color mb-3">MIDI SETUP</h2>
+                <div class="space-y-3">
+                    <div class="flex space-x-2">
+                        <button id="resetMidiBtn" class="btn btn-small flex-grow">Reset MIDI</button>
+                        <button id="panicBtn" class="btn btn-small flex-grow bg-red-accent border-red-800">Panic</button>
+                    </div>
+                    <div>
+                        <label class="text-xs text-text-muted">OUTPUT DEVICE</label>
+                        <select id="midiOutDeviceSelect" class="w-full"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-text-muted">GLOBAL MIDI CHANNEL</label>
+                        <select id="globalMidiChannelSelect" class="w-full"></select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Randomization Settings Panel -->
+            <div id="randomizationSettingsContainer" class="control-panel p-4 rounded-md">
+                <h2 class="text-lg text-accent-color mb-3">RANDOMIZATION</h2>
+                <button id="randomizeAllBtn" class="btn w-full mb-3">Randomize All Active</button>
+                <div>
+                    <label class="text-xs text-text-muted">BASE OCTAVE</label>
+                    <div id="octaveSelector" class="grid grid-cols-5 gap-1 text-sm">
+                        <!-- Radio buttons for octaves will be here -->
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <label class="text-xs text-text-muted">RANDOMIZE OPTIONS</label>
+                    <div class="grid grid-cols-2 gap-x-4 text-sm">
+                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" data-random-option="notes" checked><span>Notes</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" data-random-option="pulses" checked><span>Pulses</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" data-random-option="rotation" checked><span>Rotation</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" data-random-option="velocity" checked><span>Velocity</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" data-random-option="scale"><span>Scale</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Music Mode / Channel Volumes / Hints Panels (Wrapper) -->
+            <div class="lg:col-span-1 grid grid-flow-row gap-4">
+                <!-- Music Mode Panel -->
+                <div id="musicModePanel" class="control-panel p-4 rounded-md hidden">
+                    <h2 class="text-lg text-accent-color mb-3">MUSIC MODE</h2>
+                    <div class="slider-container mb-2">
+                        <div class="flex justify-between items-center text-xs text-text-muted">
+                            <label>INTERVAL (BARS)</label>
+                            <span id="musicModeIntervalValue">4</span>
+                        </div>
+                        <input type="range" id="musicModeIntervalSlider" min="1" max="16" value="4">
+                    </div>
+                    <label class="flex items-center space-x-2 text-sm mb-2 cursor-pointer"><input type="checkbox" id="multiTrackRandomToggle"><span>Multi-Track Random</span></label>
+                    <button id="triggerNextBtn" class="btn btn-small w-full">Trigger Next</button>
+                </div>
+
+                <!-- Channel Volumes Panel -->
+                <div id="channelVolumesWrapper" class="control-panel p-4 rounded-md">
+                    <h2 class="text-lg text-accent-color mb-3">CH VOLUMES</h2>
+                    <div id="channelVolumesContainer" class="grid grid-cols-4 gap-2">
+                        <!-- Channel volume sliders will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Hints Panel -->
+                <div id="hintsPanel" class="control-panel p-4 rounded-md hidden">
+                    <h2 class="text-lg text-accent-color mb-3">HINTS</h2>
+                    <div id="hintContent" class="text-sm text-text-muted italic"></div>
+                    <div id="musicModeLog" class="hidden mt-2 max-h-24 overflow-y-auto text-xs border-t border-gray-600 pt-2">
+                        <h3 class="text-text-muted text-sm font-bold">Log:</h3>
+                        <div id="musicModeLogContent"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Status Bar -->
+    <footer id="statusBar" class="px-4 py-1 text-xs text-right">
+        <span>Rhythm King 77 v1.0 | Ready.</span>
+    </footer>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- CONSTANTS & CONFIG --- //
+        const MAX_TRACKS = 12;
+        const MANUAL_SAVE_KEY = 'rhythmKing77_manualSave_v15';
+        const AUTOSAVE_KEY = 'rhythmKing77_autoSave_v15';
+        const SCALES = {
+            'Major': [0, 2, 4, 5, 7, 9, 11],
+            'Minor': [0, 2, 3, 5, 7, 8, 10],
+            'Dorian': [0, 2, 3, 5, 7, 9, 10],
+            'Phrygian': [0, 1, 3, 5, 7, 8, 10],
+            'Lydian': [0, 2, 4, 6, 7, 9, 11],
+            'Mixolydian': [0, 2, 4, 5, 7, 9, 10],
+            'Locrian': [0, 1, 3, 5, 6, 8, 10],
+            'Pentatonic Major': [0, 2, 4, 7, 9],
+            'Pentatonic Minor': [0, 3, 5, 7, 10],
+            'Blues': [0, 3, 5, 6, 7, 10],
+            'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        };
+        const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const HINTS = [
+            "Use the 'L' buttons to map MIDI CCs from your controller.",
+            "In Music Mode, randomization happens automatically every few bars.",
+            "You can 'learn' a track's note and channel by pressing its note 'L' button and playing a note on your MIDI keyboard.",
+            "'Lock All Steps' makes the steps slider control all tracks at once.",
+            "Save your work! Use the floppy disk icon to save the current state.",
+            "The Panic button sends 'All Notes Off' messages on all channels.",
+            "Right-click a slider to reset it to its default value.",
+            "Hold the +/- buttons to quickly change values."
+        ];
+        const VIEW_PANEL_MAP = {
+            'viewMidiToggle': 'midiPanel',
+            'viewRandomizationToggle': 'randomizationSettingsContainer',
+            'viewVolumesToggle': 'channelVolumesWrapper',
+            'viewHintsToggle': 'hintsPanel'
+        };
+
+        // --- DOM CACHING --- //
+        const dom = {
+            get: (id) => document.getElementById(id),
+            query: (sel) => document.querySelector(sel),
+            queryAll: (sel) => document.querySelectorAll(sel),
+        };
+
+        const elements = {
+            body: document.body,
+            appContainer: dom.get('appContainer'),
+            sequencerTracksPanel: dom.get('sequencerTracksPanel'),
+            playStopBtn: dom.get('playStopBtn'),
+            saveStateBtn: dom.get('saveStateBtn'),
+            loadStateBtn: dom.get('loadStateBtn'),
+            numTracksInput: dom.get('numTracksInput'),
+            numTracksDecrement: dom.get('numTracksDecrement'),
+            numTracksIncrement: dom.get('numTracksIncrement'),
+            bpmSlider: dom.get('bpmSlider'),
+            bpmValue: dom.get('bpmValue'),
+            masterVolumeSlider: dom.get('masterVolumeSlider'),
+            masterVolumeValue: dom.get('masterVolumeValue'),
+            musicModeToggle: dom.get('musicModeToggle'),
+            lockAllStepsToggle: dom.get('lockAllStepsToggle'),
+            midiOutDeviceSelect: dom.get('midiOutDeviceSelect'),
+            globalMidiChannelSelect: dom.get('globalMidiChannelSelect'),
+            resetMidiBtn: dom.get('resetMidiBtn'),
+            panicBtn: dom.get('panicBtn'),
+            randomizeAllBtn: dom.get('randomizeAllBtn'),
+            octaveSelector: dom.get('octaveSelector'),
+            randomOptionsContainer: dom.get('randomizationSettingsContainer'),
+            musicModePanel: dom.get('musicModePanel'),
+            musicModeIntervalSlider: dom.get('musicModeIntervalSlider'),
+            musicModeIntervalValue: dom.get('musicModeIntervalValue'),
+            multiTrackRandomToggle: dom.get('multiTrackRandomToggle'),
+            triggerNextBtn: dom.get('triggerNextBtn'),
+            channelVolumesContainer: dom.get('channelVolumesContainer'),
+            statusBar: dom.get('statusBar'),
+            hintsPanel: dom.get('hintsPanel'),
+            hintContent: dom.get('hintContent'),
+            musicModeLog: dom.get('musicModeLog'),
+            musicModeLogContent: dom.get('musicModeLogContent'),
+        };
+
+        // --- STATE MANAGEMENT --- //
+        let state;
+        let sequences = [];
+        let activeNotes = new Map();
+        let musicModeLoop;
+        let hintInterval;
+
+        function getDefaultTrackState(trackIndex) {
+            return {
+                on: false,
+                steps: 16,
+                pulses: 4,
+                rotation: 0,
+                velocity: 100,
+                note: `C${3 + Math.floor(trackIndex / 4)}`,
+                channel: 'global', // 'global' or 1-16
+            };
+        }
+
+        function getDefaultState() {
+            return {
+                numTracks: 4,
+                bpm: 45,
+                masterVolume: 100,
+                globalMidiChannel: 1,
+                selectedMidiOutputId: null,
+                musicMode: {
+                    on: false,
+                    interval: 4, // in bars
+                    multiTrack: false,
+                    currentScaleName: 'Minor',
+                    baseOctave: 3
+                },
+                randomizeOptions: {
+                    notes: true,
+                    pulses: true,
+                    rotation: true,
+                    velocity: true,
+                    scale: false
+                },
+                viewToggles: {
+                    midiPanel: true,
+                    randomizationSettingsContainer: true,
+                    channelVolumesWrapper: true,
+                    hintsPanel: false,
+                },
+                globalLockedSteps: 16,
+                isLockAllStepsOn: false,
+                tracks: Array.from({ length: MAX_TRACKS }, (_, i) => getDefaultTrackState(i)),
+                channelVolumes: Array.from({ length: 16 }, () => 100),
+                ccMap: {}, // e.g. { '60_1': 'bpm', '61_1': 'track.0.steps' }
+                midiLearning: {
+                    active: false,
+                    type: null, // 'cc' or 'note'
+                    target: null // e.g., 'bpm', 'track.0.steps'
+                },
+            };
+        }
+
+        // --- CORE LOGIC --- //
+
+        function init() {
+            console.log("Initializing Rhythm King 77...");
+            loadState(AUTOSAVE_KEY, true); // Load last session or default
+            midiManager.init();
+            setupEventListeners();
+            createInitialUI();
+            updateUI();
+            startAutosave();
+            startHints();
+            // Don't start transport until user interaction
+        }
+
+        function createInitialUI() {
+            // Populate global channel selector
+            for (let i = 1; i <= 16; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Channel ${i}`;
+                elements.globalMidiChannelSelect.appendChild(option);
+            }
+
+            // Populate channel volume sliders
+            for (let i = 1; i <= 16; i++) {
+                const volContainer = document.createElement('div');
+                volContainer.className = 'flex flex-col items-center';
+                volContainer.innerHTML = `
+                    <label class="text-xs text-text-muted">${i}</label>
+                    <div class="flex items-center space-x-1">
+                        <button class="btn-learn text-xs" data-learn-target="channelVolume.${i-1}">L</button>
+                        <input type="range" class="w-12 h-1" data-ch-vol-slider="${i-1}" min="0" max="127" value="100" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical; appearance: slider-vertical; height: 50px; width: 8px;">
+                    </div>
+                `;
+                elements.channelVolumesContainer.appendChild(volContainer);
+            }
+
+            // Populate octave selector
+            for (let i = 0; i < 10; i++) {
+                const label = document.createElement('label');
+                label.className = 'flex items-center space-x-1 cursor-pointer';
+                label.innerHTML = `<input type="radio" name="baseOctave" value="${i}"><span>${i}</span>`;
+                elements.octaveSelector.appendChild(label);
+            }
+        }
+
+        function deepMerge(target, source) {
+            const output = { ...target };
+            if (isObject(target) && isObject(source)) {
+                Object.keys(source).forEach(key => {
+                    if (isObject(source[key])) {
+                        if (!(key in target))
+                            Object.assign(output, { [key]: source[key] });
+                        else
+                            output[key] = deepMerge(target[key], source[key]);
+                    } else {
+                        Object.assign(output, { [key]: source[key] });
+                    }
+                });
+            }
+            return output;
+        }
+
+        function isObject(item) {
+            return (item && typeof item === 'object' && !Array.isArray(item));
+        }
+
+        function loadState(key, isAutoLoad = false) {
+            try {
+                const savedStateJSON = localStorage.getItem(key);
+                if (savedStateJSON) {
+                    const savedState = JSON.parse(savedStateJSON);
+                    state = deepMerge(getDefaultState(), savedState);
+                    updateStatus(isAutoLoad ? 'Autosaved session restored.' : 'State loaded successfully.', 'success');
+                } else {
+                    state = getDefaultState();
+                    if (!isAutoLoad) updateStatus('No saved state found.', 'warn');
+                }
+            } catch (e) {
+                console.error('Failed to load state:', e);
+                state = getDefaultState();
+                updateStatus('Error loading state. Using defaults.', 'error');
+            }
+            // After loading state, we need to rebuild the world
+            uiController.updateTrackPanelCount();
+            musicModeController.updateLoop();
+            updateUI();
+        }
+
+        function saveState(key) {
+            try {
+                localStorage.setItem(key, JSON.stringify(state));
+                return true;
+            } catch (e) {
+                console.error('Failed to save state:', e);
+                return false;
+            }
+        }
+
+        function startAutosave() {
+            setInterval(() => {
+                if (saveState(AUTOSAVE_KEY)) {
+                    // console.log("Autosaved state.");
+                }
+            }, 5000);
+        }
+
+        function startHints() {
+            if (hintInterval) clearInterval(hintInterval);
+            const showHint = () => {
+                const randomIndex = Math.floor(Math.random() * HINTS.length);
+                elements.hintContent.textContent = HINTS[randomIndex];
+            };
+            showHint();
+            hintInterval = setInterval(showHint, 20000);
+        }
+
+        function updateStatus(message, type = 'info') {
+            elements.statusBar.textContent = message;
+            elements.statusBar.style.color = type === 'success' ? 'var(--green-accent)' : type === 'error' ? 'var(--red-accent)' : 'var(--text-muted)';
+            setTimeout(() => {
+                elements.statusBar.textContent = `Rhythm King 77 v1.0 | Ready.`;
+                elements.statusBar.style.color = 'var(--text-muted)';
+            }, 4000);
+        }
+
+        // --- MIDI MANAGER --- //
+        const midiManager = {
+            midiAccess: null,
+            outputs: new Map(),
+            activeOutput: null,
+
+            init() {
+                if (navigator.requestMIDIAccess) {
+                    navigator.requestMIDIAccess({ sysex: false })
+                        .then(this.onMIDISuccess.bind(this), this.onMIDIFailure.bind(this));
+                } else {
+                    updateStatus("Web MIDI API not supported in this browser.", "error");
+                }
+            },
+
+            onMIDISuccess(midiAccess) {
+                this.midiAccess = midiAccess;
+                this.midiAccess.onstatechange = this.onStateChange.bind(this);
+                this.populateDeviceList();
+                this.listenForInputs();
+                updateStatus("MIDI ready.", "success");
+            },
+
+            onMIDIFailure() {
+                updateStatus("Could not access MIDI devices.", "error");
+            },
+
+            onStateChange() {
+                updateStatus("MIDI device state changed. Repopulating list.", "warn");
+                this.populateDeviceList();
+            },
+
+            populateDeviceList() {
+                this.outputs.clear();
+                elements.midiOutDeviceSelect.innerHTML = '<option value="">Select MIDI Output</option>';
+
+                const outputs = this.midiAccess.outputs.values();
+                for (let output of outputs) {
+                    this.outputs.set(output.id, output);
+                    const option = document.createElement('option');
+                    option.value = output.id;
+                    option.textContent = output.name;
+                    elements.midiOutDeviceSelect.appendChild(option);
+                }
+
+                // Reselect previous device if available
+                if (state.selectedMidiOutputId && this.outputs.has(state.selectedMidiOutputId)) {
+                    elements.midiOutDeviceSelect.value = state.selectedMidiOutputId;
+                    this.activeOutput = this.outputs.get(state.selectedMidiOutputId);
+                } else {
+                    this.activeOutput = null;
+                    state.selectedMidiOutputId = null;
+                }
+            },
+
+            selectOutput(id) {
+                this.activeOutput = this.outputs.get(id) || null;
+                state.selectedMidiOutputId = id;
+                updateStatus(this.activeOutput ? `Output set to ${this.activeOutput.name}` : 'No MIDI output selected.', 'info');
+            },
+
+            listenForInputs() {
+                for (let input of this.midiAccess.inputs.values()) {
+                    input.onmidimessage = this.onMIDIMessage.bind(this);
+                }
+            },
+
+            onMIDIMessage(message) {
+                const [command, data1, data2] = message.data;
+                const channel = (command & 0x0F) + 1;
+                const type = command & 0xF0;
+
+                // Handle CC Learn
+                if (type === 0xB0) { // CC message
+                    if (state.midiLearning.active && state.midiLearning.type === 'cc') {
+                        const ccNumber = data1;
+                        const target = state.midiLearning.target;
+                        const mapKey = `${ccNumber}_${channel}`;
+
+                        // Remove old mapping if it exists
+                        const oldMapping = Object.entries(state.ccMap).find(([key, val]) => val === target);
+                        if(oldMapping) delete state.ccMap[oldMapping[0]];
+
+                        state.ccMap[mapKey] = target;
+                        updateStatus(`Mapped CC ${ccNumber} (Ch ${channel}) to ${target}.`, 'success');
+                        state.midiLearning.active = false;
+                        state.midiLearning.target = null;
+                        updateUI();
+                        return; // Stop processing to avoid feedback loops
+                    }
+
+                    // Handle learned CC control
+                    const mapKey = `${data1}_${channel}`;
+                    const target = state.ccMap[mapKey];
+                    if (target) {
+                        const value = data2;
+                        handleLearnedCC(target, value);
+                    }
+                }
+
+                // Handle Note Learn
+                if (type === 0x90 && data2 > 0) { // Note On
+                    if (state.midiLearning.active && state.midiLearning.type === 'note') {
+                        const targetTrackIndex = state.midiLearning.target;
+                        const noteName = midiUtils.midiNoteToName(data1);
+                        state.tracks[targetTrackIndex].note = noteName;
+                        state.tracks[targetTrackIndex].channel = channel;
+                        updateStatus(`Track ${targetTrackIndex+1} set to Note ${noteName} on Ch ${channel}.`, 'success');
+                        state.midiLearning.active = false;
+                        state.midiLearning.target = null;
+                        updateUI();
+                    }
+                }
+            },
+
+            sendNoteOn(note, velocity, channel) {
+                if (!this.activeOutput) return;
+                const noteNumber = midiUtils.nameToMidiNote(note);
+                if (noteNumber === null) return;
+
+                const ch = parseInt(channel, 10);
+                if (isNaN(ch) || ch < 1 || ch > 16) return;
+
+                const noteOnMessage = [0x90 | (ch - 1), noteNumber, velocity];
+                this.activeOutput.send(noteOnMessage);
+
+                // Track active notes for panic/note-off
+                if (!activeNotes.has(ch)) activeNotes.set(ch, new Set());
+                activeNotes.get(ch).add(noteNumber);
+            },
+
+            sendNoteOff(note, channel) {
+                if (!this.activeOutput) return;
+                const noteNumber = midiUtils.nameToMidiNote(note);
+                if (noteNumber === null) return;
+
+                const ch = parseInt(channel, 10);
+                if (isNaN(ch) || ch < 1 || ch > 16) return;
+
+                const noteOffMessage = [0x80 | (ch - 1), noteNumber, 0];
+                this.activeOutput.send(noteOffMessage);
+
+                if (activeNotes.has(ch)) {
+                    activeNotes.get(ch).delete(noteNumber);
+                }
+            },
+
+            sendCC(ccNumber, value, channel) {
+                if (!this.activeOutput) return;
+                const ch = parseInt(channel, 10);
+                if (isNaN(ch) || ch < 1 || ch > 16) return;
+
+                const ccMessage = [0xB0 | (ch - 1), ccNumber, value];
+                this.activeOutput.send(ccMessage);
+            },
+
+            panic() {
+                console.log("PANIC!");
+                // Send CC 123 (All Notes Off) and 120 (All Sound Off) on all channels
+                for (let i = 1; i <= 16; i++) {
+                    this.sendCC(123, 0, i);
+                    this.sendCC(120, 0, i);
+                }
+
+                // Also send explicit note-offs for any tracked notes
+                for (const [channel, notes] of activeNotes.entries()) {
+                    for (const noteNumber of notes) {
+                        const noteOffMessage = [0x80 | (channel - 1), noteNumber, 0];
+                        if(this.activeOutput) this.activeOutput.send(noteOffMessage);
+                    }
+                }
+                activeNotes.clear();
+                updateStatus("Panic: All notes off signal sent.", "warn");
+            }
+        };
+
+        // --- SEQUENCER ENGINE --- //
+        const sequencer = {
+            isPlaying: false,
+
+            togglePlayStop() {
+                if (Tone.context.state !== 'running') {
+                    Tone.context.resume();
+                }
+                if (this.isPlaying) {
+                    Tone.Transport.stop();
+                    midiManager.panic(); // Ensure no hanging notes on stop
+                    this.isPlaying = false;
+                } else {
+                    Tone.Transport.start();
+                    this.isPlaying = true;
+                }
+                updateUI();
+            },
+
+            setBpm(bpm) {
+                state.bpm = bpm;
+                Tone.Transport.bpm.value = bpm;
+                updateUI();
+            },
+
+            rebuildAllSequences() {
+                sequences.forEach(seq => seq.dispose());
+                sequences = [];
+
+                for (let i = 0; i < state.numTracks; i++) {
+                    this.createSequence(i);
+                }
+
+                if (this.isPlaying) {
+                    sequences.forEach(seq => seq.start(0));
+                }
+            },
+
+            updateTrackSequence(trackIndex) {
+                if (sequences[trackIndex]) {
+                    sequences[trackIndex].dispose();
+                }
+                this.createSequence(trackIndex);
+                if (this.isPlaying) {
+                    sequences[trackIndex].start(0);
+                }
+            },
+
+            createSequence(trackIndex) {
+                const track = state.tracks[trackIndex];
+                const pattern = this.getRotatedPattern(trackIndex);
+
+                const seq = new Tone.Sequence((time, step) => {
+                    // Update visual pattern
+                    const trackPanel = dom.get(`trackPanel-${trackIndex}`);
+                    if (trackPanel) {
+                        const dots = trackPanel.querySelectorAll('.pattern-dot');
+                        dots.forEach((dot, i) => {
+                            dot.classList.toggle('active', i === step);
+                        });
+                    }
+
+                    // Trigger note
+                    if (pattern[step] && track.on) {
+                        const channel = track.channel === 'global' ? state.globalMidiChannel : track.channel;
+                        const note = track.note;
+                        const velocity = track.velocity;
+                        const volume = state.channelVolumes[channel - 1];
+                        const finalVelocity = Math.round(velocity * (volume / 127));
+
+                        midiManager.sendNoteOn(note, finalVelocity, channel);
+
+                        // Schedule note off
+                        const duration = Tone.Time('16n').toSeconds() * 0.9;
+                        Tone.Transport.scheduleOnce(() => {
+                            midiManager.sendNoteOff(note, channel);
+                        }, `+${duration}`);
+
+                        // Visual feedback
+                        trackPanel?.classList.add('pulsing');
+                        setTimeout(() => trackPanel?.classList.remove('pulsing'), 200);
+                    }
+
+                }, Array.from(Array(track.steps).keys()), `${track.steps}n`);
+
+                sequences[trackIndex] = seq;
+            },
+
+            getRotatedPattern(trackIndex) {
+                const { pulses, steps, rotation } = state.tracks[trackIndex];
+                const euclideanPattern = this.generateEuclideanPattern(pulses, steps);
+                return this.rotatePattern(euclideanPattern, rotation);
+            },
+
+            generateEuclideanPattern(pulses, steps) {
+                if (pulses > steps || pulses < 0 || steps <= 0) return [];
+                let pattern = new Array(steps).fill(0);
+                if (pulses === 0) return pattern;
+
+                let counts = [];
+                let remainders = [];
+                let divisor = steps - pulses;
+                remainders.push(pulses);
+                let level = 0;
+
+                while(true) {
+                    counts.push(Math.floor(divisor / remainders[level]));
+                    remainders.push(divisor % remainders[level]);
+                    divisor = remainders[level];
+                    level += 1;
+                    if (remainders[level] <= 1) break;
+                }
+                counts.push(divisor);
+
+                let build = (level) => {
+                    if (level === -1) return [0];
+                    if (level === -2) return [1];
+
+                    let result = [];
+                    for(let i=0; i < counts[level]; i++) {
+                        result = result.concat(build(level-1));
+                    }
+                    if(remainders[level] !== 0) {
+                        result = result.concat(build(level-2));
+                    }
+                    return result;
+                }
+
+                return build(level).reverse();
+            },
+
+            rotatePattern(pattern, rotation) {
+                const len = pattern.length;
+                if (len === 0) return [];
+                const rot = (rotation % len + len) % len;
+                return [...pattern.slice(rot), ...pattern.slice(0, rot)];
+            }
+        };
+
+        // --- MUSIC MODE CONTROLLER --- //
+        const musicModeController = {
+
+            start() {
+                if (!state.musicMode.on) return;
+                this.updateLoop();
+                if(musicModeLoop) musicModeLoop.start(0);
+                elements.body.classList.add('music-mode-bg');
+                updateStatus('Music Mode activated.');
+            },
+
+            stop() {
+                if(musicModeLoop) musicModeLoop.stop(0).dispose();
+                musicModeLoop = null;
+                elements.body.classList.remove('music-mode-bg');
+                updateStatus('Music Mode deactivated.');
+            },
+
+            updateLoop() {
+                if(musicModeLoop) musicModeLoop.stop(0).dispose();
+                if (!state.musicMode.on) return;
+
+                const interval = `${state.musicMode.interval}m`; // m for measures/bars
+                musicModeLoop = new Tone.Loop(time => {
+                    Tone.Draw.schedule(() => {
+                        this.triggerRandomization();
+                    }, time);
+                }, interval).start(0);
+
+            },
+
+            triggerRandomization() {
+                const activeTrackIndices = state.tracks.map((t, i) => t.on ? i : -1).filter(i => i !== -1);
+                if (activeTrackIndices.length === 0) {
+                    this.logChange('No active tracks to randomize.');
+                    return;
+                }
+
+                const targets = state.musicMode.multiTrack ? activeTrackIndices : [activeTrackIndices[Math.floor(Math.random() * activeTrackIndices.length)]];
+
+                targets.forEach(trackIndex => {
+                    this.randomizeTrack(trackIndex);
+                });
+
+                if (state.randomizeOptions.scale) {
+                    this.randomizeScale();
+                }
+            },
+
+            randomizeTrack(trackIndex) {
+                const track = state.tracks[trackIndex];
+                const options = state.randomizeOptions;
+                let changes = [];
+
+                if (options.notes) {
+                    const newNote = this.getRandomNote();
+                    track.note = newNote;
+                    changes.push(`note=${newNote}`);
+                }
+                if (options.pulses) {
+                    const newPulses = Math.floor(Math.random() * (track.steps - 1)) + 1;
+                    track.pulses = newPulses;
+                    changes.push(`pulses=${newPulses}`);
+                }
+                if (options.rotation) {
+                    const newRotation = Math.floor(Math.random() * track.steps);
+                    track.rotation = newRotation;
+                    changes.push(`rot=${newRotation}`);
+                }
+                if (options.velocity) {
+                    const newVelocity = Math.floor(Math.random() * 107) + 20;
+                    track.velocity = newVelocity;
+                    changes.push(`vel=${newVelocity}`);
+                }
+
+                if(changes.length > 0) {
+                    this.logChange(`T${trackIndex + 1}: ${changes.join(', ')}`);
+                    sequencer.updateTrackSequence(trackIndex);
+                    uiController.updateTrackUI(trackIndex);
+                }
+            },
+
+            randomizeScale() {
+                const scaleNames = Object.keys(SCALES);
+                const newScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
+                state.musicMode.currentScaleName = newScaleName;
+                this.logChange(`Scale changed to ${newScaleName}`);
+                updateUI();
+            },
+
+            getRandomNote() {
+                const scale = SCALES[state.musicMode.currentScaleName];
+                const noteIndex = scale[Math.floor(Math.random() * scale.length)];
+                const octave = parseInt(state.musicMode.baseOctave, 10) + (Math.random() > 0.7 ? 1 : 0);
+                return `${NOTE_NAMES[noteIndex]}${octave}`;
+            },
+
+            logChange(message) {
+                const logEntry = document.createElement('div');
+                logEntry.textContent = `[${Tone.Transport.position.split('.')[0]}] ${message}`;
+                elements.musicModeLogContent.prepend(logEntry);
+                // Limit log size
+                while(elements.musicModeLogContent.children.length > 20) {
+                    elements.musicModeLogContent.lastChild.remove();
+                }
+            }
+        };
+
+        // --- UI CONTROLLER --- //
+        const uiController = {
+
+            updateTrackPanelCount() {
+                const currentTrackCount = elements.sequencerTracksPanel.children.length;
+                if (currentTrackCount === state.numTracks) return;
+
+                elements.sequencerTracksPanel.innerHTML = '';
+                for (let i = 0; i < state.numTracks; i++) {
+                    const trackPanel = this.createTrackPanel(i);
+                    elements.sequencerTracksPanel.appendChild(trackPanel);
+                }
+                sequencer.rebuildAllSequences();
+                updateUI();
+            },
+
+            createTrackPanel(index) {
+                const panel = document.createElement('div');
+                panel.id = `trackPanel-${index}`;
+                panel.className = 'synth-panel p-3 rounded-lg space-y-2';
+                panel.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xl font-bold text-accent-color">TRACK ${index + 1}</span>
+                        <div class="flex space-x-1">
+                            <button data-control="toggle" class="btn btn-toggle btn-small">OFF</button>
+                            <button data-control="randomize" class="btn btn-small">RND</button>
+                        </div>
+                    </div>
+
+                    <div class="pattern-display flex flex-wrap gap-1 justify-center bg-black bg-opacity-25 p-2 rounded"></div>
+
+                    <!-- Controls Grid -->
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+
+                        <div class="slider-container">
+                            <div class="flex justify-between items-center text-xs text-text-muted"><span>Steps</span>
+                                <div class="flex items-center space-x-1">
+                                    <button class="btn-learn" data-learn-target="track.${index}.steps">L</button>
+                                    <span class="value-display">16</span>
+                                </div>
+                            </div>
+                            <input type="range" data-control="steps" min="1" max="32" value="16">
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="flex justify-between items-center text-xs text-text-muted"><span>Pulses</span>
+                                <div class="flex items-center space-x-1">
+                                    <button class="btn-learn" data-learn-target="track.${index}.pulses">L</button>
+                                    <span class="value-display">4</span>
+                                </div>
+                            </div>
+                            <input type="range" data-control="pulses" min="1" max="32" value="4">
+                        </div>
+
+                        <div class="slider-container">
+                             <div class="flex justify-between items-center text-xs text-text-muted"><span>Rotation</span>
+                                <div class="flex items-center space-x-1">
+                                    <button class="btn-learn" data-learn-target="track.${index}.rotation">L</button>
+                                    <span class="value-display">0</span>
+                                </div>
+                            </div>
+                            <input type="range" data-control="rotation" min="0" max="15" value="0">
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="flex justify-between items-center text-xs text-text-muted"><span>Velocity</span>
+                                <div class="flex items-center space-x-1">
+                                    <button class="btn-learn" data-learn-target="track.${index}.velocity">L</button>
+                                    <span class="value-display">100</span>
+                                </div>
+                            </div>
+                            <input type="range" data-control="velocity" min="1" max="127" value="100">
+                        </div>
+
+                        <div class="flex items-center space-x-1">
+                            <label class="text-xs text-text-muted">NOTE</label>
+                            <input type="text" data-control="note" class="w-16 text-center">
+                            <button data-control="noteLearn" class="btn-learn">L</button>
+                        </div>
+
+                        <div class="flex items-center space-x-1">
+                            <label class="text-xs text-text-muted">CH</label>
+                            <select data-control="channel" class="flex-grow"></select>
+                        </div>
+                    </div>
+                `;
+                // Populate channel select
+                const channelSelect = panel.querySelector('[data-control="channel"]');
+                const globalOption = document.createElement('option');
+                globalOption.value = 'global';
+                globalOption.textContent = 'Global';
+                channelSelect.appendChild(globalOption);
+                for (let i = 1; i <= 16; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `Ch ${i}`;
+                    channelSelect.appendChild(option);
+                }
+                return panel;
+            },
+
+            updatePatternDisplay(trackIndex) {
+                const track = state.tracks[trackIndex];
+                const panel = dom.get(`trackPanel-${trackIndex}`);
+                if (!panel) return;
+
+                const display = panel.querySelector('.pattern-display');
+                const pattern = sequencer.getRotatedPattern(trackIndex);
+                display.innerHTML = '';
+
+                for (let i = 0; i < track.steps; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'pattern-dot';
+                    if (pattern[i]) {
+                        dot.classList.add('on');
+                    }
+                    display.appendChild(dot);
+                }
+            },
+
+            updateTrackUI(index) {
+                const trackState = state.tracks[index];
+                const panel = dom.get(`trackPanel-${index}`);
+                if (!panel) return;
+
+                const onBtn = panel.querySelector('[data-control="toggle"]');
+                onBtn.classList.toggle('active', trackState.on);
+                onBtn.textContent = trackState.on ? 'ON' : 'OFF';
+
+                const controls = {
+                    steps: panel.querySelector('[data-control="steps"]'),
+                    pulses: panel.querySelector('[data-control="pulses"]'),
+                    rotation: panel.querySelector('[data-control="rotation"]'),
+                    velocity: panel.querySelector('[data-control="velocity"]'),
+                    note: panel.querySelector('[data-control="note"]'),
+                    channel: panel.querySelector('[data-control="channel"]'),
+                };
+
+                controls.steps.value = trackState.steps;
+                controls.steps.parentElement.querySelector('.value-display').textContent = trackState.steps;
+                controls.pulses.max = trackState.steps; // Pulses can't exceed steps
+                controls.pulses.value = trackState.pulses;
+                controls.pulses.parentElement.querySelector('.value-display').textContent = trackState.pulses;
+                controls.rotation.max = trackState.steps > 0 ? trackState.steps - 1 : 0;
+                controls.rotation.value = trackState.rotation;
+                controls.rotation.parentElement.querySelector('.value-display').textContent = trackState.rotation;
+                controls.velocity.value = trackState.velocity;
+                controls.velocity.parentElement.querySelector('.value-display').textContent = trackState.velocity;
+                controls.note.value = trackState.note;
+                controls.channel.value = trackState.channel;
+
+                // Update learn button states
+                const noteLearnBtn = panel.querySelector('[data-control="noteLearn"]');
+                noteLearnBtn.classList.toggle('learning', state.midiLearning.active && state.midiLearning.target === index);
+
+                panel.querySelectorAll('.btn-learn').forEach(btn => {
+                    const target = btn.dataset.learnTarget;
+                    if (!target) return;
+                    const isMapped = Object.values(state.ccMap).includes(target);
+                    const isLearning = state.midiLearning.active && state.midiLearning.target === target;
+                    btn.classList.toggle('mapped', isMapped && !isLearning);
+                    btn.classList.toggle('learning', isLearning);
+                    btn.textContent = isLearning ? '...' : 'L';
+                });
+
+                this.updatePatternDisplay(index);
+            }
+        };
+
+        function updateUI() {
+            // Master Controls
+            elements.playStopBtn.innerHTML = sequencer.isPlaying ? '&#x25A0;' : '&#x25B6;';
+            elements.playStopBtn.classList.toggle('active', sequencer.isPlaying);
+
+            elements.numTracksInput.value = state.numTracks;
+
+            elements.bpmSlider.value = state.bpm;
+            elements.bpmValue.textContent = state.bpm;
+
+            elements.masterVolumeSlider.value = state.masterVolume;
+            elements.masterVolumeValue.textContent = state.masterVolume;
+
+            elements.musicModeToggle.checked = state.musicMode.on;
+            elements.lockAllStepsToggle.checked = state.isLockAllStepsOn;
+
+            // MIDI Panel
+            elements.globalMidiChannelSelect.value = state.globalMidiChannel;
+            if (state.selectedMidiOutputId) {
+                elements.midiOutDeviceSelect.value = state.selectedMidiOutputId;
+            }
+
+            // Randomization Panel
+            const octaveRadio = elements.octaveSelector.querySelector(`input[value="${state.musicMode.baseOctave}"]`);
+            if (octaveRadio) octaveRadio.checked = true;
+
+            dom.queryAll('[data-random-option]').forEach(el => {
+                el.checked = state.randomizeOptions[el.dataset.randomOption];
+            });
+
+            // Music Mode Panel
+            elements.musicModePanel.classList.toggle('hidden', !state.musicMode.on);
+            elements.musicModeLog.classList.toggle('hidden', !state.musicMode.on);
+            elements.musicModeIntervalSlider.value = state.musicMode.interval;
+            elements.musicModeIntervalValue.textContent = state.musicMode.interval;
+            elements.multiTrackRandomToggle.checked = state.musicMode.multiTrack;
+
+            // View Toggles & Panel Visibility
+            for (const [toggleId, panelId] of Object.entries(VIEW_PANEL_MAP)) {
+                const isChecked = state.viewToggles[panelId];
+                dom.get(toggleId).checked = isChecked;
+                dom.get(panelId).classList.toggle('hidden', !isChecked);
+            }
+
+            // Channel Volumes
+            state.channelVolumes.forEach((vol, i) => {
+                const slider = dom.get(elements.channelVolumesContainer).querySelector(`[data-ch-vol-slider="${i}"]`);
+                if (slider) slider.value = vol;
+            });
+
+            // Tracks
+            for (let i = 0; i < state.numTracks; i++) {
+                uiController.updateTrackUI(i);
+            }
+
+            // Global Learn buttons
+            dom.queryAll('.control-panel .btn-learn').forEach(btn => {
+                const target = btn.dataset.learnTarget;
+                if (!target) return;
+                const isMapped = Object.values(state.ccMap).includes(target);
+                const isLearning = state.midiLearning.active && state.midiLearning.target === target;
+                btn.classList.toggle('mapped', isMapped && !isLearning);
+                btn.classList.toggle('learning', isLearning);
+                btn.textContent = isLearning ? '...' : 'L';
+            });
+        }
+
+
+        // --- EVENT LISTENERS --- //
+        function setupEventListeners() {
+            // Master Controls
+            elements.playStopBtn.addEventListener('click', () => sequencer.togglePlayStop());
+            elements.saveStateBtn.addEventListener('click', () => {
+                if(saveState(MANUAL_SAVE_KEY)) updateStatus('State saved successfully!', 'success');
+                else updateStatus('Failed to save state.', 'error');
+            });
+            elements.loadStateBtn.addEventListener('click', () => loadState(MANUAL_SAVE_KEY));
+
+            const setupNumInput = (input, decBtn, incBtn, stateKey, min, max, callback) => {
+                let interval;
+                let timeout;
+                const changeVal = (amount) => {
+                    const current = parseInt(input.value, 10);
+                    const newVal = Math.max(min, Math.min(max, current + amount));
+                    input.value = newVal;
+                    state[stateKey] = newVal;
+                    callback(newVal);
+                };
+                input.addEventListener('change', () => {
+                    const newVal = Math.max(min, Math.min(max, parseInt(input.value, 10) || min));
+                    input.value = newVal;
+                    state[stateKey] = newVal;
+                    callback(newVal);
+                });
+
+                const startChanging = (amount) => {
+                    changeVal(amount);
+                    timeout = setTimeout(() => {
+                        interval = setInterval(() => changeVal(amount), 100);
+                    }, 500);
+                };
+
+                const stopChanging = () => {
+                    clearTimeout(timeout);
+                    clearInterval(interval);
+                };
+
+                decBtn.addEventListener('mousedown', () => startChanging(-1));
+                incBtn.addEventListener('mousedown', () => startChanging(1));
+
+                document.addEventListener('mouseup', stopChanging);
+                document.addEventListener('mouseleave', stopChanging);
+            };
+
+            setupNumInput(elements.numTracksInput, elements.numTracksDecrement, elements.numTracksIncrement, 'numTracks', 1, MAX_TRACKS, (val) => {
+                uiController.updateTrackPanelCount();
+            });
+
+            elements.bpmSlider.addEventListener('input', (e) => sequencer.setBpm(parseInt(e.target.value)));
+            elements.masterVolumeSlider.addEventListener('input', (e) => {
+                state.masterVolume = parseInt(e.target.value);
+                // Send CC 7 on all channels
+                for (let i = 1; i <= 16; i++) {
+                    midiManager.sendCC(7, state.masterVolume, i);
+                }
+                updateUI();
+            });
+
+            elements.musicModeToggle.addEventListener('change', (e) => {
+                state.musicMode.on = e.target.checked;
+                if (state.musicMode.on) musicModeController.start();
+                else musicModeController.stop();
+                updateUI();
+            });
+
+            elements.lockAllStepsToggle.addEventListener('change', (e) => {
+                state.isLockAllStepsOn = e.target.checked;
+                if(state.isLockAllStepsOn) {
+                    state.globalLockedSteps = state.tracks[0].steps;
+                }
+                updateUI();
+            });
+
+            // MIDI Panel
+            elements.resetMidiBtn.addEventListener('click', () => midiManager.init());
+            elements.panicBtn.addEventListener('click', () => midiManager.panic());
+            elements.midiOutDeviceSelect.addEventListener('change', (e) => midiManager.selectOutput(e.target.value));
+            elements.globalMidiChannelSelect.addEventListener('change', (e) => {
+                state.globalMidiChannel = parseInt(e.target.value);
+            });
+
+            // Randomization Panel
+            elements.randomizeAllBtn.addEventListener('click', () => {
+                state.tracks.forEach((track, i) => {
+                    if (track.on) musicModeController.randomizeTrack(i);
+                });
+            });
+            elements.octaveSelector.addEventListener('change', (e) => {
+                if(e.target.name === 'baseOctave') state.musicMode.baseOctave = parseInt(e.target.value);
+            });
+            dom.queryAll('[data-random-option]').forEach(el => {
+                el.addEventListener('change', (e) => {
+                    state.randomizeOptions[e.target.dataset.randomOption] = e.target.checked;
+                });
+            });
+
+            // Music Mode Panel
+            elements.musicModeIntervalSlider.addEventListener('input', e => {
+                state.musicMode.interval = parseInt(e.target.value);
+                musicModeController.updateLoop();
+                updateUI();
+            });
+            elements.multiTrackRandomToggle.addEventListener('change', e => state.musicMode.multiTrack = e.target.checked);
+            elements.triggerNextBtn.addEventListener('click', () => musicModeController.triggerRandomization());
+
+            // Channel Volumes
+            elements.channelVolumesContainer.addEventListener('input', e => {
+                const index = e.target.dataset.chVolSlider;
+                if(index === undefined) return;
+                const value = parseInt(e.target.value);
+                state.channelVolumes[index] = value;
+                midiManager.sendCC(7, value, parseInt(index) + 1);
+            });
+
+            // View Toggles
+            dom.queryAll('#bottomPanelsContainer input[type="checkbox"][data-panel]').forEach(toggle => {
+                toggle.addEventListener('change', (e) => {
+                    const panelId = e.target.dataset.panel;
+                    state.viewToggles[panelId] = e.target.checked;
+                    updateUI();
+                });
+            });
+
+            // Track Controls (delegated)
+            elements.sequencerTracksPanel.addEventListener('click', e => handleTrackControlClick(e));
+            elements.sequencerTracksPanel.addEventListener('input', e => handleTrackControlInput(e));
+            elements.sequencerTracksPanel.addEventListener('change', e => handleTrackControlInput(e)); // For text/select changes
+
+            // Learn Buttons (delegated)
+            document.body.addEventListener('click', e => {
+                if(e.target.matches('.btn-learn')) {
+                    handleLearnClick(e.target);
+                }
+            });
+
+            // Slider right-click to reset
+            document.body.addEventListener('contextmenu', e => {
+                if(e.target.type === 'range') {
+                    e.preventDefault();
+                    const defaultValue = e.target.defaultValue || Math.floor((parseInt(e.target.min) + parseInt(e.target.max)) / 2);
+                    e.target.value = defaultValue;
+                    e.target.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+        }
+
+        function handleTrackControlClick(e) {
+            const target = e.target;
+            const controlType = target.dataset.control;
+            if (!controlType) return;
+
+            const panel = target.closest('.synth-panel');
+            const trackIndex = parseInt(panel.id.split('-')[1]);
+
+            switch(controlType) {
+                case 'toggle':
+                    state.tracks[trackIndex].on = !state.tracks[trackIndex].on;
+                    break;
+                case 'randomize':
+                    musicModeController.randomizeTrack(trackIndex);
+                    break;
+                case 'noteLearn':
+                    if (state.midiLearning.active && state.midiLearning.target === trackIndex) {
+                        state.midiLearning = { active: false, type: null, target: null };
+                        updateStatus('Note learn cancelled.');
+                    } else {
+                        state.midiLearning = { active: true, type: 'note', target: trackIndex };
+                        updateStatus(`Learning note for Track ${trackIndex + 1}... Play a note on your MIDI device.`);
+                    }
+                    break;
+            }
+            updateUI();
+        }
+
+        function handleTrackControlInput(e) {
+            const target = e.target;
+            const controlType = target.dataset.control;
+            if (!controlType) return;
+
+            const panel = target.closest('.synth-panel');
+            const trackIndex = parseInt(panel.id.split('-')[1]);
+            let value = (target.type === 'range' || target.type === 'number') ? parseInt(target.value) : target.value;
+
+            const track = state.tracks[trackIndex];
+
+            if (controlType === 'steps' && state.isLockAllStepsOn) {
+                state.globalLockedSteps = value;
+                state.tracks.forEach((t, i) => {
+                    if (i < state.numTracks) {
+                        t.steps = value;
+                        sequencer.updateTrackSequence(i);
+                    }
+                });
+            } else {
+                track[controlType] = value;
+                if(controlType === 'pulses' && value > track.steps) {
+                    track.pulses = track.steps; // clamp pulses
+                }
+                sequencer.updateTrackSequence(trackIndex);
+            }
+            updateUI();
+        }
+
+        function handleLearnClick(button) {
+            const target = button.dataset.learnTarget;
+            if(!target || button.dataset.control === 'noteLearn') return;
+
+            // If we're clicking the button that is already learning, cancel it.
+            if(state.midiLearning.active && state.midiLearning.target === target) {
+                state.midiLearning = { active: false, type: null, target: null };
+                updateStatus('MIDI learn cancelled.');
+            } else {
+                state.midiLearning = { active: true, type: 'cc', target: target };
+                updateStatus(`Learning CC for ${target}... Move a knob or fader.`);
+            }
+            updateUI();
+        }
+
+        function handleLearnedCC(target, value) {
+            const [type, index, sub] = target.split('.');
+
+            switch(type) {
+                case 'bpm':
+                    const newBpm = Math.round(midiUtils.scaleValue(value, 0, 127, 20, 240));
+                    sequencer.setBpm(newBpm);
+                    break;
+                case 'masterVolume':
+                    state.masterVolume = value;
+                    midiManager.sendCC(7, value, state.globalMidiChannel); // Send to global for feedback
+                    break;
+                case 'channelVolume':
+                    state.channelVolumes[index] = value;
+                    midiManager.sendCC(7, value, parseInt(index) + 1);
+                    break;
+                case 'track':
+                    const track = state.tracks[index];
+                    if(!track) return;
+
+                    const slider = document.querySelector(`[data-learn-target="${target}"]`).parentElement.parentElement.querySelector('input[type="range"]');
+                    const min = parseInt(slider.min);
+                    const max = parseInt(slider.max);
+
+                    const scaledValue = Math.round(midiUtils.scaleValue(value, 0, 127, min, max));
+
+                    if (sub === 'steps' && state.isLockAllStepsOn) {
+                        state.globalLockedSteps = scaledValue;
+                        state.tracks.forEach((t, i) => {
+                            if(i < state.numTracks) {
+                                t.steps = scaledValue;
+                                sequencer.updateTrackSequence(i);
+                            }
+                        });
+                    } else {
+                        track[sub] = scaledValue;
+                        sequencer.updateTrackSequence(index);
+                    }
+                    break;
+            }
+            updateUI();
+        }
+
+        // --- UTILITIES --- //
+        const midiUtils = {
+            nameToMidiNote(name) {
+                const match = name.toUpperCase().match(/^([A-G]#?)(-?[0-9])$/);
+                if (!match) return null;
+                const note = NOTE_NAMES.indexOf(match[1]);
+                if (note === -1) return null;
+                const octave = parseInt(match[2]);
+                return 12 + (octave * 12) + note;
+            },
+            midiNoteToName(midi) {
+                if (midi < 12) return null;
+                const octave = Math.floor((midi - 12) / 12);
+                const noteIndex = (midi - 12) % 12;
+                return NOTE_NAMES[noteIndex] + octave;
+            },
+            scaleValue(value, inMin, inMax, outMin, outMax) {
+                return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+            }
+        };
+
+        // --- KICK IT OFF --- //
+        init();
+    });
+</script>
+</body>
+</html>

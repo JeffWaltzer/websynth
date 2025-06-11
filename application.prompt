@@ -1,0 +1,115 @@
+Act as an expert full-stack web developer. Your task is to generate the complete code for a single HTML file named `index.html` that recreates a web application called "Rhythm King 77". This application is a Euclidean MIDI Sequencer with a retro 70s aesthetic.
+
+**Core Concept:**
+Rhythm King 77 is a browser-based Euclidean rhythm MIDI sequencer that allows users to create complex rhythmic patterns across multiple tracks and send them to MIDI output devices. It features generative music capabilities through a "Music Mode" and extensive MIDI CC control mapping.
+
+**Key Features to Implement:**
+
+1.  **Overall Structure & Styling:**
+    *   Single `index.html` file containing all HTML, CSS, and JavaScript.
+    *   Styling: Use Tailwind CSS for layout and utility classes. Implement custom CSS for a distinct retro 70s dark theme with orange/yellow accents (refer to color variables like `--primary-bg: #2a2a2a; --accent-color: #f0ad4e;` etc.).
+    *   Layout:
+        *   Header with title "RHYTHM KING 77" and subtitle.
+        *   Main application container (`appContainer`) with a primary content area (`mainContent`) and a fixed status bar at the bottom.
+        *   The `mainContent` should house a "Sequencer Tracks Panel" and a "Bottom Panels Container" for other controls.
+        *   Dynamic background that changes when "Music Mode" is active.
+
+2.  **Sequencer Tracks Panel:**
+    *   Display a user-configurable number of sequencer tracks (1-12, default 4, controlled by `numTracksInput`).
+    *   Each track (`synth-panel` style) should include:
+        *   Track number display.
+        *   **Controls:**
+            *   **On/Off Toggle Button:** Activates/deactivates the track.
+            *   **Randomize Button:** Randomizes parameters for this specific track.
+            *   **Steps Slider & Display:** (1-32, default 16).
+            *   **Pulses Slider & Display:** (1-32, must be <= Steps).
+            *   **Rotation Slider & Display:** (0 to Steps-1).
+            *   **Velocity Slider & Display:** (1-127).
+            *   **MIDI Note Input Field:** Text input for note (e.g., "C4", "F#3").
+            *   **Note Learn Button ("L"):** Listens for next MIDI note input to set the track's note and channel override.
+            *   **MIDI Channel Override Select:** Dropdown (Global, 1-16).
+        *   **Pattern Display:** Visual representation of the Euclidean pattern (dots for steps, highlighted for active, current playing step).
+        *   **Track Pulse Animation:** Panel should visually pulse when a note is triggered.
+        *   **MIDI CC Learn Buttons ("L"):** For Steps, Pulses, Rotation, Velocity.
+
+3.  **Bottom Panels Container (Grid Layout):**
+    *   **Master Control Panel:**
+        *   **Toolbar:** Play/Stop button (icon `&#x25B6;`/`&#x25A0;`), Save State button (icon `&#128190;`), Load State button (icon `&#128193;`).
+        *   **Number of Tracks Input:** (with +/- buttons).
+        *   **BPM Slider & Display:** (20-240, default 45) with MIDI CC Learn button.
+        *   **Master Volume Slider & Display:** (0-127, default 100, controls MIDI CC #7 on all channels) with MIDI CC Learn button.
+        *   **Global Controls Checkboxes:** "Music Mode" toggle, "Lock All Steps" toggle.
+        *   **View Toggles Checkboxes:** For MIDI Panel, Randomization Panel, Volumes Panel, Hints Panel.
+    *   **MIDI Setup Panel (`midiPanel`):**
+        *   **Reset MIDI Button.**
+        *   **Stop Notes (Panic) Button.**
+        *   **MIDI Output Device Select Dropdown.**
+        *   **Global MIDI Channel Select Dropdown (1-16).**
+    *   **Randomization Settings Panel (`randomizationSettingsContainer`):**
+        *   **Randomize All Active Button.**
+        *   **Base Octave Selector:** Radio buttons for octaves 0-9.
+        *   **Randomize Options Checkboxes:** For Notes, Pulses, Rotation, Scale, Velocity.
+    *   **Music Mode Panel (`musicModePanel`, visible when Music Mode active):**
+        *   **Interval (Bars) Slider & Display:** (1-16) for randomization frequency.
+        *   **Multi-Track Random Toggle Checkbox.**
+        *   **Trigger Next Button:** Manually triggers the next generative step.
+    *   **Channel Volumes Panel (`channelVolumesWrapper`):**
+        *   Individual volume sliders (0-127) for MIDI channels 1-16, each with a MIDI CC Learn button.
+    *   **Hints Panel (`hintsPanel`):**
+        *   **Hint Content Display:** Shows random helpful hints.
+        *   **Music Mode Log (`musicModeLog`, visible when Music Mode active):** Displays logs of generative changes.
+
+4.  **Core Logic & Functionality (JavaScript with Tone.js & Web MIDI API):**
+    *   **MIDI Handling:**
+        *   Initialize Web MIDI API, populate MIDI output device list.
+        *   Send MIDI note on/off messages based on sequencer patterns.
+        *   Send MIDI CC messages for master volume and channel volumes.
+        *   Handle incoming MIDI messages for CC learn and note learn.
+        *   Implement "All Notes Off" / "Panic" functionality.
+    *   **Sequencing Engine (Tone.js):**
+        *   Use `Tone.Transport` for master clock, BPM, play/stop.
+        *   Use `Tone.Sequence` for each track to schedule MIDI events.
+        *   Euclidean rhythm generation: `generateEuclideanPattern(pulses, steps)`.
+        *   Pattern rotation: `rotatePattern(pattern, rotation)`.
+    *   **State Management:**
+        *   Maintain application state (BPM, track parameters, MIDI settings, etc.).
+        *   **Autosave:** Periodically save state to `localStorage` (key: `rhythmKing77_autoSave_v15`).
+        *   **Manual Save/Load:** Save to/load from `localStorage` (key: `rhythmKing77_manualSave_v15`).
+        *   Implement `getDefaultState()` and a `deepMerge` utility for state updates.
+    *   **Music Mode:**
+        *   When active, periodically trigger randomization based on the "Interval" setting.
+        *   Randomization can affect one track or multiple active tracks.
+        *   Randomize selected parameters (Notes, Pulses, Rotation, Scale, Velocity).
+        *   Note randomization should use musical scales (Major, Minor, Dorian, Pentatonic, etc., from `SCALES` constant) based on a `currentScaleName` and selected `octave`.
+        *   Log generative changes to the `musicModeLog`.
+    *   **MIDI CC Learn:**
+        *   Clicking an "L" button enters learning mode for that parameter.
+        *   The next incoming MIDI CC message on any channel maps that CC number and channel to the parameter.
+        *   Learned mappings are stored in `state.ccMap`.
+        *   Mapped CCs control their respective parameters.
+        *   Button visual state: 'L' (default), '...' (learning), 'L' (green/mapped).
+    *   **Note Learn:**
+        *   Clicking a track's note "L" button enters learning mode.
+        *   The next incoming MIDI note sets the track's note and its channel override.
+    *   **Global Controls Logic:**
+        *   "Lock All Steps": When checked, changing one track's "Steps" slider updates all tracks' steps and the `globalLockedSteps` state.
+    *   **UI Updates & Interactivity:**
+        *   All UI elements should reflect the current application state.
+        *   Sliders and input fields update state and trigger necessary recalculations (e.g., pattern regeneration).
+        *   +/- buttons next to sliders/number inputs should allow increment/decrement and support auto-repeat on hold.
+        *   Status bar (`statusBar`) for user feedback (e.g., "Save successful", "MIDI device connected").
+        *   Stuck note prevention: Track active notes and send note-offs appropriately.
+
+5.  **Constants & Utilities:**
+    *   `MAX_TRACKS`, `MANUAL_SAVE_KEY`, `AUTOSAVE_KEY`.
+    *   `SCALES` object (Major, Minor, Pentatonic, etc.).
+    *   `NOTE_NAMES` array.
+    *   `HINTS` array.
+    *   `VIEW_PANEL_MAP` for toggling panel visibility.
+    *   DOM caching utility (`dom.get`, `dom.query`, `dom.queryAll`).
+
+**Code Structure (within the single `<script>` tag):**
+*   Organize JavaScript into logical sections or classes (e.g., `AppOrchestrator`, `Track`, `MIDIManager`, `StateManager`, `MusicModeController`, `UIController`) to manage different aspects of the application, even if they are all defined in the same scope. This aligns with the spirit of the Sandi Metz rules for better organization.
+*   Initialize the application on `DOMContentLoaded`.
+
+Ensure the application is robust, handles MIDI device connections/disconnections gracefully, and provides clear user feedback. The visual design should be clean, functional, and evoke a retro hardware feel.
