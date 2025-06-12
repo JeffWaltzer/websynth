@@ -12,18 +12,19 @@
         :root {
             --primary-bg: #2a2a2a;
             --secondary-bg: #3a3a3a;
-            --panel-bg: #4a4a4a; /* Darker panel for contrast */
+            --panel-bg: #4a4a4a;
             --panel-border: #6a6a6a;
             --text-color: #e0e0e0;
-            --accent-color: #f0ad4e; /* Orange-yellow accent */
+            --accent-color: #f0ad4e;
+            --accent-glow: rgba(240, 173, 78, 0.7);
             --control-bg: #333333;
             --control-border: #555555;
-            --thumb-color: #c0b090; /* Muted gold/silver for sliders */
-            --active-toggle: #5cb85c; /* Green for ON */
-            --random-btn: #337ab7; /* Blue for Random */
-            --learn-btn: #d9534f; /* Red for Learn */
-            --save-load-btn: #5bc0de; /* Light blue */
-            --midi-util-btn: #f0ad4e; /* Orange for MIDI utilities */
+            --thumb-color: #c0b090;
+            --active-toggle: #5cb85c;
+            --random-btn: #337ab7;
+            --learn-btn: #d9534f;
+            --save-load-btn: #5bc0de;
+            --midi-util-btn: #f0ad4e;
             --status-bg: rgba(0,0,0,0.8);
             --status-text: #fff;
         }
@@ -36,45 +37,47 @@
             font-size: 12px;
             display: flex;
             flex-direction: column;
-            min-height: 100vh; /* Ensure full viewport height */
+            min-height: 100vh;
         }
         .main-container {
             margin-bottom: 2rem;
-            flex-grow: 1; /* Allow content to grow */
+            flex-grow: 1;
         }
+        /* UI Enhancement: 3D panel effect */
         .synth-panel {
-            background-color: var(--panel-bg);
-            border: 2px solid var(--panel-border);
+            background-color: #444;
+            background-image: linear-gradient(to bottom, #4f4f4f, #3a3a3a);
+            border: 1px solid #222;
+            border-top-color: #555;
             border-radius: 12px;
-            box-shadow: 5px 5px 12px rgba(0,0,0,0.6), -3px -3px 8px rgba(255,255,255,0.07), inset 2px 2px 5px rgba(255,255,255,0.05), inset -2px -2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
             padding: 0.5rem;
             transition: opacity 0.4s ease-in-out, filter 0.4s ease-in-out, border-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
             position: relative;
-            display: flex; /* Use flex for all panels */
+            display: flex;
             flex-direction: column;
             gap: 0.5rem;
         }
         .synth-panel h2 {
             margin-bottom: 0.5rem;
             flex-shrink: 0;
+            color: var(--text-color);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
 
+        /* UI Enhancement: More prominent activity flash */
         .synth-panel.track-pulse {
-            animation: trackPulse 0.15s ease-out;
+            animation: trackPulse 0.2s ease-out;
         }
         @keyframes trackPulse {
             from {
                 border-color: var(--accent-color);
-                filter: brightness(1.2);
+                box-shadow: 0 0 15px 3px var(--accent-glow), 0 5px 15px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
             }
             to {
-                border-color: var(--panel-border);
-                filter: brightness(1);
+                border-color: #222;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
             }
-        }
-        .control-flash {
-            transition: box-shadow 0.5s ease-out;
-            box-shadow: 0 0 10px 4px var(--accent-color);
         }
 
         .control-slider-container { display: flex; align-items: center; gap: 0.5rem; }
@@ -86,45 +89,70 @@
         }
         .slider-button:hover, .number-input-button:hover { background-color: var(--panel-border); }
 
+        /* UI Enhancement: 3D slider track */
         .control-slider {
-            -webkit-appearance: none; appearance: none; width: 100%; height: 20px; background: var(--control-bg);
-            border-radius: 10px; border: 1px solid var(--control-border); outline: none; cursor: pointer; flex-grow: 1;
-            transition: background-color 0.1s ease;
+            -webkit-appearance: none; appearance: none; width: 100%; height: 20px;
+            background: #2a2a2a;
+            border-radius: 10px;
+            border: 1px solid #222;
+            outline: none; cursor: pointer; flex-grow: 1;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
         }
+        /* UI Enhancement: 3D slider thumb */
         .control-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 28px; height: 28px; background: var(--thumb-color);
-            border-radius: 8px; border: 2px solid var(--control-border); cursor: grab; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            transition: background-color 0.1s ease, box-shadow 0.1s ease;
+            -webkit-appearance: none; appearance: none; width: 28px; height: 28px;
+            background-image: linear-gradient(to bottom, #e0e0e0, #a0a0a0);
+            border-radius: 8px; border: 1px solid #555; cursor: grab;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: all 0.1s ease;
         }
         .control-slider::-moz-range-thumb {
-            width: 28px; height: 28px; background: var(--thumb-color); border-radius: 8px; border: 2px solid var(--control-border);
-            cursor: grab; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: background-color 0.1s ease, box-shadow 0.1s ease;
+            width: 28px; height: 28px;
+            background-image: linear-gradient(to bottom, #e0e0e0, #a0a0a0);
+            border-radius: 8px; border: 1px solid #555; cursor: grab;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: all 0.1s ease;
         }
         .control-slider:hover::-webkit-slider-thumb, .control-slider:hover::-moz-range-thumb {
-            background-color: var(--accent-color); box-shadow: 0 0 8px var(--accent-color);
+            background-image: linear-gradient(to bottom, var(--accent-color), #d88c1b);
+            box-shadow: 0 0 8px var(--accent-glow), 0 2px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
         }
 
+        /* UI Enhancement: 3D button effect */
         .push-button {
-            font-family: 'Orbitron', sans-serif; background-color: var(--panel-border); color: var(--text-color);
-            border: 2px solid var(--control-bg); padding: 0.3rem 0.8rem; border-radius: 8px; text-transform: uppercase;
-            font-weight: bold; font-size: 0.7rem; box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1);
+            font-family: 'Orbitron', sans-serif;
+            background-color: #585858;
+            background-image: linear-gradient(to bottom, #6a6a6a, #4a4a4a);
+            color: var(--text-color);
+            border: 1px solid #333;
+            border-top-color: #777;
+            padding: 0.3rem 0.8rem; border-radius: 8px; text-transform: uppercase;
+            font-weight: bold; font-size: 0.7rem;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.15);
             transition: all 0.1s ease-in-out; height: 32px; display: inline-flex; align-items: center; justify-content: center;
         }
         .push-button.icon-button { font-size: 1.1rem; padding: 0.4rem; width: 32px; height: 32px; }
         .push-button:active, .push-button.active {
-            background-color: var(--accent-color); color: #333;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.4), inset 2px 2px 5px rgba(0,0,0,0.3), inset -1px -1px 2px rgba(255,255,255,0.1);
-            transform: translateY(1px);
+            background-image: linear-gradient(to top, #6a6a6a, #4a4a4a);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.4), inset 0 2px 4px rgba(0,0,0,0.4);
+            transform: translateY(2px);
+            border-top-color: #333;
+        }
+        .push-button.active {
+            background-image: linear-gradient(to top, var(--accent-color), #d88c1b);
+            color: #333;
         }
         .push-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            background-image: none;
+            box-shadow: none;
         }
 
-        #playStopButton { background-color: #5cb85c; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.2); }
-        #playStopButton.stop-state { background-color: #d9534f; }
-        #playStopButton:active { background-color: #4cae4c; }
-        #playStopButton.stop-state:active { background-color: #c9302c; }
+        #playStopButton { background-color: #5cb85c; background-image: linear-gradient(to bottom, #7fdf7f, #5cb85c); color: white; }
+        #playStopButton.stop-state { background-color: #d9534f; background-image: linear-gradient(to bottom, #e47875, #d9534f); }
+        #playStopButton:active { background-image: linear-gradient(to top, #7fdf7f, #5cb85c); }
+        #playStopButton.stop-state:active { background-image: linear-gradient(to top, #e47875, #d9534f); }
 
         .learn-cc-button, .note-learn-button {
             background-color: var(--learn-btn); color: white; flex-shrink: 0; padding: 0.15rem 0.5rem; font-size: 0.7rem;
@@ -137,27 +165,29 @@
         @keyframes pulseLearn { from { box-shadow: 0 0 5px #ffc107; } to { box-shadow: 0 0 15px #ffc107; } }
         .learn-cc-button.mapped { background-color: #4CAF50; border-color: #337a36; }
 
-        .randomize-button { background-color: var(--random-btn); color: white; }
-        .master-randomize-button { background-color: #f0ad4e; color: #333; }
-        .re-init-midi-button { background-color: #6c757d; }
-        .save-load-button { background-color: var(--save-load-btn); color: white; }
-        .midi-utility-button { background-color: var(--midi-util-btn); color: #333; }
+        .randomize-button { background-color: var(--random-btn); color: white; background-image: linear-gradient(to bottom, #5d9cec, #337ab7);}
+        .master-randomize-button { background-color: #f0ad4e; color: #333; background-image: linear-gradient(to bottom, #f3c27a, #f0ad4e);}
+        .re-init-midi-button { background-color: #6c757d; background-image: linear-gradient(to bottom, #868e96, #6c757d);}
+        .save-load-button { background-color: var(--save-load-btn); color: white; background-image: linear-gradient(to bottom, #81d4fa, #5bc0de);}
+        .midi-utility-button { background-color: var(--midi-util-btn); color: #333; background-image: linear-gradient(to bottom, #f3c27a, #f0ad4e);}
 
         .pattern-display { display: flex; justify-content: center; align-items: center; margin-top: 0.2rem; height: 24px; gap: 4px; }
         .pattern-step {
-            width: 12px; height: 12px; background-color: var(--control-bg); border-radius: 50%;
-            transition: background-color 0.1s ease-out, transform 0.1s ease-out; flex-shrink: 0; border: 1px solid var(--control-border);
+            width: 12px; height: 12px; background-color: #333; border-radius: 50%;
+            transition: background-color 0.1s ease-out, transform 0.1s ease-out; flex-shrink: 0; border: 1px solid #222;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
         }
-        .pattern-step.active { background-color: var(--accent-color); }
+        .pattern-step.active { background-color: var(--accent-color); box-shadow: 0 0 5px var(--accent-glow), inset 0 1px 1px rgba(255,255,255,0.3);}
         .pattern-step.current { background-color: #fff; border: 2px solid var(--accent-color); transform: scale(1.3); box-shadow: 0 0 8px rgba(255,255,255,0.9); }
 
-        label { display: block; margin-bottom: 0.1rem; font-size: 0.75rem; text-transform: uppercase; font-family: 'Orbitron', sans-serif; white-space: nowrap; margin-right: 0.5rem; color: var(--accent-color); }
+        label { display: block; margin-bottom: 0.1rem; font-size: 0.75rem; text-transform: uppercase; font-family: 'Orbitron', sans-serif; white-space: nowrap; margin-right: 0.5rem; color: var(--accent-color); text-shadow: 0 1px 1px #000; }
         select, input[type="number"], input[type="text"] {
-            background-color: var(--control-bg); border: 1px solid var(--control-border); color: var(--text-color); padding: 0.4rem; border-radius: 6px; width: 100%; font-size: 0.8rem;
+            background-color: var(--control-bg); border: 1px solid #222; color: var(--text-color); padding: 0.4rem; border-radius: 6px; width: 100%; font-size: 0.8rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
         }
         input[type="number"] { text-align: center; }
 
-        .value-display { font-family: 'Orbitron', sans-serif; color: var(--text-color); font-size: 0.8rem; min-width: 30px; text-align: right; flex-grow: 1; }
+        .value-display { font-family: 'Orbitron', sans-serif; color: var(--text-color); font-size: 0.8rem; min-width: 30px; text-align: right; flex-grow: 1; text-shadow: 0 1px 1px #000; }
         .control-group { display: flex; flex-direction: column; margin-bottom: 0; }
         .control-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem; }
         .checkbox-label-container { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; margin-top: 0.3rem; cursor: pointer; color: var(--text-color); }
@@ -210,7 +240,6 @@
         #octaveSelector .radio-label:first-child { border-radius: 6px 0 0 6px;}
         #octaveSelector .radio-label:last-child { border-radius: 0 6px 6px 0;}
 
-        /* Style Adjustment: Ensure music mode buttons don't get negative margins from the general rule */
         #musicModePresetContainer .radio-label { border-radius: 6px; margin-left: 0; }
 
 
@@ -285,15 +314,15 @@
 
                     <div id="toolbar" class="flex flex-wrap items-center justify-center gap-3">
                         <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences">&#x25B6;</button>
-                        <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save the current session to browser storage">&#128190;</button>
-                        <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load the last saved session from browser storage">&#128193;</button>
+                        <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save current state as a manual restore point">&#128190;</button>
+                        <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load the last manually saved state">&#128193;</button>
                     </div>
 
                     <div class="control-group">
                         <label for="numTracksInput">Number of Tracks:</label>
                         <div class="number-input-container">
                             <button class="number-input-button" data-target="numTracksInput" data-action="decrement" title="Decrease number of tracks">&minus;</button>
-                            <input type="number" id="numTracksInput" min="1" max="12" value="4" title="Set the total number of sequencer tracks (1-12).">
+                            <input type="number" id="numTracksInput" min="1" max="12" value="4" title="Set the total number of sequencer tracks (1-12)">
                             <button class="number-input-button" data-target="numTracksInput" data-action="increment" title="Increase number of tracks">+</button>
                         </div>
                     </div>
@@ -301,7 +330,7 @@
                     <div class="control-group">
                         <div class="control-header">
                             <label for="bpmSlider">Tempo (BPM):</label> <span id="bpmValue" class="value-display">45</span>
-                            <button id="bpmSliderLearnCc" class="learn-cc-button ml-2" data-param-id="bpmSlider" title="Map Master Tempo to a MIDI CC">L</button>
+                            <button id="bpmSliderLearnCc" class="learn-cc-button ml-2" data-param-id="bpmSlider" title="Map Master Tempo to a MIDI CC knob/fader">L</button>
                         </div>
                         <div class="control-slider-container">
                             <button class="slider-button" data-target="bpmSlider" data-action="decrement" title="Decrease Tempo">&minus;</button>
@@ -313,29 +342,29 @@
                     <div class="control-group">
                         <div class="control-header">
                             <label for="masterVolumeSlider">Master Volume:</label> <span id="masterVolumeValue" class="value-display">100</span>
-                            <button id="masterVolumeLearnCc" class="learn-cc-button ml-2" data-param-id="masterVolumeSlider" title="Map Master Volume to a MIDI CC">L</button>
+                            <button id="masterVolumeLearnCc" class="learn-cc-button ml-2" data-param-id="masterVolumeSlider" title="Map Master Volume to a MIDI CC knob/fader">L</button>
                         </div>
                         <div class="control-slider-container">
                             <button class="slider-button" data-target="masterVolumeSlider" data-action="decrement" title="Decrease Volume">&minus;</button>
-                            <input type="range" id="masterVolumeSlider" min="0" max="127" value="100" class="control-slider" title="Adjust master volume (scales all note velocities)">
+                            <input type="range" id="masterVolumeSlider" min="0" max="127" value="100" class="control-slider" title="Adjust master output volume (scales all note velocities)">
                             <button class="slider-button" data-target="masterVolumeSlider" data-action="increment" title="Increase Volume">+</button>
                         </div>
                     </div>
 
                     <div class="control-group border-t border-gray-700 pt-2 mt-2">
                         <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Global Controls</label>
-                        <label class="checkbox-label-container" title="Lock all 'Steps' sliders together."><input type="checkbox" id="lockStepsCheckbox"> Lock All Steps</label>
+                        <label class="checkbox-label-container" title="Lock all 'Steps' sliders so they move together. The first track's value becomes the master value."><input type="checkbox" id="lockStepsCheckbox"> Lock All Steps</label>
                     </div>
                 </div>
 
                 <div id="viewPanel" class="synth-panel">
                     <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Views</h2>
                     <div id="viewTogglesContainer">
-                        <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="midiPanel" id="showMidiPanel" checked title="Show/Hide the MIDI Setup panel"> MIDI</label>
-                        <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="randomizationSettingsContainer" id="showRandomPanel" checked title="Show/Hide the Randomization panel"> Random</label>
-                        <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="channelVolumesWrapper" id="showVolumesPanel" checked title="Show/Hide the Channel Volumes panel"> Volumes</label>
-                        <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="hintsPanel" id="showHintsPanel" checked title="Show/Hide the Hints panel"> Hints</label>
-                        <label class="checkbox-label-container" title="Toggle Music Mode for automatic generative patterns"><input type="checkbox" id="musicModeToggle"> Music Mode</label>
+                        <label class="checkbox-label-container" title="Show/Hide the MIDI Setup panel"><input type="checkbox" data-view-toggle="midiPanel" id="showMidiPanel" checked> MIDI</label>
+                        <label class="checkbox-label-container" title="Show/Hide the Randomization panel"><input type="checkbox" data-view-toggle="randomizationSettingsContainer" id="showRandomPanel" checked> Random</label>
+                        <label class="checkbox-label-container" title="Show/Hide the Channel Volumes panel"><input type="checkbox" data-view-toggle="channelVolumesWrapper" id="showVolumesPanel" checked> Volumes</label>
+                        <label class="checkbox-label-container" title="Show/Hide the Hints & Log panel"><input type="checkbox" data-view-toggle="hintsPanel" id="showHintsPanel" checked> Hints</label>
+                        <label class="checkbox-label-container" title="Toggle Music Mode for automatic, generative patterns"><input type="checkbox" id="musicModeToggle"> Music Mode</label>
                     </div>
                 </div>
 
@@ -343,36 +372,36 @@
                     <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">MIDI Setup</h2>
                     <div class="control-group">
                         <div class="grid grid-cols-2 gap-2">
-                            <button id="reInitMidiButton" class="push-button re-init-midi-button w-full" title="Rescan for MIDI devices.">RESET MIDI</button>
-                            <button id="allNotesOffButton" class="push-button midi-utility-button w-full" title="Sends 'All Notes Off' messages to prevent stuck notes.">STOP NOTES</button>
+                            <button id="reInitMidiButton" class="push-button re-init-midi-button w-full" title="Rescan for MIDI devices if you plugged one in after loading the page">RESET MIDI</button>
+                            <button id="allNotesOffButton" class="push-button midi-utility-button w-full" title="Sends an 'All Notes Off' panic message on all channels to stop stuck notes">STOP NOTES</button>
                         </div>
                     </div>
                     <div class="control-group">
                         <label for="midiOutSelect">MIDI Output Device:</label>
-                        <select id="midiOutSelect" title="Select MIDI output device."></select>
+                        <select id="midiOutSelect" title="Select the MIDI device or virtual synth to send notes to"></select>
                     </div>
                     <div class="control-group">
                         <label for="midiChannelSelect">Global MIDI Channel:</label>
-                        <select id="midiChannelSelect" title="Select default MIDI channel (1-16)."></select>
+                        <select id="midiChannelSelect" title="Select the default MIDI channel (1-16) for all tracks set to 'Global'"></select>
                     </div>
                 </div>
 
                 <div id="randomizationSettingsContainer" class="synth-panel">
                     <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Manual Randomization</h2>
                     <div class="control-group">
-                        <button id="masterRandomizeButton" class="push-button master-randomize-button w-full" title="Randomize all active tracks.">RANDOMIZE ALL ACTIVE</button>
+                        <button id="masterRandomizeButton" class="push-button master-randomize-button w-full" title="Randomize all enabled parameters on all active tracks">RANDOMIZE ALL ACTIVE</button>
                     </div>
                     <div class="control-group">
                         <label for="octaveSelector" class="text-center">Base Octave</label>
-                        <div id="octaveSelector" title="Set the base octave for notes"></div>
+                        <div id="octaveSelector" title="Set the base octave for randomized notes"></div>
                     </div>
                     <div id="randomizeOptionsContainer" class="control-group">
                         <label class="font-bold text-xs uppercase col-span-full" style="font-family: 'Orbitron', sans-serif;">Randomize:</label>
-                        <label class="checkbox-label-container"><input type="checkbox" class="randomize-option" id="randomizeNoteCheck" checked title="Randomize the MIDI note of tracks"> Notes</label>
-                        <label class="checkbox-label-container"><input type="checkbox" class="randomize-option" id="randomizePulsesCheck" checked title="Randomize the number of pulses in tracks"> Pulses</label>
-                        <label class="checkbox-label-container"><input type="checkbox" class="randomize-option" id="randomizeRotationCheck" checked title="Randomize the pattern rotation of tracks"> Rotation</label>
-                        <label class="checkbox-label-container"><input type="checkbox" class="randomize-option" id="randomizeScaleCheck" checked title="Randomize the musical scale for all tracks"> Scale</label>
-                        <label class="checkbox-label-container"><input type="checkbox" class="randomize-option" id="randomizeVelocityCheck" checked title="Randomize the velocity of notes in tracks"> Velocity</label>
+                        <label class="checkbox-label-container" title="Randomize the MIDI note of each track"><input type="checkbox" class="randomize-option" id="randomizeNoteCheck" checked> Notes</label>
+                        <label class="checkbox-label-container" title="Randomize the number of beats (pulses) in each track"><input type="checkbox" class="randomize-option" id="randomizePulsesCheck" checked> Pulses</label>
+                        <label class="checkbox-label-container" title="Randomize the pattern's starting point (rotation)"><input type="checkbox" class="randomize-option" id="randomizeRotationCheck" checked> Rotation</label>
+                        <label class="checkbox-label-container" title="Randomize the musical scale for all tracks"><input type="checkbox" class="randomize-option" id="randomizeScaleCheck" checked> Scale</label>
+                        <label class="checkbox-label-container" title="Randomize the velocity (loudness) of each track"><input type="checkbox" class="randomize-option" id="randomizeVelocityCheck" checked> Velocity</label>
                     </div>
                 </div>
 
@@ -385,7 +414,7 @@
                         </div>
                         <div class="control-slider-container">
                             <button class="slider-button" data-target="randomIntervalSlider" data-action="decrement" title="Decrease randomization interval">&minus;</button>
-                            <input type="range" id="randomIntervalSlider" min="1" max="16" value="4" class="control-slider" title="Set how often Music Mode triggers randomization">
+                            <input type="range" id="randomIntervalSlider" min="1" max="16" value="4" class="control-slider" title="Set how often Music Mode triggers a change (in musical bars)">
                             <button class="slider-button" data-target="randomIntervalSlider" data-action="increment" title="Increase randomization interval">+</button>
                         </div>
                     </div>
@@ -394,7 +423,7 @@
                         <div id="musicModePresetContainer"></div>
                     </div>
                     <div class="control-group">
-                        <button id="musicModeNextButton" class="push-button w-full" title="Manually trigger the next randomization step">TRIGGER NEXT</button>
+                        <button id="musicModeNextButton" class="push-button w-full" title="Manually trigger the next generative change">TRIGGER NEXT</button>
                     </div>
                 </div>
 
@@ -911,10 +940,15 @@
                 if (currentLearningControl?.paramId === paramId) {
                     btn.classList.add('learning');
                     btn.textContent = '...';
+                    btn.title = `Listening for MIDI CC for ${getReadableParamId(paramId)}...`;
                 } else {
                     btn.textContent = 'L';
                     if (state.ccMap[paramId]) {
                         btn.classList.add('mapped');
+                        const { cc, channel } = state.ccMap[paramId];
+                        btn.title = `Mapped to CC #${cc} on Ch ${channel}. Click to unmap.`;
+                    } else {
+                        btn.title = `Map ${getReadableParamId(paramId)} to a MIDI CC knob/fader`;
                     }
                 }
             });
@@ -931,7 +965,8 @@
         function renderMusicModePresets() {
             dom.musicModePresetContainer.querySelectorAll('.radio-label').forEach(label => {
                 const radio = label.querySelector('input');
-                label.classList.toggle('selected', radio.value === state.musicMode.preset);
+                radio.checked = radio.value === state.musicMode.preset;
+                label.classList.toggle('selected', radio.checked);
             });
         }
 
@@ -953,15 +988,15 @@
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-base font-semibold" style="font-family: 'Orbitron', sans-serif;">Track ${trackId + 1}</h3>
                 <div>
-                    <button data-action="randomize" class="push-button randomize-button text-xs py-1 px-2" title="Randomize this track">RANDOM</button>
-                    <button data-action="toggleActive" id="trackToggle${trackId}" class="push-button text-xs py-1 px-2 ml-1" title="Toggle this track">ON</button>
+                    <button data-action="randomize" class="push-button randomize-button text-xs py-1 px-2" title="Randomize this track's parameters">RANDOM</button>
+                    <button data-action="toggleActive" id="trackToggle${trackId}" class="push-button text-xs py-1 px-2 ml-1" title="Mute or unmute this track">ON</button>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-x-3 gap-y-1 mb-2">
-                ${createSliderControl('steps', trackId, 'Steps', 1, 32, 16)}
-                ${createSliderControl('pulses', trackId, 'Pulses', 1, 16, 4)}
-                ${createSliderControl('rotation', trackId, 'Rotate', 0, 15, 0)}
-                ${createSliderControl('velocity', trackId, 'Velocity', 1, 127, 100)}
+                ${createSliderControl('steps', trackId, 'Steps', 1, 32, 16, 'Number of steps in the sequence (pattern length)')}
+                ${createSliderControl('pulses', trackId, 'Pulses', 1, 16, 4, 'Number of active beats in the pattern')}
+                ${createSliderControl('rotation', trackId, 'Rotate', 0, 15, 0, 'Shift the pattern start point left or right')}
+                ${createSliderControl('velocity', trackId, 'Velocity', 1, 127, 100, 'Note loudness (MIDI velocity)')}
                 ${createSelectControl('channelOverride', trackId, 'MIDI Ch', ['global', ...Array.from({length:16},(_,i)=>i+1)])}
                 ${createNoteControl(trackId)}
             </div>
@@ -970,17 +1005,17 @@
             return trackDiv;
         }
 
-        function createSliderControl(id, trackId, label, min, max, value) {
+        function createSliderControl(id, trackId, label, min, max, value, title) {
             return `
             <div class="control-group">
                 <div class="control-header">
                     <label for="${id}${trackId}">${label}:</label>
                     <span id="${id}Value${trackId}" class="value-display">${value}</span>
-                    <button class="learn-cc-button ml-2" data-param-id="${id}${trackId}" title="Map ${label} to MIDI CC">L</button>
+                    <button class="learn-cc-button ml-2" data-param-id="${id}${trackId}" title="Map ${label} to a MIDI CC knob/fader">L</button>
                 </div>
                 <div class="control-slider-container">
                     <button class="slider-button" data-target="${id}${trackId}" data-action="decrement" title="Decrease ${label}">&minus;</button>
-                    <input type="range" data-action="update" data-prop="${id}" id="${id}${trackId}" min="${min}" max="${max}" value="${value}" class="control-slider" title="Adjust ${label}">
+                    <input type="range" data-action="update" data-prop="${id}" id="${id}${trackId}" min="${min}" max="${max}" value="${value}" class="control-slider" title="${title}">
                     <button class="slider-button" data-target="${id}${trackId}" data-action="increment" title="Increase ${label}">+</button>
                 </div>
             </div>
@@ -991,7 +1026,7 @@
             return `
             <div class="control-group">
                 <label for="${id}${trackId}" class="mb-1">${label}:</label>
-                <select id="${id}${trackId}" data-action="update" data-prop="${id}" class="text-xs p-1 h-full" title="Set MIDI Channel for this track">
+                <select id="${id}${trackId}" data-action="update" data-prop="${id}" class="text-xs p-1 h-full" title="Set a specific MIDI Channel for this track, or use the Global setting">
                     ${options.map(o => `<option value="${o}">${o === 'global' ? 'Global' : o}</option>`).join('')}
                 </select>
             </div>
@@ -1003,8 +1038,8 @@
             <div class="control-group">
                 <label for="note${trackId}" class="mb-1">Note:</label>
                 <div class="note-input-group">
-                    <input type="text" data-action="update" data-prop="note" id="note${trackId}" class="text-xs p-1" title="Set MIDI note (e.g., C3, F#4)">
-                    <button data-action="learnNote" id="noteLearn${trackId}" class="note-learn-button" title="Learn MIDI Note from input">L</button>
+                    <input type="text" data-action="update" data-prop="note" id="note${trackId}" class="text-xs p-1" title="Set the MIDI note for this track (e.g., C3, F#4, G5)">
+                    <button data-action="learnNote" id="noteLearn${trackId}" class="note-learn-button" title="Learn MIDI note and channel from your controller">L</button>
                 </div>
             </div>
         `;
@@ -1099,9 +1134,14 @@
             document.body.addEventListener('touchend', stopAutoRepeat);
 
             dom.randomizeOptionsContainer.addEventListener('change', handleRandomizeOptionChange);
-            dom.musicModePresetContainer.addEventListener('change', e => {
-                if(e.target.name === 'musicModePreset') {
-                    updateState({ musicMode: { ...state.musicMode, preset: e.target.value }});
+
+            dom.musicModePresetContainer.addEventListener('click', e => {
+                const label = e.target.closest('.radio-label');
+                if (!label) return;
+
+                const radio = label.querySelector('input');
+                if (radio && radio.name === 'musicModePreset') {
+                    updateState({ musicMode: { ...state.musicMode, preset: radio.value }});
                 }
             });
         }
@@ -1226,7 +1266,7 @@
 
                 const volDiv = document.createElement('div');
                 volDiv.className = 'control-group';
-                volDiv.innerHTML = `<div class="control-header"><label for="channelVolume${i}">Ch ${i}:</label><span id="channelVolumeValue${i}" class="value-display"></span><button class="learn-cc-button ml-2" data-param-id="channelVolume${i}" title="Map Ch ${i} Volume to a MIDI CC">L</button></div><div class="control-slider-container"><input type="range" id="channelVolume${i}" min="0" max="127" value="100" class="control-slider" title="Adjust volume for MIDI Channel ${i}"></div>`;
+                volDiv.innerHTML = `<div class="control-header"><label for="channelVolume${i}">Ch ${i}:</label><span id="channelVolumeValue${i}" class="value-display"></span><button class="learn-cc-button ml-2" data-param-id="channelVolume${i}" title="Map Ch ${i} Volume to a MIDI CC knob/fader">L</button></div><div class="control-slider-container"><input type="range" id="channelVolume${i}" min="0" max="127" value="100" class="control-slider" title="Adjust volume for MIDI Channel ${i}"></div>`;
                 dom.channelVolumesContainer.appendChild(volDiv);
 
                 volDiv.querySelector('input').addEventListener('input', e => {
@@ -1242,6 +1282,7 @@
                 const label = document.createElement('label');
                 label.className = 'radio-label';
                 label.innerHTML = `<input type="radio" name="octaveSelect" value="${i}"><span>${i}</span>`;
+                label.title = `Set base octave for randomization to ${i}`;
                 dom.octaveSelector.appendChild(label);
             }
             dom.octaveSelector.addEventListener('change', e => {
@@ -1252,10 +1293,19 @@
             });
 
             dom.musicModePresetContainer.innerHTML = '';
+            const presetTooltips = {
+                off: "Music Mode does nothing.",
+                single: "Changes one parameter on one random track.",
+                multi: "Changes all enabled parameters on all active tracks.",
+                melodic: "Changes notes and scale, but keeps rhythm the same.",
+                theory: "Changes notes and rhythm, but keeps the scale the same.",
+                fifths: "Shifts the musical key by a perfect fifth."
+            };
             Object.entries(MUSIC_MODE_PRESETS).forEach(([key, preset]) => {
                 const label = document.createElement('label');
                 label.className = 'radio-label';
                 label.innerHTML = `<input type="radio" name="musicModePreset" value="${key}"><span>${preset.label}</span>`;
+                label.title = presetTooltips[key];
                 dom.musicModePresetContainer.appendChild(label);
             });
         }
@@ -1640,7 +1690,7 @@
             const entry = document.createElement('div');
             entry.textContent = message;
             dom.musicModeLog.prepend(entry);
-            while (dom.musicModeLog.children.length > 5) { // Change: Limit log to 5 entries
+            while (dom.musicModeLog.children.length > 5) {
                 dom.musicModeLog.removeChild(dom.musicModeLog.lastChild);
             }
         }
@@ -1650,3 +1700,15 @@
 </script>
 </body>
 </html>
+```
+
+Here's a summary of the improvements:
+
+* **Tooltip Audit:** I've added musician-friendly tooltips to all interactive controls that were missing them, including the Randomization checkboxes, the Music Mode presets, and the Octave selectors. I also improved existing tooltips to be more descriptive.
+* **3D UI:** I've reworked the CSS to give the entire interface a more tactile, 3D hardware feel.
+* **Panels:** Now have a subtle top-down gradient and more complex shadowing to make them look like distinct modules.
+* **Buttons:** Have been styled with gradients and borders to look like raised, physical buttons. The "pressed" state is also more pronounced.
+* **Sliders and Inputs:** Now have inset shadows to appear recessed into the panels, enhancing the 3D effect.
+* **Prominent Flashing:** The "activity flash" on each track is now a more noticeable but still pleasant glow effect, making it easier to see which track is currently playing its note.
+
+These changes make the sequencer not only more intuitive to use, but also give it a much more polished and professional aesthet
