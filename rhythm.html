@@ -51,11 +51,15 @@
             margin-bottom: 0.5rem;
             transition: opacity 0.4s ease-in-out, filter 0.4s ease-in-out, border-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
             position: relative;
-        }
-        #masterControlPanel {
-            padding: 0.5rem;
+            display: flex; /* Use flex for all panels */
+            flex-direction: column;
             gap: 0.5rem;
         }
+        .synth-panel h2 {
+            margin-bottom: 0.5rem;
+            flex-shrink: 0;
+        }
+
         .synth-panel.track-pulse {
             animation: trackPulse 0.15s ease-out;
             filter: brightness(1.2);
@@ -171,8 +175,8 @@
         .note-input-group { display: flex; align-items: center; gap: 0.25rem; }
         .note-input-group > input { flex-grow: 1; }
 
-        #musicModePanel, #channelVolumesWrapper, #midiPanel, #randomizationSettingsContainer, #hintsPanel { display: none; }
-        body.music-mode-active #musicModePanel { display: flex; flex-direction: column; gap: 0.5rem; }
+        #musicModePanel, #channelVolumesWrapper, #midiPanel, #randomizationSettingsContainer, #hintsPanel, #chordPanel { display: none; }
+        body.music-mode-active #musicModePanel { display: flex; }
         #appContainer { display: flex; flex-direction: column; gap: 0.75rem; flex-grow: 1; }
         #mainContent { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
         #musicModeLog {
@@ -204,9 +208,13 @@
         body.music-mode-active #logSection { display: flex; }
 
         #bottom-panels-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 0.75rem;
+        }
+        #bottom-panels-container > .synth-panel {
+            flex: 1 1 280px;
+            height: min-content;
         }
 
         #randomizeOptionsContainer, #viewTogglesContainer {
@@ -251,15 +259,15 @@
     <div id="mainContent" class="flex-grow">
         <div class="flex flex-col gap-3 main-container">
             <div id="sequencerWrapperPanel" class="w-full synth-panel">
-                <h2 class="text-lg font-semibold mb-3 text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer Tracks</h2>
+                <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer Tracks</h2>
                 <div id="sequencerTracksContainer"></div>
             </div>
 
             <div id="bottom-panels-container">
-                <div id="masterControlPanel" class="synth-panel flex flex-col gap-2">
-                    <h2 class="text-lg font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
+                <div id="masterControlPanel" class="synth-panel">
+                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
 
-                    <div id="toolbar" class="flex flex-wrap items-center justify-center gap-3 mb-2">
+                    <div id="toolbar" class="flex flex-wrap items-center justify-center gap-3">
                         <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences">&#x25B6;</button>
                         <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save the current session to browser storage">&#128190;</button>
                         <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load the last saved session from browser storage">&#128193;</button>
@@ -313,12 +321,13 @@
                             <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="randomizationSettingsContainer" id="showRandomPanel" checked title="Show/Hide the Randomization panel"> Random</label>
                             <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="channelVolumesWrapper" id="showVolumesPanel" checked title="Show/Hide the Channel Volumes panel"> Volumes</label>
                             <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="hintsPanel" id="showHintsPanel" checked title="Show/Hide the Hints panel"> Hints</label>
+                            <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="chordPanel" id="showChordPanel" checked title="Show/Hide the Chord panel"> Chords</label>
                         </div>
                     </div>
                 </div>
 
-                <div id="midiPanel" class="synth-panel flex flex-col gap-3">
-                    <h2 class="text-lg font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">MIDI Setup</h2>
+                <div id="midiPanel" class="synth-panel">
+                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">MIDI Setup</h2>
                     <div class="control-group">
                         <div class="grid grid-cols-2 gap-2">
                             <button id="reInitMidiButton" class="push-button re-init-midi-button w-full" title="Rescan for MIDI devices.">RESET MIDI</button>
@@ -336,15 +345,15 @@
                 </div>
 
                 <div id="randomizationSettingsContainer" class="synth-panel">
-                    <h2 class="text-lg font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Randomization</h2>
-                    <div class="control-group mb-3">
+                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Randomization</h2>
+                    <div class="control-group">
                         <button id="masterRandomizeButton" class="push-button master-randomize-button w-full" title="Randomize all active tracks.">RANDOMIZE ALL ACTIVE</button>
                     </div>
                     <div class="control-group">
-                        <label for="octaveSelector" class="text-center mb-1">Base Octave</label>
+                        <label for="octaveSelector" class="text-center">Base Octave</label>
                         <div id="octaveSelector" title="Set the base octave for note randomization"></div>
                     </div>
-                    <div id="randomizeOptionsContainer" class="control-group mt-2">
+                    <div id="randomizeOptionsContainer" class="control-group">
                         <label class="font-bold text-xs uppercase col-span-full" style="font-family: 'Orbitron', sans-serif;">Randomize:</label>
                         <label class="checkbox-label-container"><input type="checkbox" id="randomizeNoteCheck" checked title="Randomize the MIDI note of tracks"> Notes</label>
                         <label class="checkbox-label-container"><input type="checkbox" id="randomizePulsesCheck" checked title="Randomize the number of pulses in tracks"> Pulses</label>
@@ -354,8 +363,23 @@
                     </div>
                 </div>
 
+                <div id="chordPanel" class="synth-panel">
+                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Chords</h2>
+                    <div class="control-group">
+                        <label for="chordRootSelect">Root Note:</label>
+                        <select id="chordRootSelect" title="Select the root note for the chord"></select>
+                    </div>
+                    <div class="control-group">
+                        <label for="chordTypeSelect">Chord Type:</label>
+                        <select id="chordTypeSelect" title="Select the chord type"></select>
+                    </div>
+                    <div class="control-group">
+                        <button id="distributeChordButton" class="push-button w-full" title="Assign notes from the selected chord to active tracks">DISTRIBUTE CHORD</button>
+                    </div>
+                </div>
+
                 <div id="musicModePanel" class="synth-panel">
-                    <h2 class="text-lg font-semibold mb-1 text-center" style="font-family: 'Orbitron', sans-serif;">Music Mode</h2>
+                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Music Mode</h2>
                     <div class="control-group">
                         <div class="control-header">
                             <label for="randomIntervalSlider">Interval (Bars):</label>
@@ -370,23 +394,23 @@
                     <div class="control-group">
                         <label class="checkbox-label-container"><input type="checkbox" id="multiTrackRandomToggle" title="Randomize all active tracks at once (checked) or one at a time (unchecked)"> Multi-Track Random</label>
                     </div>
-                    <div class="control-group mt-3">
+                    <div class="control-group">
                         <button id="musicModeNextButton" class="push-button w-full" title="Manually trigger the next randomization step">TRIGGER NEXT</button>
                     </div>
                 </div>
 
                 <div id="channelVolumesWrapper" class="synth-panel">
-                    <h2 class="text-lg font-semibold mb-2 text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
+                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
                     <div id="channelVolumesContainer"></div>
                 </div>
 
                 <div id="hintsPanel" class="synth-panel">
                     <div class="control-group">
-                        <label class="font-bold text-xs uppercase mb-2" style="font-family: 'Orbitron', sans-serif;">Helpful Hint</label>
+                        <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Helpful Hint</label>
                         <div id="hintContent"></div>
                     </div>
-                    <div id="logSection" class="control-group mt-3 flex-grow flex-col">
-                        <label class="font-bold text-xs uppercase mb-2" style="font-family: 'Orbitron', sans-serif;">Music Mode Log</label>
+                    <div id="logSection" class="control-group flex-grow flex-col">
+                        <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Music Mode Log</label>
                         <div id="musicModeLog"></div>
                     </div>
                 </div>
@@ -405,16 +429,18 @@
 
         // --- CONSTANTS AND CONFIGURATION ---
         const MAX_TRACKS = 12;
-        const MANUAL_SAVE_KEY = 'rhythmKing77_manualSave_v15';
-        const AUTOSAVE_KEY = 'rhythmKing77_autoSave_v15';
+        const MANUAL_SAVE_KEY = 'rhythmKing77_manualSave_v17';
+        const AUTOSAVE_KEY = 'rhythmKing77_autoSave_v17';
         const SCALES = { 'Major': [0, 2, 4, 5, 7, 9, 11], 'Minor': [0, 2, 3, 5, 7, 8, 10], 'Dorian': [0, 2, 3, 5, 7, 9, 10], 'Phrygian': [0, 1, 3, 5, 7, 8, 10], 'Lydian': [0, 2, 4, 6, 7, 9, 11], 'Mixolydian': [0, 2, 4, 5, 7, 9, 10], 'Locrian': [0, 1, 3, 5, 6, 8, 10], 'Major Pentatonic': [0, 2, 4, 7, 9], 'Minor Pentatonic': [0, 3, 5, 7, 10], 'Blues': [0, 3, 5, 6, 7, 10], 'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11], 'Whole Tone': [0, 2, 4, 6, 8, 10], 'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] };
+        const CHORDS = { 'Major': [0, 4, 7], 'Minor': [0, 3, 7], 'Diminished': [0, 3, 6], 'Augmented': [0, 4, 8], 'Major 7th': [0, 4, 7, 11], 'Minor 7th': [0, 3, 7, 10], 'Dominant 7th': [0, 4, 7, 10], 'Suspended 2nd': [0, 2, 7], 'Suspended 4th': [0, 5, 7], };
         const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         const HINTS = [ "Click a red 'L' to map a MIDI CC. Click a green 'L' to un-map it.", "Toggle 'Music Mode' for generative grooves.", "Hit 'Random' on tracks for instant variations.", "Use the 'Save' icon to create a manual save point.", "Hold +/- buttons for rapid value changes.", "The 'Stop Notes' button sends an 'All Notes Off' command to your MIDI gear.", "'Stop Notes' is your friend if notes get stuck!" ];
         const VIEW_PANEL_MAP = {
             showMidiPanel: 'midiPanel',
             showRandomPanel: 'randomizationSettingsContainer',
             showVolumesPanel: 'channelVolumesWrapper',
-            showHintsPanel: 'hintsPanel'
+            showHintsPanel: 'hintsPanel',
+            showChordPanel: 'chordPanel',
         };
 
         // --- DOM ELEMENT CACHE ---
@@ -437,7 +463,8 @@
                 'multiTrackRandomToggle', 'musicModeNextButton', 'musicModeLog', 'hintContent',
                 'app-background', 'octaveSelector', 'viewTogglesContainer',
                 'randomizationSettingsContainer', 'musicModePanel', 'logSection',
-                'midiPanel', 'hintsPanel'
+                'midiPanel', 'hintsPanel', 'chordPanel', 'chordRootSelect', 'chordTypeSelect',
+                'distributeChordButton'
             ];
             ids.forEach(id => {
                 const camelCaseId = id.replace(/-([a-z])/g, g => g[1].toUpperCase());
@@ -477,11 +504,16 @@
                     velocity: true,
                     octave: 3,
                 },
+                chords: {
+                    rootNote: 0, // C
+                    type: 'Major',
+                },
                 view: {
                     showMidiPanel: true,
                     showRandomPanel: true,
                     showVolumesPanel: true,
                     showHintsPanel: true,
+                    showChordPanel: true,
                 },
                 tracks: Array.from({ length: 4 }, (_, i) => ({
                     id: i,
@@ -732,7 +764,7 @@
                 const checkbox = dom.get(key);
                 const panel = dom.get(panelId);
                 if (checkbox) checkbox.checked = state.view[key];
-                if(panel) panel.style.display = state.view[key] ? 'block' : 'none';
+                if(panel) panel.style.display = state.view[key] ? 'flex' : 'none';
             });
             dom.musicModePanel.style.display = state.musicMode.enabled ? 'flex' : 'none';
 
@@ -750,6 +782,9 @@
             dom.randomizeRotationCheck.checked = state.randomization.rotation;
             dom.randomizeScaleCheck.checked = state.randomization.scale;
             dom.randomizeVelocityCheck.checked = state.randomization.velocity;
+
+            dom.chordRootSelect.value = state.chords.rootNote;
+            dom.chordTypeSelect.value = state.chords.type;
 
             renderAllTracks();
             renderChannelVolumes();
@@ -1008,6 +1043,10 @@
                 updateState({ musicMode: {...state.musicMode, multiTrack: e.target.checked }});
             });
 
+            dom.chordRootSelect.addEventListener('change', e => updateState({ chords: { ...state.chords, rootNote: parseInt(e.target.value) }}));
+            dom.chordTypeSelect.addEventListener('change', e => updateState({ chords: { ...state.chords, type: e.target.value }}));
+            dom.distributeChordButton.addEventListener('click', handleDistributeChord);
+
             dom.sequencerTracksContainer.addEventListener('click', handleTrackAction);
             dom.sequencerTracksContainer.addEventListener('input', handleTrackAction);
             dom.sequencerTracksContainer.addEventListener('change', handleTrackAction);
@@ -1059,12 +1098,19 @@
 
             const track = state.tracks.find(t => t.id === trackId);
             const newValues = {[prop]: value};
+
             if(prop === 'steps') {
                 if(value < track.pulses) newValues.pulses = value;
                 if(value <= track.rotation) newValues.rotation = value > 0 ? value - 1 : 0;
             }
-            if(prop === 'pulses' && value > track.steps) {
-                newValues.steps = value;
+
+            if(prop === 'pulses') {
+                const maxPulses = state.stepsLocked ? state.globalLockedSteps : track.steps;
+                if (value > maxPulses) {
+                    value = maxPulses;
+                    newValues.pulses = value;
+                    target.value = value;
+                }
             }
 
             if (prop === 'steps' && state.stepsLocked) {
@@ -1140,6 +1186,9 @@
                     updateState({ randomization: { ...state.randomization, octave: parseInt(e.target.value, 10)}})
                 }
             });
+
+            NOTE_NAMES.forEach((name, i) => dom.chordRootSelect.add(new Option(name, i)));
+            Object.keys(CHORDS).forEach(name => dom.chordTypeSelect.add(new Option(name, name)));
         }
 
         function setupToneJS() {
@@ -1363,6 +1412,27 @@
             }
         }
 
+        function handleDistributeChord() {
+            const rootNote = state.chords.rootNote;
+            const chordIntervals = CHORDS[state.chords.type];
+            const octave = state.randomization.octave;
+
+            if (!chordIntervals) return;
+
+            const chordNotes = chordIntervals.map(interval => (12 * octave) + rootNote + interval);
+            const activeTracks = state.tracks.filter(t => t.active);
+
+            const newTracks = state.tracks.map(track => {
+                if (!track.active) return track;
+
+                const noteIndex = activeTracks.indexOf(track) % chordNotes.length;
+                return { ...track, note: chordNotes[noteIndex] };
+            });
+
+            updateState({ tracks: newTracks });
+            showStatusMessage(`${NOTE_NAMES[rootNote]} ${state.chords.type} chord distributed.`, 2000);
+        }
+
         function setHarmoniousRandomizationScale() {
             const scaleNames = Object.keys(SCALES);
             const randomScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
@@ -1379,7 +1449,9 @@
 
             if (options.pulses) {
                 const old = track.pulses;
-                newTrackState.pulses = Math.floor(Math.random() * (track.steps > 1 ? track.steps - 1 : 1)) + 1;
+                // Bias towards smaller values
+                const maxPulses = state.stepsLocked ? state.globalLockedSteps : track.steps;
+                newTrackState.pulses = Math.floor(Math.pow(Math.random(), 2) * (maxPulses - 1)) + 1;
                 changes.push(`P:${old}→${newTrackState.pulses}`);
             }
             if (options.rotation) {
