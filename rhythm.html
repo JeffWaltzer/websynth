@@ -48,7 +48,6 @@
             border-radius: 12px;
             box-shadow: 5px 5px 12px rgba(0,0,0,0.6), -3px -3px 8px rgba(255,255,255,0.07), inset 2px 2px 5px rgba(255,255,255,0.05), inset -2px -2px 5px rgba(0,0,0,0.2);
             padding: 0.5rem;
-            margin-bottom: 0.5rem;
             transition: opacity 0.4s ease-in-out, filter 0.4s ease-in-out, border-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
             position: relative;
             display: flex; /* Use flex for all panels */
@@ -62,16 +61,15 @@
 
         .synth-panel.track-pulse {
             animation: trackPulse 0.15s ease-out;
-            filter: brightness(1.2);
         }
         @keyframes trackPulse {
-            0% {
-                box-shadow: 0 0 15px 5px var(--accent-color), 5px 5px 12px rgba(0,0,0,0.6), -3px -3px 8px rgba(255,255,255,0.07), inset 2px 2px 5px rgba(255,255,255,0.05), inset -2px -2px 5px rgba(0,0,0,0.2);
-                transform: scale(1.005);
+            from {
+                border-color: var(--accent-color);
+                filter: brightness(1.2);
             }
-            100% {
-                box-shadow: 5px 5px 12px rgba(0,0,0,0.6), -3px -3px 8px rgba(255,255,255,0.07), inset 2px 2px 5px rgba(255,255,255,0.05), inset -2px -2px 5px rgba(0,0,0,0.2);
-                transform: scale(1);
+            to {
+                border-color: var(--panel-border);
+                filter: brightness(1);
             }
         }
         .control-flash {
@@ -118,6 +116,10 @@
             box-shadow: 1px 1px 3px rgba(0,0,0,0.4), inset 2px 2px 5px rgba(0,0,0,0.3), inset -1px -1px 2px rgba(255,255,255,0.1);
             transform: translateY(1px);
         }
+        .push-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
         #playStopButton { background-color: #5cb85c; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.2); }
         #playStopButton.stop-state { background-color: #d9534f; }
@@ -146,8 +148,8 @@
             width: 12px; height: 12px; background-color: var(--control-bg); border-radius: 50%;
             transition: background-color 0.1s ease-out, transform 0.1s ease-out; flex-shrink: 0; border: 1px solid var(--control-border);
         }
-        .pattern-step.active { background-color: var(--accent-color); animation: dotPop 0.1s ease-out; }
-        @keyframes dotPop { 0% { transform: scale(1); } 50% { transform: scale(1.4); background-color: white; } 100% { transform: scale(1); } }
+        /* FIX: Removed dotPop animation to prevent flashing */
+        .pattern-step.active { background-color: var(--accent-color); }
         .pattern-step.current { background-color: #fff; border: 2px solid var(--accent-color); transform: scale(1.3); box-shadow: 0 0 8px rgba(255,255,255,0.9); }
 
         label { display: block; margin-bottom: 0.1rem; font-size: 0.75rem; text-transform: uppercase; font-family: 'Orbitron', sans-serif; white-space: nowrap; margin-right: 0.5rem; color: var(--accent-color); }
@@ -175,7 +177,7 @@
         .note-input-group { display: flex; align-items: center; gap: 0.25rem; }
         .note-input-group > input { flex-grow: 1; }
 
-        #musicModePanel, #channelVolumesWrapper, #midiPanel, #randomizationSettingsContainer, #hintsPanel, #chordPanel { display: none; }
+        #musicModePanel, #channelVolumesWrapper, #midiPanel, #randomizationSettingsContainer, #hintsPanel { display: none; }
         body.music-mode-active #musicModePanel { display: flex; }
         #appContainer { display: flex; flex-direction: column; gap: 0.75rem; flex-grow: 1; }
         #mainContent { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -211,10 +213,11 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.75rem;
+            align-items: stretch; /* Stretch panels to fill height */
         }
         #bottom-panels-container > .synth-panel {
             flex: 1 1 280px;
-            height: min-content;
+            height: auto;
         }
 
         #randomizeOptionsContainer, #viewTogglesContainer {
@@ -308,21 +311,18 @@
 
                     <div class="control-group border-t border-gray-700 pt-2 mt-2">
                         <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Global Controls</label>
-                        <div class="grid grid-cols-2 gap-x-4">
-                            <label class="checkbox-label-container" title="Toggle Music Mode for automatic generative patterns"><input type="checkbox" id="musicModeToggle"> Music Mode</label>
-                            <label class="checkbox-label-container" title="Lock all 'Steps' sliders together."><input type="checkbox" id="lockStepsCheckbox"> Lock All Steps</label>
-                        </div>
+                        <label class="checkbox-label-container" title="Lock all 'Steps' sliders together."><input type="checkbox" id="lockStepsCheckbox"> Lock All Steps</label>
                     </div>
+                </div>
 
-                    <div class="control-group border-t border-gray-700 pt-2 mt-2">
-                        <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">View Toggles</label>
-                        <div id="viewTogglesContainer">
-                            <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="midiPanel" id="showMidiPanel" checked title="Show/Hide the MIDI Setup panel"> MIDI</label>
-                            <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="randomizationSettingsContainer" id="showRandomPanel" checked title="Show/Hide the Randomization panel"> Random</label>
-                            <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="channelVolumesWrapper" id="showVolumesPanel" checked title="Show/Hide the Channel Volumes panel"> Volumes</label>
-                            <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="hintsPanel" id="showHintsPanel" checked title="Show/Hide the Hints panel"> Hints</label>
-                            <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="chordPanel" id="showChordPanel" checked title="Show/Hide the Chord panel"> Chords</label>
-                        </div>
+                <div id="viewPanel" class="synth-panel">
+                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Views</h2>
+                    <div id="viewTogglesContainer">
+                        <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="midiPanel" id="showMidiPanel" checked title="Show/Hide the MIDI Setup panel"> MIDI</label>
+                        <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="randomizationSettingsContainer" id="showRandomPanel" checked title="Show/Hide the Randomization panel"> Random</label>
+                        <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="channelVolumesWrapper" id="showVolumesPanel" checked title="Show/Hide the Channel Volumes panel"> Volumes</label>
+                        <label class="checkbox-label-container"><input type="checkbox" data-view-toggle="hintsPanel" id="showHintsPanel" checked title="Show/Hide the Hints panel"> Hints</label>
+                        <label class="checkbox-label-container" title="Toggle Music Mode for automatic generative patterns"><input type="checkbox" id="musicModeToggle"> Music Mode</label>
                     </div>
                 </div>
 
@@ -351,7 +351,7 @@
                     </div>
                     <div class="control-group">
                         <label for="octaveSelector" class="text-center">Base Octave</label>
-                        <div id="octaveSelector" title="Set the base octave for note randomization"></div>
+                        <div id="octaveSelector" title="Set the base octave for notes"></div>
                     </div>
                     <div id="randomizeOptionsContainer" class="control-group">
                         <label class="font-bold text-xs uppercase col-span-full" style="font-family: 'Orbitron', sans-serif;">Randomize:</label>
@@ -360,21 +360,6 @@
                         <label class="checkbox-label-container"><input type="checkbox" id="randomizeRotationCheck" checked title="Randomize the pattern rotation of tracks"> Rotation</label>
                         <label class="checkbox-label-container"><input type="checkbox" id="randomizeScaleCheck" checked title="Randomize the musical scale for all tracks"> Scale</label>
                         <label class="checkbox-label-container"><input type="checkbox" id="randomizeVelocityCheck" checked title="Randomize the velocity of notes in tracks"> Velocity</label>
-                    </div>
-                </div>
-
-                <div id="chordPanel" class="synth-panel">
-                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Chords</h2>
-                    <div class="control-group">
-                        <label for="chordRootSelect">Root Note:</label>
-                        <select id="chordRootSelect" title="Select the root note for the chord"></select>
-                    </div>
-                    <div class="control-group">
-                        <label for="chordTypeSelect">Chord Type:</label>
-                        <select id="chordTypeSelect" title="Select the chord type"></select>
-                    </div>
-                    <div class="control-group">
-                        <button id="distributeChordButton" class="push-button w-full" title="Assign notes from the selected chord to active tracks">DISTRIBUTE CHORD</button>
                     </div>
                 </div>
 
@@ -429,18 +414,16 @@
 
         // --- CONSTANTS AND CONFIGURATION ---
         const MAX_TRACKS = 12;
-        const MANUAL_SAVE_KEY = 'rhythmKing77_manualSave_v17';
-        const AUTOSAVE_KEY = 'rhythmKing77_autoSave_v17';
+        const MANUAL_SAVE_KEY = 'rhythmKing77_manualSave_v19';
+        const AUTOSAVE_KEY = 'rhythmKing77_autoSave_v19';
         const SCALES = { 'Major': [0, 2, 4, 5, 7, 9, 11], 'Minor': [0, 2, 3, 5, 7, 8, 10], 'Dorian': [0, 2, 3, 5, 7, 9, 10], 'Phrygian': [0, 1, 3, 5, 7, 8, 10], 'Lydian': [0, 2, 4, 6, 7, 9, 11], 'Mixolydian': [0, 2, 4, 5, 7, 9, 10], 'Locrian': [0, 1, 3, 5, 6, 8, 10], 'Major Pentatonic': [0, 2, 4, 7, 9], 'Minor Pentatonic': [0, 3, 5, 7, 10], 'Blues': [0, 3, 5, 6, 7, 10], 'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11], 'Whole Tone': [0, 2, 4, 6, 8, 10], 'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] };
-        const CHORDS = { 'Major': [0, 4, 7], 'Minor': [0, 3, 7], 'Diminished': [0, 3, 6], 'Augmented': [0, 4, 8], 'Major 7th': [0, 4, 7, 11], 'Minor 7th': [0, 3, 7, 10], 'Dominant 7th': [0, 4, 7, 10], 'Suspended 2nd': [0, 2, 7], 'Suspended 4th': [0, 5, 7], };
         const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         const HINTS = [ "Click a red 'L' to map a MIDI CC. Click a green 'L' to un-map it.", "Toggle 'Music Mode' for generative grooves.", "Hit 'Random' on tracks for instant variations.", "Use the 'Save' icon to create a manual save point.", "Hold +/- buttons for rapid value changes.", "The 'Stop Notes' button sends an 'All Notes Off' command to your MIDI gear.", "'Stop Notes' is your friend if notes get stuck!" ];
         const VIEW_PANEL_MAP = {
             showMidiPanel: 'midiPanel',
             showRandomPanel: 'randomizationSettingsContainer',
             showVolumesPanel: 'channelVolumesWrapper',
-            showHintsPanel: 'hintsPanel',
-            showChordPanel: 'chordPanel',
+            showHintsPanel: 'hintsPanel'
         };
 
         // --- DOM ELEMENT CACHE ---
@@ -463,8 +446,7 @@
                 'multiTrackRandomToggle', 'musicModeNextButton', 'musicModeLog', 'hintContent',
                 'app-background', 'octaveSelector', 'viewTogglesContainer',
                 'randomizationSettingsContainer', 'musicModePanel', 'logSection',
-                'midiPanel', 'hintsPanel', 'chordPanel', 'chordRootSelect', 'chordTypeSelect',
-                'distributeChordButton'
+                'midiPanel', 'hintsPanel', 'viewPanel', 'appContainer'
             ];
             ids.forEach(id => {
                 const camelCaseId = id.replace(/-([a-z])/g, g => g[1].toUpperCase());
@@ -476,7 +458,7 @@
         let state = {};
         let transportLoops = [];
         let timedRandomEvent = null;
-        let statusTimeout, autosaveTimeout, logClearTimeout, hintInterval;
+        let statusTimeout, autosaveTimeout, hintInterval;
         let activeTrackNotes = {}; // For stuck note prevention
 
         function getDefaultState() {
@@ -504,16 +486,11 @@
                     velocity: true,
                     octave: 3,
                 },
-                chords: {
-                    rootNote: 0, // C
-                    type: 'Major',
-                },
                 view: {
                     showMidiPanel: true,
                     showRandomPanel: true,
                     showVolumesPanel: true,
-                    showHintsPanel: true,
-                    showChordPanel: true,
+                    showHintsPanel: true
                 },
                 tracks: Array.from({ length: 4 }, (_, i) => ({
                     id: i,
@@ -564,9 +541,11 @@
             }
         }
 
-        async function loadState(stateToLoad, isPlaying = false) {
-            if (!isPlaying && Tone.Transport.state === 'started') {
+        async function loadState(stateToLoad) {
+            const wasPlaying = Tone.Transport.state === 'started';
+            if (wasPlaying) {
                 await Tone.Transport.stop();
+                panic(); // Clear any lingering notes from the old state
             }
 
             state = deepMerge(getDefaultState(), stateToLoad);
@@ -588,7 +567,7 @@
 
             setupTimedRandomization();
 
-            if (isPlaying) {
+            if (wasPlaying) {
                 await Tone.Transport.start();
             }
         }
@@ -601,8 +580,7 @@
             }
             try {
                 const loaded = JSON.parse(savedStateJSON);
-                const isPlaying = Tone.Transport.state === 'started';
-                await loadState(loaded, isPlaying);
+                await loadState(loaded);
                 showStatusMessage("Manual save loaded successfully!", 2000);
             } catch (e) {
                 showStatusMessage("Error loading manual save. Data might be corrupt.", 5000);
@@ -620,6 +598,7 @@
             try {
                 if (!navigator.requestMIDIAccess) {
                     showStatusMessage('Web MIDI not supported in this browser.', 5000);
+                    updateState({ midi: { ...state.midi, available: false } });
                     return;
                 }
                 if (midiAccess) {
@@ -627,12 +606,14 @@
                     midiAccess.removeEventListener('statechange', populateMidiDeviceList);
                 }
                 midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+                updateState({ midi: { ...state.midi, available: true } });
                 populateMidiDeviceList();
                 midiAccess.addEventListener('statechange', populateMidiDeviceList);
                 midiAccess.inputs.forEach(i => i.onmidimessage = handleMidiMessage);
             } catch (err) {
-                showStatusMessage('MIDI Access Denied. Please check browser permissions.', 5000);
+                showStatusMessage('Web MIDI disabled by permissions policy.', 5000);
                 console.error("MIDI setup error:", err);
+                updateState({ midi: { ...state.midi, available: false } });
             }
         }
 
@@ -641,6 +622,7 @@
             const channel = (cmd & 0x0F) + 1;
             const command = cmd & 0xF0;
 
+            // Note learning
             if (command === 0x90 && param2 > 0 && noteLearningTrack) {
                 const trackId = noteLearningTrack.trackId;
                 updateTrackState(trackId, { note: param1, channelOverride: channel });
@@ -649,6 +631,7 @@
                 return;
             }
 
+            // CC learning and mapping
             if (command === 0xB0) {
                 if (currentLearningControl) {
                     const { paramId } = currentLearningControl;
@@ -674,7 +657,10 @@
         }
 
         function populateMidiDeviceList() {
-            if (!midiAccess) return;
+            if (!midiAccess || !state.midi?.available) {
+                dom.midiOutSelect.innerHTML = '<option>MIDI Not Available</option>';
+                return;
+            }
             const selectedId = midiOutput?.id;
             dom.midiOutSelect.innerHTML = '';
             if (midiAccess.outputs.size === 0) {
@@ -694,8 +680,8 @@
         function updateMidiOutput() {
             const selectedId = dom.midiOutSelect.value;
             midiOutput = selectedId ? midiAccess?.outputs.get(selectedId) : null;
-            if(state.midiOutputId !== (midiOutput?.id ?? null)) {
-                updateState({ midiOutputId: midiOutput?.id ?? null });
+            if(state.midi.outputId !== (midiOutput?.id ?? null)) {
+                updateState({ midi: { ...state.midi, outputId: midiOutput?.id ?? null } });
             }
         }
 
@@ -714,8 +700,8 @@
         function panic() {
             clearActiveNotes();
             for (let i = 1; i <= 16; i++) {
-                sendMidiCC(120, 0, i);
-                sendMidiCC(123, 0, i);
+                sendMidiCC(120, 0, i); // All sound off
+                sendMidiCC(123, 0, i); // All notes off
             }
         }
 
@@ -759,6 +745,10 @@
             dom.lockStepsCheckbox.checked = state.stepsLocked;
             dom.midiChannelSelect.value = state.globalMidiChannel;
 
+            const midiAvailable = state.midi?.available ?? false;
+            dom.midiPanel.querySelectorAll('select, button').forEach(el => el.disabled = !midiAvailable);
+            dom.queryAll('.learn-cc-button, .note-learn-button').forEach(btn => btn.disabled = !midiAvailable);
+
             // View Toggles
             Object.entries(VIEW_PANEL_MAP).forEach(([key, panelId]) => {
                 const checkbox = dom.get(key);
@@ -766,13 +756,14 @@
                 if (checkbox) checkbox.checked = state.view[key];
                 if(panel) panel.style.display = state.view[key] ? 'flex' : 'none';
             });
+
+            dom.musicModeToggle.checked = state.musicMode.enabled;
             dom.musicModePanel.style.display = state.musicMode.enabled ? 'flex' : 'none';
 
             document.body.classList.toggle('music-mode-active', state.musicMode.enabled);
             dom.appBackground.classList.toggle('bg-music-mode', state.musicMode.enabled);
             dom.appBackground.classList.toggle('bg-default', !state.musicMode.enabled);
             dom.logSection.style.display = state.musicMode.enabled ? 'flex' : 'none';
-            dom.musicModeToggle.checked = state.musicMode.enabled;
             dom.randomIntervalSlider.value = state.musicMode.interval;
             dom.randomIntervalValue.textContent = state.musicMode.interval;
             dom.multiTrackRandomToggle.checked = state.musicMode.multiTrack;
@@ -782,9 +773,6 @@
             dom.randomizeRotationCheck.checked = state.randomization.rotation;
             dom.randomizeScaleCheck.checked = state.randomization.scale;
             dom.randomizeVelocityCheck.checked = state.randomization.velocity;
-
-            dom.chordRootSelect.value = state.chords.rootNote;
-            dom.chordTypeSelect.value = state.chords.type;
 
             renderAllTracks();
             renderChannelVolumes();
@@ -811,9 +799,16 @@
 
         function renderTrack(track, panel) {
             const update = (prop, value, text) => {
-                panel.querySelector(`#${prop}${track.id}`).value = value;
-                panel.querySelector(`#${prop}Value${track.id}`).textContent = text ?? value;
+                const el = panel.querySelector(`#${prop}${track.id}`);
+                if (el) el.value = value;
+                const textEl = panel.querySelector(`#${prop}Value${track.id}`);
+                if(textEl) textEl.textContent = text ?? value;
             };
+
+            const pulsesSlider = panel.querySelector(`#pulses${track.id}`);
+            if (pulsesSlider) {
+                pulsesSlider.max = track.steps;
+            }
 
             update('steps', track.steps);
             update('pulses', track.pulses);
@@ -898,7 +893,7 @@
             </div>
             <div class="grid grid-cols-2 gap-x-3 gap-y-1 mb-2">
                 ${createSliderControl('steps', trackId, 'Steps', 1, 32, 16)}
-                ${createSliderControl('pulses', trackId, 'Pulses', 1, 32, 4)}
+                ${createSliderControl('pulses', trackId, 'Pulses', 1, 16, 4)}
                 ${createSliderControl('rotation', trackId, 'Rotate', 0, 15, 0)}
                 ${createSliderControl('velocity', trackId, 'Velocity', 1, 127, 100)}
                 ${createSelectControl('channelOverride', trackId, 'MIDI Ch', ['global', ...Array.from({length:16},(_,i)=>i+1)])}
@@ -1017,40 +1012,38 @@
 
             dom.lockStepsCheckbox.addEventListener('change', handleLockStepsChange);
             dom.viewTogglesContainer.addEventListener('change', e => {
-                if (e.target.dataset.viewToggle) {
+                if(e.target.id === 'musicModeToggle') {
+                    updateState({ musicMode: { ...state.musicMode, enabled: e.target.checked } });
+                    setupTimedRandomization();
+                } else if (e.target.dataset.viewToggle) {
                     const viewKey = 'show' + e.target.id.charAt(4).toUpperCase() + e.target.id.slice(5);
                     updateState({ view: { ...state.view, [viewKey]: e.target.checked } });
                 }
             });
 
-            dom.musicModeToggle.addEventListener('change', e => {
-                updateState({ musicMode: { ...state.musicMode, enabled: e.target.checked } });
-                setupTimedRandomization();
-            });
             dom.musicModeNextButton.addEventListener('click', triggerGenerativeStep);
             dom.masterRandomizeButton.addEventListener('click', handleMasterRandomize);
 
             dom.randomIntervalSlider.addEventListener('input', e => {
                 const newInterval = parseInt(e.target.value, 10);
                 dom.randomIntervalValue.textContent = newInterval;
-            });
-            dom.randomIntervalSlider.addEventListener('change', e => {
-                const newInterval = parseInt(e.target.value, 10);
                 updateState({ musicMode: {...state.musicMode, interval: newInterval }});
+            });
+
+            dom.randomIntervalSlider.addEventListener('change', e => {
                 setupTimedRandomization();
             });
+
             dom.multiTrackRandomToggle.addEventListener('change', e => {
                 updateState({ musicMode: {...state.musicMode, multiTrack: e.target.checked }});
             });
 
-            dom.chordRootSelect.addEventListener('change', e => updateState({ chords: { ...state.chords, rootNote: parseInt(e.target.value) }}));
-            dom.chordTypeSelect.addEventListener('change', e => updateState({ chords: { ...state.chords, type: e.target.value }}));
-            dom.distributeChordButton.addEventListener('click', handleDistributeChord);
-
             dom.sequencerTracksContainer.addEventListener('click', handleTrackAction);
             dom.sequencerTracksContainer.addEventListener('input', handleTrackAction);
             dom.sequencerTracksContainer.addEventListener('change', handleTrackAction);
-            document.body.addEventListener('click', handleBodyClick);
+
+            document.body.addEventListener('click', handleBodyClick, true);
+
 
             // Listeners for +/- buttons
             document.body.addEventListener('mousedown', startAutoRepeat);
@@ -1074,7 +1067,9 @@
                 case 'randomize': randomizeTrackParameters(track); break;
                 case 'toggleActive':
                     if (track.active) {
-                        sendMidiNoteOff(track.note, track.channelOverride !== 'global' ? parseInt(track.channelOverride) : state.globalMidiChannel);
+                        const ch = (track.channelOverride !== 'global') ? parseInt(track.channelOverride) : state.globalMidiChannel;
+                        sendMidiNoteOff(track.note, ch);
+                        delete activeTrackNotes[trackId];
                     }
                     updateTrackState(trackId, { active: !track.active });
                     break;
@@ -1121,11 +1116,19 @@
         }
 
         function handleBodyClick(e) {
-            const target = e.target;
-            if (target.matches('.learn-cc-button')) {
-                handleLearnCcClick(target.dataset.paramId, target);
+            const isLearnButton = e.target.closest('.learn-cc-button, .note-learn-button');
+            if (isLearnButton) {
+                if(e.target.classList.contains('learn-cc-button')) {
+                    handleLearnCcClick(e.target.dataset.paramId, e.target);
+                }
+                return;
+            }
+
+            if(currentLearningControl || noteLearningTrack) {
+                cancelAllLearnModes(true);
             }
         }
+
 
         // --- INITIALIZATION ---
         async function init() {
@@ -1144,13 +1147,13 @@
                 localStorage.removeItem(AUTOSAVE_KEY);
             }
 
-            state = deepMerge(getDefaultState(), loadedState || {});
+            state = getDefaultState();
 
             setupGlobalListeners();
             setupToneJS();
             createInitialUI();
 
-            await loadState(state);
+            await loadState(loadedState || state);
             await setupMIDI();
 
             hintInterval = setInterval(showHint, 25000);
@@ -1183,12 +1186,12 @@
             }
             dom.octaveSelector.addEventListener('change', e => {
                 if (e.target.name === 'octaveSelect') {
-                    updateState({ randomization: { ...state.randomization, octave: parseInt(e.target.value, 10)}})
+                    const newOctave = parseInt(e.target.value, 10);
+                    const newRandomizationState = { ...state.randomization, octave: newOctave };
+                    updateState({ randomization: newRandomizationState });
+                    logChange(`Base octave for randomization set to ${newOctave}.`);
                 }
             });
-
-            NOTE_NAMES.forEach((name, i) => dom.chordRootSelect.add(new Option(name, i)));
-            Object.keys(CHORDS).forEach(name => dom.chordTypeSelect.add(new Option(name, name)));
         }
 
         function setupToneJS() {
@@ -1241,7 +1244,6 @@
             transportLoops[track.id] = new Tone.Sequence((time, value) => {
                 const ch = (track.channelOverride !== 'global') ? parseInt(track.channelOverride) : state.globalMidiChannel;
 
-                // Stuck note prevention: turn off the last note for this track before playing a new one
                 if (activeTrackNotes[track.id]) {
                     const { note, channel } = activeTrackNotes[track.id];
                     sendMidiNoteOff(note, channel);
@@ -1252,17 +1254,18 @@
                     const channelVolume = state.channelVolumes[ch - 1] / 127.0;
                     const masterVol = state.masterVolume / 127.0;
                     const finalVelocity = Math.round(track.velocity * channelVolume * masterVol);
+                    const noteToPlay = { note: track.note, channel: ch };
 
-                    sendMidiNoteOn(track.note, Math.max(1, Math.min(127, finalVelocity)), ch);
-                    activeTrackNotes[track.id] = { note: track.note, channel: ch }; // Track the new note
+                    sendMidiNoteOn(noteToPlay.note, Math.max(1, Math.min(127, finalVelocity)), noteToPlay.channel);
+                    activeTrackNotes[track.id] = noteToPlay;
 
                     Tone.Transport.scheduleOnce(() => {
-                        sendMidiNoteOff(track.note, ch);
-                        // Ensure we only delete if it's still the same note that's active
-                        if(activeTrackNotes[track.id] && activeTrackNotes[track.id].note === track.note) {
+                        const currentlyActive = activeTrackNotes[track.id];
+                        if (currentlyActive && currentlyActive.note === noteToPlay.note && currentlyActive.channel === noteToPlay.channel) {
+                            sendMidiNoteOff(noteToPlay.note, noteToPlay.channel);
                             delete activeTrackNotes[track.id];
                         }
-                    }, time + Tone.Time("16n").toSeconds() * 0.8);
+                    }, time + Tone.Time("16n").toSeconds() * 0.9);
 
                     Tone.Draw.schedule(() => {
                         const panel = dom.query(`.synth-panel[data-track-id="${track.id}"]`);
@@ -1344,15 +1347,19 @@
         }
 
         function handleLearnCcClick(paramId, button) {
-            cancelAllLearnModes(false);
+            if (currentLearningControl?.paramId === paramId) {
+                cancelAllLearnModes(true);
+                return;
+            }
             if (state.ccMap[paramId]) {
                 const newCcMap = {...state.ccMap};
                 delete newCcMap[paramId];
                 updateState({ccMap: newCcMap});
                 showStatusMessage(`Mapping for ${getReadableParamId(paramId)} cleared.`);
             } else {
+                cancelAllLearnModes(false);
                 currentLearningControl = { paramId, button };
-                showStatusMessage(`Listening for MIDI CC for ${getReadableParamId(paramId)}.`);
+                showStatusMessage(`Listening for MIDI CC for ${getReadableParamId(paramId)}...`);
             }
             render();
         }
@@ -1367,6 +1374,10 @@
         }
 
         function startNoteLearn(trackId, button) {
+            if (noteLearningTrack?.trackId === trackId) {
+                cancelAllLearnModes(true);
+                return;
+            }
             cancelAllLearnModes(false);
             noteLearningTrack = { trackId, button };
             button.classList.add('learning');
@@ -1412,27 +1423,6 @@
             }
         }
 
-        function handleDistributeChord() {
-            const rootNote = state.chords.rootNote;
-            const chordIntervals = CHORDS[state.chords.type];
-            const octave = state.randomization.octave;
-
-            if (!chordIntervals) return;
-
-            const chordNotes = chordIntervals.map(interval => (12 * octave) + rootNote + interval);
-            const activeTracks = state.tracks.filter(t => t.active);
-
-            const newTracks = state.tracks.map(track => {
-                if (!track.active) return track;
-
-                const noteIndex = activeTracks.indexOf(track) % chordNotes.length;
-                return { ...track, note: chordNotes[noteIndex] };
-            });
-
-            updateState({ tracks: newTracks });
-            showStatusMessage(`${NOTE_NAMES[rootNote]} ${state.chords.type} chord distributed.`, 2000);
-        }
-
         function setHarmoniousRandomizationScale() {
             const scaleNames = Object.keys(SCALES);
             const randomScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
@@ -1440,6 +1430,7 @@
             const newScale = `${NOTE_NAMES[randomRootNote]} ${randomScaleName}`;
             updateState({currentScaleName: newScale});
             logChange(`Scale: ${newScale}`);
+            regenerateScaleFromName();
         }
 
         function randomizeTrackParameters(track, shouldLog = true) {
@@ -1449,9 +1440,8 @@
 
             if (options.pulses) {
                 const old = track.pulses;
-                // Bias towards smaller values
                 const maxPulses = state.stepsLocked ? state.globalLockedSteps : track.steps;
-                newTrackState.pulses = Math.floor(Math.pow(Math.random(), 2) * (maxPulses - 1)) + 1;
+                newTrackState.pulses = maxPulses > 0 ? Math.floor(Math.pow(Math.random(), 2) * (maxPulses - 1)) + 1 : 0;
                 changes.push(`P:${old}→${newTrackState.pulses}`);
             }
             if (options.rotation) {
@@ -1461,10 +1451,19 @@
             }
             if (options.note) {
                 if (currentRandomizationScale.length === 0) regenerateScaleFromName();
-                const minMidi = 12 * options.octave;
-                const maxMidi = minMidi + 23;
+
+                // FIX: Expand randomization to 3 octaves: below, current, and above the base octave.
+                const baseOctave = options.octave;
+                const minMidi = Math.max(0, (baseOctave - 1) * 12);
+                const maxMidi = Math.min(127, (baseOctave + 1) * 12 + 11);
+
                 let octaveFilteredScale = currentRandomizationScale.filter(note => note >= minMidi && note <= maxMidi);
-                if (octaveFilteredScale.length === 0) octaveFilteredScale = currentRandomizationScale;
+
+                if (octaveFilteredScale.length === 0) {
+                    // Fallback to the entire scale if the 3-octave range is somehow empty
+                    octaveFilteredScale = currentRandomizationScale;
+                }
+
                 if (octaveFilteredScale.length > 0) {
                     const oldNote = Tone.Frequency(track.note, "midi").toNote();
                     newTrackState.note = octaveFilteredScale[Math.floor(Math.random() * octaveFilteredScale.length)];
@@ -1526,17 +1525,14 @@
         }
 
         function logChange(message) {
-            if (logClearTimeout) clearTimeout(logClearTimeout);
             if (!dom.musicModeLog) return;
             const entry = document.createElement('div');
             entry.textContent = message;
             dom.musicModeLog.prepend(entry);
-            while (dom.musicModeLog.children.length > 20) {
+            // FIX: Only show the last 3 log messages
+            while (dom.musicModeLog.children.length > 3) {
                 dom.musicModeLog.removeChild(dom.musicModeLog.lastChild);
             }
-            logClearTimeout = setTimeout(() => {
-                if (dom.musicModeLog) dom.musicModeLog.innerHTML = '';
-            }, 15000);
         }
 
         // Kick off the application
