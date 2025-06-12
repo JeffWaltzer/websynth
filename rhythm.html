@@ -148,7 +148,6 @@
             width: 12px; height: 12px; background-color: var(--control-bg); border-radius: 50%;
             transition: background-color 0.1s ease-out, transform 0.1s ease-out; flex-shrink: 0; border: 1px solid var(--control-border);
         }
-        /* FIX: Removed dotPop animation to prevent flashing */
         .pattern-step.active { background-color: var(--accent-color); }
         .pattern-step.current { background-color: #fff; border: 2px solid var(--accent-color); transform: scale(1.3); box-shadow: 0 0 8px rgba(255,255,255,0.9); }
 
@@ -350,16 +349,25 @@
                         <button id="masterRandomizeButton" class="push-button master-randomize-button w-full" title="Randomize all active tracks.">RANDOMIZE ALL ACTIVE</button>
                     </div>
                     <div class="control-group">
+                        <label for="randomizationPresetSelect">Preset</label>
+                        <select id="randomizationPresetSelect" title="Select a randomization preset">
+                            <option value="default">Default</option>
+                            <option value="subtle">Subtle</option>
+                            <option value="rhythmic">Rhythmic</option>
+                            <option value="melodic">Melodic</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
                         <label for="octaveSelector" class="text-center">Base Octave</label>
                         <div id="octaveSelector" title="Set the base octave for notes"></div>
                     </div>
                     <div id="randomizeOptionsContainer" class="control-group">
                         <label class="font-bold text-xs uppercase col-span-full" style="font-family: 'Orbitron', sans-serif;">Randomize:</label>
-                        <label class="checkbox-label-container"><input type="checkbox" id="randomizeNoteCheck" checked title="Randomize the MIDI note of tracks"> Notes</label>
-                        <label class="checkbox-label-container"><input type="checkbox" id="randomizePulsesCheck" checked title="Randomize the number of pulses in tracks"> Pulses</label>
-                        <label class="checkbox-label-container"><input type="checkbox" id="randomizeRotationCheck" checked title="Randomize the pattern rotation of tracks"> Rotation</label>
-                        <label class="checkbox-label-container"><input type="checkbox" id="randomizeScaleCheck" checked title="Randomize the musical scale for all tracks"> Scale</label>
-                        <label class="checkbox-label-container"><input type="checkbox" id="randomizeVelocityCheck" checked title="Randomize the velocity of notes in tracks"> Velocity</label>
+                        <label class="checkbox-label-container"><input type="checkbox" class="randomize-option" id="randomizeNoteCheck" checked title="Randomize the MIDI note of tracks"> Notes</label>
+                        <label class="checkbox-label-container"><input type="checkbox" class="randomize-option" id="randomizePulsesCheck" checked title="Randomize the number of pulses in tracks"> Pulses</label>
+                        <label class="checkbox-label-container"><input type="checkbox" class="randomize-option" id="randomizeRotationCheck" checked title="Randomize the pattern rotation of tracks"> Rotation</label>
+                        <label class="checkbox-label-container"><input type="checkbox" class="randomize-option" id="randomizeScaleCheck" checked title="Randomize the musical scale for all tracks"> Scale</label>
+                        <label class="checkbox-label-container"><input type="checkbox" class="randomize-option" id="randomizeVelocityCheck" checked title="Randomize the velocity of notes in tracks"> Velocity</label>
                     </div>
                 </div>
 
@@ -446,7 +454,8 @@
                 'multiTrackRandomToggle', 'musicModeNextButton', 'musicModeLog', 'hintContent',
                 'app-background', 'octaveSelector', 'viewTogglesContainer',
                 'randomizationSettingsContainer', 'musicModePanel', 'logSection',
-                'midiPanel', 'hintsPanel', 'viewPanel', 'appContainer'
+                'midiPanel', 'hintsPanel', 'viewPanel', 'appContainer', 'randomizationPresetSelect',
+                'randomizeOptionsContainer'
             ];
             ids.forEach(id => {
                 const camelCaseId = id.replace(/-([a-z])/g, g => g[1].toUpperCase());
@@ -479,6 +488,7 @@
                     multiTrack: false,
                 },
                 randomization: {
+                    preset: 'default', // Add preset to state
                     note: true,
                     pulses: true,
                     rotation: true,
@@ -768,12 +778,7 @@
             dom.randomIntervalValue.textContent = state.musicMode.interval;
             dom.multiTrackRandomToggle.checked = state.musicMode.multiTrack;
 
-            dom.randomizeNoteCheck.checked = state.randomization.note;
-            dom.randomizePulsesCheck.checked = state.randomization.pulses;
-            dom.randomizeRotationCheck.checked = state.randomization.rotation;
-            dom.randomizeScaleCheck.checked = state.randomization.scale;
-            dom.randomizeVelocityCheck.checked = state.randomization.velocity;
-
+            renderRandomizationPresetUI();
             renderAllTracks();
             renderChannelVolumes();
             renderCcMappings();
@@ -1044,13 +1049,68 @@
 
             document.body.addEventListener('click', handleBodyClick, true);
 
-
             // Listeners for +/- buttons
             document.body.addEventListener('mousedown', startAutoRepeat);
             document.body.addEventListener('mouseup', stopAutoRepeat);
             document.body.addEventListener('mouseleave', stopAutoRepeat);
             document.body.addEventListener('touchstart', startAutoRepeat, { passive: false });
             document.body.addEventListener('touchend', stopAutoRepeat);
+
+            // Listener for Randomization Preset dropdown
+            dom.randomizationPresetSelect.addEventListener('change', handlePresetChange);
+            // Listener for individual randomize checkboxes
+            dom.randomizeOptionsContainer.addEventListener('change', handleRandomizeOptionChange);
+        }
+
+        function handleRandomizeOptionChange(e) {
+            if(e.target.classList.contains('randomize-option')) {
+                const newRandomizationState = { ...state.randomization, preset: 'default' };
+                dom.queryAll('.randomize-option').forEach(el => {
+                    const key = el.id.replace('randomize', '').replace('Check', '').toLowerCase();
+                    newRandomizationState[key] = el.checked;
+                });
+                updateState({ randomization: newRandomizationState });
+            }
+        }
+
+        function handlePresetChange(e) {
+            const preset = e.target.value;
+            const newRandomizationState = { ...state.randomization, preset: preset };
+
+            const presetSettings = {
+                default: { note: true, pulses: true, rotation: true, scale: true, velocity: true, disabled: false },
+                subtle:   { note: false, pulses: false, rotation: true, scale: false, velocity: true, disabled: true },
+                rhythmic: { note: false, pulses: true, rotation: true, scale: false, velocity: false, disabled: true },
+                melodic:  { note: true, pulses: false, rotation: false, scale: true, velocity: false, disabled: true }
+            };
+
+            const settings = presetSettings[preset];
+            Object.keys(settings).forEach(key => {
+                if(key !== 'disabled') {
+                    newRandomizationState[key] = settings[key];
+                }
+            });
+
+            updateState({ randomization: newRandomizationState });
+        }
+
+        function renderRandomizationPresetUI() {
+            const preset = state.randomization.preset;
+            dom.randomizationPresetSelect.value = preset;
+
+            const shouldDisable = preset !== 'default';
+
+            dom.randomizeNoteCheck.disabled = shouldDisable;
+            dom.randomizePulsesCheck.disabled = shouldDisable;
+            dom.randomizeRotationCheck.disabled = shouldDisable;
+            dom.randomizeScaleCheck.disabled = shouldDisable;
+            dom.randomizeVelocityCheck.disabled = shouldDisable;
+
+            dom.randomizeNoteCheck.checked = state.randomization.note;
+            dom.randomizePulsesCheck.checked = state.randomization.pulses;
+            dom.randomizeRotationCheck.checked = state.randomization.rotation;
+            dom.randomizeScaleCheck.checked = state.randomization.scale;
+            dom.randomizeVelocityCheck.checked = state.randomization.velocity;
         }
 
         function handleTrackAction(e) {
@@ -1169,6 +1229,7 @@
                 volDiv.className = 'control-group';
                 volDiv.innerHTML = `<div class="control-header"><label for="channelVolume${i}">Ch ${i}:</label><span id="channelVolumeValue${i}" class="value-display"></span><button class="learn-cc-button ml-2" data-param-id="channelVolume${i}" title="Map Ch ${i} Volume to a MIDI CC">L</button></div><div class="control-slider-container"><input type="range" id="channelVolume${i}" min="0" max="127" value="100" class="control-slider" title="Adjust volume for MIDI Channel ${i}"></div>`;
                 dom.channelVolumesContainer.appendChild(volDiv);
+
                 volDiv.querySelector('input').addEventListener('input', e => {
                     const newVolume = parseInt(e.target.value, 10);
                     const newVolumes = [...state.channelVolumes];
@@ -1428,9 +1489,10 @@
             const randomScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
             const randomRootNote = Math.floor(Math.random() * 12);
             const newScale = `${NOTE_NAMES[randomRootNote]} ${randomScaleName}`;
+
+            // This updateState call will handle regenerating the scale via render() -> regenerateScaleFromName()
             updateState({currentScaleName: newScale});
             logChange(`Scale: ${newScale}`);
-            regenerateScaleFromName();
         }
 
         function randomizeTrackParameters(track, shouldLog = true) {
@@ -1452,7 +1514,6 @@
             if (options.note) {
                 if (currentRandomizationScale.length === 0) regenerateScaleFromName();
 
-                // FIX: Expand randomization to 3 octaves: below, current, and above the base octave.
                 const baseOctave = options.octave;
                 const minMidi = Math.max(0, (baseOctave - 1) * 12);
                 const maxMidi = Math.min(127, (baseOctave + 1) * 12 + 11);
@@ -1460,7 +1521,6 @@
                 let octaveFilteredScale = currentRandomizationScale.filter(note => note >= minMidi && note <= maxMidi);
 
                 if (octaveFilteredScale.length === 0) {
-                    // Fallback to the entire scale if the 3-octave range is somehow empty
                     octaveFilteredScale = currentRandomizationScale;
                 }
 
@@ -1486,7 +1546,9 @@
         }
 
         function triggerGenerativeStep() {
-            if (state.randomization.scale) setHarmoniousRandomizationScale();
+            if (state.randomization.scale) {
+                setHarmoniousRandomizationScale();
+            }
             const activeTracks = state.tracks.filter(t => t.active);
             if (activeTracks.length === 0) {
                 logChange("Music Mode: No active tracks.");
@@ -1517,11 +1579,25 @@
         }
 
         function handleMasterRandomize() {
-            if(state.randomization.scale) setHarmoniousRandomizationScale();
+            if(state.randomization.scale) {
+                let currentOctave = state.randomization.octave;
+                let newOctave = currentOctave + (Math.floor(Math.random() * 3) - 1);
+                newOctave = Math.max(2, Math.min(5, newOctave));
+
+                // Temporarily update state for this operation without a full re-render
+                state.randomization.octave = newOctave;
+                logChange(`New base octave: ${newOctave}`);
+
+                setHarmoniousRandomizationScale();
+            } else {
+                regenerateScaleFromName();
+            }
+
             state.tracks.forEach(t => {
-                if(t.active) randomizeTrackParameters(t)
+                if(t.active) randomizeTrackParameters(t, false);
             });
             showStatusMessage("All active tracks randomized!", 2500);
+            render(); // Re-render to show new octave selection and other changes
         }
 
         function logChange(message) {
@@ -1529,7 +1605,6 @@
             const entry = document.createElement('div');
             entry.textContent = message;
             dom.musicModeLog.prepend(entry);
-            // FIX: Only show the last 3 log messages
             while (dom.musicModeLog.children.length > 3) {
                 dom.musicModeLog.removeChild(dom.musicModeLog.lastChild);
             }
