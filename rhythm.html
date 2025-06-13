@@ -1661,7 +1661,7 @@
             }
 
             const changesString = changes.length > 0 ? `T${track.id + 1}: ${changes.join(', ')}` : null;
-            if (shouldLog && changesString) logChange(changesString);
+            if (shouldLog && changesString) logChange(changesString, { isGenerative: true });
         }
 
         async function triggerGenerativeStep() {
@@ -1690,7 +1690,7 @@
                 const newOctave = Math.max(2, Math.min(5, state.randomization.octave + (Math.floor(Math.random() * 3) - 1)));
                 if (newOctave !== state.randomization.octave) {
                     nextState.randomization = { ...state.randomization, octave: newOctave };
-                    if(shouldLogGenerativeStep) logChange(`New base octave: ${newOctave}`);
+                    if(shouldLogGenerativeStep) logChange(`New base octave: ${newOctave}`, { isGenerative: true });
                 }
             }
 
@@ -1700,7 +1700,7 @@
                 const scaleName = parts.slice(1).join(' ');
 
                 if (scaleName !== 'Major' && scaleName !== 'Minor') {
-                    logChange(`Jazz Mode needs Major/Minor scale. Changing scale...`);
+                    logChange(`Jazz Mode needs Major/Minor scale. Changing scale...`, { isGenerative: true });
                     const randomRootNote = Math.floor(Math.random() * 12);
                     updateState({ currentScaleName: `${NOTE_NAMES[randomRootNote]} Major` });
                     return;
@@ -1720,7 +1720,7 @@
                 const chordNotes = chordIntervals.map(i => chordRootNote + i + (state.randomization.octave * 12));
 
                 const chordName = `${NOTE_NAMES[chordRootNote % 12]}`;
-                if(shouldLogGenerativeStep) logChange(`Jazz Chord: ${chordName}7 (${scaleName})`);
+                if(shouldLogGenerativeStep) logChange(`Jazz Chord: ${chordName}7 (${scaleName})`, { isGenerative: true });
 
                 const newTracks = [...state.tracks];
                 const activeTrackCount = activeTracks.length;
@@ -1737,7 +1737,7 @@
                 const scaleParts = state.currentScaleName.split(' ');
                 const newRootIndex = (NOTE_NAMES.indexOf(scaleParts[0]) + 7) % 12;
                 nextState.currentScaleName = `${NOTE_NAMES[newRootIndex]} ${scaleParts.slice(1).join(' ')}`;
-                if(shouldLogGenerativeStep) logChange(`Key Change: ${nextState.currentScaleName}`);
+                if(shouldLogGenerativeStep) logChange(`Key Change: ${nextState.currentScaleName}`, { isGenerative: true });
                 if (Object.keys(nextState).length > 0) updateState(nextState);
 
             } else if (presetKey === 'rock') {
@@ -1745,7 +1745,7 @@
                 if (state.currentScaleName.split(' ').slice(1).join(' ') !== targetScale) {
                     const randomRootNote = Math.floor(Math.random() * 12);
                     nextState.currentScaleName = `${NOTE_NAMES[randomRootNote]} ${targetScale}`;
-                    if(shouldLogGenerativeStep) logChange(`${preset.label} Mode: Set scale to ${nextState.currentScaleName}`);
+                    if(shouldLogGenerativeStep) logChange(`${preset.label} Mode: Set scale to ${nextState.currentScaleName}`, { isGenerative: true });
                 }
                 if (Object.keys(nextState).length > 0) {
                     updateState(nextState);
@@ -1759,7 +1759,7 @@
                 const randomScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
                 const randomRootNote = Math.floor(Math.random() * 12);
                 nextState.currentScaleName = `${NOTE_NAMES[randomRootNote]} ${randomScaleName}`;
-                if(shouldLogGenerativeStep) logChange(`Scale: ${nextState.currentScaleName}`);
+                if(shouldLogGenerativeStep) logChange(`Scale: ${nextState.currentScaleName}`, { isGenerative: true });
                 if (Object.keys(nextState).length > 0) updateState(nextState);
             }
 
@@ -1767,7 +1767,7 @@
                 const assignedNotesByChannel = {};
                 activeTracks.forEach(t => randomizeTrackParameters(t, presetConfig.options, shouldLogGenerativeStep, assignedNotesByChannel));
                 if (state.musicMode.refine) {
-                    setTimeout(() => handleRefine(true), 50);
+                    setTimeout(() => handleRefine(false), 50);
                 }
             }
 
@@ -1828,7 +1828,6 @@
         }
 
         function handleRefine(showStatus = true) {
-            if(showStatus) logChange("Refining sequence...");
             const activeTracks = state.tracks.filter(t => t.active);
             if (activeTracks.length < 2) {
                 if(showStatus) {
@@ -1839,6 +1838,7 @@
             }
 
             let newTracks = JSON.parse(JSON.stringify(state.tracks));
+            let refinementLogs = [];
 
             // 1. Harmonic Foundation (Anchor to Root)
             const rootNoteMidi = NOTE_NAMES.indexOf(state.currentScaleName.split(' ')[0]);
@@ -1862,7 +1862,7 @@
                         const lowestNoteName = Tone.Frequency(originalLowestNote, 'midi').toNote();
                         const rootNoteName = Tone.Frequency(originalRootNote, 'midi').toNote();
 
-                        if (showStatus) logChange(`Set bass to root (${lowestNoteName} ↔ ${rootNoteName})`);
+                        refinementLogs.push(`Bass note swap: ${lowestNoteName} ↔ ${rootNoteName}`);
                     }
                 } else {
                     const lowestTrackIndex = newTracks.findIndex(t => t.id === lowestNote.id);
@@ -1871,7 +1871,7 @@
                         const currentOctave = Math.floor(newTracks[lowestTrackIndex].note / 12);
                         newTracks[lowestTrackIndex].note = currentOctave * 12 + rootNoteMidi;
                         const newNoteName = Tone.Frequency(newTracks[lowestTrackIndex].note, 'midi').toNote();
-                        if (showStatus) logChange(`Set bass to root: ${oldNoteName} → ${newNoteName}`);
+                        refinementLogs.push(`Set bass to root: ${oldNoteName} → ${newNoteName}`);
                     }
                 }
             }
@@ -1894,7 +1894,7 @@
                             newTracks[trackIndex].note = newNote;
                             currentNotes[j] = newNote;
                             notesChanged = true;
-                            if(showStatus) logChange(`Resolved dissonance: ${Tone.Frequency(oldNote, 'midi').toNote()} → ${Tone.Frequency(newNote, 'midi').toNote()}`);
+                            refinementLogs.push(`Resolved dissonance: ${Tone.Frequency(oldNote, 'midi').toNote()} → ${Tone.Frequency(newNote, 'midi').toNote()}`);
                             break;
                         }
                     }
@@ -1927,8 +1927,14 @@
                 }
             });
 
-            if (showStatus && tweakedRhythms.length > 0) logChange(`Rhythm tweaks: ${tweakedRhythms.join(', ')}`);
-            if (showStatus && tweakedRotations.length > 0) logChange(`Rotation tweaks: ${tweakedRotations.join(', ')}`);
+            if (tweakedRhythms.length > 0) refinementLogs.push(`Rhythm tweaks: ${tweakedRhythms.join(', ')}`);
+            if (tweakedRotations.length > 0) refinementLogs.push(`Rotation tweaks: ${tweakedRotations.join(', ')}`);
+
+            if (refinementLogs.length > 0) {
+                logChange(`Refined: ${refinementLogs.join(' | ')}`);
+            } else if (showStatus) {
+                logChange("Refined: No changes needed.");
+            }
 
             updateState({ tracks: newTracks });
             if(showStatus) showStatusMessage("Sequence refined!", 2000);
@@ -1938,17 +1944,19 @@
         function logChange(message, options = {}) {
             if (!dom.musicModeLog) return;
 
-            if (message === "---" || (state.musicMode.refine && options.isGenerative)) {
-                // Don't log normal generative steps if auto-refine is on
-            } else if (message === "Music Mode is Off." && lastLogWasMusicModeOff) {
-                return;
-            } else {
-                lastLogWasMusicModeOff = (message === "Music Mode is Off.");
-                const entry = document.createElement('div');
-                entry.textContent = message;
-                if(options.separator) entry.style.borderTop = "1px solid var(--control-border)";
-                dom.musicModeLog.prepend(entry);
+            if (state.musicMode.refine && options.isGenerative) {
+                return; // Don't log normal generative steps if auto-refine is on
             }
+
+            if (message === "Music Mode is Off." && lastLogWasMusicModeOff) {
+                return;
+            }
+            lastLogWasMusicModeOff = (message === "Music Mode is Off.");
+
+            const entry = document.createElement('div');
+            entry.textContent = message;
+            if(options.separator) entry.style.borderTop = "1px solid var(--control-border)";
+            dom.musicModeLog.prepend(entry);
 
             while (dom.musicModeLog.children.length > 12) {
                 dom.musicModeLog.removeChild(dom.musicModeLog.lastChild);
