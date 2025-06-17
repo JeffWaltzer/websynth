@@ -36,7 +36,7 @@
             background-color: var(--primary-bg);
             color: var(--text-color);
             overscroll-behavior: none;
-            font-size: 12px;
+            font-size: 11px; /* Compressed UI */
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -51,105 +51,84 @@
             background-image: linear-gradient(to bottom, #4f4f4f, #3a3a3a);
             border: 1px solid #222;
             border-top-color: #555;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
-            padding: 0.5rem;
+            border-radius: 10px; /* Compressed UI */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+            padding: 0.5rem; /* Compressed UI */
             transition: opacity 0.4s ease-in-out, filter 0.4s ease-in-out, border-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.4rem; /* Compressed UI */
         }
         .synth-panel h2 {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem; /* Compressed UI */
             flex-shrink: 0;
             color: var(--text-color);
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            font-size: 1.1em;
         }
 
-        /* UI Enhancement: More prominent activity flash */
         .synth-panel.track-pulse {
             animation: trackPulse 0.2s ease-out;
         }
         @keyframes trackPulse {
             from {
                 border-color: var(--flash-color, var(--accent-color));
-                box-shadow: 0 0 15px 3px var(--flash-glow, var(--accent-glow)), 0 5px 15px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+                box-shadow: 0 0 12px 2px var(--flash-glow, var(--accent-glow)), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
             }
             to {
                 border-color: #222;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
             }
         }
 
-        .control-slider-container { display: flex; align-items: center; gap: 0.5rem; }
-        .number-input-container { display: flex; align-items: center; gap: 0.5rem; }
+        .control-slider-container { display: flex; align-items: center; gap: 0.4rem; }
+        .number-input-container { display: flex; align-items: center; gap: 0.4rem; }
         .slider-button, .number-input-button {
-            background-color: var(--control-border); color: var(--text-color); border: 1px solid var(--control-bg); border-radius: 6px;
-            padding: 0.2rem 0.5rem; font-size: 0.9rem; font-weight: bold; line-height: 1; cursor: pointer; user-select: none;
+            background-color: var(--control-border); color: var(--text-color); border: 1px solid var(--control-bg); border-radius: 5px;
+            padding: 0.1rem 0.4rem; font-size: 0.9rem; font-weight: bold; line-height: 1; cursor: pointer; user-select: none;
             transition: background-color 0.1s ease;
         }
         .slider-button:hover, .number-input-button:hover { background-color: var(--panel-border); }
 
-        /* UI Enhancement: 3D slider track */
         .control-slider {
-            -webkit-appearance: none; appearance: none; width: 100%; height: 20px;
-            background: #2a2a2a;
-            border-radius: 10px;
-            border: 1px solid #222;
-            outline: none; cursor: pointer; flex-grow: 1;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+            -webkit-appearance: none; appearance: none; width: 100%; height: 18px;
+            background: #2a2a2a; border-radius: 8px; border: 1px solid #222;
+            outline: none; cursor: pointer; flex-grow: 1; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
         }
-        /* UI Enhancement: 3D slider thumb */
         .control-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 28px; height: 28px;
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px;
             background-image: linear-gradient(to bottom, #e0e0e0, #a0a0a0);
-            border-radius: 8px; border: 1px solid #555; cursor: grab;
-            box-shadow: 0 2px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            border-radius: 6px; border: 1px solid #555; cursor: grab;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
             transition: all 0.1s ease;
         }
         .control-slider::-moz-range-thumb {
-            width: 28px; height: 28px;
+            width: 24px; height: 24px;
             background-image: linear-gradient(to bottom, #e0e0e0, #a0a0a0);
-            border-radius: 8px; border: 1px solid #555; cursor: grab;
-            box-shadow: 0 2px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            border-radius: 6px; border: 1px solid #555; cursor: grab;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
             transition: all 0.1s ease;
         }
         .control-slider:hover::-webkit-slider-thumb, .control-slider:hover::-moz-range-thumb {
             background-image: linear-gradient(to bottom, var(--accent-color), #d88c1b);
-            box-shadow: 0 0 8px var(--accent-glow), 0 2px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            box-shadow: 0 0 6px var(--accent-glow), 0 2px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
         }
 
-        /* UI Enhancement: 3D button effect */
         .push-button {
-            font-family: 'Orbitron', sans-serif;
-            background-color: #585858;
-            background-image: linear-gradient(to bottom, #6a6a6a, #4a4a4a);
-            color: var(--text-color);
-            border: 1px solid #333;
-            border-top-color: #777;
-            padding: 0.3rem 0.8rem; border-radius: 8px; text-transform: uppercase;
-            font-weight: bold; font-size: 0.7rem;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.15);
-            transition: all 0.1s ease-in-out; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+            font-family: 'Orbitron', sans-serif; background-color: #585858; background-image: linear-gradient(to bottom, #6a6a6a, #4a4a4a);
+            color: var(--text-color); border: 1px solid #333; border-top-color: #777; padding: 0.2rem 0.6rem;
+            border-radius: 6px; text-transform: uppercase; font-weight: bold; font-size: 0.65rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.15);
+            transition: all 0.1s ease-in-out; height: 28px; display: inline-flex; align-items: center; justify-content: center;
         }
-        .push-button.icon-button { font-size: 1.1rem; padding: 0.4rem; width: 32px; height: 32px; }
+        .push-button.icon-button { font-size: 1rem; padding: 0.3rem; width: 28px; height: 28px; }
         .push-button:active, .push-button.active {
-            background-image: linear-gradient(to top, #6a6a6a, #4a4a4a);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.4), inset 0 2px 4px rgba(0,0,0,0.4);
-            transform: translateY(2px);
-            border-top-color: #333;
+            background-image: linear-gradient(to top, #6a6a6a, #4a4a4a); box-shadow: 0 1px 1px rgba(0,0,0,0.4), inset 0 2px 3px rgba(0,0,0,0.4);
+            transform: translateY(1px); border-top-color: #333;
         }
-        .push-button.active {
-            background-image: linear-gradient(to top, var(--accent-color), #d88c1b);
-            color: #333;
-        }
-        .push-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            background-image: none;
-            box-shadow: none;
-        }
+        .push-button.active { background-image: linear-gradient(to top, var(--accent-color), #d88c1b); color: #333; }
+        .push-button:disabled { opacity: 0.5; cursor: not-allowed; background-image: none; box-shadow: none; }
 
         #playStopButton { background-color: #5cb85c; background-image: linear-gradient(to bottom, #7fdf7f, #5cb85c); color: white; }
         #playStopButton.stop-state { background-color: #d9534f; background-image: linear-gradient(to bottom, #e47875, #d9534f); }
@@ -157,14 +136,12 @@
         #playStopButton.stop-state:active { background-image: linear-gradient(to top, #e47875, #d9534f); }
 
         .learn-cc-button, .note-learn-button {
-            background-color: var(--learn-btn); color: white; flex-shrink: 0; padding: 0.15rem 0.5rem; font-size: 0.7rem;
-            border-radius: 6px; border: 1px solid #c9302c; box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            background-color: var(--learn-btn); color: white; flex-shrink: 0; padding: 0.1rem 0.4rem; font-size: 0.65rem;
+            border-radius: 5px; border: 1px solid #c9302c; box-shadow: 0 1px 1px rgba(0,0,0,0.3);
         }
         .learn-cc-button:hover, .note-learn-button:hover { background-color: #c9302c; }
-        .learn-cc-button.learning, .note-learn-button.learning {
-            background-color: #ffc107; color: #333; animation: pulseLearn 1s infinite alternate;
-        }
-        @keyframes pulseLearn { from { box-shadow: 0 0 5px #ffc107; } to { box-shadow: 0 0 15px #ffc107; } }
+        .learn-cc-button.learning, .note-learn-button.learning { background-color: #ffc107; color: #333; animation: pulseLearn 1s infinite alternate; }
+        @keyframes pulseLearn { from { box-shadow: 0 0 4px #ffc107; } to { box-shadow: 0 0 12px #ffc107; } }
         .learn-cc-button.mapped { background-color: #4CAF50; border-color: #337a36; }
 
         .randomize-button { background-color: var(--random-btn); color: white; background-image: linear-gradient(to bottom, #5d9cec, #337ab7);}
@@ -177,134 +154,102 @@
         .quantize-button { background-color: var(--quantize-btn); background-image: linear-gradient(to bottom, #58d68d, #2ecc71); color: white; }
         .quantize-button:active { background-image: linear-gradient(to top, #58d68d, #2ecc71); }
 
-
-        .pattern-display { display: flex; justify-content: center; align-items: center; margin-top: 0.2rem; height: 24px; gap: 4px; }
+        .pattern-display { display: flex; justify-content: center; align-items: center; margin-top: 0.2rem; height: 20px; gap: 3px; }
         .pattern-step {
-            width: 12px; height: 12px; background-color: #333; border-radius: 50%;
+            width: 10px; height: 10px; background-color: #333; border-radius: 50%;
             transition: background-color 0.1s ease-out, transform 0.1s ease-out; flex-shrink: 0; border: 1px solid #222;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.5);
         }
-        .pattern-step.active { background-color: var(--accent-color); box-shadow: 0 0 5px var(--accent-glow), inset 0 1px 1px rgba(255,255,255,0.3);}
-        .pattern-step.current { background-color: #fff; border: 2px solid var(--accent-color); transform: scale(1.3); box-shadow: 0 0 8px rgba(255,255,255,0.9); }
+        .pattern-step.active { background-color: var(--accent-color); box-shadow: 0 0 4px var(--accent-glow), inset 0 1px 1px rgba(255,255,255,0.3);}
+        .pattern-step.current { background-color: #fff; border: 1px solid var(--accent-color); transform: scale(1.3); box-shadow: 0 0 6px rgba(255,255,255,0.9); }
 
-        label { display: block; margin-bottom: 0.1rem; font-size: 0.75rem; text-transform: uppercase; font-family: 'Orbitron', sans-serif; white-space: nowrap; margin-right: 0.5rem; color: var(--accent-color); text-shadow: 0 1px 1px #000; }
+        label { display: block; margin-bottom: 0.1rem; font-size: 0.7rem; text-transform: uppercase; font-family: 'Orbitron', sans-serif; white-space: nowrap; margin-right: 0.5rem; color: var(--accent-color); text-shadow: 0 1px 1px #000; }
         select, input[type="number"], input[type="text"] {
-            background-color: var(--control-bg); border: 1px solid #222; color: var(--text-color); padding: 0.4rem; border-radius: 6px; width: 100%; font-size: 0.8rem;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+            background-color: var(--control-bg); border: 1px solid #222; color: var(--text-color); padding: 0.3rem; border-radius: 5px; width: 100%; font-size: 0.75rem;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
         }
         input[type="number"] { text-align: center; }
 
-        .value-display { font-family: 'Orbitron', sans-serif; color: var(--text-color); font-size: 0.8rem; min-width: 30px; text-align: right; flex-grow: 1; text-shadow: 0 1px 1px #000; }
+        .value-display { font-family: 'Orbitron', sans-serif; color: var(--text-color); font-size: 0.75rem; min-width: 25px; text-align: right; flex-grow: 1; text-shadow: 0 1px 1px #000; }
         .control-group { display: flex; flex-direction: column; margin-bottom: 0; }
         .control-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem; }
-        .checkbox-label-container { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; margin-top: 0.3rem; cursor: pointer; color: var(--text-color); }
-        .checkbox-label-container input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-color); border-radius: 4px; }
+        .checkbox-label-container { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; margin-top: 0.2rem; cursor: pointer; color: var(--text-color); }
+        .checkbox-label-container input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent-color); border-radius: 3px; }
 
         #sequencerWrapperPanel { width: 100%; }
-        #sequencerTracksContainer { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; padding: 0.5rem 0; margin-left: auto; margin-right: auto; }
-        #sequencerTracksContainer > .synth-panel {
-            margin-bottom: 0;
-            min-width: 300px;
-            max-width: 340px;
-            flex: 1 1 300px;
-        }
+        #sequencerTracksContainer { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; padding: 0.5rem 0; margin-left: auto; margin-right: auto; }
+        #sequencerTracksContainer > .synth-panel { margin-bottom: 0; min-width: 280px; max-width: 320px; flex: 1 1 280px; }
 
-        .explanation-text-footer { font-size: 0.85rem; line-height: 1.5; color: #b0b0b0; text-align: center; padding: 1.5rem 1rem; max-width: 700px; margin: 1rem auto 0 auto; border-top: 1px solid var(--control-border); }
+        .explanation-text-footer { font-size: 0.8rem; line-height: 1.4; color: #b0b0b0; text-align: center; padding: 1rem; max-width: 700px; margin: 1rem auto 0 auto; border-top: 1px solid var(--control-border); }
         .note-input-group { display: flex; align-items: center; gap: 0.25rem; }
         .note-input-group > input { flex-grow: 1; }
+        .note-learn-button { padding: 0.1rem 0.3rem; }
 
         #musicModePanel, #channelVolumesWrapper, #midiPanel, #randomizationSettingsContainer, #hintsPanel { display: none; }
         body.music-mode-active #musicModePanel { display: flex; }
-        #appContainer { display: flex; flex-direction: column; gap: 0.75rem; flex-grow: 1; }
+        #appContainer { display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1; }
         #mainContent { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
 
         #musicModeLog {
-            height: 100%;
-            background-color: rgba(0,0,0,0.3);
-            border-radius: 8px;
-            padding: 0.25rem 0.4rem;
-            font-size: 0.65rem;
-            line-height: 1.5;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column-reverse;
-            color: var(--accent-color);
+            height: 100%; background-color: rgba(0,0,0,0.3); border-radius: 6px; padding: 0.2rem 0.3rem;
+            font-size: 0.6rem; line-height: 1.4; overflow-y: auto; display: flex; flex-direction: column-reverse; color: var(--accent-color);
         }
-        #musicModeLog > div {
-            padding-bottom: 0.1rem;
-            margin-bottom: 0.1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            word-break: break-word;
-        }
+        #musicModeLog > div.log-entry { padding-bottom: 0.1rem; margin-bottom: 0.1rem; border-bottom: 1px solid rgba(255,255,255,0.05); word-break: break-word; }
+        #musicModeLog > div.log-separator { height: 1px; background-color: var(--control-border); margin: 3px 0; border: none; }
 
-        #channelVolumesContainer { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 0.5rem 0.75rem; padding: 0.2rem; }
+        #channelVolumesContainer { display: grid; grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); gap: 0.4rem 0.6rem; padding: 0.1rem; }
         #channelVolumesContainer .control-group { margin-bottom: 0; }
         #channelVolumesContainer .control-header { margin-bottom: 0.1rem; }
-        #channelVolumesContainer .control-slider { height: 12px; }
-        #channelVolumesContainer .control-slider::-webkit-slider-thumb { width: 20px; height: 20px; }
-        #channelVolumesContainer .control-slider::-moz-range-thumb { width: 20px; height: 20px; }
-        #channelVolumesContainer label { font-size: 0.7rem; }
+        #channelVolumesContainer .control-slider { height: 10px; }
+        #channelVolumesContainer .control-slider::-webkit-slider-thumb { width: 18px; height: 18px; }
+        #channelVolumesContainer .control-slider::-moz-range-thumb { width: 18px; height: 18px; }
+        #channelVolumesContainer label { font-size: 0.65rem; }
 
         #octaveSelector { display: flex; justify-content: center; }
-        #musicModePresetContainer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem;}
+        #musicModePresetContainer { display: grid; grid-template-columns: repeat(auto-fit, minmax(55px, 1fr)); gap: 0.25rem;}
+        #musicModePresetContainer .radio-label { font-size: 0.7rem; }
 
         .radio-label {
             display: inline-flex; align-items: center; background-color: var(--control-bg); border: 1px solid var(--control-border);
-            padding: 0.2rem 0.6rem; transition: all 0.1s ease; font-size: 0.8rem; cursor: pointer; justify-content: center;
+            padding: 0.2rem 0.5rem; transition: all 0.1s ease; font-size: 0.75rem; cursor: pointer; justify-content: center;
         }
         .radio-label input { display: none; }
         .radio-label:hover { background-color: var(--panel-border); z-index: 1; position: relative; }
         .radio-label.selected { background-color: var(--accent-color); border-color: #f8c57a; z-index: 2; position: relative; }
         .radio-label.selected span { color: var(--primary-bg); font-weight: bold; }
 
-        #octaveSelector .radio-label {
-            padding: 0.2rem;
-            width: 28px;
-            text-align: center;
-        }
+        #octaveSelector .radio-label { padding: 0.2rem; width: 24px; text-align: center; }
         #octaveSelector .radio-label:not(:first-child) { margin-left: -1px; }
         #octaveSelector .radio-label:first-child { border-radius: 6px 0 0 6px;}
         #octaveSelector .radio-label:last-child { border-radius: 0 6px 6px 0;}
 
         #musicModePresetContainer .radio-label { border-radius: 6px; margin-left: 0; }
 
-
         #logSection { display: none; }
         body.music-mode-active #logSection { display: flex; }
 
-        #bottom-panels-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            align-items: stretch;
-        }
-        #bottom-panels-container > .synth-panel {
-            flex-grow: 1;
-            flex-shrink: 1;
-            flex-basis: 300px;
-            height: auto;
-        }
-        #masterControlPanel { max-width: 380px; }
-        #viewPanel { max-width: 180px; }
-        #midiPanel { max-width: 280px; }
-        #randomizationSettingsContainer { max-width: 320px; }
-        #musicModePanel { max-width: 320px; }
-        #channelVolumesWrapper { max-width: 420px; }
+        #bottom-panels-container { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: stretch; }
+        #bottom-panels-container > .synth-panel { flex-grow: 1; flex-shrink: 1; flex-basis: 280px; height: auto; }
+        #masterControlPanel { max-width: 350px; }
+        #viewPanel, #midiPanel, #randomizationSettingsContainer, #musicModePanel { flex: 1 1 200px; max-width: 280px; }
+        #channelVolumesWrapper { flex: 1 1 300px; max-width: 400px; }
 
-        #hintsPanel { flex: 1 1 300px; display: flex; flex-direction: column;}
+        #hintsPanel { flex: 1 1 280px; display: flex; flex-direction: column;}
         #hintsPanel .control-group { display: flex; flex-direction: column; }
         #hintsPanel .control-group#hintContainer { flex-shrink: 0; }
         #hintsPanel #logSection { flex-grow: 1; }
 
+        .toggle-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.25rem; }
+
         #statusBar {
             position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--status-bg); color: var(--status-text);
-            padding: 0.5rem 1rem; text-align: center; font-size: 0.9rem; z-index: 1000; opacity: 0; visibility: hidden;
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; border-top: 2px solid var(--accent-color);
+            padding: 0.4rem 1rem; text-align: center; font-size: 0.8rem; z-index: 1000; opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; border-top: 1px solid var(--accent-color);
         }
         #statusBar.visible { opacity: 1; visibility: visible; }
         #hintContent {
-            background-color: var(--control-bg); border: 1px solid var(--control-border); border-radius: 8px; padding: 0.75rem;
-            min-height: 80px; display: flex; align-items: center; justify-content: center; color: #b0b0b0; font-style: italic;
+            background-color: var(--control-bg); border: 1px solid var(--control-border); border-radius: 6px; padding: 0.5rem;
+            min-height: 60px; display: flex; align-items: center; justify-content: center; color: #b0b0b0; font-style: italic;
         }
 
         #app-background {
@@ -319,18 +264,18 @@
         }
     </style>
 </head>
-<body class="p-1 md:p-4">
+<body class="p-1 md:p-2">
 
 <div id="app-background" class="bg-default"></div>
 
-<header class="text-center mb-4">
-    <h1 class="text-3xl md:text-4xl font-bold" style="font-family: 'Orbitron', sans-serif; color: var(--accent-color);">RHYTHM KING 77</h1>
-    <p class="text-sm md:text-base text-gray-400">Euclidean MIDI Sequencer</p>
+<header class="text-center mb-2">
+    <h1 class="text-2xl md:text-3xl font-bold" style="font-family: 'Orbitron', sans-serif; color: var(--accent-color);">RHYTHM KING 77</h1>
+    <p class="text-xs md:text-sm text-gray-400">Euclidean MIDI Sequencer</p>
 </header>
 
 <div id="appContainer">
     <div id="mainContent" class="flex-grow">
-        <div class="flex flex-col gap-3 main-container">
+        <div class="flex flex-col gap-2 main-container">
             <div id="sequencerWrapperPanel" class="w-full synth-panel">
                 <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer Tracks</h2>
                 <div id="sequencerTracksContainer"></div>
@@ -340,7 +285,7 @@
                 <div id="masterControlPanel" class="synth-panel">
                     <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
 
-                    <div id="toolbar" class="flex flex-wrap items-center justify-center gap-3">
+                    <div id="toolbar" class="flex flex-wrap items-center justify-center gap-2">
                         <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences">&#x25B6;</button>
                         <button id="refineButton" class="push-button icon-button refine-button" title="Use a musical algorithm to refine the current notes and velocities">⚖️</button>
                         <button id="quantizeNotesButton" class="push-button icon-button quantize-button" title="Quantize all track notes to the selected scale">🎼</button>
@@ -383,13 +328,15 @@
 
                     <div class="control-group border-t border-gray-700 pt-2 mt-2">
                         <label class="font-bold text-xs uppercase" style="font-family: 'Orbitron', sans-serif;">Global Controls</label>
-                        <label class="checkbox-label-container" title="Lock all 'Steps' sliders so they move together. The first track's value becomes the master value."><input type="checkbox" id="lockStepsCheckbox"> Lock All Steps</label>
+                        <div class="toggle-grid">
+                            <label class="checkbox-label-container" title="Lock all 'Steps' sliders so they move together. The first track's value becomes the master value."><input type="checkbox" id="lockStepsCheckbox"> Lock All Steps</label>
+                        </div>
                     </div>
                 </div>
 
                 <div id="viewPanel" class="synth-panel">
                     <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Panel Toggles</h2>
-                    <div id="viewTogglesContainer">
+                    <div id="viewTogglesContainer" class="toggle-grid">
                         <label class="checkbox-label-container" title="Show/Hide the MIDI Setup panel"><input type="checkbox" data-view-toggle="midiPanel" id="showMidiPanel" checked> MIDI</label>
                         <label class="checkbox-label-container" title="Show/Hide the Randomization panel"><input type="checkbox" data-view-toggle="randomizationSettingsContainer" id="showRandomizePanel" checked> Randomize</label>
                         <label class="checkbox-label-container" title="Show/Hide the Channel Volumes panel"><input type="checkbox" data-view-toggle="channelVolumesWrapper" id="showVolumesPanel" checked> Volumes</label>
@@ -422,7 +369,7 @@
                         <button id="masterRandomizeButton" class="push-button master-randomize-button w-full" title="Randomize all enabled parameters on all active tracks">RANDOMIZE ALL ACTIVE</button>
                     </div>
 
-                    <div class="control-group border-t border-b border-gray-700 py-2 my-2">
+                    <div class="control-group border-t border-b border-gray-700 py-1 my-1">
                         <label class="font-bold text-xs uppercase text-center" style="font-family: 'Orbitron', sans-serif;">Global Scale</label>
                         <div class="grid grid-cols-2 gap-2 mt-1">
                             <div>
@@ -440,13 +387,14 @@
                         <label for="octaveSelector" class="text-center">Base Octave</label>
                         <div id="octaveSelector" title="Set the base octave for randomized notes"></div>
                     </div>
-                    <div id="randomizeOptionsContainer" class="control-group">
-                        <label class="font-bold text-xs uppercase col-span-full" style="font-family: 'Orbitron', sans-serif;">Randomize:</label>
+                    <div id="randomizeOptionsContainer" class="control-group toggle-grid">
                         <label class="checkbox-label-container" title="Randomize the MIDI note of each track"><input type="checkbox" class="randomize-option" id="randomizeNoteCheck" checked> Notes</label>
                         <label class="checkbox-label-container" title="Randomize the number of beats (pulses) in each track"><input type="checkbox" class="randomize-option" id="randomizePulsesCheck" checked> Pulses</label>
                         <label class="checkbox-label-container" title="Randomize the pattern's starting point (rotation)"><input type="checkbox" class="randomize-option" id="randomizeRotationCheck" checked> Rotation</label>
                         <label class="checkbox-label-container" title="Randomize the musical scale for all tracks"><input type="checkbox" class="randomize-option" id="randomizeScaleCheck" checked> Scale</label>
                         <label class="checkbox-label-container" title="Randomize the velocity (loudness) of each track"><input type="checkbox" class="randomize-option" id="randomizeVelocityCheck" checked> Velocity</label>
+                        <label class="checkbox-label-container" title="Randomize the base octave during generative changes"><input type="checkbox" class="randomize-option" id="randomizeOctaveCheck"> Octave</label>
+                        <label class="checkbox-label-container" title="Allow the chord type to be randomized for Jazz/Rock modes"><input type="checkbox" class="randomize-option" id="randomizeChordCheck"> Chord</label>
                     </div>
                 </div>
 
@@ -468,11 +416,16 @@
                         <div id="musicModePresetContainer"></div>
                     </div>
                     <div class="control-group">
+                        <label for="chordTypeSelect">Chord Type</label>
+                        <select id="chordTypeSelect" title="Select the chord type for applicable modes"></select>
+                    </div>
+
+                    <div class="control-group">
                         <button id="musicModeNextButton" class="push-button w-full" title="Manually trigger the next generative change">TRIGGER NEXT</button>
                     </div>
-                    <div class="control-group border-t border-gray-700 pt-2 mt-2">
+                    <div class="control-group border-t border-gray-700 pt-2 mt-1 toggle-grid">
                         <label class="checkbox-label-container" title="Apply the Refine algorithm after each generative change to improve musicality"><input type="checkbox" id="musicModeRefineCheck"> Auto-Refine</label>
-                        <label class="checkbox-label-container" title="Randomize the base octave during generative changes"><input type="checkbox" id="musicModeRandomizeOctaveCheck"> Randomize Octave</label>
+                        <label class="checkbox-label-container" title="Automatically quantize notes to the selected scale after each generative change"><input type="checkbox" id="musicModeQuantizeCheck"> Auto-Quantize</label>
                     </div>
                 </div>
 
@@ -506,11 +459,20 @@
 
         // --- CONSTANTS AND CONFIGURATION ---
         const MAX_TRACKS = 12;
-        const MANUAL_SAVE_KEY = 'rhythmKing77_manualSave_v24'; // Incremented version
-        const AUTOSAVE_KEY = 'rhythmKing77_autoSave_v24'; // Incremented version
+        const MANUAL_SAVE_KEY = 'rhythmKing77_manualSave_v30'; // Incremented version
+        const AUTOSAVE_KEY = 'rhythmKing77_autoSave_v30'; // Incremented version
         const SCALES = { 'Major': [0, 2, 4, 5, 7, 9, 11], 'Minor': [0, 2, 3, 5, 7, 8, 10], 'Dorian': [0, 2, 3, 5, 7, 9, 10], 'Phrygian': [0, 1, 3, 5, 7, 8, 10], 'Lydian': [0, 2, 4, 6, 7, 9, 11], 'Mixolydian': [0, 2, 4, 5, 7, 9, 10], 'Locrian': [0, 1, 3, 5, 6, 8, 10], 'Major Pentatonic': [0, 2, 4, 7, 9], 'Minor Pentatonic': [0, 3, 5, 7, 10], 'Blues': [0, 3, 5, 6, 7, 10], 'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11], 'Whole Tone': [0, 2, 4, 6, 8, 10], 'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] };
         const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        const HINTS = [ "Click a red 'L' to map a MIDI CC. Click a green 'L' to un-map it.", "Toggle 'Music Mode' for generative grooves.", "Hit 'Random' on tracks for instant variations.", "Use the 'Save' icon to create a manual save point.", "Hold +/- buttons for rapid value changes.", "The 'Stop Notes' button sends an 'All Notes Off' command to your MIDI gear.", "Use the 🎼 button to snap all notes to the selected scale.", "'Stop Notes' is your friend if notes get stuck!" ];
+        const CHORD_TYPES = {
+            'Random': null,
+            'Maj7': [0, 4, 7, 11],
+            'min7': [0, 3, 7, 10],
+            'Dom7': [0, 4, 7, 10],
+            'min7b5': [0, 3, 6, 10],
+            'dim7': [0, 3, 6, 9],
+            'Power': [0, 7]
+        };
+        const HINTS = [ "Click a red 'L' to map a MIDI CC. Click a green 'L' to un-map it.", "Toggle 'Music Mode' for generative grooves.", "Hit 'Random' on tracks for instant variations.", "Use the 'Save' icon to create a manual save point.", "Hold +/- buttons for rapid value changes.", "The 'Stop Notes' button sends an 'All Notes Off' command to your MIDI gear.", "Use the 🎼 button to snap all notes to the selected scale.", "Master Volume is a global velocity scaler. It won't affect tracks whose Channel Volume is set to 0.", "'Stop Notes' is your friend if notes get stuck!" ];
         const VIEW_PANEL_MAP = {
             showMidiPanel: 'midiPanel',
             showRandomizePanel: 'randomizationSettingsContainer',
@@ -523,8 +485,9 @@
             multi: { label: "Multi", multi: true, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } },
             melodic: { label: "Melodic", multi: true, options: { note: true, pulses: false, rotation: false, scale: true, velocity: false } },
             jazz: { label: "Jazz", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } },
+            rock: { label: "Rock", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } },
+            baroque: { label: "Baroque", multi: true, options: { note: true, pulses: true, rotation: false, scale: true, velocity: true } },
             fifths: { label: "Fifths", multi: true, options: { note: true, pulses: true, rotation: true, scale: false, velocity: true } },
-            rock: { label: "Rock", multi: true, options: { note: true, pulses: true, rotation: true, scale: false, velocity: true } },
         };
 
         // --- DOM ELEMENT CACHE ---
@@ -542,14 +505,14 @@
                 'masterVolumeValue', 'masterVolumeLearnCc', 'midiOutSelect', 'midiChannelSelect',
                 'sequencerTracksContainer', 'channelVolumesContainer', 'channelVolumesWrapper',
                 'statusBar', 'statusBar-content', 'musicModeToggle', 'randomIntervalSlider',
-                'randomIntervalValue', 'randomizeNoteCheck', 'randomizePulsesCheck',
-                'randomizeRotationCheck', 'randomizeScaleCheck', 'randomizeVelocityCheck', 'musicModeRandomizeOctaveCheck',
+                'randomIntervalValue', 'randomizeNoteCheck', 'randomizePulsesCheck', 'randomizeChordCheck',
+                'randomizeRotationCheck', 'randomizeScaleCheck', 'randomizeVelocityCheck', 'randomizeOctaveCheck',
                 'musicModeNextButton', 'musicModeLog', 'hintContent', 'app-background',
                 'octaveSelector', 'viewTogglesContainer', 'randomizationSettingsContainer',
                 'musicModePanel', 'logSection', 'midiPanel', 'hintsPanel', 'viewPanel',
-                'appContainer', 'randomizeOptionsContainer', 'musicModePresetContainer', 'musicModeRefineCheck',
+                'appContainer', 'randomizeOptionsContainer', 'musicModePresetContainer', 'musicModeRefineCheck', 'musicModeQuantizeCheck',
                 'sequencerWrapperPanel', 'hintContainer', 'showRandomizePanel', 'showHintsLogPanel',
-                'scaleRootSelect', 'scaleTypeSelect'
+                'scaleRootSelect', 'scaleTypeSelect', 'chordTypeSelect'
             ];
             ids.forEach(id => {
                 const camelCaseId = id.replace(/-([a-z])/g, g => g[1].toUpperCase());
@@ -577,11 +540,13 @@
                 channelVolumes: Array(16).fill(100),
                 currentScaleName: 'C Major',
                 musicMode: {
-                    enabled: false,
+                    enabled: true, // Music mode on by default
                     interval: 4,
                     preset: 'single',
                     refine: false,
-                    randomizeOctave: false
+                    autoQuantize: false,
+                    chordType: 'Random',
+                    randomizeChord: true
                 },
                 randomization: {
                     note: true,
@@ -590,6 +555,7 @@
                     scale: true,
                     velocity: true,
                     octave: 3,
+                    randomizeOctave: false,
                 },
                 view: {
                     showMidiPanel: true,
@@ -679,17 +645,36 @@
                 panic();
             }
 
-            state = deepMerge(getDefaultState(), stateToLoad);
+            const defaultState = getDefaultState();
+            state = defaultState;
+            if (stateToLoad) {
+                Object.keys(defaultState).forEach(key => {
+                    if (key in stateToLoad) {
+                        if (isObject(defaultState[key]) && !Array.isArray(defaultState[key])) {
+                            state[key] = { ...defaultState[key], ...stateToLoad[key] };
+                        } else {
+                            state[key] = stateToLoad[key];
+                        }
+                    }
+                });
+            }
+
 
             state.tracks.forEach(track => {
-                if (!track.pattern) {
-                    const rawPattern = generateEuclideanPattern(track.pulses, track.steps);
-                    track.pattern = rotatePattern(rawPattern, track.rotation);
-                    track.currentStep = 0;
-                }
+                const rawPattern = generateEuclideanPattern(track.pulses, track.steps);
+                track.pattern = rotatePattern(rawPattern, track.rotation);
+                track.currentStep = 0;
             });
 
-            syncAppWithState(state, getDefaultState());
+            Tone.Transport.bpm.value = state.bpm;
+            setupTimedRandomization();
+
+            if (midiOutput) {
+                state.channelVolumes.forEach((volume, i) => {
+                    sendMidiCC(7, volume, i + 1);
+                });
+            }
+
             render();
 
             if (state.midiOutputId && Array.from(dom.midiOutSelect.options).some(o => o.value === state.midiOutputId)) {
@@ -698,9 +683,11 @@
             }
 
             if (wasPlaying) {
+                rebuildAllTrackLoops();
                 await Tone.Transport.start();
             }
         }
+
 
         async function loadManualState() {
             const savedStateJSON = localStorage.getItem(MANUAL_SAVE_KEY);
@@ -884,6 +871,9 @@
             dom.masterVolumeValue.textContent = state.masterVolume;
             dom.lockStepsCheckbox.checked = state.stepsLocked;
             dom.midiChannelSelect.value = state.globalMidiChannel;
+            dom.chordTypeSelect.value = state.musicMode.chordType;
+            dom.randomizeChordCheck.checked = state.musicMode.randomizeChord;
+
 
             const midiAvailable = !!midiAccess;
             dom.midiPanel.querySelectorAll('select, button').forEach(el => {
@@ -906,7 +896,8 @@
             dom.musicModeToggle.checked = state.musicMode.enabled;
             dom.musicModePanel.style.display = state.musicMode.enabled ? 'flex' : 'none';
             dom.musicModeRefineCheck.checked = state.musicMode.refine;
-            dom.musicModeRandomizeOctaveCheck.checked = state.musicMode.randomizeOctave;
+            dom.musicModeQuantizeCheck.checked = state.musicMode.autoQuantize;
+
 
             document.body.classList.toggle('music-mode-active', state.musicMode.enabled);
             dom.appBackground.classList.toggle('bg-music-mode', state.musicMode.enabled);
@@ -1053,23 +1044,24 @@
             dom.randomizeRotationCheck.checked = state.randomization.rotation;
             dom.randomizeScaleCheck.checked = state.randomization.scale;
             dom.randomizeVelocityCheck.checked = state.randomization.velocity;
+            dom.randomizeOctaveCheck.checked = state.randomization.randomizeOctave;
         }
 
         // --- UI CREATION ---
         function createSequencerTrackUI(trackId) {
             const trackDiv = document.createElement('div');
-            trackDiv.className = 'synth-panel p-3 flex flex-col relative';
+            trackDiv.className = 'synth-panel p-2 flex flex-col relative';
             trackDiv.dataset.trackId = trackId;
 
             trackDiv.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
+                <div class="flex justify-between items-center mb-1">
                     <h3 class="text-base font-semibold" style="font-family: 'Orbitron', sans-serif;">Track ${trackId + 1}</h3>
                     <div>
                         <button data-action="randomize" class="push-button randomize-button text-xs py-1 px-2" title="Randomize this track's parameters">RANDOM</button>
                         <button data-action="toggleActive" id="trackToggle${trackId}" class="push-button text-xs py-1 px-2 ml-1" title="Mute or unmute this track">ON</button>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-x-3 gap-y-1 mb-2">
+                <div class="grid grid-cols-2 gap-x-2 gap-y-1 mb-1">
                     ${createSliderControl('steps', trackId, 'Steps', 1, 32, 16, 'Number of steps in the sequence (pattern length)')}
                     ${createSliderControl('pulses', trackId, 'Pulses', 1, 16, 4, 'Number of active beats in the pattern')}
                     ${createSliderControl('rotation', trackId, 'Rotate', 0, 15, 0, 'Shift the pattern start point left or right')}
@@ -1088,7 +1080,7 @@
                     <div class="control-header">
                         <label for="${id}${trackId}">${label}:</label>
                         <span id="${id}Value${trackId}" class="value-display">${value}</span>
-                        <button class="learn-cc-button ml-2" data-param-id="${id}${trackId}" title="Map ${label} to a MIDI CC knob/fader">L</button>
+                        <button class="learn-cc-button ml-1" data-param-id="${id}${trackId}" title="Map ${label} to a MIDI CC knob/fader">L</button>
                     </div>
                     <div class="control-slider-container">
                         <button class="slider-button" data-target="${id}${trackId}" data-action="decrement" title="Decrease ${label}">&minus;</button>
@@ -1186,13 +1178,19 @@
 
             dom.scaleRootSelect.addEventListener('change', handleScaleChange);
             dom.scaleTypeSelect.addEventListener('change', handleScaleChange);
+            dom.chordTypeSelect.addEventListener('change', e => {
+                updateState({ musicMode: { ...state.musicMode, chordType: e.target.value } });
+            });
+            dom.randomizeChordCheck.addEventListener('change', e => {
+                updateState({ musicMode: { ...state.musicMode, randomizeChord: e.target.checked } });
+            });
 
             dom.viewTogglesContainer.addEventListener('change', e => {
                 if(e.target.id === 'musicModeToggle') {
                     if(e.target.checked) dom.musicModeLog.innerHTML = '';
                     updateState({ musicMode: { ...state.musicMode, enabled: e.target.checked } });
                 } else if (e.target.dataset.viewToggle) {
-                    const viewKey = 'show' + e.target.id.charAt(4).toUpperCase() + e.target.id.slice(5);
+                    const viewKey = e.target.id;
                     updateState({ view: { ...state.view, [viewKey]: e.target.checked } });
                 }
             });
@@ -1207,9 +1205,8 @@
             dom.musicModeRefineCheck.addEventListener('change', e => {
                 updateState({ musicMode: { ...state.musicMode, refine: e.target.checked } });
             });
-
-            dom.musicModeRandomizeOctaveCheck.addEventListener('change', e => {
-                updateState({ musicMode: { ...state.musicMode, randomizeOctave: e.target.checked } });
+            dom.musicModeQuantizeCheck.addEventListener('change', e => {
+                updateState({ musicMode: { ...state.musicMode, autoQuantize: e.target.checked } });
             });
 
             dom.sequencerTracksContainer.addEventListener('click', handleTrackAction);
@@ -1247,10 +1244,10 @@
             }
         }
 
-        function handleQuantizeNotes() {
+        function handleQuantizeNotes(showStatus = true) {
             regenerateScaleFromName();
             if (currentRandomizationScale.length === 0) {
-                showStatusMessage("Cannot quantize: Invalid scale selected.", 3000);
+                if(showStatus) showStatusMessage("Cannot quantize: Invalid scale selected.", 3000);
                 return;
             }
 
@@ -1263,7 +1260,7 @@
             });
 
             updateState({ tracks: newTracks });
-            showStatusMessage(`All notes quantized to ${state.currentScaleName}.`, 2500);
+            if(showStatus) showStatusMessage(`All notes quantized to ${state.currentScaleName}.`, 2500);
         }
 
 
@@ -1271,7 +1268,14 @@
             if(e.target.classList.contains('randomize-option')) {
                 const newRandomizationState = { ...state.randomization };
                 dom.queryAll('.randomize-option').forEach(el => {
-                    const key = el.id.replace('randomize', '').replace('Check', '').toLowerCase();
+                    let key = el.id.replace('randomize', '').replace('Check', '').toLowerCase();
+                    if (el.id === 'randomizeOctaveCheck') {
+                        key = 'randomizeOctave';
+                    }
+                    // The chord checkbox is special, it lives in musicMode state
+                    if (el.id === 'randomizeChordCheck') {
+                        return; // Handled by its own listener
+                    }
                     newRandomizationState[key] = el.checked;
                 });
                 updateState({ randomization: newRandomizationState });
@@ -1324,7 +1328,7 @@
 
             if(prop === 'steps') {
                 if(value < track.pulses) newValues.pulses = value;
-                if(value <= track.rotation) newValues.rotation = value > 0 ? value - 1 : 0;
+                if(value <= track.rotation) newValues.rotation = value > 0 ? newValues - 1 : 0;
             } else if (prop === 'pulses') {
                 const maxPulses = state.stepsLocked ? state.globalLockedSteps : track.steps;
                 if (value > maxPulses) newValues.pulses = maxPulses;
@@ -1369,12 +1373,12 @@
                 localStorage.removeItem(AUTOSAVE_KEY);
             }
 
+            await setupMIDI();
+            createInitialUI();
             setupGlobalListeners();
             setupToneJS();
-            createInitialUI();
 
             await loadState(loadedState || getDefaultState());
-            await setupMIDI();
 
             hintInterval = setInterval(showHint, 25000);
             showHint();
@@ -1387,7 +1391,7 @@
 
                 const volDiv = document.createElement('div');
                 volDiv.className = 'control-group';
-                volDiv.innerHTML = `<div class="control-header"><label for="channelVolume${i}">Ch ${i}:</label><span id="channelVolumeValue${i}" class="value-display"></span><button class="learn-cc-button ml-2" data-param-id="channelVolume${i}" title="Map Ch ${i} Volume to a MIDI CC knob/fader">L</button></div><div class="control-slider-container"><input type="range" id="channelVolume${i}" min="0" max="127" value="100" class="control-slider" title="Adjust volume for MIDI Channel ${i}"></div>`;
+                volDiv.innerHTML = `<div class="control-header"><label for="channelVolume${i}">Ch ${i}:</label><span id="channelVolumeValue${i}" class="value-display"></span><button class="learn-cc-button ml-1" data-param-id="channelVolume${i}" title="Map Ch ${i} Volume to a MIDI CC knob/fader">L</button></div><div class="control-slider-container"><input type="range" id="channelVolume${i}" min="0" max="127" value="100" class="control-slider" title="Adjust volume for MIDI Channel ${i}"></div>`;
                 dom.channelVolumesContainer.appendChild(volDiv);
 
                 volDiv.querySelector('input').addEventListener('input', e => {
@@ -1399,10 +1403,9 @@
                 });
             }
 
-            // Populate Scale Selectors
             NOTE_NAMES.forEach(note => dom.scaleRootSelect.add(new Option(note, note)));
             Object.keys(SCALES).forEach(scaleName => dom.scaleTypeSelect.add(new Option(scaleName, scaleName)));
-
+            Object.keys(CHORD_TYPES).forEach(chordName => dom.chordTypeSelect.add(new Option(chordName, chordName)));
 
             for (let i = 0; i <= 9; i++) {
                 const label = document.createElement('label');
@@ -1425,8 +1428,9 @@
                 multi: "Changes all enabled parameters on all active tracks.",
                 melodic: "Changes notes and scale, but keeps rhythm the same.",
                 jazz: "Generates diatonic 7th chords from the current scale.",
-                fifths: "Shifts the musical key by a perfect fifth.",
-                rock: "Uses the Minor Pentatonic scale for a classic rock sound."
+                rock: "Generates power chords or minor chords.",
+                baroque: "Generates arpeggiated triads based on a I-V-vi-IV progression.",
+                fifths: "Shifts the musical key by a perfect fifth."
             };
             Object.entries(MUSIC_MODE_PRESETS).forEach(([key, preset]) => {
                 const label = document.createElement('label');
@@ -1470,8 +1474,8 @@
             const output = { ...target };
             if (isObject(target) && isObject(source)) {
                 Object.keys(source).forEach(key => {
-                    if (isObject(source[key]) && !Array.isArray(source[key])) {
-                        output[key] = deepMerge(target[key] || {}, source[key]);
+                    if (isObject(source[key]) && key in target && isObject(target[key])) {
+                        output[key] = deepMerge(target[key], source[key]);
                     } else {
                         output[key] = source[key];
                     }
@@ -1676,6 +1680,9 @@
 
         // --- GENERATIVE FUNCTIONS ---
         let currentRandomizationScale = [];
+        let baroqueProgression = [0, 7, 9, 5]; // I-V-vi-IV in semitones relative to root
+        let baroqueStep = 0;
+
         function regenerateScaleFromName() {
             if (!state.currentScaleName) return;
             const parts = state.currentScaleName.split(' ');
@@ -1735,8 +1742,8 @@
                 }
             }
             if (options.velocity) {
-                changes.push(`V:${track.velocity}→${Math.floor(Math.random() * 107) + 21}`);
-                newTrackState.velocity = Math.floor(Math.random() * 107) + 21;
+                newTrackState.velocity = Math.floor(Math.random() * 78) + 50; // Range 50-127
+                changes.push(`V:${track.velocity}→${newTrackState.velocity}`);
             }
 
             if (Object.keys(newTrackState).length > 0) {
@@ -1763,13 +1770,13 @@
                 return;
             }
 
-            logChange('---', { separator: true });
+            logChange(null, { separator: true });
 
             let nextState = {};
             const randomizerOptions = preset.options;
             const shouldLogGenerativeStep = !state.musicMode.refine;
 
-            if(state.musicMode.randomizeOctave) {
+            if(state.randomization.randomizeOctave) {
                 const newOctave = Math.max(2, Math.min(5, state.randomization.octave + (Math.floor(Math.random() * 3) - 1)));
                 if (newOctave !== state.randomization.octave) {
                     nextState.randomization = { ...state.randomization, octave: newOctave };
@@ -1777,33 +1784,41 @@
                 }
             }
 
-            if (presetKey === 'jazz') {
+            const handleChordalModes = (modeName, requiredScale, diatonicMap) => {
                 const parts = state.currentScaleName.split(' ');
                 const rootNote = NOTE_NAMES.indexOf(parts[0]);
                 const scaleName = parts.slice(1).join(' ');
 
-                if (scaleName !== 'Major' && scaleName !== 'Minor') {
-                    logChange(`Jazz Mode needs Major/Minor scale. Changing scale...`, { isGenerative: true });
+                if (requiredScale && scaleName !== requiredScale) {
+                    logChange(`${modeName} Mode needs ${requiredScale} scale. Changing...`, { isGenerative: true });
                     const randomRootNote = Math.floor(Math.random() * 12);
-                    updateState({ currentScaleName: `${NOTE_NAMES[randomRootNote]} Major` });
+                    updateState({ currentScaleName: `${NOTE_NAMES[randomRootNote]} ${requiredScale}` });
                     return;
                 }
 
-                const diatonicChordsMajor = { 0: [0,4,7,11], 2: [0,3,7,10], 4: [0,3,7,10], 5: [0,4,7,11], 7: [0,4,7,10], 9: [0,3,7,10], 11: [0,3,6,10] };
-                const diatonicChordsMinor = { 0: [0,3,7,10], 2: [0,3,6,10], 3: [0,4,7,11], 5: [0,3,7,10], 7: [0,3,7,10], 8: [0,4,7,11], 10: [0,4,7,10] };
-
+                let chordIntervals;
+                let chordName;
                 const scaleIntervals = SCALES[scaleName];
-                const diatonicMap = scaleName === 'Major' ? diatonicChordsMajor : diatonicChordsMinor;
 
-                const randomDegreeIndex = Math.floor(Math.random() * 7);
-                const degreeRoot = scaleIntervals[randomDegreeIndex];
-                const chordIntervals = diatonicMap[degreeRoot];
+                if (state.musicMode.randomizeChord || state.musicMode.chordType === 'Random') {
+                    const randomDegreeIndex = Math.floor(Math.random() * 7);
+                    const degreeRoot = scaleIntervals[randomDegreeIndex];
+                    chordIntervals = diatonicMap[degreeRoot];
+                    const chordRootNote = rootNote + degreeRoot;
+                    chordName = `${NOTE_NAMES[chordRootNote % 12]}7 (${scaleName})`;
+                } else {
+                    chordIntervals = CHORD_TYPES[state.musicMode.chordType];
+                    if(!chordIntervals) chordIntervals = [0, 7]; // Default to power chord
+                    const randomDegreeIndex = Math.floor(Math.random() * 7);
+                    const degreeRoot = scaleIntervals[randomDegreeIndex];
+                    const chordRootNote = rootNote + degreeRoot;
+                    chordName = `${NOTE_NAMES[chordRootNote % 12]}${state.musicMode.chordType}`;
+                }
 
-                const chordRootNote = rootNote + degreeRoot;
+                const chordRootNote = rootNote + (scaleIntervals[Math.floor(Math.random() * 7)]);
                 const chordNotes = chordIntervals.map(i => chordRootNote + i + (state.randomization.octave * 12));
 
-                const chordName = `${NOTE_NAMES[chordRootNote % 12]}`;
-                if(shouldLogGenerativeStep) logChange(`Jazz Chord: ${chordName}7 (${scaleName})`, { isGenerative: true });
+                if(shouldLogGenerativeStep) logChange(`${modeName} Chord: ${chordName}`, { isGenerative: true });
 
                 const newTracks = [...state.tracks];
                 const activeTrackCount = activeTracks.length;
@@ -1815,6 +1830,42 @@
                     }
                 }
                 updateState({ ...nextState, tracks: newTracks });
+            };
+
+
+            if (presetKey === 'jazz' || presetKey === 'rock') {
+                const diatonicChords = { 0: [0,4,7,11], 2: [0,3,7,10], 4: [0,3,7,10], 5: [0,4,7,11], 7: [0,4,7,10], 9: [0,3,7,10], 11: [0,3,6,10] }; // Major scale chords for Jazz
+                const rockChords = {0:[0,7], 2:[0,7], 3:[0,7], 5:[0,7], 7:[0,7], 8:[0,7], 10:[0,7]}; // Minor scale power chords for Rock
+                handleChordalModes(presetKey.charAt(0).toUpperCase() + presetKey.slice(1), presetKey === 'jazz' ? 'Major' : 'Minor', presetKey === 'jazz' ? diatonicChords : rockChords);
+            } else if (presetKey === 'baroque') {
+                const parts = state.currentScaleName.split(' ');
+                if (parts[1] !== 'Major' && parts[1] !== 'Minor') {
+                    logChange(`Baroque Mode needs Major/Minor scale. Changing...`, { isGenerative: true });
+                    const randomRootNote = Math.floor(Math.random() * 12);
+                    updateState({ currentScaleName: `${NOTE_NAMES[randomRootNote]} Major` });
+                    return;
+                }
+
+                const rootNote = NOTE_NAMES.indexOf(parts[0]);
+                const scaleIntervals = SCALES[parts[1]];
+                const chordRootOffset = baroqueProgression[baroqueStep % baroqueProgression.length];
+                baroqueStep++;
+
+                const chordRoot = rootNote + chordRootOffset;
+                const isMajor = [0, 5, 7].includes(chordRootOffset); // I, IV, V are major
+                const chordIntervals = isMajor ? [0, 4, 7] : [0, 3, 7]; // Major or minor triad
+                const arpeggioNotes = chordIntervals.map(i => chordRoot + i + (state.randomization.octave * 12));
+
+                if(shouldLogGenerativeStep) logChange(`Baroque: ${NOTE_NAMES[chordRoot % 12]}${isMajor ? '' : 'm'} arpeggio`, { isGenerative: true });
+
+                const newTracks = [...state.tracks];
+                activeTracks.forEach((track, i) => {
+                    const trackIndex = newTracks.findIndex(t => t.id === track.id);
+                    if(trackIndex !== -1) {
+                        newTracks[trackIndex] = {...newTracks[trackIndex], note: arpeggioNotes[i % arpeggioNotes.length] };
+                    }
+                });
+                updateState({tracks: newTracks});
 
             } else if (presetKey === 'fifths') {
                 const scaleParts = state.currentScaleName.split(' ');
@@ -1823,20 +1874,6 @@
                 if(shouldLogGenerativeStep) logChange(`Key Change: ${nextState.currentScaleName}`, { isGenerative: true });
                 if (Object.keys(nextState).length > 0) updateState(nextState);
 
-            } else if (presetKey === 'rock') {
-                const targetScale = 'Minor Pentatonic';
-                if (state.currentScaleName.split(' ').slice(1).join(' ') !== targetScale) {
-                    const randomRootNote = Math.floor(Math.random() * 12);
-                    nextState.currentScaleName = `${NOTE_NAMES[randomRootNote]} ${targetScale}`;
-                    if(shouldLogGenerativeStep) logChange(`${preset.label} Mode: Set scale to ${nextState.currentScaleName}`, { isGenerative: true });
-                }
-                if (Object.keys(nextState).length > 0) {
-                    updateState(nextState);
-                    setTimeout(() => randomizeAllTracksForPreset(preset), 50);
-                } else {
-                    randomizeAllTracksForPreset(preset);
-                }
-                return;
             } else if (randomizerOptions.scale) {
                 const scaleNames = Object.keys(SCALES);
                 const randomScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
@@ -1844,14 +1881,6 @@
                 nextState.currentScaleName = `${NOTE_NAMES[randomRootNote]} ${randomScaleName}`;
                 if(shouldLogGenerativeStep) logChange(`Scale: ${nextState.currentScaleName}`, { isGenerative: true });
                 if (Object.keys(nextState).length > 0) updateState(nextState);
-            }
-
-            function randomizeAllTracksForPreset(presetConfig) {
-                const assignedNotesByChannel = {};
-                activeTracks.forEach(t => randomizeTrackParameters(t, presetConfig.options, shouldLogGenerativeStep, assignedNotesByChannel));
-                if (state.musicMode.refine) {
-                    setTimeout(() => handleRefine(false), 50);
-                }
             }
 
             const assignedNotesByChannel = {};
@@ -1864,6 +1893,9 @@
 
             if (state.musicMode.refine) {
                 setTimeout(() => handleRefine(false), 50);
+            }
+            if (state.musicMode.autoQuantize) {
+                setTimeout(() => handleQuantizeNotes(false), 60);
             }
         }
 
@@ -1885,22 +1917,27 @@
 
         function handleMasterRandomize() {
             const options = state.randomization;
-            let nextState = {};
-            logChange('---', { separator: true });
+            let changesToMake = {};
+            logChange(null, { separator: true });
 
-            if(options.scale) {
+            if(options.randomizeOctave) {
                 const newOctave = Math.max(2, Math.min(5, state.randomization.octave + (Math.floor(Math.random() * 3) - 1)));
-                nextState.randomization = { ...state.randomization, octave: newOctave };
-                logChange(`New base octave: ${newOctave}`);
-
-                const scaleNames = Object.keys(SCALES);
-                const randomScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
-                nextState.currentScaleName = `${NOTE_NAMES[Math.floor(Math.random() * 12)]} ${randomScaleName}`;
-                logChange(`Scale: ${nextState.currentScaleName}`);
+                if(newOctave !== state.randomization.octave) {
+                    changesToMake.randomization = { ...state.randomization, octave: newOctave };
+                    logChange(`New base octave: ${newOctave}`);
+                }
             }
 
-            if (Object.keys(nextState).length > 0) {
-                updateState(nextState);
+            if(options.scale) {
+                const scaleNames = Object.keys(SCALES);
+                const randomScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
+                const newScale = `${NOTE_NAMES[Math.floor(Math.random() * 12)]} ${randomScaleName}`;
+                changesToMake.currentScaleName = newScale;
+                logChange(`Scale: ${newScale}`);
+            }
+
+            if (Object.keys(changesToMake).length > 0) {
+                updateState(changesToMake);
             }
 
             const assignedNotesByChannel = {};
@@ -1923,7 +1960,6 @@
             let newTracks = JSON.parse(JSON.stringify(state.tracks));
             let refinementLogs = [];
 
-            // 1. Harmonic Foundation (Anchor to Root)
             const rootNoteMidi = NOTE_NAMES.indexOf(state.currentScaleName.split(' ')[0]);
             let notes = activeTracks.map(t => ({ note: t.note, id: t.id, isRoot: (t.note % 12) === rootNoteMidi }));
             notes.sort((a, b) => a.note - b.note);
@@ -1936,16 +1972,8 @@
                     const rootTrackIndex = newTracks.findIndex(t => t.id === rootNoteTrack.id);
 
                     if (lowestTrackIndex !== -1 && rootTrackIndex !== -1) {
-                        const originalLowestNote = newTracks[lowestTrackIndex].note;
-                        const originalRootNote = newTracks[rootTrackIndex].note;
-
-                        newTracks[lowestTrackIndex].note = originalRootNote;
-                        newTracks[rootTrackIndex].note = originalLowestNote;
-
-                        const lowestNoteName = Tone.Frequency(originalLowestNote, 'midi').toNote();
-                        const rootNoteName = Tone.Frequency(originalRootNote, 'midi').toNote();
-
-                        refinementLogs.push(`Bass note swap: ${lowestNoteName} ↔ ${rootNoteName}`);
+                        [newTracks[lowestTrackIndex].note, newTracks[rootTrackIndex].note] = [newTracks[rootTrackIndex].note, newTracks[lowestTrackIndex].note];
+                        refinementLogs.push(`Bass note swap`);
                     }
                 } else {
                     const lowestTrackIndex = newTracks.findIndex(t => t.id === lowestNote.id);
@@ -1953,65 +1981,28 @@
                         const oldNoteName = Tone.Frequency(newTracks[lowestTrackIndex].note, 'midi').toNote();
                         const currentOctave = Math.floor(newTracks[lowestTrackIndex].note / 12);
                         newTracks[lowestTrackIndex].note = currentOctave * 12 + rootNoteMidi;
-                        const newNoteName = Tone.Frequency(newTracks[lowestTrackIndex].note, 'midi').toNote();
-                        refinementLogs.push(`Set bass to root: ${oldNoteName} → ${newNoteName}`);
+                        refinementLogs.push(`Set bass to root: ${oldNoteName} → ${Tone.Frequency(newTracks[lowestTrackIndex].note, 'midi').toNote()}`);
                     }
                 }
             }
 
-            // 2. Dissonance Reduction
             let currentNotes = newTracks.filter(t => t.active).map(t => t.note);
-            let notesChanged = false;
             for (let i = 0; i < currentNotes.length; i++) {
                 for (let j = i + 1; j < currentNotes.length; j++) {
-                    const interval = Math.abs(currentNotes[i] - currentNotes[j]) % 12;
-                    if (interval === 1) { // Only target minor 2nds
+                    if (Math.abs(currentNotes[i] - currentNotes[j]) % 12 === 1) {
                         const trackToChangeId = newTracks.filter(t => t.active)[j].id;
                         const trackIndex = newTracks.findIndex(t => t.id === trackToChangeId);
                         const oldNote = newTracks[trackIndex].note;
+                        let newNote = findClosestNoteInScale(oldNote + 1, currentRandomizationScale);
+                        if(newNote === oldNote) newNote = findClosestNoteInScale(oldNote - 1, currentRandomizationScale);
 
-                        let newNote = oldNote + 1;
-                        while(!currentRandomizationScale.includes(newNote) && newNote < 127) { newNote++; }
-
-                        if (newNote < 127 && !currentNotes.includes(newNote)) {
+                        if (newNote !== oldNote && !currentNotes.includes(newNote)) {
                             newTracks[trackIndex].note = newNote;
-                            currentNotes[j] = newNote;
-                            notesChanged = true;
-                            refinementLogs.push(`Resolved dissonance: ${Tone.Frequency(oldNote, 'midi').toNote()} → ${Tone.Frequency(newNote, 'midi').toNote()}`);
-                            break;
+                            refinementLogs.push(`Resolved M2: ${Tone.Frequency(oldNote, 'midi').toNote()}→${Tone.Frequency(newNote, 'midi').toNote()}`);
                         }
                     }
                 }
-                if(notesChanged) break;
             }
-
-            // 3. Velocity Humanization & Rhythmic Refinement
-            const totalPulses = activeTracks.reduce((sum, t) => sum + t.pulses, 0);
-            const tweakedRhythms = [];
-            const tweakedRotations = [];
-
-            newTracks.forEach(track => {
-                if(track.active) {
-                    track.velocity = Math.max(20, Math.min(127, track.velocity + Math.floor(Math.random() * 21) - 10));
-
-                    const velocityAdjustment = (1 - (track.pulses / totalPulses)) * 10 - 5;
-                    track.velocity = Math.round(Math.max(20, Math.min(127, track.velocity + velocityAdjustment)));
-
-                    if (Math.random() < 0.3) {
-                        const oldPulses = track.pulses;
-                        track.pulses = Math.max(1, Math.min(track.steps, track.pulses + (Math.random() > 0.5 ? 1 : -1)));
-                        if(oldPulses !== track.pulses) tweakedRhythms.push(`T${track.id+1} ${oldPulses}→${track.pulses}p`);
-                    }
-                    if (Math.random() < 0.2) {
-                        const oldRotation = track.rotation;
-                        track.rotation = (track.rotation + 1) % track.steps;
-                        if(oldRotation !== track.rotation) tweakedRotations.push(`T${track.id+1}`);
-                    }
-                }
-            });
-
-            if (tweakedRhythms.length > 0) refinementLogs.push(`Rhythm tweaks: ${tweakedRhythms.join(', ')}`);
-            if (tweakedRotations.length > 0) refinementLogs.push(`Rotation tweaks: ${tweakedRotations.join(', ')}`);
 
             if (refinementLogs.length > 0) {
                 logChange(`Refined: ${refinementLogs.join(' | ')}`);
@@ -2027,8 +2018,15 @@
         function logChange(message, options = {}) {
             if (!dom.musicModeLog) return;
 
+            if (options.separator) {
+                const separator = document.createElement('div');
+                separator.className = 'log-separator';
+                dom.musicModeLog.prepend(separator);
+                return;
+            }
+
             if (state.musicMode.refine && options.isGenerative) {
-                return; // Don't log normal generative steps if auto-refine is on
+                return;
             }
 
             if (message === "Music Mode is Off." && lastLogWasMusicModeOff) {
@@ -2037,16 +2035,17 @@
             lastLogWasMusicModeOff = (message === "Music Mode is Off.");
 
             const entry = document.createElement('div');
+            entry.className = 'log-entry';
             entry.textContent = message;
-            if(options.separator) entry.style.borderTop = "1px solid var(--control-border)";
             dom.musicModeLog.prepend(entry);
 
-            while (dom.musicModeLog.children.length > 12) {
+            while (dom.musicModeLog.children.length > 20) {
                 dom.musicModeLog.removeChild(dom.musicModeLog.lastChild);
             }
         }
 
         init();
+
     });
 </script>
 </body>
