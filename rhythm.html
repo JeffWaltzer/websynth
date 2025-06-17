@@ -205,7 +205,7 @@
         #musicModeLog > div.log-entry { padding-bottom: 0.1rem; margin-bottom: 0.1rem; border-bottom: 1px solid rgba(255,255,255,0.05); word-break: break-word; }
         #musicModeLog > div.log-separator { height: 1px; background-color: var(--control-border); margin: 3px 0; border: none; }
 
-        #channelVolumesContainer { display: grid; grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); gap: 0.4rem 0.6rem; padding: 0.1rem; }
+        #channelVolumesContainer { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.4rem 0.6rem; padding: 0.1rem; }
         #channelVolumesContainer .control-group { margin-bottom: 0; }
         #channelVolumesContainer .control-header { margin-bottom: 0.1rem; }
         #channelVolumesContainer .control-slider { height: 10px; }
@@ -481,6 +481,7 @@
             HINTS: [ "Click a red 'L' to map a MIDI CC. Click a green 'L' to un-map it.", "Toggle 'Music Mode' for generative grooves.", "Hit 'Random' on tracks for instant variations.", "Use the 'Save' icon to create a manual save point.", "Hold +/- buttons for rapid value changes.", "The 'Stop Notes' button sends an 'All Notes Off' command to your MIDI gear.", "Use the 🎼 button to snap all notes to the selected scale.", "Master Volume is a global velocity scaler. It won't affect tracks whose Channel Volume is set to 0.", "'Stop Notes' is your friend if notes get stuck!" ],
             VIEW_PANEL_MAP: { showMidiPanel: 'midiPanel', showRandomizePanel: 'randomizationSettingsContainer', showVolumesPanel: 'channelVolumesWrapper', showHintsLogPanel: 'hintsPanel' },
             MUSIC_MODE_PRESETS: { off: { label: "Off", multi: false, options: { note: false, pulses: false, rotation: false, scale: false, velocity: false } }, single: { label: "Single", multi: false, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, multi: { label: "Multi", multi: true, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, melodic: { label: "Melodic", multi: true, options: { note: true, pulses: false, rotation: false, scale: true, velocity: false } }, jazz: { label: "Jazz", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, rock: { label: "Rock", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, baroque: { label: "Baroque", multi: true, options: { note: true, pulses: true, rotation: false, scale: true, velocity: true } }, fifths: { label: "Fifths", multi: true, options: { note: true, pulses: true, rotation: true, scale: false, velocity: true } }, },
+            INTERNAL_SYNTH_NAMES: ['Piano', 'Bright Pad', '8-bit Kick', 'FM Lead', 'AM Bass', 'Saw Lead', 'Square Pluck', 'Duo Arp', 'Synth Choir', 'Metallic Perc', 'Wobble Bass', 'Glassy Bell', 'Soft Pad', 'Funky Clav', 'Distorted Lead', 'Sub Bass'],
 
             // --- APPLICATION STATE & CACHE ---
             dom: {},
@@ -519,7 +520,6 @@
                         localStorage.removeItem(this.AUTOSAVE_KEY);
                     }
 
-                    // **BUG FIX**: Initialize state first, before other components that rely on it.
                     await this.loadState(loadedState);
 
                     this.createInitialUI();
@@ -1156,10 +1156,13 @@
                 for(let i=1; i<=16; i++) {
                     const slider = document.getElementById(`channelVolume${i}`);
                     const valueDisplay = document.getElementById(`channelVolumeValue${i}`);
-                    if (slider && valueDisplay) {
+                    const label = document.querySelector(`label[for="channelVolume${i}"]`);
+
+                    if (slider && valueDisplay && label) {
                         const volume = this.state.channelVolumes[i - 1];
                         slider.value = volume;
                         valueDisplay.textContent = volume;
+                        label.textContent = `Ch ${i} (${this.INTERNAL_SYNTH_NAMES[i-1]})`
                     }
                 }
             },
@@ -1217,7 +1220,7 @@
                     this.dom.midiChannelSelect.add(new Option(`Ch ${i}`, i));
                     const volDiv = document.createElement('div');
                     volDiv.className = 'control-group';
-                    volDiv.innerHTML = `<div class="control-header"><label for="channelVolume${i}">Ch ${i}:</label><span id="channelVolumeValue${i}" class="value-display"></span><button class="learn-cc-button ml-1" data-param-id="channelVolume${i}" title="Map Ch ${i} Volume to a MIDI CC knob/fader">L</button></div><div class="control-slider-container"><input type="range" id="channelVolume${i}" min="0" max="127" value="100" class="control-slider" title="Adjust volume for MIDI Channel ${i}"></div>`;
+                    volDiv.innerHTML = `<div class="control-header"><label for="channelVolume${i}"></label><span id="channelVolumeValue${i}" class="value-display"></span><button class="learn-cc-button ml-1" data-param-id="channelVolume${i}" title="Map Ch ${i} Volume to a MIDI CC knob/fader">L</button></div><div class="control-slider-container"><input type="range" id="channelVolume${i}" min="0" max="127" value="100" class="control-slider" title="Adjust volume for MIDI Channel ${i}"></div>`;
                     this.dom.channelVolumesContainer.appendChild(volDiv);
                     volDiv.querySelector('input').addEventListener('input', e => {
                         const newVolume = parseInt(e.target.value, 10);
@@ -1738,7 +1741,10 @@
                     let newTracks = JSON.parse(JSON.stringify(this.state.tracks));
                     const assignedNotesByChannel = {};
 
-                    if (preset.multi) {
+                    if (presetKey === 'jazz' || presetKey === 'rock') {
+                        this.handleChordalMode(presetKey, newTracks);
+                    }
+                    else if (preset.multi) {
                         newTracks.forEach(t => {
                             if(t.active) this.randomizeTrackParameters(t, randomizerOptions, true, assignedNotesByChannel, newTracks);
                         });
@@ -1759,6 +1765,52 @@
                 } catch (error) {
                     console.error("Error during generative step:", error);
                 }
+            },
+
+            handleChordalMode(modeName, tracks) {
+                const requiredScale = modeName === 'jazz' ? 'Major' : 'Minor';
+                const parts = this.state.currentScaleName.split(' ');
+                const rootNote = this.NOTE_NAMES.indexOf(parts[0]);
+                const scaleName = parts.slice(1).join(' ');
+
+                if (scaleName !== requiredScale) {
+                    this.logChange(`${modeName} Mode needs ${requiredScale} scale.`, { isGenerative: true });
+                    return; // Don't change the scale automatically, just log a warning
+                }
+
+                const scaleIntervals = this.SCALES[scaleName];
+                const diatonicMap = modeName === 'jazz'
+                    ? { 0: [0,4,7,11], 2: [0,3,7,10], 4: [0,3,7,10], 5: [0,4,7,11], 7: [0,4,7,10], 9: [0,3,7,10], 11: [0,3,6,10] }
+                    : {0:[0,7], 2:[0,7], 3:[0,7], 5:[0,7], 7:[0,7], 8:[0,7], 10:[0,7]};
+
+                let chordIntervals;
+                let chordName;
+
+                const randomDegreeIndex = Math.floor(Math.random() * 7);
+                const degreeRoot = scaleIntervals[randomDegreeIndex];
+                chordIntervals = diatonicMap[degreeRoot] || [0, 7]; // Fallback
+                const chordRootNote = rootNote + degreeRoot;
+                chordName = `${this.NOTE_NAMES[chordRootNote % 12]}${modeName === 'jazz' ? 'maj7' : 'm'}`; // Simplified chord name
+
+                if(this.state.musicMode.randomizeChord || this.state.musicMode.chordType === 'Random') {
+                    this.logChange(`${modeName} Chord: ${chordName}`, { isGenerative: true });
+                } else {
+                    chordIntervals = this.CHORD_TYPES[this.state.musicMode.chordType] || [0,7];
+                    const chordRoot = rootNote + scaleIntervals[Math.floor(Math.random() * 7)];
+                    chordName = `${this.NOTE_NAMES[chordRoot % 12]}${this.state.musicMode.chordType}`;
+                    this.logChange(`${modeName} Chord: ${chordName}`, { isGenerative: true });
+                }
+
+                const chordRootMidi = rootNote + (scaleIntervals[Math.floor(Math.random() * 7)]);
+                const chordNotes = chordIntervals.map(i => chordRootMidi + i + (this.state.randomization.octave * 12));
+
+                const activeTracks = tracks.filter(t => t.active);
+                activeTracks.forEach((track, i) => {
+                    const trackIndex = tracks.findIndex(t => t.id === track.id);
+                    if(trackIndex !== -1) {
+                        tracks[trackIndex].note = chordNotes[i % chordNotes.length];
+                    }
+                });
             },
 
             randomizeTrackParameters(track, options, shouldLog = true, assignedNotesByChannel = {}, tracks) {
@@ -1814,17 +1866,16 @@
             },
 
             handleMasterRandomize() {
-                const options = this.state.randomization;
                 let changesToMake = {};
                 this.logChange(null, { separator: true });
 
-                if(options.randomizeOctave) {
+                if(this.state.randomization.randomizeOctave) {
                     const newOctave = Math.floor(Math.random() * 4) + 2; // Octaves 2-5
                     changesToMake.randomization = { ...this.state.randomization, octave: newOctave };
                     this.logChange(`New base octave: ${newOctave}`);
                 }
 
-                if(options.scale) {
+                if(this.state.randomization.scale) {
                     const scaleNames = Object.keys(this.SCALES);
                     const randomScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
                     const newScale = `${this.NOTE_NAMES[Math.floor(Math.random() * 12)]} ${randomScaleName}`;
@@ -1832,16 +1883,17 @@
                     this.logChange(`Scale: ${newScale}`);
                 }
 
-                if (Object.keys(changesToMake).length > 0) {
-                    this.updateState(changesToMake);
-                }
-
                 let newTracks = JSON.parse(JSON.stringify(this.state.tracks));
                 const assignedNotesByChannel = {};
+
+                const options = {...this.state.randomization, note: this.state.randomization.note, scale: false}; // don't randomize scale per-track
+
                 newTracks.forEach(t => {
                     if(t.active) this.randomizeTrackParameters(t, options, true, assignedNotesByChannel, newTracks);
                 });
-                this.updateState({tracks: newTracks});
+                changesToMake.tracks = newTracks;
+
+                this.updateState(changesToMake);
 
                 this.showStatusMessage("All Active Tracks Randomized!", 2500);
                 document.documentElement.classList.add('randomize-flash');
@@ -1917,3 +1969,4 @@
 </script>
 </body>
 </html>
+
