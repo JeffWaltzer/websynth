@@ -6,7 +6,7 @@
     <title>Rhythm King 77 - Euclidean MIDI Sequencer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* Custom CSS for a more refined look */
         :root {
@@ -74,6 +74,7 @@
             color: var(--text-color);
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
             font-size: 1.1em;
+            font-weight: 700;
         }
 
         .synth-panel.track-pulse {
@@ -124,7 +125,7 @@
         }
 
         .push-button {
-            font-family: 'Orbitron', sans-serif; background-color: #585858; background-image: linear-gradient(to bottom, #6a6a6a, #4a4a4a);
+            font-family: 'Inter', sans-serif; background-color: #585858; background-image: linear-gradient(to bottom, #6a6a6a, #4a4a4a);
             color: var(--text-color); border: 1px solid #333; border-top-color: #777; padding: 0.2rem 0.6rem;
             border-radius: 6px; text-transform: capitalize; font-weight: bold; font-size: 0.65rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.15);
@@ -171,14 +172,17 @@
         .pattern-step.active { background-color: var(--accent-color); box-shadow: 0 0 4px var(--accent-glow), inset 0 1px 1px rgba(255,255,255,0.3);}
         .pattern-step.current { background-color: #fff; border: 1px solid var(--accent-color); transform: scale(1.3); box-shadow: 0 0 6px rgba(255,255,255,0.9); }
 
-        label { display: block; margin-bottom: 0.1rem; font-size: 0.7rem; text-transform: uppercase; font-family: 'Orbitron', sans-serif; white-space: nowrap; margin-right: 0.5rem; color: var(--accent-color); text-shadow: 0 1px 1px #000; }
+        label { display: block; margin-bottom: 0.1rem; font-size: 0.7rem; font-family: 'Inter', sans-serif; white-space: nowrap; margin-right: 0.5rem; color: var(--accent-color); text-shadow: 0 1px 1px #000; text-transform: capitalize; }
+        h1, h2, h3, label, .push-button { font-family: 'Inter', sans-serif; }
+        h1 {font-weight: 700;}
+        label[for="scaleRootSelect"], label[for="scaleTypeSelect"] {text-transform: uppercase;}
         select, input[type="number"], input[type="text"] {
             background-color: var(--control-bg); border: 1px solid #222; color: var(--text-color); padding: 0.3rem; border-radius: 5px; width: 100%; font-size: 0.75rem;
             box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
         }
         input[type="number"] { text-align: center; }
 
-        .value-display { font-family: 'Orbitron', sans-serif; color: var(--text-color); font-size: 0.75rem; min-width: 25px; text-align: right; flex-grow: 1; text-shadow: 0 1px 1px #000; }
+        .value-display { font-family: 'Inter', sans-serif; color: var(--text-color); font-size: 0.75rem; min-width: 25px; text-align: right; flex-grow: 1; text-shadow: 0 1px 1px #000; }
         .control-group { display: flex; flex-direction: column; margin-bottom: 0; }
         .control-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem; }
         .checkbox-label-container { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; margin-top: 0.2rem; cursor: pointer; color: var(--text-color); }
@@ -199,7 +203,8 @@
         #mainContent { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
 
         #musicModeLog {
-            height: 100%; background-color: rgba(0,0,0,0.3); border-radius: 6px; padding: 0.2rem 0.3rem;
+            height: 60px; /* Reduced height */
+            background-color: rgba(0,0,0,0.3); border-radius: 6px; padding: 0.2rem 0.3rem;
             font-size: 0.6rem; line-height: 1.4; overflow-y: auto; display: flex; flex-direction: column-reverse; color: var(--accent-color);
         }
         #musicModeLog > div.log-entry { padding-bottom: 0.1rem; margin-bottom: 0.1rem; border-bottom: 1px solid rgba(255,255,255,0.05); word-break: break-word; }
@@ -277,7 +282,7 @@
 <div id="app-background" class="bg-default"></div>
 
 <header class="text-center mb-2">
-    <h1 class="text-2xl md:text-3xl font-bold" style="font-family: 'Orbitron', sans-serif; color: var(--accent-color);">Rhythm King 77</h1>
+    <h1 class="text-2xl md:text-3xl font-bold">Rhythm King 77</h1>
     <p class="text-xs md:text-sm text-gray-400">Euclidean MIDI Sequencer</p>
 </header>
 
@@ -285,16 +290,16 @@
     <div id="mainContent" class="flex-grow">
         <div class="flex flex-col gap-2 main-container">
             <div id="sequencerWrapperPanel" class="w-full synth-panel">
-                <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Euclidean Sequencer Tracks</h2>
+                <h2 class="text-lg font-semibold text-center">Euclidean Sequencer Tracks</h2>
                 <div id="sequencerTracksContainer"></div>
             </div>
 
             <div id="bottom-panels-container">
                 <div id="masterControlPanel" class="synth-panel">
-                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Master Control</h2>
+                    <h2 class="text-lg font-semibold text-center">Master Control</h2>
 
                     <div id="toolbar" class="flex flex-wrap items-center justify-center gap-2">
-                        <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences">&#x25B6;</button>
+                        <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences (Spacebar)">&#x25B6;</button>
                         <button id="refineButton" class="push-button icon-button refine-button" title="Use a musical algorithm to refine the current notes and velocities">⚖️</button>
                         <button id="quantizeNotesButton" class="push-button icon-button quantize-button" title="Quantize all track notes to the selected scale">🎼</button>
                         <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save current state as a manual restore point">&#128190;</button>
@@ -335,7 +340,7 @@
                     </div>
 
                     <div class="control-group border-t border-gray-700 pt-2 mt-2">
-                        <label class="font-bold text-xs" style="font-family: 'Orbitron', sans-serif;">Global Controls</label>
+                        <label class="font-bold text-xs">Global Controls</label>
                         <div class="toggle-grid">
                             <label class="checkbox-label-container" title="Lock all 'Steps' sliders so they move together. The first track's value becomes the master value."><input type="checkbox" id="lockStepsCheckbox"> Lock All Steps</label>
                         </div>
@@ -343,9 +348,9 @@
                 </div>
 
                 <div id="viewPanel" class="synth-panel">
-                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Panel Toggles</h2>
+                    <h2 class="text-lg font-semibold text-center">Panel Toggles</h2>
                     <div id="viewTogglesContainer" class="toggle-grid">
-                        <label class="checkbox-label-container" title="Show/Hide the MIDI Setup panel"><input type="checkbox" data-view-toggle="midiPanel" id="showMidiPanel" checked> MIDI</label>
+                        <label class="checkbox-label-container" title="Show/Hide the MIDI Setup panel"><input type="checkbox" data-view-toggle="midiPanel" id="showMidiPanel" checked> Sound</label>
                         <label class="checkbox-label-container" title="Show/Hide the Randomization panel"><input type="checkbox" data-view-toggle="randomizationSettingsContainer" id="showRandomizePanel" checked> Randomize</label>
                         <label class="checkbox-label-container" title="Show/Hide the Channel Volumes panel"><input type="checkbox" data-view-toggle="channelVolumesWrapper" id="showVolumesPanel" checked> Volumes</label>
                         <label class="checkbox-label-container" title="Show/Hide the Hints & Log panel"><input type="checkbox" data-view-toggle="hintsPanel" id="showHintsLogPanel" checked> Hints & Log</label>
@@ -354,7 +359,7 @@
                 </div>
 
                 <div id="midiPanel" class="synth-panel">
-                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">MIDI Setup</h2>
+                    <h2 class="text-lg font-semibold text-center">Sound Setup</h2>
                     <div class="control-group">
                         <div class="grid grid-cols-2 gap-2">
                             <button id="reInitMidiButton" class="push-button w-full" title="Rescan for MIDI devices if you plugged one in after loading the page">Reset MIDI</button>
@@ -366,19 +371,19 @@
                         <select id="midiOutSelect" title="Select the device or virtual synth to send notes to"></select>
                     </div>
                     <div class="control-group">
-                        <label for="midiChannelSelect">Global MIDI Channel:</label>
+                        <label for="midiChannelSelect">Global Channel:</label>
                         <select id="midiChannelSelect" title="Select the default MIDI channel (1-16) for all tracks set to 'Global'"></select>
                     </div>
                 </div>
 
                 <div id="randomizationSettingsContainer" class="synth-panel">
-                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Randomization</h2>
+                    <h2 class="text-lg font-semibold text-center">Randomization</h2>
                     <div class="control-group">
                         <button id="masterRandomizeButton" class="push-button master-randomize-button w-full" title="Randomize all enabled parameters on all active tracks">Randomize All Active</button>
                     </div>
 
                     <div class="control-group border-t border-b border-gray-700 py-1 my-1">
-                        <label class="font-bold text-xs uppercase text-center" style="font-family: 'Orbitron', sans-serif;">Global Scale</label>
+                        <label class="font-bold text-xs uppercase text-center">Global Scale</label>
                         <div class="grid grid-cols-2 gap-2 mt-1">
                             <div>
                                 <label for="scaleRootSelect">Root</label>
@@ -403,11 +408,12 @@
                         <label class="checkbox-label-container" title="Randomize the velocity (loudness) of each track"><input type="checkbox" class="randomize-option" id="randomizeVelocityCheck" checked> Velocity</label>
                         <label class="checkbox-label-container" title="Randomize the base octave during generative changes"><input type="checkbox" class="randomize-option" id="randomizeOctaveCheck"> Octave</label>
                         <label class="checkbox-label-container" title="Allow the chord type to be randomized for Jazz/Rock modes"><input type="checkbox" class="randomize-option" id="randomizeChordCheck"> Chord</label>
+                        <label class="checkbox-label-container" id="randomizeInstrumentsContainer" title="Randomize the internal synth instrument for each track" style="display: none;"><input type="checkbox" class="randomize-option" id="randomizeInstrumentsCheck"> Instruments</label>
                     </div>
                 </div>
 
                 <div id="musicModePanel" class="synth-panel">
-                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Music Mode</h2>
+                    <h2 class="text-lg font-semibold text-center">Music Mode</h2>
                     <div class="control-group">
                         <div class="control-header">
                             <label for="randomIntervalSlider">Interval (Bars):</label>
@@ -438,17 +444,17 @@
                 </div>
 
                 <div id="channelVolumesWrapper" class="synth-panel">
-                    <h2 class="text-lg font-semibold text-center" style="font-family: 'Orbitron', sans-serif;">Channel Volumes</h2>
+                    <h2 class="text-lg font-semibold text-center">Channel Volumes</h2>
                     <div id="channelVolumesContainer"></div>
                 </div>
 
                 <div id="hintsPanel" class="synth-panel">
                     <div id="hintContainer" class="control-group">
-                        <label class="font-bold text-xs" style="font-family: 'Orbitron', sans-serif;">Helpful Hint</label>
+                        <label class="font-bold text-xs">Helpful Hint</label>
                         <div id="hintContent"></div>
                     </div>
                     <div id="logSection" class="control-group">
-                        <label class="font-bold text-xs" style="font-family: 'Orbitron', sans-serif;">Music Mode Log</label>
+                        <label class="font-bold text-xs">Music Mode Log</label>
                         <div id="musicModeLog"></div>
                     </div>
                 </div>
@@ -465,20 +471,15 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-        // =========================================================================
-        // RHYTHM KING APPLICATION OBJECT
-        // Encapsulates all application logic to prevent global namespace pollution
-        // and to create a more resilient, modular architecture.
-        // =========================================================================
         const RhythmKingApp = {
             // --- CONSTANTS AND CONFIGURATION ---
             MAX_TRACKS: 12,
-            MANUAL_SAVE_KEY: 'rhythmKing77_manualSave_v33',
-            AUTOSAVE_KEY: 'rhythmKing77_autoSave_v33',
+            MANUAL_SAVE_KEY: 'rhythmKing77_manualSave_v34',
+            AUTOSAVE_KEY: 'rhythmKing77_autoSave_v34',
             SCALES: { 'Major': [0, 2, 4, 5, 7, 9, 11], 'Minor': [0, 2, 3, 5, 7, 8, 10], 'Dorian': [0, 2, 3, 5, 7, 9, 10], 'Phrygian': [0, 1, 3, 5, 7, 8, 10], 'Lydian': [0, 2, 4, 6, 7, 9, 11], 'Mixolydian': [0, 2, 4, 5, 7, 9, 10], 'Locrian': [0, 1, 3, 5, 6, 8, 10], 'Major Pentatonic': [0, 2, 4, 7, 9], 'Minor Pentatonic': [0, 3, 5, 7, 10], 'Blues': [0, 3, 5, 6, 7, 10], 'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11], 'Whole Tone': [0, 2, 4, 6, 8, 10], 'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
             NOTE_NAMES: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
             CHORD_TYPES: { 'Random': null, 'Maj7': [0, 4, 7, 11], 'min7': [0, 3, 7, 10], 'Dom7': [0, 4, 7, 10], 'min7b5': [0, 3, 6, 10], 'dim7': [0, 3, 6, 9], 'Power': [0, 7] },
-            HINTS: [ "Click a red 'L' to map a MIDI CC. Click a green 'L' to un-map it.", "Toggle 'Music Mode' for generative grooves.", "Hit 'Random' on tracks for instant variations.", "Use the 'Save' icon to create a manual save point.", "Hold +/- buttons for rapid value changes.", "The 'Stop Notes' button sends an 'All Notes Off' command to your MIDI gear.", "Use the 🎼 button to snap all notes to the selected scale.", "Master Volume is a global velocity scaler. It won't affect tracks whose Channel Volume is set to 0.", "'Stop Notes' is your friend if notes get stuck!" ],
+            HINTS: [ "Click 'L' to map a MIDI CC. Click a green 'L' to un-map.", "Toggle 'Music Mode' for generative grooves.", "Hit 'Random' on tracks for instant variations.", "Use the 'Save' icon to create a restore point.", "Hold +/- buttons for rapid value changes.", "The 'Stop Notes' button sends an 'All Notes Off' command.", "Use the 🎼 button to snap all notes to the selected scale." ],
             VIEW_PANEL_MAP: { showMidiPanel: 'midiPanel', showRandomizePanel: 'randomizationSettingsContainer', showVolumesPanel: 'channelVolumesWrapper', showHintsLogPanel: 'hintsPanel' },
             MUSIC_MODE_PRESETS: { off: { label: "Off", multi: false, options: { note: false, pulses: false, rotation: false, scale: false, velocity: false } }, single: { label: "Single", multi: false, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, multi: { label: "Multi", multi: true, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, melodic: { label: "Melodic", multi: true, options: { note: true, pulses: false, rotation: false, scale: true, velocity: false } }, jazz: { label: "Jazz", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, rock: { label: "Rock", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, baroque: { label: "Baroque", multi: true, options: { note: true, pulses: true, rotation: false, scale: true, velocity: true } }, fifths: { label: "Fifths", multi: true, options: { note: true, pulses: true, rotation: true, scale: false, velocity: true } }, },
             INTERNAL_SYNTH_NAMES: ['Piano', 'Bright Pad', '8-bit Kick', 'FM Lead', 'AM Bass', 'Saw Lead', 'Square Pluck', 'Duo Arp', 'Synth Choir', 'Metallic Perc', 'Wobble Bass', 'Glassy Bell', 'Soft Pad', 'Funky Clav', 'Distorted Lead', 'Sub Bass'],
@@ -512,9 +513,7 @@
                     let loadedState = null;
                     try {
                         const autoSaveJSON = localStorage.getItem(this.AUTOSAVE_KEY);
-                        if (autoSaveJSON) {
-                            loadedState = JSON.parse(autoSaveJSON);
-                        }
+                        if (autoSaveJSON) loadedState = JSON.parse(autoSaveJSON);
                     } catch (e) {
                         console.error("Could not parse autosave, starting fresh.", e);
                         localStorage.removeItem(this.AUTOSAVE_KEY);
@@ -527,9 +526,9 @@
                     this.setupToneJS();
                     this.setupEventListeners();
 
-                    if (loadedState) {
-                        this.showStatusMessage("Autosave loaded.", 2000);
-                    }
+                    this.updateMidiOutput(); // Final check to ensure UI matches state
+
+                    if (loadedState) this.showStatusMessage("Autosave loaded.", 2000);
 
                     this.hintInterval = setInterval(() => this.showHint(), 25000);
                     this.showHint();
@@ -548,7 +547,7 @@
                     'masterVolumeValue', 'masterVolumeLearnCc', 'midiOutSelect', 'midiChannelSelect',
                     'sequencerTracksContainer', 'channelVolumesContainer', 'channelVolumesWrapper',
                     'statusBar', 'statusBar-content', 'musicModeToggle', 'randomIntervalSlider',
-                    'randomIntervalValue', 'randomizeNoteCheck', 'randomizePulsesCheck', 'randomizeChordCheck',
+                    'randomIntervalValue', 'randomizeNoteCheck', 'randomizePulsesCheck', 'randomizeChordCheck', 'randomizeInstrumentsContainer', 'randomizeInstrumentsCheck',
                     'randomizeRotationCheck', 'randomizeScaleCheck', 'randomizeVelocityCheck', 'randomizeOctaveCheck',
                     'musicModeNextButton', 'musicModeLog', 'hintContent', 'app-background',
                     'octaveSelector', 'viewTogglesContainer', 'randomizationSettingsContainer',
@@ -569,8 +568,15 @@
 
             setupEventListeners() {
                 this.dom.playStopButton.addEventListener('click', () => this.handlePlayStop());
-                this.dom.numTracksInput.addEventListener('change', (e) => this.handleNumTracksChange(e));
+                document.body.addEventListener('keydown', (e) => {
+                    if (e.target.tagName.toUpperCase() === 'INPUT' || e.target.tagName.toUpperCase() === 'SELECT') return;
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.handlePlayStop();
+                    }
+                });
 
+                this.dom.numTracksInput.addEventListener('change', (e) => this.handleNumTracksChange(e));
                 this.dom.bpmSlider.addEventListener('input', e => this.updateState({ bpm: parseInt(e.target.value, 10) }));
                 this.dom.masterVolumeSlider.addEventListener('input', e => this.updateState({ masterVolume: parseInt(e.target.value, 10) }));
 
@@ -590,7 +596,10 @@
                     this.showStatusMessage("Stop Notes: All notes off sent.", 1500);
                 });
                 this.dom.midiOutSelect.addEventListener('change', () => this.updateMidiOutput());
-                this.dom.midiChannelSelect.addEventListener('change', e => this.updateState({ globalMidiChannel: parseInt(e.target.value, 10) }));
+                this.dom.midiChannelSelect.addEventListener('change', e => {
+                    this.updateState({ globalMidiChannel: parseInt(e.target.value, 10) });
+                    this.rebuildAllTrackLoops();
+                });
 
                 this.dom.lockStepsCheckbox.addEventListener('change', (e) => this.handleLockStepsChange(e));
 
@@ -622,6 +631,11 @@
                 document.body.addEventListener('touchend', () => this.stopAutoRepeat());
 
                 this.dom.randomizeOptionsContainer.addEventListener('change', (e) => this.handleRandomizeOptionChange(e));
+                this.dom.octaveSelector.addEventListener('change', (e) => {
+                    if (e.target.name === 'octaveSelect') {
+                        this.updateState({ randomization: { ...this.state.randomization, octave: parseInt(e.target.value) }});
+                    }
+                });
 
                 this.dom.musicModePresetContainer.addEventListener('click', (e) => {
                     const label = e.target.closest('.radio-label');
@@ -638,8 +652,8 @@
                 return {
                     numTracks: 4, bpm: 45, masterVolume: 100, globalMidiChannel: 1, midiOutputId: 'internal_synth', ccMap: {},
                     stepsLocked: false, globalLockedSteps: 16, channelVolumes: Array(16).fill(100), currentScaleName: 'C Major',
-                    musicMode: { enabled: false, interval: 4, preset: 'single', refine: false, autoQuantize: false, chordType: 'Random', randomizeChord: true },
-                    randomization: { note: true, pulses: true, rotation: true, scale: true, velocity: true, octave: 3, randomizeOctave: false, },
+                    musicMode: { enabled: true, interval: 4, preset: 'single', refine: false, autoQuantize: false, chordType: 'Random', randomizeChord: true },
+                    randomization: { note: true, pulses: true, rotation: true, scale: true, velocity: true, octave: 3, randomizeOctave: true, instruments: true },
                     view: { showMidiPanel: true, showRandomizePanel: true, showVolumesPanel: true, showHintsLogPanel: true },
                     tracks: Array.from({ length: 4 }, (_, i) => ({ id: i, active: true, pulses: [4, 3, 5, 7][i] || 4, steps: 16, rotation: [0, 2, 4, 0][i] || 0, note: [60, 64, 67, 71][i] || 60, velocity: 100, channelOverride: 'global' }))
                 };
@@ -647,7 +661,7 @@
 
             updateState(newState) {
                 try {
-                    const prevState = { ...this.state };
+                    const prevState = this.state ? { ...this.state } : this.getDefaultState();
                     const updatedState = this.deepMerge(this.state, newState);
 
                     if (!prevState.tracks || JSON.stringify(updatedState.tracks) !== JSON.stringify(prevState.tracks)) {
@@ -721,18 +735,24 @@
                     });
 
                     Tone.Transport.bpm.value = this.state.bpm;
-                    this.setupTimedRandomization();
 
                     if (this.midiOutput || this.state.midiOutputId === 'internal_synth') {
-                        this.state.channelVolumes.forEach((volume, i) => this.sendMidiCC(7, volume, i + 1));
+                        this.state.channelVolumes.forEach((volume, i) => {
+                            if (this.state.midiOutputId === 'internal_synth') {
+                                if(this.internalSynths[i]) this.internalSynths[i].volume.value = -24 + (24 * (volume/127));
+                            } else {
+                                this.sendMidiCC(7, volume, i + 1)
+                            }
+                        });
                     }
 
-                    this.render();
+                    this.render(); // Render after state is fully loaded
 
-                    if (this.state.midiOutputId && Array.from(this.dom.midiOutSelect.options).some(o => o.value === this.state.midiOutputId)) {
+                    if (this.dom.midiOutSelect && Array.from(this.dom.midiOutSelect.options).some(o => o.value === this.state.midiOutputId)) {
                         this.dom.midiOutSelect.value = this.state.midiOutputId;
-                        this.updateMidiOutput();
                     }
+
+                    this.updateMidiOutput(); // This will populate channel selectors
 
                     if (wasPlaying) {
                         this.rebuildAllTrackLoops();
@@ -858,13 +878,9 @@
                 try {
                     const selectedId = this.state?.midiOutputId || 'internal_synth';
                     this.dom.midiOutSelect.innerHTML = '';
-
-                    // Add the internal synth as the first option
                     this.dom.midiOutSelect.add(new Option("Internal Synth", "internal_synth"));
 
-                    if (!this.midiAccess || this.midiAccess.outputs.size === 0) {
-                        if(!this.midiAccess) console.log("No MIDI access, only internal synth available.");
-                    } else {
+                    if (this.midiAccess && this.midiAccess.outputs.size > 0) {
                         this.midiAccess.outputs.forEach(out => {
                             this.dom.midiOutSelect.add(new Option(out.name, out.id));
                         });
@@ -882,10 +898,11 @@
                 try {
                     const selectedId = this.dom.midiOutSelect.value;
                     if (selectedId === 'internal_synth') {
-                        this.midiOutput = null; // Ensure external MIDI is cleared
+                        this.midiOutput = null;
                     } else {
                         this.midiOutput = this.midiAccess?.outputs.get(selectedId) || null;
                     }
+                    this.populateChannelSelectors();
                     if(!this.state || this.state.midiOutputId !== selectedId) {
                         this.updateState({ midiOutputId: selectedId });
                     }
@@ -913,8 +930,8 @@
             panic() {
                 this.clearActiveNotes();
                 for (let i = 1; i <= 16; i++) {
-                    this.sendMidiCC(123, 0, i); // All notes off
-                    this.sendMidiCC(120, 0, i); // All sound off
+                    this.sendMidiCC(123, 0, i);
+                    this.sendMidiCC(120, 0, i);
                 }
                 this.internalSynths.forEach(synth => {
                     if(synth && typeof synth.releaseAll === 'function'){
@@ -1043,7 +1060,7 @@
                     this.dom.masterVolumeSlider.value = this.state.masterVolume;
                     this.dom.masterVolumeValue.textContent = this.state.masterVolume;
                     this.dom.lockStepsCheckbox.checked = this.state.stepsLocked;
-                    this.dom.midiChannelSelect.value = this.state.globalMidiChannel;
+
                     this.dom.chordTypeSelect.value = this.state.musicMode.chordType;
                     this.dom.randomizeChordCheck.checked = this.state.musicMode.randomizeChord;
                     const midiAvailable = !!this.midiAccess;
@@ -1076,6 +1093,7 @@
                     this.renderCcMappings();
                     this.renderOctaveSelector();
                     this.renderScaleSelector();
+                    this.populateChannelSelectors();
                 } catch (error) {
                     console.error("A major error occurred during rendering:", error);
                     this.showStatusMessage("Render Error. Check console.", 5000);
@@ -1162,7 +1180,7 @@
                         const volume = this.state.channelVolumes[i - 1];
                         slider.value = volume;
                         valueDisplay.textContent = volume;
-                        label.textContent = `Ch ${i} (${this.INTERNAL_SYNTH_NAMES[i-1]})`
+                        label.textContent = `Ch ${i}`;
                     }
                 }
             },
@@ -1213,11 +1231,13 @@
                 this.dom.randomizeScaleCheck.checked = this.state.randomization.scale;
                 this.dom.randomizeVelocityCheck.checked = this.state.randomization.velocity;
                 this.dom.randomizeOctaveCheck.checked = this.state.randomization.randomizeOctave;
+                this.dom.randomizeInstrumentsCheck.checked = this.state.randomization.instruments;
+
+                this.dom.randomizeInstrumentsContainer.style.display = this.state.midiOutputId === 'internal_synth' ? 'flex' : 'none';
             },
 
             createInitialUI() {
                 for (let i = 1; i <= 16; i++) {
-                    this.dom.midiChannelSelect.add(new Option(`Ch ${i}`, i));
                     const volDiv = document.createElement('div');
                     volDiv.className = 'control-group';
                     volDiv.innerHTML = `<div class="control-header"><label for="channelVolume${i}"></label><span id="channelVolumeValue${i}" class="value-display"></span><button class="learn-cc-button ml-1" data-param-id="channelVolume${i}" title="Map Ch ${i} Volume to a MIDI CC knob/fader">L</button></div><div class="control-slider-container"><input type="range" id="channelVolume${i}" min="0" max="127" value="100" class="control-slider" title="Adjust volume for MIDI Channel ${i}"></div>`;
@@ -1229,6 +1249,8 @@
                         if (this.state.midiOutputId === 'internal_synth') {
                             const scaledVol = -24 + (24 * (newVolume / 127));
                             this.internalSynths[i-1].volume.value = scaledVol;
+                        } else {
+                            this.sendMidiCC(7, newVolume, i);
                         }
                         this.updateState({ channelVolumes: newVolumes });
                     });
@@ -1259,64 +1281,62 @@
                 trackDiv.className = 'synth-panel p-2 flex flex-col relative';
                 trackDiv.dataset.trackId = trackId;
                 trackDiv.innerHTML = `
-                <div class="flex justify-between items-center mb-1">
-                    <h3 class="text-base font-semibold" style="font-family: 'Orbitron', sans-serif;">Track ${trackId + 1}</h3>
-                    <div>
-                        <button data-action="randomize" class="push-button randomize-button text-xs py-1 px-2" title="Randomize this track's parameters">Random</button>
-                        <button data-action="toggleActive" id="trackToggle${trackId}" class="push-button text-xs py-1 px-2 ml-1" title="Mute or unmute this track">On</button>
+                    <div class="flex justify-between items-center mb-1">
+                        <h3 class="text-base font-semibold">Track ${trackId + 1}</h3>
+                        <div>
+                            <button data-action="randomize" class="push-button randomize-button text-xs py-1 px-2" title="Randomize this track's parameters">Random</button>
+                            <button data-action="toggleActive" id="trackToggle${trackId}" class="push-button text-xs py-1 px-2 ml-1" title="Mute or unmute this track">On</button>
+                        </div>
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-x-2 gap-y-1 mb-1">
-                    ${this.createSliderControl('steps', trackId, 'Steps', 1, 32, 16)}
-                    ${this.createSliderControl('pulses', trackId, 'Pulses', 1, 16, 4)}
-                    ${this.createSliderControl('rotation', trackId, 'Rotate', 0, 15, 0)}
-                    ${this.createSliderControl('velocity', trackId, 'Velocity', 1, 127, 100)}
-                    ${this.createSelectControl('channelOverride', trackId, 'MIDI Ch', ['global', ...Array.from({length:16},(_,i)=>i+1)])}
-                    ${this.createNoteControl(trackId)}
-                </div>
-                <div id="patternDisplay${trackId}" class="pattern-display my-1"></div>
-            `;
+                    <div class="grid grid-cols-2 gap-x-2 gap-y-1 mb-1">
+                        ${this.createSliderControl('steps', trackId, 'Steps', 1, 32, 16, "Number of steps in the sequence")}
+                        ${this.createSliderControl('pulses', trackId, 'Pulses', 1, 16, 4, "Number of active beats")}
+                        ${this.createSliderControl('rotation', trackId, 'Rotate', 0, 15, 0, "Shift pattern start point")}
+                        ${this.createSliderControl('velocity', trackId, 'Velocity', 1, 127, 100, "Note loudness")}
+                        ${this.createSelectControl('channelOverride', trackId, 'Channel', ['global', ...Array.from({length:16},(_,i)=>i+1)])}
+                        ${this.createNoteControl(trackId)}
+                    </div>
+                    <div id="patternDisplay${trackId}" class="pattern-display my-1"></div>
+                `;
                 return trackDiv;
             },
 
-            createSliderControl(id, trackId, label, min, max, value) {
+            createSliderControl(id, trackId, label, min, max, value, title = "") {
                 return `
-                <div class="control-group">
-                    <div class="control-header">
-                        <label for="${id}${trackId}">${label}:</label>
-                        <span id="${id}Value${trackId}" class="value-display">${value}</span>
-                        <button class="learn-cc-button ml-1" data-param-id="${id}${trackId}">L</button>
+                    <div class="control-group">
+                        <div class="control-header">
+                            <label for="${id}${trackId}" title="${title}">${label}:</label>
+                            <span id="${id}Value${trackId}" class="value-display">${value}</span>
+                            <button class="learn-cc-button ml-1" data-param-id="${id}${trackId}" title="Map ${label} to MIDI CC">L</button>
+                        </div>
+                        <div class="control-slider-container">
+                            <button class="slider-button" data-target="${id}${trackId}" data-action="decrement">&minus;</button>
+                            <input type="range" data-action="update" data-prop="${id}" id="${id}${trackId}" min="${min}" max="${max}" value="${value}" class="control-slider" title="${title}">
+                            <button class="slider-button" data-target="${id}${trackId}" data-action="increment">+</button>
+                        </div>
                     </div>
-                    <div class="control-slider-container">
-                        <button class="slider-button" data-target="${id}${trackId}" data-action="decrement">&minus;</button>
-                        <input type="range" data-action="update" data-prop="${id}" id="${id}${trackId}" min="${min}" max="${max}" value="${value}" class="control-slider">
-                        <button class="slider-button" data-target="${id}${trackId}" data-action="increment">+</button>
-                    </div>
-                </div>
-            `;
+                `;
             },
 
             createSelectControl(id, trackId, label, options) {
                 return `
-                <div class="control-group">
-                    <label for="${id}${trackId}" class="mb-1">${label}:</label>
-                    <select id="${id}${trackId}" data-action="update" data-prop="${id}" class="text-xs p-1 h-full">
-                        ${options.map(o => `<option value="${o}">${o === 'global' ? 'Global' : o}</option>`).join('')}
-                    </select>
-                </div>
-            `;
+                    <div class="control-group">
+                        <label for="${id}${trackId}" class="mb-1">${label}:</label>
+                        <select id="${id}${trackId}" data-action="update" data-prop="${id}" class="text-xs p-1 h-full" title="Set a specific output channel for this track, or use the Global setting"></select>
+                    </div>
+                `;
             },
 
             createNoteControl(trackId) {
                 return `
-                <div class="control-group">
-                    <label for="note${trackId}" class="mb-1">Note:</label>
-                    <div class="note-input-group">
-                        <input type="text" data-action="update" data-prop="note" id="note${trackId}" class="text-xs p-1">
-                        <button data-action="learnNote" id="noteLearn${trackId}" class="note-learn-button">L</button>
+                    <div class="control-group">
+                        <label for="note${trackId}" class="mb-1">Note:</label>
+                        <div class="note-input-group">
+                            <input type="text" data-action="update" data-prop="note" id="note${trackId}" class="text-xs p-1" title="Set the MIDI note (e.g., C3, F#4)">
+                            <button data-action="learnNote" id="noteLearn${trackId}" class="note-learn-button" title="Learn MIDI note and channel from your controller">L</button>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
             },
 
             handleViewToggle(e) {
@@ -1391,6 +1411,7 @@
                         let key = el.id.replace('randomize', '').replace('Check', '').toLowerCase();
                         if (el.id === 'randomizeOctaveCheck') key = 'randomizeOctave';
                         if (el.id === 'randomizeChordCheck') return;
+                        if (el.id === 'randomizeInstrumentsCheck') key = 'instruments';
                         newRandomizationState[key] = el.checked;
                     });
                     this.updateState({ randomization: newRandomizationState });
@@ -1407,7 +1428,10 @@
                     const track = this.state.tracks.find(t => t.id === trackId);
                     if (!track) return;
                     switch(action) {
-                        case 'randomize': this.updateState({tracks: this.randomizeTrackParameters(track, this.state.randomization, true, {}, JSON.parse(JSON.stringify(this.state.tracks)))}); break;
+                        case 'randomize':
+                            let newTracks = this.randomizeTrackParameters(track, this.state.randomization, true, {}, JSON.parse(JSON.stringify(this.state.tracks)));
+                            this.updateState({tracks: newTracks});
+                            break;
                         case 'toggleActive':
                             if (track.active && this.activeTrackNotes[trackId]) {
                                 this.sendMidiNoteOff(this.activeTrackNotes[trackId].note, this.activeTrackNotes[trackId].channel);
@@ -1555,15 +1579,18 @@
             },
 
             setupToneJS() {
-                // Setup the internal synths
-                const synthTypes = [Tone.FMSynth, Tone.AMSynth, Tone.MonoSynth, Tone.DuoSynth];
+                const masterComp = new Tone.Compressor(-12, 4).toDestination();
+                const synthOptions = [
+                    { synth: Tone.FMSynth, options: { volume: -2, harmonicity: 1.5, modulationIndex: 5, envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.8 } } }, // Louder Piano
+                    { synth: Tone.AMSynth, options: { volume: -4, envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.8 } } },
+                    { synth: Tone.MonoSynth, options: { volume: -6, envelope: { attack: 0.05, release: 0.4 } } },
+                    { synth: Tone.DuoSynth, options: { volume: -6, vibratoAmount: 0.1, harmonicity: 1.5 } },
+                    { synth: Tone.MembraneSynth, options: { pitchDecay: 0.01, octaves: 4, envelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.4 }, volume: -2 } },
+                    { synth: Tone.PluckSynth, options: { attackNoise: 0.5, dampening: 4000, resonance: 0.9, volume: -2 } }
+                ];
                 for(let i = 0; i < 16; i++) {
-                    const synthType = synthTypes[i % synthTypes.length];
-                    const synth = new synthType().toDestination();
-                    // Basic effects chain
-                    const dist = new Tone.Distortion(0.1).toDestination();
-                    const reverb = new Tone.Reverb(0.5).toDestination();
-                    synth.chain(dist, reverb);
+                    const synthDef = synthOptions[i % synthOptions.length];
+                    const synth = new synthDef.synth(synthDef.options).connect(masterComp);
                     this.internalSynths.push(synth);
                 }
 
@@ -1608,33 +1635,10 @@
                 try {
                     return new Tone.Sequence((time, value) => {
                         if (!track || !this.state) return;
-                        const ch = (track.channelOverride !== 'global') ? parseInt(track.channelOverride, 10) : this.state.globalMidiChannel;
-                        const isInternal = this.state.midiOutputId === 'internal_synth';
 
-                        if (!isInternal && this.activeTrackNotes[track.id]) {
-                            this.sendMidiNoteOff(this.activeTrackNotes[track.id].note, this.activeTrackNotes[track.id].channel);
-                            delete this.activeTrackNotes[track.id];
-                        }
-
-                        if (track.active && value === 1) {
-                            const channelVolume = this.state.channelVolumes[ch - 1] / 127.0;
-                            const masterVol = this.state.masterVolume / 127.0;
-                            const finalVelocity = Math.round(track.velocity * channelVolume * masterVol);
-
-                            if (finalVelocity > 0) {
-                                const noteToPlay = { note: track.note, channel: ch };
-                                if(isInternal){
-                                    const synth = this.internalSynths[ch-1];
-                                    if(synth){
-                                        const noteFrequency = Tone.Frequency(noteToPlay.note, 'midi').toFrequency();
-                                        synth.triggerAttackRelease(noteFrequency, "16n", time, finalVelocity / 127);
-                                    }
-                                } else {
-                                    this.sendMidiNoteOn(noteToPlay.note, Math.min(127, finalVelocity), noteToPlay.channel);
-                                    this.activeTrackNotes[track.id] = noteToPlay;
-                                }
-                            }
-                            Tone.Draw.schedule(() => {
+                        // Visual updates are scheduled with Tone.Draw
+                        Tone.Draw.schedule(() => {
+                            if (track.active && value === 1) {
                                 const allNotes = this.state.tracks.filter(t => t.active).map(t => t.note);
                                 const minNote = Math.min(...allNotes, Infinity);
                                 const maxNote = Math.max(...allNotes, -Infinity);
@@ -1646,9 +1650,8 @@
                                     panel.classList.add('track-pulse');
                                     setTimeout(() => panel.classList.remove('track-pulse'), 150);
                                 }
-                            }, time);
-                        }
-                        Tone.Draw.schedule(() => {
+                            }
+
                             const trackToUpdate = this.state.tracks.find(t => t.id === track.id);
                             if(trackToUpdate) {
                                 trackToUpdate.currentStep = (trackToUpdate.currentStep + 1) % trackToUpdate.steps;
@@ -1656,6 +1659,37 @@
                                 if (panel) this.renderPatternDisplay(trackToUpdate, panel);
                             }
                         }, time);
+
+                        // Audio events are scheduled directly
+                        if (track.active && value === 1) {
+                            try {
+                                const ch = (track.channelOverride !== 'global') ? parseInt(track.channelOverride, 10) : this.state.globalMidiChannel;
+                                const isInternal = this.state.midiOutputId === 'internal_synth';
+                                const channelVolume = this.state.channelVolumes[ch - 1] / 127.0;
+                                const masterVol = this.state.masterVolume / 127.0;
+                                const finalVelocity = Math.round(track.velocity * channelVolume * masterVol);
+
+                                if (finalVelocity > 0) {
+                                    const noteToPlay = { note: track.note, channel: ch };
+                                    const noteFrequency = Tone.Frequency(noteToPlay.note, 'midi').toFrequency();
+                                    const duration = Tone.Time("16n").toSeconds() * 0.9;
+
+                                    if(isInternal){
+                                        const synth = this.internalSynths[ch-1];
+                                        if(synth){
+                                            synth.triggerAttackRelease(noteFrequency, duration, time, finalVelocity / 127);
+                                        }
+                                    } else {
+                                        this.sendMidiNoteOn(noteToPlay.note, Math.min(127, finalVelocity), noteToPlay.channel);
+                                        Tone.Transport.scheduleOnce(() => {
+                                            this.sendMidiNoteOff(noteToPlay.note, noteToPlay.channel);
+                                        }, time + duration);
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn(`Tone.js scheduling error caught for track ${track.id}.`, e);
+                            }
+                        }
                     }, track.pattern, `${track.steps}n`);
                 } catch (error) {
                     console.error(`Failed to create loop for track ${track?.id}`, error);
@@ -1734,7 +1768,6 @@
 
                     if (Object.keys(nextStateChanges).length > 0) {
                         this.updateState(nextStateChanges);
-                        // Give the state a moment to update before proceeding
                         await new Promise(resolve => setTimeout(resolve, 0));
                     }
 
@@ -1746,12 +1779,12 @@
                     }
                     else if (preset.multi) {
                         newTracks.forEach(t => {
-                            if(t.active) this.randomizeTrackParameters(t, randomizerOptions, true, assignedNotesByChannel, newTracks);
+                            if(t.active) newTracks = this.randomizeTrackParameters(t, randomizerOptions, true, assignedNotesByChannel, newTracks);
                         });
                     } else if (preset.options.note || preset.options.pulses || preset.options.rotation || preset.options.velocity) {
                         const trackToRandomize = activeTracks[Math.floor(Math.random() * activeTracks.length)];
                         if (trackToRandomize) {
-                            this.randomizeTrackParameters(trackToRandomize, randomizerOptions, true, assignedNotesByChannel, newTracks);
+                            newTracks = this.randomizeTrackParameters(trackToRandomize, randomizerOptions, true, assignedNotesByChannel, newTracks);
                         }
                     }
                     this.updateState({tracks: newTracks});
@@ -1775,7 +1808,7 @@
 
                 if (scaleName !== requiredScale) {
                     this.logChange(`${modeName} Mode needs ${requiredScale} scale.`, { isGenerative: true });
-                    return; // Don't change the scale automatically, just log a warning
+                    return;
                 }
 
                 const scaleIntervals = this.SCALES[scaleName];
@@ -1793,12 +1826,12 @@
                 chordName = `${this.NOTE_NAMES[chordRootNote % 12]}${modeName === 'jazz' ? 'maj7' : 'm'}`; // Simplified chord name
 
                 if(this.state.musicMode.randomizeChord || this.state.musicMode.chordType === 'Random') {
-                    this.logChange(`${modeName} Chord: ${chordName}`, { isGenerative: true });
+                    this.logChange(`Generative Chord: ${chordName} (${modeName})`, { isGenerative: true });
                 } else {
                     chordIntervals = this.CHORD_TYPES[this.state.musicMode.chordType] || [0,7];
                     const chordRoot = rootNote + scaleIntervals[Math.floor(Math.random() * 7)];
                     chordName = `${this.NOTE_NAMES[chordRoot % 12]}${this.state.musicMode.chordType}`;
-                    this.logChange(`${modeName} Chord: ${chordName}`, { isGenerative: true });
+                    this.logChange(`Generative Chord: ${chordName} (${modeName})`, { isGenerative: true });
                 }
 
                 const chordRootMidi = rootNote + (scaleIntervals[Math.floor(Math.random() * 7)]);
@@ -1854,6 +1887,12 @@
                     changes.push(`V:${track.velocity}→${newTrackState.velocity}`);
                 }
 
+                if (options.instruments && this.state.midiOutputId === 'internal_synth') {
+                    const newChannel = Math.floor(Math.random() * 16) + 1;
+                    newTrackState.channelOverride = newChannel;
+                    changes.push(`Inst: → ${this.INTERNAL_SYNTH_NAMES[newChannel-1]}`);
+                }
+
                 const trackIndex = tracks.findIndex(t => t.id === track.id);
                 if(trackIndex !== -1) {
                     tracks[trackIndex] = newTrackState;
@@ -1886,7 +1925,7 @@
                 let newTracks = JSON.parse(JSON.stringify(this.state.tracks));
                 const assignedNotesByChannel = {};
 
-                const options = {...this.state.randomization, note: this.state.randomization.note, scale: false}; // don't randomize scale per-track
+                const options = {...this.state.randomization};
 
                 newTracks.forEach(t => {
                     if(t.active) this.randomizeTrackParameters(t, options, true, assignedNotesByChannel, newTracks);
@@ -1959,6 +1998,25 @@
 
                 this.updateState({ tracks: newTracks });
                 if(showStatus) this.showStatusMessage("Sequence refined!", 2000);
+            },
+            populateChannelSelectors() {
+                const isInternal = this.state.midiOutputId === 'internal_synth';
+                const selects = [this.dom.midiChannelSelect, ...document.querySelectorAll('select[id^="channelOverride"]')];
+
+                selects.forEach(select => {
+                    if(!select) return;
+                    const currentVal = select.value;
+                    let optionsHtml = '';
+                    if(select.id.includes('channelOverride')){
+                        optionsHtml += `<option value="global">Global</option>`;
+                    }
+                    for(let i = 1; i <= 16; i++){
+                        const name = isInternal ? `(${this.INTERNAL_SYNTH_NAMES[i-1]})` : '';
+                        optionsHtml += `<option value="${i}">Ch ${i} ${name}</option>`;
+                    }
+                    select.innerHTML = optionsHtml;
+                    select.value = currentVal;
+                });
             }
         };
 
@@ -1969,4 +2027,3 @@
 </script>
 </body>
 </html>
-
