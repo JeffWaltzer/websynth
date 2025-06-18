@@ -251,11 +251,10 @@
         #midiPanel { order: 3; flex: 1 1 200px; max-width: 280px; }
         #musicModePanel { order: 4; flex: 1 1 200px; max-width: 280px; }
         #randomizationSettingsContainer { order: 5; flex: 1 1 200px; max-width: 280px; }
-        #locksPanel { order: 6; flex: 1 1 200px; max-width: 280px; }
-        #channelVolumesWrapper { order: 7; flex: 1 1 300px; max-width: 400px; }
-        #hintsPanel { order: 8; flex: 1 1 280px; display: flex; flex-direction: column;}
-        #helpPanel { order: 9; width: 100%; margin-top: 0.5rem; max-width: 900px; margin-left:auto; margin-right: auto;}
-        #hotkeysPanel { order: 10; width: 100%; margin-top: 0.5rem; }
+        #channelVolumesWrapper { order: 6; flex: 1 1 300px; max-width: 400px; }
+        #hintsPanel { order: 7; flex: 1 1 280px; display: flex; flex-direction: column;}
+        #helpPanel { order: 8; width: 100%; margin-top: 0.5rem; max-width: 900px; margin-left:auto; margin-right: auto;}
+        #hotkeysPanel { order: 9; width: 100%; margin-top: 0.5rem; }
 
         #hintsPanel, #helpPanel, #hotkeysPanel {
             display: flex;
@@ -324,7 +323,7 @@
 
         #hotkeysList {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 1fr; /* Single column */
             gap: 0.5rem;
             padding: 0.5rem;
         }
@@ -417,7 +416,6 @@
                         <label class="checkbox-label-container" title="Toggle Music Mode for automatic, generative patterns (M)"><input type="checkbox" id="musicModeToggle"> Music Mode</label>
                         <label class="checkbox-label-container" title="Show/Hide the Help panel"><input type="checkbox" data-view-toggle="helpPanel" id="showHelpPanel"> Help</label>
                         <label class="checkbox-label-container" title="Show/Hide the Hotkeys panel"><input type="checkbox" data-view-toggle="hotkeysPanel" id="showHotkeysPanel"> Hotkeys</label>
-                        <label class="checkbox-label-container" title="Show/Hide the Locks panel"><input type="checkbox" data-view-toggle="locksPanel" id="showLocksPanel"> Locks</label>
                     </div>
                 </div>
 
@@ -586,8 +584,8 @@
             HINTS: [ "Click 'L' to map a MIDI CC. Click a green 'L' to un-map.", "Toggle 'Music Mode' for generative grooves.", "Hit 'Random' on tracks for instant variations.", "Use the 'Save' icon to create a restore point.", "Hold +/- buttons for rapid value changes.", "The 'Stop Notes' button sends an 'All Notes Off' command.", "Use the 🎼 button to snap all notes to the selected scale." ],
             VIEW_PANEL_MAP: { showMidiPanel: 'midiPanel', showRandomizePanel: 'randomizationSettingsContainer', showVolumesPanel: 'channelVolumesWrapper', showHintsLogPanel: 'hintsPanel', showHelpPanel: 'helpPanel', showHotkeysPanel: 'hotkeysPanel', showLocksPanel: 'locksPanel' },
             MUSIC_MODE_PRESETS: { off: { label: "Off", multi: false, options: { note: false, pulses: false, rotation: false, scale: false, velocity: false } }, single: { label: "Single", multi: false, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, multi: { label: "Multi", multi: true, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, melodic: { label: "Melodic", multi: true, options: { note: true, pulses: false, rotation: false, scale: true, velocity: false } }, jazz: { label: "Jazz", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, rock: { label: "Rock", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, baroque: { label: "Baroque", multi: true, options: { note: true, pulses: true, rotation: false, scale: true, velocity: true } }, fifths: { label: "Fifths", multi: true, options: { note: true, pulses: true, rotation: true, scale: false, velocity: true } }, berlin: { label: "Berlin", multi: true, options: { note: true, pulses: true, rotation: true, scale: false, velocity: true } }, },
-            INTERNAL_SYNTH_NAMES: ['Piano', 'Bright Pad', '8-bit Kick', 'FM Lead', 'AM Bass', 'Saw Lead', 'Square Pluck', 'Duo Arp', 'Synth Choir', 'Metallic Perc', 'Wobble Bass', 'Glassy Bell', 'Soft Pad', 'Funky Clav', 'Distorted Lead', 'Sub Bass'],
-            HOTKEYS: {'Spacebar': 'Play / Pause', 'T': 'Try Me!', 'B': 'Berlin Mode', 'R': 'Randomize All', 'Q': 'Quantize Notes', 'S': 'Save State', 'L': 'Load State', 'N': 'Trigger Next', 'M': 'Toggle Music Mode'},
+            INTERNAL_SYNTH_NAMES: ['E-Piano', 'Chorus Pad', '8-bit Kick', 'Triangle Lead', 'AM Bass', 'Theremin', 'Square Pluck', 'Duo Arp', 'Synth Choir', 'Metal Synth', 'Wobble Bass', 'Flute', 'Soft Pad', 'Funky Clav', 'Distorted Lead', 'Sub Bass'],
+            HOTKEYS: {'Spacebar': 'Play / Pause', 'T': 'Try Me!', 'R': 'Randomize All', 'Q': 'Quantize Notes', 'S': 'Save State', 'L': 'Load State', 'N': 'Trigger Next', 'M': 'Toggle Music Mode'},
 
             // --- APPLICATION STATE & CACHE ---
             dom: {},
@@ -611,6 +609,7 @@
             lastRandomizedTrackId: null,
             diatonicChordQualities: { Major: ['maj7', 'min7', 'min7', 'maj7', 'dom7', 'min7', 'min7b5'], Minor: ['min7', 'min7b5', 'maj7', 'min7', 'min7', 'maj7', 'dom7'] },
             currentChordRoot: 0,
+            masterVolumeNode: null,
 
             // --- INITIALIZATION ---
             async init() {
@@ -654,7 +653,7 @@
 
             setupDOMCache() {
                 const ids = [
-                    'playStopButton', 'masterRandomizeButton', 'saveStateButton', 'loadStateButton', 'refineButton', 'quantizeNotesButton', 'tryMeButton', 'berlinButton',
+                    'playStopButton', 'masterRandomizeButton', 'saveStateButton', 'loadStateButton', 'refineButton', 'quantizeNotesButton', 'tryMeButton',
                     'reInitMidiButton', 'allNotesOffButton', 'numTracksInput',
                     'bpmSlider', 'bpmValue', 'bpmSliderLearnCc', 'masterVolumeSlider',
                     'masterVolumeValue', 'masterVolumeLearnCc', 'midiOutSelect', 'midiChannelSelect',
@@ -696,14 +695,10 @@
                     if (e.key.toLowerCase() === 'n') this.triggerGenerativeStep();
                     if (e.key.toLowerCase() === 'm') this.dom.musicModeToggle.click();
                     if (e.key.toLowerCase() === 't') this.tryMe();
-                    if (e.key.toLowerCase() === 'b') this.handleBerlinMode();
 
                 });
 
                 this.dom.tryMeButton.addEventListener('click', () => this.tryMe());
-                if (this.dom.berlinButton) {
-                    this.dom.berlinButton.addEventListener('click', () => this.handleBerlinMode());
-                }
                 this.dom.setAllToGlobal.addEventListener('click', () => this.setAllTracksToGlobal());
                 this.dom.numTracksInput.addEventListener('change', (e) => this.handleNumTracksChange(e));
                 this.dom.bpmSlider.addEventListener('input', e => this.updateState({ bpm: parseInt(e.target.value, 10) }));
@@ -818,6 +813,12 @@
             syncAppWithState(newState, prevState) {
                 try {
                     if (!prevState || newState.bpm !== prevState.bpm) Tone.Transport.bpm.value = newState.bpm;
+                    if (!prevState || newState.masterVolume !== prevState.masterVolume) {
+                        if (this.masterVolumeNode) {
+                            const dB = newState.masterVolume === 0 ? -Infinity : Tone.gainToDb(newState.masterVolume / 127);
+                            this.masterVolumeNode.volume.value = dB;
+                        }
+                    }
                     if (!prevState || JSON.stringify(newState.musicMode) !== JSON.stringify(prevState.musicMode)) this.setupTimedRandomization();
                     if (!prevState || JSON.stringify(newState.tracks) !== JSON.stringify(prevState.tracks) || newState.globalMidiChannel !== prevState.globalMidiChannel) this.rebuildAllTrackLoops();
                 } catch (error) {
@@ -2293,7 +2294,10 @@
                 });
                 this.showStatusMessage("Try Me! A new setup has been created.", 2500);
             },
-            handleBerlinMode() {
+            handleBerlinMode(isGenerative = false) {
+                if(!isGenerative) {
+                    this.updateState({musicMode: {...this.state.musicMode, preset: 'berlin'}});
+                }
                 const root = 0; // C
                 const scale = this.SCALES['Minor Pentatonic'];
                 const newTracks = this.state.tracks.map((track, i) => {
