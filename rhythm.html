@@ -538,7 +538,6 @@
                             <p><strong>Getting Started (Internal Synth):</strong> Just press the <strong>Play button (or Spacebar)</strong> to hear the default pattern. The app defaults to its built-in synth, so no setup is needed. Each of the 16 channels has a different instrument sound.</p>
                             <p><strong>Exploring Tracks:</strong> Each grey box at the top is a "track". You can change a track's rhythm using the "Steps" (pattern length) and "Pulses" (number of notes) sliders. Use the "Note" input to set its pitch. Select a specific instrument for a track using the "Channel" dropdown.</p>
                             <p><strong>Music Mode & Randomization:</strong> The real power is in generating new ideas. <strong>Music Mode</strong> is on by default and will automatically change the pattern every few bars. Use the main <strong>"Randomize All Active"</strong> button (hotkey: R) to create a completely new sequence instantly. Tweak the options in the "Randomization" panel to control what gets changed.</p>
-                            <p><strong>Background Operation:</strong> Please note that to save system resources, most modern browsers will pause audio and visual updates when this tab is not in the foreground. Generative changes from Music Mode will not occur while the tab is in the background.</p>
                         </div>
                     </div>
                     <div id="hintContainer" class="control-group mt-2 pt-2 border-t border-gray-700">
@@ -2294,10 +2293,7 @@
                 });
                 this.showStatusMessage("Try Me! A new setup has been created.", 2500);
             },
-            handleBerlinMode(isGenerative = false) {
-                if(!isGenerative) {
-                    this.updateState({musicMode: {...this.state.musicMode, preset: 'berlin'}});
-                }
+            handleBerlinMode() {
                 const root = 0; // C
                 const scale = this.SCALES['Minor Pentatonic'];
                 const newTracks = this.state.tracks.map((track, i) => {
