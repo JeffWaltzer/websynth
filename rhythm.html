@@ -248,8 +248,8 @@
         #bottom-panels-container > .synth-panel { flex-grow: 1; flex-shrink: 1; flex-basis: 280px; height: auto; }
         #masterControlPanel { order: 1; max-width: 350px; }
         #viewPanel { order: 2; flex: 1 1 200px; max-width: 280px; }
-        #musicModePanel { order: 3; flex: 1 1 200px; max-width: 280px; }
-        #midiPanel { order: 4; flex: 1 1 200px; max-width: 280px; }
+        #midiPanel { order: 3; flex: 1 1 200px; max-width: 280px; }
+        #musicModePanel { order: 4; flex: 1 1 200px; max-width: 280px; }
         #randomizationSettingsContainer { order: 5; flex: 1 1 200px; max-width: 280px; }
         #locksPanel { order: 6; flex: 1 1 200px; max-width: 280px; }
         #channelVolumesWrapper { order: 7; flex: 1 1 300px; max-width: 400px; }
@@ -257,27 +257,30 @@
         #helpPanel { order: 9; width: 100%; margin-top: 0.5rem; max-width: 900px; margin-left:auto; margin-right: auto;}
         #hotkeysPanel { order: 10; width: 100%; margin-top: 0.5rem; }
 
-        #hintsPanel, #helpPanel {
+        #hintsPanel, #helpPanel, #hotkeysPanel {
             display: flex;
             flex-direction: column;
             min-height: 150px; /* Ensure panel has some height */
         }
-        #hintsPanel .control-group#hintContainer, #helpPanel .control-group {
-            flex-shrink: 0;
-        }
-        #hintsPanel #logSection, #helpPanel .help-content-container {
+        #helpPanel .help-content-container, #hotkeysPanel .hotkeys-content-container {
             flex-grow: 1;
             min-height: 0; /* Allows the log to actually grow */
             display: flex; /* Make sure log section itself is a flex container */
             flex-direction: column;
         }
+        #helpPanel .text-sm, #hotkeysPanel #hotkeysList {
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+        #hintsPanel #logSection {
+            flex-grow: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
         #musicModeLog, #helpPanel .text-sm {
             flex-grow: 1;
-        }
-
-        #helpPanel .text-sm {
-            max-height: 300px;
-            overflow-y: auto;
         }
 
         .toggle-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.25rem; }
@@ -364,7 +367,6 @@
                     <div id="toolbar" class="flex flex-wrap items-center justify-center gap-2">
                         <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences (Spacebar)">&#x25B6;</button>
                         <button id="tryMeButton" class="push-button icon-button try-me-button" title="Try a new harmonious setup (T)">✨</button>
-                        <button id="berlinButton" class="push-button icon-button" title="Generate Berlin School sequence">🏙️</button>
                         <button id="refineButton" class="push-button icon-button refine-button" title="Refine current notes (R)">⚖️</button>
                         <button id="quantizeNotesButton" class="push-button icon-button quantize-button" title="Quantize all notes to scale (Q)">🎼</button>
                         <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save current state (S)">&#128190;</button>
@@ -531,7 +533,7 @@
                 </div>
 
                 <div id="helpPanel" class="synth-panel">
-                    <h2 class="text-lg font-semibold text-center">Quick Start Guide</h2>
+                    <h2 class="text-lg font-semibold text-center">Instructions</h2>
                     <div class="help-content-container">
                         <div class="text-sm px-4 space-y-2">
                             <p><strong>Welcome to Rhythm King 77!</strong> This is a generative music sequencer. It creates rhythms and melodies that you can send to its internal synthesizer or your own MIDI hardware/software.</p>
@@ -583,7 +585,7 @@
             CHORD_TYPES: { 'Random': null, 'Maj7': [0, 4, 7, 11], 'min7': [0, 3, 7, 10], 'Dom7': [0, 4, 7, 10], 'min7b5': [0, 3, 6, 10], 'dim7': [0, 3, 6, 9], 'Power': [0, 7] },
             HINTS: [ "Click 'L' to map a MIDI CC. Click a green 'L' to un-map.", "Toggle 'Music Mode' for generative grooves.", "Hit 'Random' on tracks for instant variations.", "Use the 'Save' icon to create a restore point.", "Hold +/- buttons for rapid value changes.", "The 'Stop Notes' button sends an 'All Notes Off' command.", "Use the 🎼 button to snap all notes to the selected scale." ],
             VIEW_PANEL_MAP: { showMidiPanel: 'midiPanel', showRandomizePanel: 'randomizationSettingsContainer', showVolumesPanel: 'channelVolumesWrapper', showHintsLogPanel: 'hintsPanel', showHelpPanel: 'helpPanel', showHotkeysPanel: 'hotkeysPanel', showLocksPanel: 'locksPanel' },
-            MUSIC_MODE_PRESETS: { off: { label: "Off", multi: false, options: { note: false, pulses: false, rotation: false, scale: false, velocity: false } }, single: { label: "Single", multi: false, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, multi: { label: "Multi", multi: true, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, melodic: { label: "Melodic", multi: true, options: { note: true, pulses: false, rotation: false, scale: true, velocity: false } }, jazz: { label: "Jazz", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, rock: { label: "Rock", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, baroque: { label: "Baroque", multi: true, options: { note: true, pulses: true, rotation: false, scale: true, velocity: true } }, fifths: { label: "Fifths", multi: true, options: { note: true, pulses: true, rotation: true, scale: false, velocity: true } }, },
+            MUSIC_MODE_PRESETS: { off: { label: "Off", multi: false, options: { note: false, pulses: false, rotation: false, scale: false, velocity: false } }, single: { label: "Single", multi: false, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, multi: { label: "Multi", multi: true, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, melodic: { label: "Melodic", multi: true, options: { note: true, pulses: false, rotation: false, scale: true, velocity: false } }, jazz: { label: "Jazz", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, rock: { label: "Rock", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, baroque: { label: "Baroque", multi: true, options: { note: true, pulses: true, rotation: false, scale: true, velocity: true } }, fifths: { label: "Fifths", multi: true, options: { note: true, pulses: true, rotation: true, scale: false, velocity: true } }, berlin: { label: "Berlin", multi: true, options: { note: true, pulses: true, rotation: true, scale: false, velocity: true } }, },
             INTERNAL_SYNTH_NAMES: ['Piano', 'Bright Pad', '8-bit Kick', 'FM Lead', 'AM Bass', 'Saw Lead', 'Square Pluck', 'Duo Arp', 'Synth Choir', 'Metallic Perc', 'Wobble Bass', 'Glassy Bell', 'Soft Pad', 'Funky Clav', 'Distorted Lead', 'Sub Bass'],
             HOTKEYS: {'Spacebar': 'Play / Pause', 'T': 'Try Me!', 'B': 'Berlin Mode', 'R': 'Randomize All', 'Q': 'Quantize Notes', 'S': 'Save State', 'L': 'Load State', 'N': 'Trigger Next', 'M': 'Toggle Music Mode'},
 
@@ -607,6 +609,8 @@
             autoRepeatTimeoutId: null,
             autoRepeatIntervalId: null,
             lastRandomizedTrackId: null,
+            diatonicChordQualities: { Major: ['maj7', 'min7', 'min7', 'maj7', 'dom7', 'min7', 'min7b5'], Minor: ['min7', 'min7b5', 'maj7', 'min7', 'min7', 'maj7', 'dom7'] },
+            currentChordRoot: 0,
 
             // --- INITIALIZATION ---
             async init() {
@@ -697,7 +701,9 @@
                 });
 
                 this.dom.tryMeButton.addEventListener('click', () => this.tryMe());
-                this.dom.berlinButton.addEventListener('click', () => this.handleBerlinMode());
+                if (this.dom.berlinButton) {
+                    this.dom.berlinButton.addEventListener('click', () => this.handleBerlinMode());
+                }
                 this.dom.setAllToGlobal.addEventListener('click', () => this.setAllTracksToGlobal());
                 this.dom.numTracksInput.addEventListener('change', (e) => this.handleNumTracksChange(e));
                 this.dom.bpmSlider.addEventListener('input', e => this.updateState({ bpm: parseInt(e.target.value, 10) }));
@@ -1897,7 +1903,6 @@
                     let nextStateChanges = {};
 
                     const randomizerOptions = preset.options;
-                    const shouldLogGenerativeStep = !this.state.musicMode.refine;
 
                     if(this.state.randomization.randomizeOctave && !this.state.locks.octave) {
                         const newOctave = Math.max(1, Math.min(8, this.state.randomization.octave + (Math.floor(Math.random() * 3) - 1)));
@@ -1928,6 +1933,9 @@
                         this.handleChordalMode(presetKey, newTracks);
                     } else if (presetKey === 'fifths') {
                         this.handleFifthsMode(newTracks);
+                    } else if (presetKey === 'berlin') {
+                        this.handleBerlinMode(true);
+                        return; // Berlin mode is a full setup, so we exit
                     }
                     else if (preset.multi) {
                         newTracks.forEach(t => {
