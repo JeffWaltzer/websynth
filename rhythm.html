@@ -6,7 +6,7 @@
     <title>Rhythm King 77 - Euclidean MIDI Sequencer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
     <style>
         /* Custom CSS for a more refined look */
         :root {
@@ -69,7 +69,7 @@
             gap: 0.4rem; /* Compressed UI */
         }
         .synth-panel h2 {
-            margin-bottom: 0.4rem; /* Compressed UI */
+            margin-bottom: 0.2rem; /* Reduced space */
             flex-shrink: 0;
             color: var(--text-color);
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
@@ -162,7 +162,6 @@
         .refine-button:active { background-image: linear-gradient(to top, #af7ac5, #9b59b6); }
         .quantize-button { background-color: var(--quantize-btn); background-image: linear-gradient(to bottom, #58d68d, #2ecc71); color: white; }
         .quantize-button:active { background-image: linear-gradient(to top, #58d68d, #2ecc71); }
-        .reset-button { background-color: #e74c3c; background-image: linear-gradient(to bottom, #ec7063, #e74c3c); color:white; }
         .try-me-button { background-color: #9b59b6; background-image: linear-gradient(to bottom, #af7ac5, #9b59b6); color:white; }
 
         .pattern-display { display: flex; justify-content: center; align-items: center; margin-top: 0.2rem; height: 20px; gap: 3px; }
@@ -199,15 +198,17 @@
         .note-input-group > input { flex-grow: 1; }
         .note-learn-button { padding: 0.1rem 0.3rem; }
 
-        #musicModePanel, #channelVolumesWrapper, #midiPanel, #randomizationSettingsContainer, #hintsPanel, #helpPanel, #hotkeysPanel { display: none; }
+        #musicModePanel, #channelVolumesWrapper, #midiPanel, #randomizationSettingsContainer, #hintsPanel, #helpPanel, #hotkeysPanel, #locksPanel { display: none; }
         body.music-mode-active #musicModePanel { display: flex; }
         #appContainer { display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1; }
         #mainContent { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
 
         #musicModeLog {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.85rem;
             height: 90px;
             background-color: rgba(0,0,0,0.3); border-radius: 6px; padding: 0.2rem 0.3rem;
-            font-size: 0.6rem; line-height: 1.4; overflow-y: auto; display: flex; flex-direction: column-reverse; color: var(--accent-color);
+            line-height: 1.4; overflow-y: auto; display: flex; flex-direction: column-reverse; color: var(--accent-color);
         }
         #musicModeLog > div.log-entry { padding-bottom: 0.1rem; margin-bottom: 0.1rem; border-bottom: 1px solid rgba(255,255,255,0.05); word-break: break-word; }
         #musicModeLog > div.log-separator { height: 1px; background-color: var(--control-border); margin: 3px 0; border: none; }
@@ -250,29 +251,34 @@
         #musicModePanel { order: 3; flex: 1 1 200px; max-width: 280px; }
         #midiPanel { order: 4; flex: 1 1 200px; max-width: 280px; }
         #randomizationSettingsContainer { order: 5; flex: 1 1 200px; max-width: 280px; }
-        #channelVolumesWrapper { order: 6; flex: 1 1 300px; max-width: 400px; }
-        #hintsPanel { order: 7; flex: 1 1 280px; display: flex; flex-direction: column;}
-        #helpPanel { order: 8; width: 100%; margin-top: 0.5rem; max-width: 900px; margin-left:auto; margin-right: auto;}
-        #hotkeysPanel { order: 9; width: 100%; margin-top: 0.5rem; }
+        #locksPanel { order: 6; flex: 1 1 200px; max-width: 280px; }
+        #channelVolumesWrapper { order: 7; flex: 1 1 300px; max-width: 400px; }
+        #hintsPanel { order: 8; flex: 1 1 280px; display: flex; flex-direction: column;}
+        #helpPanel { order: 9; width: 100%; margin-top: 0.5rem; max-width: 900px; margin-left:auto; margin-right: auto;}
+        #hotkeysPanel { order: 10; width: 100%; margin-top: 0.5rem; }
 
-        #hintsPanel {
+        #hintsPanel, #helpPanel {
             display: flex;
             flex-direction: column;
             min-height: 150px; /* Ensure panel has some height */
         }
-        #hintsPanel .control-group#hintContainer {
+        #hintsPanel .control-group#hintContainer, #helpPanel .control-group {
             flex-shrink: 0;
         }
-        #hintsPanel #logSection {
+        #hintsPanel #logSection, #helpPanel .help-content-container {
             flex-grow: 1;
             min-height: 0; /* Allows the log to actually grow */
             display: flex; /* Make sure log section itself is a flex container */
             flex-direction: column;
         }
-        #musicModeLog {
+        #musicModeLog, #helpPanel .text-sm {
             flex-grow: 1;
         }
 
+        #helpPanel .text-sm {
+            max-height: 300px;
+            overflow-y: auto;
+        }
 
         .toggle-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.25rem; }
 
@@ -358,11 +364,11 @@
                     <div id="toolbar" class="flex flex-wrap items-center justify-center gap-2">
                         <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences (Spacebar)">&#x25B6;</button>
                         <button id="tryMeButton" class="push-button icon-button try-me-button" title="Try a new harmonious setup (T)">✨</button>
+                        <button id="berlinButton" class="push-button icon-button" title="Generate Berlin School sequence">🏙️</button>
                         <button id="refineButton" class="push-button icon-button refine-button" title="Refine current notes (R)">⚖️</button>
                         <button id="quantizeNotesButton" class="push-button icon-button quantize-button" title="Quantize all notes to scale (Q)">🎼</button>
                         <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save current state (S)">&#128190;</button>
                         <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load last saved state (L)">&#128193;</button>
-                        <button id="resetButton" class="push-button icon-button reset-button" title="Reset to Defaults">&#x21BA;</button>
                     </div>
 
                     <div class="control-group">
@@ -397,13 +403,6 @@
                             <button class="slider-button" data-target="masterVolumeSlider" data-action="increment" title="Increase Volume">+</button>
                         </div>
                     </div>
-
-                    <div class="control-group border-t border-gray-700 pt-2 mt-2">
-                        <label class="font-bold text-xs">Global Controls</label>
-                        <div class="toggle-grid">
-                            <label class="checkbox-label-container" title="Lock all 'Steps' sliders so they move together. The first track's value becomes the master value."><input type="checkbox" id="lockStepsCheckbox"> Lock All Steps</label>
-                        </div>
-                    </div>
                 </div>
 
                 <div id="viewPanel" class="synth-panel">
@@ -416,6 +415,7 @@
                         <label class="checkbox-label-container" title="Toggle Music Mode for automatic, generative patterns (M)"><input type="checkbox" id="musicModeToggle"> Music Mode</label>
                         <label class="checkbox-label-container" title="Show/Hide the Help panel"><input type="checkbox" data-view-toggle="helpPanel" id="showHelpPanel"> Help</label>
                         <label class="checkbox-label-container" title="Show/Hide the Hotkeys panel"><input type="checkbox" data-view-toggle="hotkeysPanel" id="showHotkeysPanel"> Hotkeys</label>
+                        <label class="checkbox-label-container" title="Show/Hide the Locks panel"><input type="checkbox" data-view-toggle="locksPanel" id="showLocksPanel"> Locks</label>
                     </div>
                 </div>
 
@@ -512,11 +512,18 @@
                     <div id="channelVolumesContainer"></div>
                 </div>
 
-                <div id="hintsPanel" class="synth-panel">
-                    <div id="hintContainer" class="control-group">
-                        <label class="font-bold text-xs">Helpful Hint</label>
-                        <div id="hintContent"></div>
+                <div id="locksPanel" class="synth-panel">
+                    <h2 class="text-lg font-semibold text-center">Parameter Locks</h2>
+                    <div class="toggle-grid">
+                        <label class="checkbox-label-container" title="Lock all 'Steps' sliders so they move together. The first track's value becomes the master value."><input type="checkbox" id="lockStepsCheckbox"> Lock All Steps</label>
+                        <label class="checkbox-label-container" title="Prevent Pulses from being randomized"><input type="checkbox" id="lockPulsesCheckbox"> Lock Pulses</label>
+                        <label class="checkbox-label-container" title="Prevent Rotation from being randomized"><input type="checkbox" id="lockRotationCheckbox"> Lock Rotation</label>
+                        <label class="checkbox-label-container" title="Prevent Velocity from being randomized"><input type="checkbox" id="lockVelocityCheckbox"> Lock Velocity</label>
+                        <label class="checkbox-label-container" title="Prevent Instruments from being randomized"><input type="checkbox" id="lockInstrumentsCheckbox"> Lock Instruments</label>
                     </div>
+                </div>
+
+                <div id="hintsPanel" class="synth-panel">
                     <div id="logSection" class="control-group">
                         <label class="font-bold text-xs">Music Mode Log</label>
                         <div id="musicModeLog"></div>
@@ -525,12 +532,18 @@
 
                 <div id="helpPanel" class="synth-panel">
                     <h2 class="text-lg font-semibold text-center">Quick Start Guide</h2>
-                    <div class="text-sm px-4 space-y-2">
-                        <p><strong>Welcome to Rhythm King 77!</strong> This is a generative music sequencer. It creates rhythms and melodies that you can send to its internal synthesizer or your own MIDI hardware/software.</p>
-                        <p><strong>Getting Started (Internal Synth):</strong> Just press the <strong>Play button (or Spacebar)</strong> to hear the default pattern. The app defaults to its built-in synth, so no setup is needed. Each of the 16 channels has a different instrument sound.</p>
-                        <p><strong>Exploring Tracks:</strong> Each grey box at the top is a "track". You can change a track's rhythm using the "Steps" (pattern length) and "Pulses" (number of notes) sliders. Use the "Note" input to set its pitch. Select a specific instrument for a track using the "Channel" dropdown.</p>
-                        <p><strong>Music Mode & Randomization:</strong> The real power is in generating new ideas. <strong>Music Mode</strong> is on by default and will automatically change the pattern every few bars. Use the main <strong>"Randomize All Active"</strong> button (hotkey: R) to create a completely new sequence instantly. Tweak the options in the "Randomization" panel to control what gets changed.</p>
-                        <p><strong>Background Operation:</strong> Please note that to save system resources, most modern browsers will pause audio and visual updates when this tab is not in the foreground. Generative changes from Music Mode will not occur while the tab is in the background.</p>
+                    <div class="help-content-container">
+                        <div class="text-sm px-4 space-y-2">
+                            <p><strong>Welcome to Rhythm King 77!</strong> This is a generative music sequencer. It creates rhythms and melodies that you can send to its internal synthesizer or your own MIDI hardware/software.</p>
+                            <p><strong>Getting Started (Internal Synth):</strong> Just press the <strong>Play button (or Spacebar)</strong> to hear the default pattern. The app defaults to its built-in synth, so no setup is needed. Each of the 16 channels has a different instrument sound.</p>
+                            <p><strong>Exploring Tracks:</strong> Each grey box at the top is a "track". You can change a track's rhythm using the "Steps" (pattern length) and "Pulses" (number of notes) sliders. Use the "Note" input to set its pitch. Select a specific instrument for a track using the "Channel" dropdown.</p>
+                            <p><strong>Music Mode & Randomization:</strong> The real power is in generating new ideas. <strong>Music Mode</strong> is on by default and will automatically change the pattern every few bars. Use the main <strong>"Randomize All Active"</strong> button (hotkey: R) to create a completely new sequence instantly. Tweak the options in the "Randomization" panel to control what gets changed.</p>
+                            <p><strong>Background Operation:</strong> Please note that to save system resources, most modern browsers will pause audio and visual updates when this tab is not in the foreground. Generative changes from Music Mode will not occur while the tab is in the background.</p>
+                        </div>
+                    </div>
+                    <div id="hintContainer" class="control-group mt-2 pt-2 border-t border-gray-700">
+                        <label class="font-bold text-xs">Helpful Hint</label>
+                        <div id="hintContent"></div>
                     </div>
                 </div>
                 <div id="hotkeysPanel" class="synth-panel">
@@ -569,10 +582,10 @@
             NOTE_NAMES: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
             CHORD_TYPES: { 'Random': null, 'Maj7': [0, 4, 7, 11], 'min7': [0, 3, 7, 10], 'Dom7': [0, 4, 7, 10], 'min7b5': [0, 3, 6, 10], 'dim7': [0, 3, 6, 9], 'Power': [0, 7] },
             HINTS: [ "Click 'L' to map a MIDI CC. Click a green 'L' to un-map.", "Toggle 'Music Mode' for generative grooves.", "Hit 'Random' on tracks for instant variations.", "Use the 'Save' icon to create a restore point.", "Hold +/- buttons for rapid value changes.", "The 'Stop Notes' button sends an 'All Notes Off' command.", "Use the 🎼 button to snap all notes to the selected scale." ],
-            VIEW_PANEL_MAP: { showMidiPanel: 'midiPanel', showRandomizePanel: 'randomizationSettingsContainer', showVolumesPanel: 'channelVolumesWrapper', showHintsLogPanel: 'hintsPanel', showHelpPanel: 'helpPanel', showHotkeysPanel: 'hotkeysPanel' },
+            VIEW_PANEL_MAP: { showMidiPanel: 'midiPanel', showRandomizePanel: 'randomizationSettingsContainer', showVolumesPanel: 'channelVolumesWrapper', showHintsLogPanel: 'hintsPanel', showHelpPanel: 'helpPanel', showHotkeysPanel: 'hotkeysPanel', showLocksPanel: 'locksPanel' },
             MUSIC_MODE_PRESETS: { off: { label: "Off", multi: false, options: { note: false, pulses: false, rotation: false, scale: false, velocity: false } }, single: { label: "Single", multi: false, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, multi: { label: "Multi", multi: true, options: { note: true, pulses: true, rotation: true, scale: true, velocity: true } }, melodic: { label: "Melodic", multi: true, options: { note: true, pulses: false, rotation: false, scale: true, velocity: false } }, jazz: { label: "Jazz", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, rock: { label: "Rock", multi: true, options: { note: true, pulses: false, rotation: false, scale: false, velocity: true } }, baroque: { label: "Baroque", multi: true, options: { note: true, pulses: true, rotation: false, scale: true, velocity: true } }, fifths: { label: "Fifths", multi: true, options: { note: true, pulses: true, rotation: true, scale: false, velocity: true } }, },
             INTERNAL_SYNTH_NAMES: ['Piano', 'Bright Pad', '8-bit Kick', 'FM Lead', 'AM Bass', 'Saw Lead', 'Square Pluck', 'Duo Arp', 'Synth Choir', 'Metallic Perc', 'Wobble Bass', 'Glassy Bell', 'Soft Pad', 'Funky Clav', 'Distorted Lead', 'Sub Bass'],
-            HOTKEYS: {'Spacebar': 'Play / Pause', 'T': 'Try Me!', 'R': 'Randomize All', 'Q': 'Quantize Notes', 'S': 'Save State', 'L': 'Load State', 'N': 'Trigger Next', 'M': 'Toggle Music Mode'},
+            HOTKEYS: {'Spacebar': 'Play / Pause', 'T': 'Try Me!', 'B': 'Berlin Mode', 'R': 'Randomize All', 'Q': 'Quantize Notes', 'S': 'Save State', 'L': 'Load State', 'N': 'Trigger Next', 'M': 'Toggle Music Mode'},
 
             // --- APPLICATION STATE & CACHE ---
             dom: {},
@@ -593,12 +606,14 @@
             baroqueStep: 0,
             autoRepeatTimeoutId: null,
             autoRepeatIntervalId: null,
+            lastRandomizedTrackId: null,
 
             // --- INITIALIZATION ---
             async init() {
                 try {
                     console.log("Rhythm King 77 Initializing...");
                     this.setupDOMCache();
+                    this.createInitialUI();
 
                     let loadedState = null;
                     try {
@@ -611,12 +626,16 @@
 
                     await this.loadState(loadedState);
 
-                    this.createInitialUI();
                     await this.setupMIDI();
                     this.setupToneJS();
                     this.setupEventListeners();
 
-                    if (loadedState) this.showStatusMessage("Autosave loaded.", 2000);
+                    if (loadedState) {
+                        this.showStatusMessage("Autosave loaded.", 2000);
+                    } else if (this.state.musicMode.enabled) {
+                        await this.triggerGenerativeStep(); // Initial randomization if music mode is on
+                    }
+                    this.setupTimedRandomization();
 
                     this.hintInterval = setInterval(() => this.showHint(), 25000);
                     this.showHint();
@@ -631,8 +650,8 @@
 
             setupDOMCache() {
                 const ids = [
-                    'playStopButton', 'masterRandomizeButton', 'saveStateButton', 'loadStateButton', 'refineButton', 'quantizeNotesButton', 'resetButton', 'tryMeButton',
-                    'reInitMidiButton', 'allNotesOffButton', 'numTracksInput', 'lockStepsCheckbox',
+                    'playStopButton', 'masterRandomizeButton', 'saveStateButton', 'loadStateButton', 'refineButton', 'quantizeNotesButton', 'tryMeButton', 'berlinButton',
+                    'reInitMidiButton', 'allNotesOffButton', 'numTracksInput',
                     'bpmSlider', 'bpmValue', 'bpmSliderLearnCc', 'masterVolumeSlider',
                     'masterVolumeValue', 'masterVolumeLearnCc', 'midiOutSelect', 'midiChannelSelect',
                     'sequencerTracksContainer', 'channelVolumesContainer', 'channelVolumesWrapper', 'setAllToGlobal',
@@ -645,7 +664,8 @@
                     'appContainer', 'randomizeOptionsContainer', 'musicModePresetContainer', 'musicModeRefineCheck', 'musicModeQuantizeCheck',
                     'sequencerWrapperPanel', 'hintContainer', 'showRandomizePanel', 'showHintsLogPanel','showHelpPanel','showHotkeysPanel',
                     'scaleRootSelect', 'scaleTypeSelect', 'chordTypeSelect',
-                    'confirmationDialog', 'dialogMessage', 'dialogConfirm', 'dialogCancel'
+                    'confirmationDialog', 'dialogMessage', 'dialogConfirm', 'dialogCancel',
+                    'locksPanel', 'showLocksPanel', 'lockStepsCheckbox', 'lockPulsesCheckbox', 'lockRotationCheckbox', 'lockVelocityCheckbox', 'lockInstrumentsCheckbox'
                 ];
                 ids.forEach(id => {
                     try {
@@ -672,11 +692,12 @@
                     if (e.key.toLowerCase() === 'n') this.triggerGenerativeStep();
                     if (e.key.toLowerCase() === 'm') this.dom.musicModeToggle.click();
                     if (e.key.toLowerCase() === 't') this.tryMe();
+                    if (e.key.toLowerCase() === 'b') this.handleBerlinMode();
 
                 });
 
-                this.dom.resetButton.addEventListener('click', () => this.confirmReset());
                 this.dom.tryMeButton.addEventListener('click', () => this.tryMe());
+                this.dom.berlinButton.addEventListener('click', () => this.handleBerlinMode());
                 this.dom.setAllToGlobal.addEventListener('click', () => this.setAllTracksToGlobal());
                 this.dom.numTracksInput.addEventListener('change', (e) => this.handleNumTracksChange(e));
                 this.dom.bpmSlider.addEventListener('input', e => this.updateState({ bpm: parseInt(e.target.value, 10) }));
@@ -703,7 +724,7 @@
                     this.rebuildAllTrackLoops();
                 });
 
-                this.dom.lockStepsCheckbox.addEventListener('change', (e) => this.handleLockStepsChange(e));
+                this.dom.locksPanel.addEventListener('change', (e) => this.handleGlobalLockChange(e));
 
                 this.dom.scaleRootSelect.addEventListener('change', () => this.handleScaleChange());
                 this.dom.scaleTypeSelect.addEventListener('change', () => this.handleScaleChange());
@@ -753,10 +774,11 @@
             getDefaultState() {
                 return {
                     numTracks: 4, bpm: 45, masterVolume: 100, globalMidiChannel: 1, midiOutputId: 'internal_synth', ccMap: {},
-                    stepsLocked: false, globalLockedSteps: 16, channelVolumes: Array(16).fill(100), currentScaleName: 'C Major',
+                    channelVolumes: Array(16).fill(100), currentScaleName: 'C Major',
                     musicMode: { enabled: true, interval: 3, preset: 'multi', refine: true, autoQuantize: true, chordType: 'Random', randomizeChord: true },
                     randomization: { note: true, pulses: true, rotation: true, scale: true, velocity: true, octave: 3, randomizeOctave: true, instruments: true },
-                    view: { showMidiPanel: true, showRandomizePanel: true, showVolumesPanel: false, showHintsLogPanel: true, showHelpPanel: true, showHotkeysPanel: false },
+                    locks: { steps: false, pulses: false, rotation: false, velocity: false, instruments: false },
+                    view: { showMidiPanel: true, showRandomizePanel: true, showVolumesPanel: false, showHintsLogPanel: true, showHelpPanel: true, showHotkeysPanel: false, showLocksPanel: false },
                     tracks: Array.from({ length: 4 }, (_, i) => ({ id: i, active: true, pulses: [4, 3, 5, 7][i] || 4, steps: 16, rotation: [0, 2, 4, 0][i] || 0, note: [60, 64, 67, 71][i] || 60, velocity: 100, channelOverride: 'global' }))
                 };
             },
@@ -896,6 +918,7 @@
                     sanitizedState.numTracks = Math.max(1, Math.min(this.MAX_TRACKS, parseInt(s.numTracks) || 4));
                     sanitizedState.bpm = Math.max(20, Math.min(240, parseInt(s.bpm) || 120));
                     sanitizedState.masterVolume = Math.max(0, Math.min(127, parseInt(s.masterVolume) || 100));
+                    sanitizedState.globalMidiChannel = Math.max(1, Math.min(16, parseInt(s.globalMidiChannel) || 1));
                     if (!s.currentScaleName || !Object.keys(this.SCALES).includes(s.currentScaleName.split(' ').slice(1).join(' '))) {
                         sanitizedState.currentScaleName = 'C Major';
                     }
@@ -1167,7 +1190,6 @@
                     this.dom.bpmValue.textContent = this.state.bpm;
                     this.dom.masterVolumeSlider.value = this.state.masterVolume;
                     this.dom.masterVolumeValue.textContent = this.state.masterVolume;
-                    this.dom.lockStepsCheckbox.checked = this.state.stepsLocked;
 
                     this.dom.chordTypeSelect.value = this.state.musicMode.chordType;
                     this.dom.randomizeChordCheck.checked = this.state.musicMode.randomizeChord;
@@ -1202,6 +1224,7 @@
                     this.renderOctaveSelector();
                     this.renderScaleSelector();
                     this.populateChannelSelectors();
+                    this.renderLocksPanel();
                 } catch (error) {
                     console.error("A major error occurred during rendering:", error);
                     this.showStatusMessage("Render Error. Check console.", 5000);
@@ -1342,6 +1365,15 @@
                 this.dom.randomizeInstrumentsCheck.checked = this.state.randomization.instruments;
 
                 this.dom.randomizeInstrumentsContainer.style.display = this.state.midiOutputId === 'internal_synth' ? 'flex' : 'none';
+            },
+
+            renderLocksPanel() {
+                if (!this.state || !this.state.locks) return;
+                this.dom.lockStepsCheckbox.checked = this.state.locks.steps;
+                this.dom.lockPulsesCheckbox.checked = this.state.locks.pulses;
+                this.dom.lockRotationCheckbox.checked = this.state.locks.rotation;
+                this.dom.lockVelocityCheckbox.checked = this.state.locks.velocity;
+                this.dom.lockInstrumentsCheckbox.checked = this.state.locks.instruments;
             },
 
             createInitialUI() {
@@ -1572,7 +1604,7 @@
                         return;
                     }
                 }
-                if (prop === 'steps' && this.state.stepsLocked) {
+                if (prop === 'steps' && this.state.locks.steps) {
                     this.synchronizeAllTrackSteps(value);
                 } else {
                     this.updateTrackState(trackId, {[prop]: value});
@@ -1619,20 +1651,27 @@
                         newTracks.push(currentTracks[i]);
                     } else {
                         const defaultTrack = this.getDefaultState().tracks[0];
-                        newTracks.push({ ...defaultTrack, id: i, steps: this.state.stepsLocked ? this.state.globalLockedSteps : 16, });
+                        newTracks.push({ ...defaultTrack, id: i, steps: this.state.locks.steps ? this.state.globalLockedSteps : 16, });
                     }
                 }
                 this.updateState({ numTracks: newCount, tracks: newTracks });
             },
 
-            handleLockStepsChange(e) {
-                const stepsLocked = e.target.checked;
-                if(stepsLocked) {
-                    const globalLockedSteps = this.state.tracks.length > 0 ? this.state.tracks[0].steps : 16;
-                    this.updateState({ stepsLocked, globalLockedSteps });
-                    this.synchronizeAllTrackSteps(globalLockedSteps);
+            handleGlobalLockChange(e) {
+                if(e.target.id === 'lockStepsCheckbox') {
+                    const stepsLocked = e.target.checked;
+                    if(stepsLocked) {
+                        const globalLockedSteps = this.state.tracks.length > 0 ? this.state.tracks[0].steps : 16;
+                        this.updateState({ locks: {...this.state.locks, steps: stepsLocked}, globalLockedSteps });
+                        this.synchronizeAllTrackSteps(globalLockedSteps);
+                    } else {
+                        this.updateState({ locks: {...this.state.locks, steps: stepsLocked} });
+                    }
                 } else {
-                    this.updateState({ stepsLocked });
+                    const newLocks = {...this.state.locks};
+                    const key = e.target.id.replace('lock', '').replace('Checkbox', '').toLowerCase();
+                    newLocks[key] = e.target.checked;
+                    this.updateState({locks: newLocks});
                 }
             },
 
@@ -1708,6 +1747,7 @@
                 Tone.Transport.on('start', () => {
                     this.dom.playStopButton.innerHTML = '&#x25A0;';
                     this.dom.playStopButton.classList.add('active', 'stop-state');
+                    this.rebuildAllTrackLoops();
                     this.transportLoops.forEach(loop => loop?.start(0));
                 });
                 Tone.Transport.on('stop', () => {
@@ -1831,7 +1871,7 @@
                     this.dom.musicModeLog.prepend(separator);
                     return;
                 }
-                if (this.state.musicMode && this.state.musicMode.refine && options.isGenerative) return;
+                if (this.state.musicMode && this.state.musicMode.refine && options.isGenerative && !options.forceLog) return;
                 const entry = document.createElement('div');
                 entry.className = 'log-entry';
                 entry.textContent = message;
@@ -1859,21 +1899,21 @@
                     const randomizerOptions = preset.options;
                     const shouldLogGenerativeStep = !this.state.musicMode.refine;
 
-                    if(this.state.randomization.randomizeOctave) {
+                    if(this.state.randomization.randomizeOctave && !this.state.locks.octave) {
                         const newOctave = Math.max(1, Math.min(8, this.state.randomization.octave + (Math.floor(Math.random() * 3) - 1)));
                         if (newOctave !== this.state.randomization.octave) {
                             if (!nextStateChanges.randomization) nextStateChanges.randomization = {...this.state.randomization};
                             nextStateChanges.randomization.octave = newOctave;
-                            if(shouldLogGenerativeStep) this.logChange(`New base octave: ${newOctave}`, { isGenerative: true });
+                            this.logChange(`New base octave: ${newOctave}`, { isGenerative: true, forceLog: true });
                         }
                     }
 
-                    if (randomizerOptions.scale) {
+                    if (randomizerOptions.scale && !this.state.locks.scale) {
                         const scaleNames = Object.keys(this.SCALES);
                         const randomScaleName = scaleNames[Math.floor(Math.random() * scaleNames.length)];
                         const randomRootNote = Math.floor(Math.random() * 12);
                         nextStateChanges.currentScaleName = `${this.NOTE_NAMES[randomRootNote]} ${randomScaleName}`;
-                        if(shouldLogGenerativeStep) this.logChange(`Scale: ${nextStateChanges.currentScaleName}`, { isGenerative: true });
+                        this.logChange(`Scale: ${nextStateChanges.currentScaleName}`, { isGenerative: true, forceLog: true });
                     }
 
                     if (Object.keys(nextStateChanges).length > 0) {
@@ -1886,14 +1926,19 @@
 
                     if (presetKey === 'jazz' || presetKey === 'rock') {
                         this.handleChordalMode(presetKey, newTracks);
+                    } else if (presetKey === 'fifths') {
+                        this.handleFifthsMode(newTracks);
                     }
                     else if (preset.multi) {
                         newTracks.forEach(t => {
                             if(t.active) newTracks = this.randomizeTrackParameters(t, randomizerOptions, true, assignedNotesByChannel, newTracks);
                         });
                     } else if (preset.options.note || preset.options.pulses || preset.options.rotation || preset.options.velocity) {
-                        const trackToRandomize = activeTracks[Math.floor(Math.random() * activeTracks.length)];
+                        let availableTracks = activeTracks.filter(t => t.id !== this.lastRandomizedTrackId);
+                        if(availableTracks.length === 0) availableTracks = activeTracks;
+                        const trackToRandomize = availableTracks[Math.floor(Math.random() * availableTracks.length)];
                         if (trackToRandomize) {
+                            this.lastRandomizedTrackId = trackToRandomize.id;
                             newTracks = this.randomizeTrackParameters(trackToRandomize, randomizerOptions, true, assignedNotesByChannel, newTracks);
                         }
                     }
@@ -1917,7 +1962,7 @@
                 const scaleName = parts.slice(1).join(' ');
 
                 if (scaleName !== requiredScale) {
-                    this.logChange(`${modeName} Mode needs ${requiredScale} scale.`, { isGenerative: true });
+                    this.logChange(`${modeName} Mode needs ${requiredScale} scale.`, { isGenerative: true, forceLog: true });
                     return;
                 }
 
@@ -1936,12 +1981,12 @@
                 chordName = `${this.NOTE_NAMES[chordRootNote % 12]}${modeName === 'jazz' ? 'maj7' : 'm'}`; // Simplified chord name
 
                 if(this.state.musicMode.randomizeChord || this.state.musicMode.chordType === 'Random') {
-                    this.logChange(`Generative Chord: ${chordName} (${modeName})`, { isGenerative: true });
+                    this.logChange(`Generative Chord: ${chordName} (${modeName})`, { isGenerative: true, forceLog: true });
                 } else {
                     chordIntervals = this.CHORD_TYPES[this.state.musicMode.chordType] || [0,7];
                     const chordRoot = rootNote + scaleIntervals[Math.floor(Math.random() * 7)];
                     chordName = `${this.NOTE_NAMES[chordRoot % 12]}${this.state.musicMode.chordType}`;
-                    this.logChange(`Generative Chord: ${chordName} (${modeName})`, { isGenerative: true });
+                    this.logChange(`Generative Chord: ${chordName} (${modeName})`, { isGenerative: true, forceLog: true });
                 }
 
                 const chordRootMidi = rootNote + (scaleIntervals[Math.floor(Math.random() * 7)]);
@@ -1956,24 +2001,38 @@
                 });
             },
 
+            handleFifthsMode(tracks) {
+                const parts = this.state.currentScaleName.split(' ');
+                let rootNote = this.NOTE_NAMES.indexOf(parts[0]);
+                const scaleName = parts.slice(1).join(' ');
+                const oldRootName = this.NOTE_NAMES[rootNote];
+
+                rootNote = (rootNote + 7) % 12; // Move up a perfect fifth
+                const newRootName = this.NOTE_NAMES[rootNote];
+
+                const newScale = `${newRootName} ${scaleName}`;
+                this.logChange(`Fifths Walk: ${oldRootName} -> ${newRootName}`, { isGenerative: true, forceLog: true });
+                this.updateState({ currentScaleName: newScale });
+            },
+
             randomizeTrackParameters(track, options, shouldLog = true, assignedNotesByChannel = {}, tracks) {
                 let changes = [];
                 let newTrackState = {...track};
 
-                if (options.pulses) {
+                if (options.pulses && !this.state.locks.pulses) {
                     const old = track.pulses;
-                    const maxPulses = this.state.stepsLocked ? this.state.globalLockedSteps : track.steps;
+                    const maxPulses = this.state.locks.steps ? this.state.globalLockedSteps : track.steps;
                     newTrackState.pulses = maxPulses > 0 ? Math.floor(Math.pow(Math.random(), 2) * (maxPulses - 1)) + 1 : 0;
                     changes.push(`P:${old}→${newTrackState.pulses}`);
                 }
-                if (options.rotation) {
+                if (options.rotation && !this.state.locks.rotation) {
                     const old = track.rotation;
                     newTrackState.rotation = track.steps > 0 ? Math.floor(Math.random() * track.steps) : 0;
                     changes.push(`R:${old}→${newTrackState.rotation}`);
                 }
                 if (options.note) {
                     const baseOctave = this.state.randomization.octave;
-                    const minMidi = Math.max(0, (baseOctave - 1) * 12);
+                    const minMidi = Math.max(12, (baseOctave - 1) * 12);
                     const maxMidi = Math.min(127, (baseOctave + 1) * 12 + 11);
 
                     let octaveFilteredScale = this.currentRandomizationScale.filter(note => note >= minMidi && note <= maxMidi);
@@ -1992,12 +2051,12 @@
                         assignedNotesByChannel[trackChannel].push(newNote);
                     }
                 }
-                if (options.velocity) {
-                    newTrackState.velocity = Math.floor(Math.random() * 78) + 50; // Range 50-127
+                if (options.velocity && !this.state.locks.velocity) {
+                    newTrackState.velocity = Math.floor(Math.random() * 48) + 80; // Range 80-127
                     changes.push(`V:${track.velocity}→${newTrackState.velocity}`);
                 }
 
-                if (options.instruments && this.state.midiOutputId === 'internal_synth') {
+                if (options.instruments && this.state.midiOutputId === 'internal_synth' && !this.state.locks.instruments) {
                     const newChannel = Math.floor(Math.random() * 16) + 1;
                     newTrackState.channelOverride = newChannel;
                     changes.push(`Inst: → ${this.INTERNAL_SYNTH_NAMES[newChannel-1]}`);
@@ -2225,6 +2284,58 @@
                     randomization: {...this.state.randomization, octave: 3 }
                 });
                 this.showStatusMessage("Try Me! A new setup has been created.", 2500);
+            },
+            handleBerlinMode() {
+                const root = 0; // C
+                const scale = this.SCALES['Minor Pentatonic'];
+                const newTracks = this.state.tracks.map((track, i) => {
+                    let newTrack = {...track};
+                    newTrack.active = true;
+                    switch(i) {
+                        case 0: // Bass Sequence
+                            newTrack.note = 12 * 2 + root; // C2
+                            newTrack.pulses = 8;
+                            newTrack.steps = 16;
+                            newTrack.rotation = 0;
+                            newTrack.channelOverride = 16; // Sub Bass
+                            newTrack.velocity = 110;
+                            break;
+                        case 1: // Main Arp
+                            newTrack.note = 12 * 4 + root; // C4
+                            newTrack.pulses = 12;
+                            newTrack.steps = 16;
+                            newTrack.rotation = 2;
+                            newTrack.channelOverride = 7; // Square Pluck
+                            newTrack.velocity = 90;
+                            break;
+                        case 2: // Counter Arp
+                            newTrack.note = 12 * 5 + root + scale[3]; // G5
+                            newTrack.pulses = 7;
+                            newTrack.steps = 16;
+                            newTrack.rotation = 8;
+                            newTrack.channelOverride = 8; // Duo Arp
+                            newTrack.velocity = 80;
+                            break;
+                        case 3: // High Pad/FX
+                            newTrack.note = 12 * 6 + root; // C6
+                            newTrack.pulses = 1;
+                            newTrack.steps = 32;
+                            newTrack.rotation = 16;
+                            newTrack.channelOverride = 2; // Bright Pad
+                            newTrack.velocity = 70;
+                            break;
+                        default:
+                            newTrack.active = false;
+                    }
+                    return newTrack;
+                });
+                this.updateState({
+                    bpm: 135,
+                    tracks: newTracks,
+                    currentScaleName: 'C Minor Pentatonic',
+                    randomization: {...this.state.randomization, octave: 4 }
+                });
+                this.showStatusMessage("Berlin School mode activated!", 2500);
             }
         };
 
