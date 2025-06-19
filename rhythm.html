@@ -254,7 +254,7 @@
         #channelVolumesWrapper { order: 6; flex: 1 1 300px; max-width: 400px; }
         #hintsPanel { order: 7; flex: 1 1 280px; display: flex; flex-direction: column;}
         #helpPanel { order: 8; width: 100%; margin-top: 0.5rem; max-width: 900px; margin-left:auto; margin-right: auto;}
-        #hotkeysPanel { order: 9; width: 100%; margin-top: 0.5rem; }
+        #hotkeysPanel { order: 9; width: 100%; max-width: 250px; margin-top: 0.5rem; }
 
         #hintsPanel, #helpPanel, #hotkeysPanel {
             display: flex;
@@ -2292,58 +2292,6 @@
                     randomization: {...this.state.randomization, octave: 3 }
                 });
                 this.showStatusMessage("Try Me! A new setup has been created.", 2500);
-            },
-            handleBerlinMode() {
-                const root = 0; // C
-                const scale = this.SCALES['Minor Pentatonic'];
-                const newTracks = this.state.tracks.map((track, i) => {
-                    let newTrack = {...track};
-                    newTrack.active = true;
-                    switch(i) {
-                        case 0: // Bass Sequence
-                            newTrack.note = 12 * 2 + root; // C2
-                            newTrack.pulses = 8;
-                            newTrack.steps = 16;
-                            newTrack.rotation = 0;
-                            newTrack.channelOverride = 16; // Sub Bass
-                            newTrack.velocity = 110;
-                            break;
-                        case 1: // Main Arp
-                            newTrack.note = 12 * 4 + root; // C4
-                            newTrack.pulses = 12;
-                            newTrack.steps = 16;
-                            newTrack.rotation = 2;
-                            newTrack.channelOverride = 7; // Square Pluck
-                            newTrack.velocity = 90;
-                            break;
-                        case 2: // Counter Arp
-                            newTrack.note = 12 * 5 + root + scale[3]; // G5
-                            newTrack.pulses = 7;
-                            newTrack.steps = 16;
-                            newTrack.rotation = 8;
-                            newTrack.channelOverride = 8; // Duo Arp
-                            newTrack.velocity = 80;
-                            break;
-                        case 3: // High Pad/FX
-                            newTrack.note = 12 * 6 + root; // C6
-                            newTrack.pulses = 1;
-                            newTrack.steps = 32;
-                            newTrack.rotation = 16;
-                            newTrack.channelOverride = 2; // Bright Pad
-                            newTrack.velocity = 70;
-                            break;
-                        default:
-                            newTrack.active = false;
-                    }
-                    return newTrack;
-                });
-                this.updateState({
-                    bpm: 135,
-                    tracks: newTracks,
-                    currentScaleName: 'C Minor Pentatonic',
-                    randomization: {...this.state.randomization, octave: 4 }
-                });
-                this.showStatusMessage("Berlin School mode activated!", 2500);
             }
         };
 
