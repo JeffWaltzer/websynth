@@ -3,112 +3,511 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MIDI Master Control - Collection of MIDI tools and instruments">
-    <title>MIDI Master Control</title>
-    <link rel="icon" href="https://placehold.co/32x32/3a2f2f/f0e6d2?text=MIDI" type="image/x-icon"> <!-- Favicon added for better user experience -->
-    <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Midi Weaver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Favicon: Leaf of Lórien -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%23b4d4a4%22>🌿</text></svg>">
     <style>
         :root {
-            --burnt-orange: #f58700;
-            --dark-orange: #d47500;
-            --wood-brown: #3a2f2f;
-            --panel-tan: #c5b8a5;
-            --wood-grain: #8a7868;
-            --ivory: #f0e6d2;
-        }
+            --bg-primary: #3f3b36;
+            --bg-secondary: #5e584f;
+            --text-primary: #f2eade;
+            --accent-interactive: #87A878;
+            --glow-effect: #B4D4A4;
+            /* Interval Colors */
+            --key-color-root: #60a5fa; /* blue-400 */
+            --key-color-third: #4ade80; /* green-400 */
+            --key-color-fifth: #facc15; /* yellow-400 */
+            --key-color-extension: #c084fc; /* purple-400 */
+            --key-color-pulse: #f87171; /* red-400 */
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--wood-brown);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            --font-title: 'MedievalSharp', cursive;
+            --font-body: 'Crimson Text', serif;
         }
+        html { scroll-padding-bottom: 8rem; }
+        body { background-color: var(--bg-primary); color: var(--text-primary); font-family: var(--font-body); }
+        .panel-title { font-family: var(--font-title); color: var(--text-primary); text-shadow: 0 0 8px rgba(242, 234, 222, 0.3); }
+        .control-panel-item { background-color: var(--bg-secondary); border: 2px solid var(--accent-interactive); box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.5), 0 0 7px var(--accent-interactive); }
+        .control-panel label { font-weight: 600; color: var(--text-primary); opacity: 0.9; }
+        .themed-input { width: 100%; background-color: var(--bg-primary); border: 1px solid var(--bg-secondary); color: var(--text-primary); border-radius: 0.5rem; padding: 0.5rem 0.75rem; transition: all 0.3s ease-in-out; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+        .themed-input:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(50%); }
+        .themed-input:focus { outline: none; border-color: var(--glow-effect); box-shadow: 0 0 10px -2px var(--glow-effect), inset 0 1px 3px rgba(0,0,0,0.5); }
+        .themed-scrollbar::-webkit-scrollbar { width: 12px; }
+        .themed-scrollbar::-webkit-scrollbar-track { background: var(--bg-primary); }
+        .themed-scrollbar::-webkit-scrollbar-thumb { background-color: var(--bg-secondary); border-radius: 10px; border: 2px solid var(--bg-primary); }
+        .themed-scrollbar::-webkit-scrollbar-thumb:hover { background-color: var(--accent-interactive); }
+        .log-box { background-color: rgba(0,0,0,0.2); font-family: var(--font-body); white-space: pre-wrap; word-wrap: break-word; border-top: 2px solid var(--accent-interactive); box-shadow: inset 0 5px 15px rgba(0,0,0,0.5); }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; box-shadow: 0 0 5px; transition: all 0.5s ease; }
+        .status-dot.red { background-color: #ef4444; }
+        .status-dot.green { background-color: var(--glow-effect); }
+        .status-dot.yellow { background-color: #eab308; }
+        .tooltip-container { position: relative; display: inline-block; }
+        .tooltip { visibility: hidden; opacity: 0; background-color: var(--bg-primary); color: var(--text-primary); text-align: center; border-radius: 6px; padding: 8px 12px; position: absolute; z-index: 10; bottom: 110%; left: 50%; transform: translateX(-50%); width: max-content; max-width: 250px; border: 1px solid var(--accent-interactive); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none; font-size: 0.875rem; }
+        .tooltip-container:hover .tooltip { visibility: visible; opacity: 1; }
+        #midi-setup-status { display: none; background-color: #4a443d; border: 2px solid #eab308; border-radius: 0.75rem; margin: 1.5rem auto 0 auto; padding: 1rem; max-width: 95%; }
+        .chord-display { font-family: var(--font-body); text-align: center; font-size: 2.25rem; line-height: 2.5rem; color: var(--text-primary); text-shadow: 0 0 15px var(--glow-effect); }
+        .chord-display-label { font-family: var(--font-title); font-size: 1.25rem; opacity: 0.8; }
+        #status-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 0.25rem 1rem; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(5px); border-top: 1px solid var(--accent-interactive); text-align: center; font-family: var(--font-body); z-index: 20; }
 
-        main.container {
-            background-color: var(--panel-tan);
-            max-width: 600px;
-            width: 100%;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5) inset, 0 2px 5px rgba(0,0,0,0.3);
-            border: 4px solid transparent;
-            border-image: repeating-linear-gradient(
-                    90deg,
-                    var(--burnt-orange) 0px, var(--burnt-orange) 5px,
-                    transparent 5px, transparent 10px
-            ) 1 round;
-            background-position: 0 0;
-            animation: crawling-ants 2s linear infinite;
-        }
-
-        h1 {
-            font-family: 'Monoton', cursive;
-            color: var(--wood-brown);
-            text-align: center;
-            font-size: 2.5em;
-            margin: 0 0 30px;
-            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
-        }
-
-        nav.menu {
-            display: grid;
-            gap: 10px;
-        }
-
-        a {
-            background-color: var(--burnt-orange);
-            color: var(--wood-brown);
-            text-decoration: none;
-            padding: 15px 20px;
-            border: 2px solid var(--dark-orange);
-            border-radius: 6px;
-            font-weight: 600;
-            text-align: center;
-            text-transform: uppercase;
-            box-shadow: 0 2px 3px rgba(0,0,0,0.2), 0 1px 1px rgba(255,255,255,0.3) inset;
-            transition: all 0.1s ease-in-out;
-        }
-
-        a:hover {
-            background-color: #ff9a1f;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.4) inset;
-            transform: translateY(-2px);
-        }
-
-        a:active {
-            background-color: var(--dark-orange);
-            transform: translateY(0);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.2) inset;
-        }
-
-        @keyframes crawling-ants {
-            from {
-                background-position: 0 0;
-            }
-            to {
-                background-position: 10px 0;
-            }
-        }
+        /* Piano Keyboard Styles */
+        .piano { display: flex; list-style: none; margin: 0; padding: 0; position: relative; width: 100%; height: 80px; border-radius: 0.5rem; overflow: hidden; background: #444; }
+        .piano .key { border: 1px solid #000; transition: background-color 0.1s ease; }
+        .piano .key.white { float: left; width: calc(100% / 36); height: 100%; background: #fff; }
+        .piano .key.black { position: absolute; width: calc(100% / 36 * 0.6); height: 60%; background: #222; z-index: 2; }
+        .piano .key.in-scale { background-color: rgba(135, 168, 120, 0.2); }
+        .piano .key.active.key-root { background: var(--key-color-root); }
+        .piano .key.active.key-third { background: var(--key-color-third); }
+        .piano .key.active.key-fifth { background: var(--key-color-fifth); }
+        .piano .key.active.key-extension { background: var(--key-color-extension); }
+        .piano .key.pulse { animation: pulse-key 0.5s; }
+        @keyframes pulse-key { 0% { background: var(--key-color-pulse); } 100% { /* returns to original active color via JS */ } }
+        .theory-interactive { cursor: pointer; text-decoration: underline; color: var(--glow-effect); }
     </style>
 </head>
-<body>
-<main class="container">
-    <h1>MIDI Master Control</h1>
-    <nav class="menu">
-        <a href="polychain.html" title="Chain multiple synthesizers together and send notes across your MIDI gear for rich, layered sounds">MIDI Poly Chain</a>
-        <a href="delay.html" title="Add groovy echo effects and rhythmic patterns to your MIDI performance with adjustable timing">Delay</a>
-        <a href="synth.html" title="Twist knobs and shape your sound with this comprehensive MIDI instrument controller">Synth</a>
-        <a href="chords.html" title="Discover instant chord recognition and get hip progression suggestions while you play">Chords</a>
-        <a href="keyboard.html" title="Jam on this funky virtual MIDI keyboard with dynamic velocity control">Keyboard</a>
-        <a href="sequen.html" title="Lay down far-out sequences and grooves with this pattern-making machine">Sequencer</a>
-        <a href="rhythm.html" title="Create complex rhythmic patterns with this Euclidean MIDI sequencer">Rhythm King 77</a>
-        <a href="playwithme.html" title="Get down with this interactive jam buddy that follows your lead">Play With Me</a>
-        <a href="MusicBuddy.html" title="Your intelligent music companion">Music Buddy</a>
-    </nav>
-</main>
+<body class="antialiased themed-scrollbar">
+
+<div class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="p-4 sticky top-0 z-10 bg-black/10 backdrop-blur-sm">
+        <div class="container mx-auto flex justify-between items-center border-b-2 border-solid pb-4" style="border-color: var(--accent-interactive);">
+            <h1 class="panel-title text-4xl">Midi Weaver</h1>
+            <div class="flex items-center gap-4">
+                <div class="tooltip-container"><button id="rescan-button" class="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center text-2xl hover:bg-blue-800/50 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></button><span class="tooltip">Rescan for MIDI Devices</span></div>
+                <div class="tooltip-container"><button id="panic-button" class="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center text-2xl hover:bg-red-800/50 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg></button><span class="tooltip">Panic! Sends an "All Notes Off" message to silence stuck notes.</span></div>
+                <div id="midi-status" class="flex items-center bg-black/20 px-4 py-2 rounded-lg"><span id="midi-status-dot" class="status-dot red"></span><span id="midi-status-text" class="text-sm">Awaiting MIDI Access...</span></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-4 md:p-6 lg:p-8 flex-grow">
+        <div id="midi-setup-status"></div>
+        <div class="control-panel-item p-4 rounded-xl mb-8"><h2 class="panel-title text-2xl text-center mb-4">Live Chord Display</h2><div class="grid grid-cols-2 gap-4 divide-x-2 divide-green-900/50"><div class="px-2"><p class="chord-display-label">Input</p><div id="input-chord-display" class="chord-display">-</div></div><div class="px-2"><p class="chord-display-label">Output</p><div id="output-chord-display" class="chord-display">-</div></div></div></div>
+        <div class="control-panel-item p-4 rounded-xl mb-8"><h2 class="panel-title text-2xl text-center mb-2">Live Output Keyboard</h2><ul id="piano-keyboard-container" class="piano"></ul></div>
+        <div class="control-panel-item p-6 rounded-xl md:col-span-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
+                <!-- Column 1: Diatonic Context -->
+                <div class="space-y-4">
+                    <h3 class="panel-title text-xl border-b border-white/10 pb-2">Diatonic Context</h3>
+                    <div class="tooltip-container w-full"><label for="scale-root-select">Key</label><select id="scale-root-select" class="themed-input"></select><span class="tooltip">Set the root note of the scale.</span></div>
+                    <div class="tooltip-container w-full"><label for="scale-type-select">Scale</label><select id="scale-type-select" class="themed-input"></select><span class="tooltip">Set the scale type (e.g., Major, minor).</span></div>
+                </div>
+                <!-- Column 2: MIDI Routing -->
+                <div class="space-y-4">
+                    <h3 class="panel-title text-xl border-b border-white/10 pb-2">MIDI Routing</h3>
+                    <div class="tooltip-container w-full"><label for="midi-in-select">Input Device</label><select id="midi-in-select" class="themed-input"></select><span class="tooltip">Select your MIDI controller.</span></div>
+                    <div class="tooltip-container w-full"><label for="midi-out-select">Output Device</label><select id="midi-out-select" class="themed-input"></select><span class="tooltip">Select the sound output device.</span></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="tooltip-container"><label for="input-channel-select">In Ch.</label><select id="input-channel-select" class="themed-input"></select><span class="tooltip">Listen for notes on this MIDI channel.</span></div>
+                        <div class="tooltip-container"><label for="output-channel-select">Out Ch.</label><select id="output-channel-select" class="themed-input"></select><span class="tooltip">Send chords on this MIDI channel.</span></div>
+                    </div>
+                </div>
+                <!-- Column 3: Harmonizer -->
+                <div class="space-y-4">
+                    <h3 class="panel-title text-xl border-b border-white/10 pb-2">Harmonizer</h3>
+                    <div class="tooltip-container flex items-center gap-4"><label for="analysis-mode-toggle" class="flex-grow">Analysis Mode</label><input type="checkbox" id="analysis-mode-toggle" /><span class="tooltip">When on, this tool will only analyze your input chord instead of generating an output.</span></div>
+                    <div class="tooltip-container"><label for="chord-type-select">Chord Type</label><select id="chord-type-select" class="themed-input"><option value="major">Major</option><option value="minor">Minor</option><option value="diminished">Diminished</option><option value="augmented">Augmented</option><option value="sus2">Sus2</option><option value="sus4">Sus4</option><option value="major7">Major 7th</option><option value="minor7">Minor 7th</option><option value="dominant7">Dominant 7th</option><option value="power">Power Chord</option><option value="single">Single Note</option></select><span class="tooltip">The harmonic structure to generate.</span></div>
+                </div>
+                <!-- Column 4: Voicing & Performance -->
+                <div class="space-y-4">
+                    <h3 class="panel-title text-xl border-b border-white/10 pb-2">Voicing & Performance</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="tooltip-container"><label for="inversion-select">Inversion</label><select id="inversion-select" class="themed-input"><option value="0">Root</option><option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option></select><span class="tooltip">Rearrange the chord's notes.</span></div>
+                        <div class="tooltip-container"><label for="add-note-select">Add Note</label><select id="add-note-select" class="themed-input"><option value="none">None</option><option value="add6">Add 6th</option><option value="add9">Add 9th</option></select><span class="tooltip">Add a color note.</span></div>
+                    </div>
+                    <div class="tooltip-container"><label for="octave-shift-input" class="flex justify-between"><span>Octave Shift</span><span id="octave-shift-value" class="font-bold">0</span></label><input id="octave-shift-input" class="themed-input" type="range" min="-3" max="3" value="0" step="1"><span class="tooltip">Transpose the output.</span></div>
+                    <div class="tooltip-container w-full"><label for="chord-spread-slider" class="flex justify-between"><span>Chord Spread</span><span id="chord-spread-value">0</span></label><input id="chord-spread-slider" type="range" min="0" max="3" value="0" class="themed-input"><span class="tooltip">Spread the voicing.</span></div>
+                    <div class="tooltip-container w-full"><label for="strum-speed-slider" class="flex justify-between"><span>Strum Speed</span><span id="strum-speed-value">0ms</span></label><input id="strum-speed-slider" type="range" min="0" max="50" value="0" step="1" class="themed-input"><span class="tooltip">Delay notes to simulate a strum.</span></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="container mx-auto p-4 md:px-6 lg:px-8 mb-12"><div class="flex-1"><h3 class="panel-title text-2xl mb-2">Music Theory</h3><div id="theory-log" class="log-box themed-scrollbar h-48 p-4 overflow-y-auto text-base"></div></div></footer>
+    <div id="status-bar">Waiting for input...</div>
+</div>
+
+<script>
+    // --- DOM Elements ---
+    const elements = {
+        midiStatusText: document.getElementById('midi-status-text'),
+        midiStatusDot: document.getElementById('midi-status-dot'),
+        panicButton: document.getElementById('panic-button'),
+        rescanButton: document.getElementById('rescan-button'),
+        midiSetupStatus: document.getElementById('midi-setup-status'),
+        inputChordDisplay: document.getElementById('input-chord-display'),
+        outputChordDisplay: document.getElementById('output-chord-display'),
+        statusBar: document.getElementById('status-bar'),
+        pianoKeyboardContainer: document.getElementById('piano-keyboard-container'),
+        midiInSelect: document.getElementById('midi-in-select'),
+        midiOutSelect: document.getElementById('midi-out-select'),
+        inChannelSelect: document.getElementById('input-channel-select'),
+        outChannelSelect: document.getElementById('output-channel-select'),
+        chordTypeSelect: document.getElementById('chord-type-select'),
+        inversionSelect: document.getElementById('inversion-select'),
+        octaveShiftInput: document.getElementById('octave-shift-input'),
+        octaveShiftValue: document.getElementById('octave-shift-value'),
+        theoryLog: document.getElementById('theory-log'),
+        addNoteSelect: document.getElementById('add-note-select'),
+        chordSpreadSlider: document.getElementById('chord-spread-slider'),
+        chordSpreadValue: document.getElementById('chord-spread-value'),
+        strumSpeedSlider: document.getElementById('strum-speed-slider'),
+        strumSpeedValue: document.getElementById('strum-speed-value'),
+        analysisModeToggle: document.getElementById('analysis-mode-toggle'),
+        scaleRootSelect: document.getElementById('scale-root-select'),
+        scaleTypeSelect: document.getElementById('scale-type-select'),
+    };
+
+    // --- Global State ---
+    let midiAccess = null;
+    let activeInputNotes = new Set();
+    let currentlyPlayedOutputNotes = { notes: new Set(), noteMap: new Map() };
+    let chordDetectionTimeout = null;
+
+    // --- Constants ---
+    const SETTINGS_KEY = 'midiWeaverSettings_v2';
+    const NOTE_NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+    const CHORD_INTERVALS = { major: [0, 4, 7], minor: [0, 3, 7], diminished: [0, 3, 6], augmented: [0, 4, 8], sus2: [0, 2, 7], sus4: [0, 5, 7], major7: [0, 4, 7, 11], minor7: [0, 3, 7, 10], dominant7: [0, 4, 7, 10], power: [0, 7], single: [0] };
+    const ADD_NOTE_INTERVALS = { none: null, add6: 9, add9: 14 };
+    const INTERVAL_NAMES = { '0': 'R', '1': 'm2', '2': 'M2', '3': 'm3', '4': 'M3', '5': 'P4', '6': 'd5', '7': 'P5', '8': 'A5', '9': 'M6', '10': 'm7', '11': 'M7', '12': 'P8', '13': 'm9', '14': 'M9' };
+    const KNOWN_CHORDS = { '4,7': '<sup>maj</sup>', '3,7': '<sup>m</sup>', '3,6': '<sup>dim</sup>', '4,8': '<sup>aug</sup>', '4,7,11': '<sup>maj7</sup>', '3,7,10': '<sup>m7</sup>', '4,7,10': '<sup>dom7</sup>', '2,7': '<sup>sus2</sup>', '5,7': '<sup>sus4</sup>', '7': '<sup>5</sup>' };
+    const KEY_MAP = [ true, false, true, false, true, true, false, true, false, true, false, true ];
+    const PIANO_START_NOTE = 36; const PIANO_END_NOTE = 96;
+    const SCALES = { 'Major': [0, 2, 4, 5, 7, 9, 11], 'Natural Minor': [0, 2, 3, 5, 7, 8, 10], 'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11] };
+    const DIATONIC_CHORD_NAMES = { 'Major': ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'], 'Natural Minor': ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'] };
+
+    // --- Functions ---
+    function logSystem(message, type = 'info') {
+        const color = type === 'error' ? 'text-red-400' : 'text-gray-400';
+        const html = `<p class="${color}"><span class="opacity-50">${new Date().toLocaleTimeString()}:</span> ${message}</p>`;
+        elements.theoryLog.insertAdjacentHTML('beforeend', html);
+        elements.theoryLog.scrollTop = elements.theoryLog.scrollHeight;
+    }
+
+    function updateStatusBar(htmlMessage) { elements.statusBar.innerHTML = htmlMessage; }
+
+    function logTheory(detail) {
+        elements.theoryLog.innerHTML = `<p class="text-base opacity-90 whitespace-pre-line">${detail}</p>`;
+    }
+
+    function midiNoteToName(note, includeOctave = false) {
+        if (note < 0 || note > 127) return 'N/A';
+        const name = NOTE_NAMES[note % 12];
+        return includeOctave ? name + (Math.floor(note / 12) - 1) : name;
+    }
+
+    function getChordName(notes) {
+        if (notes.length === 0) return { name: '-', root: null, intervals: [] };
+        const sortedNotes = [...notes].sort((a,b) => a-b);
+        if (notes.length === 1) return { name: midiNoteToName(sortedNotes[0]), root: sortedNotes[0], intervals: [0] };
+        if (notes.length === 2) {
+            const interval = sortedNotes[1] - sortedNotes[0];
+            return { name: INTERVAL_NAMES[interval] || 'Interval', root: sortedNotes[0], intervals: [0, interval] };
+        }
+        const uniquePitchClasses = [...new Set(sortedNotes.map(n => n % 12))];
+        for (const potentialRoot of uniquePitchClasses) {
+            const intervals = uniquePitchClasses.map(pc => (pc - potentialRoot + 12) % 12).sort((a, b) => a - b);
+            const intervalKey = intervals.filter(i => i !== 0).join(',');
+            if (KNOWN_CHORDS[intervalKey]) {
+                const rootName = NOTE_NAMES[potentialRoot];
+                const rootNote = sortedNotes.find(n => n % 12 === potentialRoot);
+                return { name: `${rootName}${KNOWN_CHORDS[intervalKey]}`, root: rootNote, intervals };
+            }
+        }
+        return { name: '...', root: sortedNotes[0], intervals: [] };
+    }
+
+    function createPianoKeyboard() {
+        elements.pianoKeyboardContainer.innerHTML = '';
+        let whiteKeyCount = 0;
+        for(let i = PIANO_START_NOTE; i <= PIANO_END_NOTE; i++) if(KEY_MAP[i % 12]) whiteKeyCount++;
+        const whiteKeyWidth = 100 / whiteKeyCount;
+        let whiteKeyIndex = 0;
+        for(let i = PIANO_START_NOTE; i <= PIANO_END_NOTE; i++) {
+            const isWhite = KEY_MAP[i % 12];
+            const key = document.createElement('li');
+            key.className = `key ${isWhite ? 'white' : 'black'}`;
+            key.dataset.note = i;
+            if (isWhite) {
+                key.style.width = `${whiteKeyWidth}%`;
+                whiteKeyIndex++;
+            } else {
+                key.style.left = `${(whiteKeyIndex - 0.5) * whiteKeyWidth}%`;
+            }
+            elements.pianoKeyboardContainer.appendChild(key);
+        }
+    }
+
+    function updatePianoKeyboard(noteMap, clear = false) {
+        elements.pianoKeyboardContainer.querySelectorAll('.key.active').forEach(k => k.className = k.className.replace(/ active key-\w+| active/g, ''));
+        if (clear) return;
+        for (const [note, intervalRole] of noteMap) {
+            const key = elements.pianoKeyboardContainer.querySelector(`[data-note="${note}"]`);
+            if (key) key.classList.add('active', `key-${intervalRole}`);
+        }
+    }
+
+    function pulseKey(note) {
+        const key = elements.pianoKeyboardContainer.querySelector(`[data-note="${note}"]`);
+        if (key && key.classList.contains('active')) {
+            const originalClass = key.className;
+            key.classList.add('pulse');
+            setTimeout(() => key.className = originalClass, 500);
+        }
+    }
+
+    function handleMIDIMessage(event) {
+        const [command, note, velocity] = event.data;
+        const channel = command & 0x0F;
+        const messageType = command & 0xF0;
+        if (channel !== parseInt(elements.inChannelSelect.value)) return;
+        if (messageType === 0x90 && velocity > 0) activeInputNotes.add(note);
+        else if (messageType === 0x80 || (messageType === 0x90 && velocity === 0)) activeInputNotes.delete(note);
+        if (chordDetectionTimeout) clearTimeout(chordDetectionTimeout);
+        chordDetectionTimeout = setTimeout(processChordState, 50);
+    }
+
+    function processChordState() {
+        stopAllOutputNotes();
+        const notes = [...activeInputNotes];
+        const { name: inputChordName, root: detectedRoot, intervals: inputIntervals } = getChordName(notes);
+        elements.inputChordDisplay.innerHTML = inputChordName;
+
+        if (elements.analysisModeToggle.checked) {
+            handleAnalysisMode(notes, inputChordName, detectedRoot, inputIntervals);
+            return;
+        }
+
+        if (detectedRoot !== null) {
+            const { chordNotes, explanation, suggestion, outputChordName, noteMap } = generateOutputChord(detectedRoot, inputChordName);
+            elements.outputChordDisplay.innerHTML = outputChordName;
+            updateStatusBar(suggestion);
+            logTheory(explanation);
+            playOutputChord(chordNotes, noteMap, 100);
+            currentlyPlayedOutputNotes = { notes: new Set(chordNotes), noteMap };
+        } else {
+            elements.outputChordDisplay.innerHTML = '-';
+            if (notes.length === 0) {
+                elements.inputChordDisplay.innerHTML = '-';
+                updateStatusBar('Waiting for input...');
+                logTheory('');
+            }
+        }
+    }
+
+    function handleAnalysisMode(notes, inputChordName, root, intervals) {
+        updatePianoKeyboard(new Map(), true);
+        const noteMap = new Map();
+        intervals.forEach(interval => {
+            const noteInChord = notes.find(n => n % 12 === (root % 12 + interval) % 12) || root + interval;
+            noteMap.set(noteInChord, getIntervalRole(interval));
+        });
+        updatePianoKeyboard(noteMap);
+        logTheory(buildTheoryString(root, inputChordName, intervals, notes));
+        updateStatusBar(`Analysis: <strong>${inputChordName}</strong>`);
+        if (notes.length === 0) {
+            elements.inputChordDisplay.innerHTML = '-';
+            updateStatusBar('Waiting for input...');
+            logTheory('');
+        }
+    }
+
+    function playOutputChord(chordNotes, noteMap, velocity) {
+        updatePianoKeyboard(noteMap);
+        const output = midiAccess.outputs.get(elements.midiOutSelect.value);
+        if (!output) return;
+        const noteOnCommand = 0x90 | parseInt(elements.outChannelSelect.value);
+        const strum = parseInt(elements.strumSpeedSlider.value);
+        chordNotes.forEach((n, i) => {
+            if (n >= 0 && n <= 127) {
+                const delay = i * strum;
+                if (delay > 0) setTimeout(() => output.send([noteOnCommand, n, velocity]), delay);
+                else output.send([noteOnCommand, n, velocity]);
+            }
+        });
+    }
+
+    function stopAllOutputNotes() {
+        updatePianoKeyboard(new Map(), true);
+        if (currentlyPlayedOutputNotes.notes.size === 0) return;
+        const output = midiAccess.outputs.get(elements.midiOutSelect.value);
+        if (!output) return;
+        const noteOffCommand = 0x80 | parseInt(elements.outChannelSelect.value);
+        for (const note of currentlyPlayedOutputNotes.notes) if (note >= 0 && note <= 127) output.send([noteOffCommand, note, 0]);
+        currentlyPlayedOutputNotes = { notes: new Set(), noteMap: new Map() };
+    }
+
+    function getIntervalRole(interval) {
+        if (interval === 0) return 'root';
+        if (interval === 3 || interval === 4) return 'third';
+        if (interval === 6 || interval === 7 || interval === 8) return 'fifth';
+        return 'extension';
+    }
+
+    function buildTheoryString(root, chordName, intervals, notes, formulaName = "Analysis") {
+        if(root === null) return '';
+        const scaleRoot = parseInt(elements.scaleRootSelect.value);
+        const scaleType = elements.scaleTypeSelect.value;
+        const scaleIntervals = SCALES[scaleType];
+        const scaleDiatonicNames = DIATONIC_CHORD_NAMES[scaleType];
+
+        let diatonicFunction = '';
+        if(scaleDiatonicNames) {
+            const degree = (root % 12 - scaleRoot + 12) % 12;
+            const degreeIndex = scaleIntervals.indexOf(degree);
+            if (degreeIndex !== -1) {
+                diatonicFunction = `\nFunction: ${scaleDiatonicNames[degreeIndex]} in ${NOTE_NAMES[scaleRoot]} ${scaleType}`;
+            }
+        }
+
+        const noteNames = notes.sort((a,b)=>a-b).map(n => `<span class="theory-interactive" data-note="${n}">${midiNoteToName(n, true)}</span>`).join(', ');
+        const intervalNames = intervals.sort((a,b)=>a-b).map(i => `<span class="theory-interactive" data-interval="${i}">${INTERVAL_NAMES[i] || '?'}</span>`).join(', ');
+
+        return `Root: <span class="theory-interactive" data-note="${root}">${midiNoteToName(root, true)}</span>\nFormula (${formulaName}): ${intervalNames}\nResulting Notes: ${noteNames}${diatonicFunction}`;
+    }
+
+    function generateOutputChord(rootNote, inputChordName) {
+        const intervals = [...CHORD_INTERVALS[elements.chordTypeSelect.value]];
+        const addNote = ADD_NOTE_INTERVALS[elements.addNoteSelect.value];
+        if (addNote !== null && !intervals.includes(addNote)) intervals.push(addNote);
+
+        let notes = intervals.map(interval => rootNote + interval);
+        const inversion = parseInt(elements.inversionSelect.value);
+        for (let i = 0; i < inversion; i++) if (notes.length > i) notes[i] += 12;
+        notes.sort((a,b) => a - b);
+
+        const spread = parseInt(elements.chordSpreadSlider.value);
+        if(spread > 0) notes.forEach((note, i) => { if (i > 0 && i <= spread) notes[i] += 12; });
+
+        const octaveShift = parseInt(elements.octaveShiftInput.value) * 12;
+        const finalNotes = notes.map(note => note + octaveShift);
+
+        const { name: outputChordName } = getChordName(finalNotes);
+        const suggestion = `Input: <strong>${inputChordName}</strong><span class="mx-2">→</span>Output: <strong>${outputChordName}</strong>`;
+        const formulaName = elements.chordTypeSelect.options[elements.chordTypeSelect.selectedIndex].text;
+        const explanation = buildTheoryString(rootNote, outputChordName, intervals, finalNotes, formulaName);
+
+        const noteMap = new Map();
+        finalNotes.forEach(note => {
+            const interval = (note - rootNote) % 12;
+            noteMap.set(note, getIntervalRole(interval));
+        });
+
+        return { chordNotes: finalNotes, suggestion, explanation, outputChordName, noteMap };
+    }
+
+    function saveSettings() { /* ... */ }
+    function loadSettings() { /* ... */ }
+
+    function showMidiSetupStatus(htmlMessage) { elements.midiSetupStatus.innerHTML = htmlMessage; elements.midiSetupStatus.style.display = 'block'; };
+    function hideMidiSetupStatus() { elements.midiSetupStatus.style.display = 'none'; };
+    function initializeMIDI() {
+        logSystem('Requesting MIDI access...');
+        if (navigator.requestMIDIAccess) {
+            navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
+        } else {
+            elements.midiStatusText.textContent = 'Not Supported';
+            elements.midiStatusDot.className = 'status-dot red';
+            showMidiSetupStatus('<p>Web MIDI API is not supported in this browser. Please try Chrome, Edge, or Opera.</p>');
+        }
+    };
+    function onMIDISuccess(access) {
+        midiAccess = access;
+        elements.midiStatusText.textContent = 'Connected';
+        elements.midiStatusDot.className = 'status-dot green';
+        logSystem('MIDI connection successful. Scanning devices...');
+        updateDeviceLists();
+        midiAccess.onstatechange = (event) => {
+            logSystem(`MIDI device state changed: ${event.port.name} is ${event.port.state}. Rescanning...`);
+            updateDeviceLists();
+        };
+    };
+    function onMIDIFailure(error) { elements.midiStatusText.textContent = 'Access Denied'; elements.midiStatusDot.className = 'status-dot red'; logSystem(`Failed to get MIDI access - ${error.name}`, 'error'); if (error.name === 'SecurityError' || error.name === 'NotAllowedError') { showMidiSetupStatus('<p>MIDI Access Blocked. Please grant permission in browser settings and refresh.</p>'); } else { showMidiSetupStatus(`<p>Could not access MIDI. Error: ${error.name}.</p>`); } };
+    function updateDeviceLists() {
+        if (!midiAccess) return;
+        const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+        const selectedInputId = elements.midiInSelect.value || savedSettings.midiInput;
+        const selectedOutputId = elements.midiOutSelect.value || savedSettings.midiOutput;
+
+        elements.midiInSelect.innerHTML = '';
+        elements.midiOutSelect.innerHTML = '';
+
+        if (midiAccess.inputs.size === 0) {
+            elements.midiInSelect.innerHTML = '<option>No Inputs Found</option>';
+        } else {
+            midiAccess.inputs.forEach(i => { const o = document.createElement('option'); o.value = i.id; o.textContent = i.name; elements.midiInSelect.appendChild(o); });
+        }
+
+        if (midiAccess.outputs.size === 0) {
+            elements.midiOutSelect.innerHTML = '<option>No Outputs Found</option>';
+        } else {
+            midiAccess.outputs.forEach(o => { const p = document.createElement('option'); p.value = o.id; p.textContent = o.name; elements.midiOutSelect.appendChild(p); });
+        }
+
+        if (midiAccess.inputs.has(selectedInputId)) {
+            elements.midiInSelect.value = selectedInputId;
+        } else if (midiAccess.inputs.size > 0) {
+            elements.midiInSelect.value = midiAccess.inputs.values().next().value.id;
+        }
+
+        if (midiAccess.outputs.has(selectedOutputId)) {
+            elements.midiOutSelect.value = selectedOutputId;
+        } else if (midiAccess.outputs.size > 0) {
+            elements.midiOutSelect.value = midiAccess.outputs.values().next().value.id;
+        }
+
+        saveSettings();
+
+        if (midiAccess.inputs.size === 0 || midiAccess.outputs.size === 0) {
+            showMidiSetupStatus('<p>No MIDI Devices Found. Please connect a device and click Rescan.</p>');
+        } else {
+            hideMidiSetupStatus();
+        }
+        attachMIDIMessageListener();
+    };
+    function attachMIDIMessageListener() { if (!midiAccess) return; midiAccess.inputs.forEach(i => i.onmidimessage = null); const ci = midiAccess.inputs.get(elements.midiInSelect.value); if(ci) { ci.onmidimessage = handleMIDIMessage; logSystem(`Listening on: ${ci.name}`); } else { logSystem('Could not attach listener. Selected input not found.', 'error'); } };
+    function populateUIData() { createPianoKeyboard(); for (let i = 0; i < 12; i++) { const o = document.createElement('option'); o.value = i; o.textContent = NOTE_NAMES[i]; elements.scaleRootSelect.appendChild(o); } for (const scale in SCALES) { const o = document.createElement('option'); o.value = scale; o.textContent = scale; elements.scaleTypeSelect.appendChild(o); } for (let i = 1; i <= 16; i++) { const o = document.createElement('option'); o.value = i - 1; o.textContent = i; elements.inChannelSelect.appendChild(o.cloneNode(true)); elements.outChannelSelect.appendChild(o.cloneNode(true)); } elements.outChannelSelect.value = 1; };
+    function setupEventListeners() {
+        const controlsToSave = [elements.midiInSelect, elements.midiOutSelect, elements.inChannelSelect, elements.outChannelSelect, elements.chordTypeSelect, elements.inversionSelect, elements.addNoteSelect, elements.octaveShiftInput, elements.strumSpeedSlider, elements.chordSpreadSlider, elements.scaleRootSelect, elements.scaleTypeSelect, elements.analysisModeToggle];
+        controlsToSave.forEach(control => { control.addEventListener('change', saveSettings); if (control.type === 'range') control.addEventListener('input', saveSettings); });
+        elements.midiInSelect.addEventListener('change', () => { saveSettings(); attachMIDIMessageListener(); });
+        elements.octaveShiftInput.addEventListener('input', e => elements.octaveShiftValue.textContent = e.target.value);
+        elements.strumSpeedSlider.addEventListener('input', e => { elements.strumSpeedValue.textContent = `${e.target.value}ms`; });
+        elements.chordSpreadSlider.addEventListener('input', e => { elements.chordSpreadValue.textContent = e.target.value; });
+        elements.rescanButton.addEventListener('click', () => { logSystem('Manual MIDI device scan initiated.'); updateDeviceLists(); });
+        elements.panicButton.addEventListener('click', () => { stopAllOutputNotes(); activeInputNotes.clear(); elements.inputChordDisplay.innerHTML = '-'; elements.outputChordDisplay.innerHTML = '-'; logSystem('Panic: All notes stopped.'); updateStatusBar('Waiting for input...'); logTheory(''); });
+        elements.theoryLog.addEventListener('click', e => { const target = e.target.closest('.theory-interactive'); if(!target) return; const note = target.dataset.note; const interval = target.dataset.interval; if(note) pulseKey(parseInt(note)); if(interval) { pulseKey(currentlyPlayedOutputNotes.noteMap.get(0)); pulseKey(currentlyPlayedOutputNotes.noteMap.get(parseInt(interval))); } });
+        elements.scaleRootSelect.addEventListener('change', updateScaleHighlight);
+        elements.scaleTypeSelect.addEventListener('change', updateScaleHighlight);
+    };
+    function updateScaleHighlight() {
+        document.querySelectorAll('.piano .key.in-scale').forEach(k => k.classList.remove('in-scale'));
+        const scaleRoot = parseInt(elements.scaleRootSelect.value);
+        const scaleIntervals = SCALES[elements.scaleTypeSelect.value];
+        if(!scaleIntervals) return;
+        for (let i = PIANO_START_NOTE; i <= PIANO_END_NOTE; i++) {
+            const pitchClass = (i - scaleRoot + 12) % 12;
+            if(scaleIntervals.includes(pitchClass)) {
+                const key = elements.pianoKeyboardContainer.querySelector(`[data-note="${i}"]`);
+                if(key) key.classList.add('in-scale');
+            }
+        }
+        saveSettings();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        logSystem('Application loaded. Initializing MIDI...');
+        elements.midiStatusText.textContent = 'Initializing...';
+        elements.midiStatusDot.className = 'status-dot yellow';
+        populateUIData();
+        loadSettings();
+        updateScaleHighlight();
+        setupEventListeners();
+        initializeMIDI();
+    });
+</script>
 </body>
 </html>
