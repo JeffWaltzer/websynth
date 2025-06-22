@@ -29,29 +29,20 @@
         }
 
         main.container {
-            background-color: var(--panel-tan); /* Keep the background color */
+            background-color: var(--panel-tan);
             max-width: 600px;
             width: 100%;
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.5) inset, 0 2px 5px rgba(0,0,0,0.3);
-
-            /* "Crawling Ants" Effect */
-            /* Define the border width and make it transparent for border-image to take effect */
             border: 4px solid transparent;
-
-            /* The actual border image and animation */
-            /* repeating-linear-gradient creates the 'ant' (colored segment) and 'gap' (transparent segment) pattern */
             border-image: repeating-linear-gradient(
-                    90deg, /* Angle of the gradient (horizontal movement) */
-                    var(--burnt-orange) 0px, var(--burnt-orange) 5px, /* An 'ant' segment of 5px */
-                    transparent 5px, transparent 10px /* A 'gap' segment of 5px, total pattern length is 10px */
-            ) 1 round; /* Slice: 1 (stretch to fill), Repeat: round (adjusts pattern to fit perfectly) */
-
-            /* Animate background-position to make the border-image "crawl" */
-            /* This works because border-image with a gradient implicitly follows background-position */
-            background-position: 0 0; /* Initial position for the animation */
-            animation: crawling-ants 2s linear infinite; /* Apply the animation: 2s duration, linear speed, infinite loop */
+                    90deg,
+                    var(--burnt-orange) 0px, var(--burnt-orange) 5px,
+                    transparent 5px, transparent 10px
+            ) 1 round;
+            background-position: 0 0;
+            animation: crawling-ants 2s linear infinite;
         }
 
         h1 {
@@ -70,7 +61,7 @@
 
         a {
             background-color: var(--burnt-orange);
-            color: var(--wood-brown); /* Changed text color for better contrast (WCAG AA) */
+            color: var(--wood-brown);
             text-decoration: none;
             padding: 15px 20px;
             border: 2px solid var(--dark-orange);
@@ -94,14 +85,11 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.2) inset;
         }
 
-        /* Keyframes for the 'crawling-ants' animation */
         @keyframes crawling-ants {
             from {
-                background-position: 0 0; /* Start with no offset */
+                background-position: 0 0;
             }
             to {
-                /* Shift the background position by the total length of one 'ant' + 'gap' segment */
-                /* (5px ant + 5px gap = 10px) to create a seamless looping effect */
                 background-position: 10px 0;
             }
         }
@@ -119,6 +107,7 @@
         <a href="sequen.html" title="Lay down far-out sequences and grooves with this pattern-making machine">Sequencer</a>
         <a href="rhythm.html" title="Create complex rhythmic patterns with this Euclidean MIDI sequencer">Rhythm King 77</a>
         <a href="playwithme.html" title="Get down with this interactive jam buddy that follows your lead">Play With Me</a>
+        <a href="MusicBuddy.html" title="Your intelligent music companion">Music Buddy</a>
     </nav>
 </main>
 </body>
