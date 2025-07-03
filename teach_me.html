@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chord Compass - MIDI Theory Helper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the visual keyboard */
+        .key {
+            border: 1px solid #4a5568;
+            box-sizing: border-box;
+            transition: background-color 0.1s ease;
+            position: relative;
+            cursor: pointer;
+        }
+        .key.white {
+            background-color: #f7fafc;
+            width: 50px;
+            height: 220px;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+        .key.black {
+            background-color: #2d3748;
+            width: 30px;
+            height: 140px;
+            margin-left: -15px;
+            margin-right: -15px;
+            z-index: 10;
+            border-radius: 3px;
+        }
+        /* Active state for a pressed key */
+        .key.active {
+            background-color: #4fd1c5; /* Teal */
+            border-color: #38b2ac;
+        }
+        /* Hint state for scale notes */
+        .key.hint {
+            background-color: #fefcbf; /* Light yellow */
+        }
+        /* Root note of the highlighted scale */
+        .key.hint-root {
+            background-color: #f6ad55; /* Orange */
+        }
+        .key.active.hint {
+            background-color: #68d391; /* Green for playing a correct scale note */
+        }
+        .key .note-name {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #4a5568;
+            pointer-events: none;
+        }
+        .key.black .note-name {
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body class="bg-gray-800 text-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+<div class="w-full max-w-7xl mx-auto bg-gray-900 shadow-2xl rounded-lg p-6">
+    <header class="text-center mb-6">
+        <h1 class="text-3xl font-bold text-white">Chord Compass</h1>
+        <p class="text-gray-400">Play a chord on your MIDI controller to see an analysis and scale suggestions.</p>
+    </header>
+
+    <!-- MIDI Connection Status and Control -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+        <button id="connectMidiButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+            Connect to MIDI Device
+        </button>
+        <div id="midiStatus" class="bg-gray-700 text-sm text-gray-300 px-4 py-2 rounded-lg">
+            Status: Not Connected
+        </div>
+    </div>
+
+    <!-- Analysis Output -->
+    <div id="analysis-output" class="bg-gray-800 p-6 rounded-lg mb-6 text-center flex flex-col justify-center items-center">
+        <h2 class="text-2xl font-semibold text-cyan-400 mb-2 h-8 flex items-center justify-center" id="chord-name">Waiting for input...</h2>
+        <p class="text-gray-400 h-6 flex items-center justify-center" id="chord-notes"></p>
+        <p class="text-yellow-300 mt-2 h-6 flex items-center justify-center" id="scale-suggestion"></p>
+    </div>
+
+    <!-- Visual Piano Keyboard -->
+    <div class="relative w-full overflow-x-auto pb-4">
+        <div id="keyboard-container" class="flex justify-center h-[230px]">
+            <!-- Keyboard will be generated here by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Element References ---
+        const connectButton = document.getElementById('connectMidiButton');
+        const midiStatus = document.getElementById('midiStatus');
+        const keyboardContainer = document.getElementById('keyboard-container');
+        const chordNameEl = document.getElementById('chord-name');
+        const chordNotesEl = document.getElementById('chord-notes');
+        const scaleSuggestionEl = document.getElementById('scale-suggestion');
+
+        // --- Music Theory Data ---
+        const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+        const CHORD_FORMULAS = {
+            'Major': [0, 4, 7],
+            'Minor': [0, 3, 7],
+            'Diminished': [0, 3, 6],
+            'Augmented': [0, 4, 8],
+            'Major 7th': [0, 4, 7, 11],
+            'Minor 7th': [0, 3, 7, 10],
+            'Dominant 7th': [0, 4, 7, 10],
+            'Suspended 2nd': [0, 2, 7],
+            'Suspended 4th': [0, 5, 7],
+        };
+
+        const SCALE_INTERVALS = {
+            'Major': { intervals: [0, 2, 4, 5, 7, 9, 11], name: 'Major Scale' },
+            'Natural Minor': { intervals: [0, 2, 3, 5, 7, 8, 10], name: 'Natural Minor Scale' },
+            'Harmonic Minor': { intervals: [0, 2, 3, 5, 7, 8, 11], name: 'Harmonic Minor Scale' },
+            'Dorian': { intervals: [0, 2, 3, 5, 7, 9, 10], name: 'Dorian Mode' },
+            'Mixolydian': { intervals: [0, 2, 4, 5, 7, 9, 10], name: 'Mixolydian Mode' },
+        };
+
+        // --- State Management ---
+        let activeNotes = new Set();
+        let midiAccess = null;
+
+        // --- Utility Functions ---
+        const midiNoteToName = (note) => NOTE_NAMES[note % 12];
+
+        // --- Core Application Logic ---
+
+        /**
+         * Creates the visual piano keyboard.
+         */
+        const createKeyboard = () => {
+            const startNote = 21; // A0
+            const endNote = 108; // C8
+            for (let i = startNote; i <= endNote; i++) {
+                const noteName = midiNoteToName(i);
+                const isBlack = noteName.includes('#');
+                const key = document.createElement('div');
+                key.classList.add('key', isBlack ? 'black' : 'white');
+                key.dataset.note = i;
+                const nameSpan = document.createElement('span');
+                nameSpan.classList.add('note-name');
+                if (noteName === 'C') {
+                    nameSpan.textContent = `${noteName}${Math.floor(i / 12) - 1}`;
+                }
+                key.appendChild(nameSpan);
+                keyboardContainer.appendChild(key);
+            }
+        };
+
+        /**
+         * Handles incoming MIDI messages.
+         */
+        const onMIDIMessage = (message) => {
+            const [command, note, velocity] = message.data;
+            if (command === 144 && velocity > 0) noteOn(note);
+            else if (command === 128 || (command === 144 && velocity === 0)) noteOff(note);
+        };
+
+        const noteOn = (note) => {
+            activeNotes.add(note);
+            updateKeyAppearance(note, true);
+            analyzeNotes();
+        };
+
+        const noteOff = (note) => {
+            activeNotes.delete(note);
+            updateKeyAppearance(note, false);
+            analyzeNotes();
+        };
+
+        /**
+         * Updates the visual appearance of a key on the virtual keyboard.
+         */
+        const updateKeyAppearance = (note, isActive) => {
+            const keyElement = document.querySelector(`.key[data-note="${note}"]`);
+            if (keyElement) keyElement.classList.toggle('active', isActive);
+        };
+
+        /**
+         * Analyzes the currently active notes to identify a chord and suggest scales.
+         */
+        const analyzeNotes = () => {
+            clearHighlights();
+            if (activeNotes.size < 2) {
+                resetAnalysisDisplay();
+                return;
+            }
+
+            const sortedNotes = Array.from(activeNotes).sort((a, b) => a - b);
+            const result = identifyChord(sortedNotes);
+
+            if (result) {
+                const { rootNoteName, chordName, noteNames } = result;
+                chordNameEl.textContent = `${rootNoteName} ${chordName}`;
+                chordNotesEl.textContent = `Notes: ${noteNames.join(', ')}`;
+
+                const rootMidiNote = sortedNotes.find(n => midiNoteToName(n) === rootNoteName);
+                if(rootMidiNote !== undefined) {
+                    suggestAndHighlightScale(rootMidiNote, chordName);
+                }
+            } else {
+                chordNameEl.textContent = 'Unrecognized Chord';
+                chordNotesEl.textContent = `Notes: ${sortedNotes.map(midiNoteToName).join(', ')}`;
+                scaleSuggestionEl.textContent = '';
+            }
+        };
+
+        /**
+         * Suggests and highlights a scale based on the chord type.
+         */
+        const suggestAndHighlightScale = (rootNote, chordName) => {
+            let scaleInfo = null;
+            const rootNoteName = midiNoteToName(rootNote);
+
+            if (chordName.includes('Major')) {
+                scaleInfo = SCALE_INTERVALS['Major'];
+            } else if (chordName.includes('Minor')) {
+                // Could offer multiple suggestions, but let's start with Natural Minor
+                scaleInfo = SCALE_INTERVALS['Natural Minor'];
+            } else if (chordName.includes('Dominant')) {
+                scaleInfo = SCALE_INTERVALS['Mixolydian'];
+            } else if (chordName.includes('Suspended')) {
+                scaleInfo = SCALE_INTERVALS['Major']; // Major is a safe bet for sus chords
+            }
+
+
+            if (scaleInfo) {
+                const scaleNotes = getScaleNotes(rootNote, scaleInfo.intervals);
+                scaleSuggestionEl.textContent = `Hint: Try the ${rootNoteName} ${scaleInfo.name}.`;
+                highlightScale(scaleNotes, rootNote);
+            } else {
+                scaleSuggestionEl.textContent = `No scale suggestion for this chord type yet.`;
+            }
+        };
+
+        /**
+         * Identifies a chord from a set of notes.
+         */
+        function identifyChord(notes) {
+            // Try to find a root position chord first
+            for (let i = 0; i < notes.length; i++) {
+                const rootNote = notes[i];
+                const intervals = notes.map(note => (note - rootNote) % 12).sort((a, b) => a - b);
+                for (const [chordName, formula] of Object.entries(CHORD_FORMULAS)) {
+                    if (formula.length === intervals.length && formula.every((val, index) => val === intervals[index])) {
+                        return {
+                            rootNoteName: midiNoteToName(rootNote),
+                            chordName: chordName,
+                            noteNames: notes.map(midiNoteToName)
+                        };
+                    }
+                }
+            }
+            // If no root position found, check for inversions
+            for (const root of notes) {
+                const intervals = notes.map(note => (note - root + 12) % 12).sort((a, b) => a - b);
+                for (const [chordName, formula] of Object.entries(CHORD_FORMULAS)) {
+                    const sortedFormula = [...formula].sort((a, b) => a - b);
+                    if(intervals.length === sortedFormula.length && intervals.every((v, i) => v === sortedFormula[i])) {
+                        return {
+                            rootNoteName: midiNoteToName(root),
+                            chordName: `${chordName}`, // No need to say 'inversion', it's implicit
+                            noteNames: notes.map(midiNoteToName)
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Gets the MIDI note numbers for a given scale across several octaves.
+         */
+        const getScaleNotes = (rootNote, intervals) => {
+            let scale = new Set();
+            for (let octave = -2; octave <= 3; octave++) {
+                intervals.forEach(interval => {
+                    const note = rootNote + interval + (12 * octave);
+                    if (note >= 21 && note <= 108) {
+                        scale.add(note);
+                    }
+                });
+            }
+            return Array.from(scale);
+        };
+
+        /**
+         * Highlights the keys of a suggested scale on the virtual keyboard.
+         */
+        const highlightScale = (scaleNotes, rootNote) => {
+            scaleNotes.forEach(note => {
+                const keyElement = document.querySelector(`.key[data-note="${note}"]`);
+                if (keyElement) {
+                    keyElement.classList.add('hint');
+                    // Add a special class for the root note of the scale
+                    if ((note % 12) === (rootNote % 12)) {
+                        keyElement.classList.add('hint-root');
+                    }
+                }
+            });
+        };
+
+        const clearHighlights = () => {
+            document.querySelectorAll('.key.hint, .key.hint-root').forEach(el => {
+                el.classList.remove('hint');
+                el.classList.remove('hint-root');
+            });
+        }
+
+        const resetAnalysisDisplay = () => {
+            chordNameEl.textContent = 'Waiting for input...';
+            chordNotesEl.textContent = 'Play two or more notes to identify a chord.';
+            scaleSuggestionEl.textContent = '';
+        };
+
+
+        // --- MIDI Setup ---
+        const setupMIDI = () => {
+            if (!navigator.requestMIDIAccess) {
+                midiStatus.textContent = "Web MIDI API not supported in this browser.";
+                midiStatus.classList.add('bg-red-700');
+                return;
+            }
+            navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+        };
+
+        function onMIDISuccess(access) {
+            midiAccess = access;
+            const inputs = midiAccess.inputs.values();
+            let deviceFound = false;
+            for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
+                input.value.onmidimessage = onMIDIMessage;
+                deviceFound = true;
+            }
+
+            midiStatus.textContent = deviceFound ? 'Status: MIDI Connected' : 'Status: No MIDI devices found.';
+            midiStatus.classList.toggle('bg-green-700', deviceFound);
+            midiStatus.classList.toggle('bg-yellow-600', !deviceFound);
+            midiStatus.classList.remove('bg-red-700');
+
+
+            midiAccess.onstatechange = (event) => {
+                console.log(event.port.name, event.port.manufacturer, event.port.state);
+                // Re-run setup to find new devices or handle disconnections
+                setupMIDI();
+            };
+        }
+
+        function onMIDIFailure(msg) {
+            midiStatus.textContent = `Failed to get MIDI access - ${msg}`;
+            midiStatus.classList.add('bg-red-700');
+        }
+
+        // --- Initial Setup ---
+        createKeyboard();
+        resetAnalysisDisplay();
+        connectButton.addEventListener('click', setupMIDI);
+
+    });
+</script>
+</body>
+</html>
