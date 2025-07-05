@@ -6,18 +6,16 @@
     <meta name="description" content="MIDI Master Control - Collection of MIDI tools and instruments">
     <title>MIDI Master Control</title>
     <link rel="icon" href="https://placehold.co/32x32/3a2f2f/f0e6d2?text=MIDI" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Inter:wght@400;600;700&display=swap"
+          rel="stylesheet">
     <style>
         :root {
-            /* Enhanced contrast color palette */
-            --burnt-orange: #e65100;     /* Darker, more visible orange */
-            --dark-orange: #bf360c;      /* Higher contrast for active states */
-            --wood-brown: #2b2321;       /* Darker background for better contrast */
-            --panel-tan: #e6d5c1;        /* Lighter panel for better readability */
+            --burnt-orange: #e65100;
+            --dark-orange: #bf360c;
+            --wood-brown: #2b2321;
+            --panel-tan: #e6d5c1;
             --wood-grain: #8a7868;
-            --ivory: #ffffff;            /* Pure white for maximum contrast where needed */
-            
-            /* High contrast focus colors */
+            --ivory: #ffffff;
             --focus-outline: #ffffff;
             --focus-ring: #000000;
         }
@@ -31,59 +29,57 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            line-height: 1.5;           /* Improved readability */
+            line-height: 1.5;
         }
 
         main.container {
             background-color: var(--panel-tan);
-            max-width: 800px;           /* Increased width for better text wrapping */
+            max-width: 800px;
             width: 100%;
-            padding: 40px;              /* Increased padding for better spacing */
-            border-radius: 12px;        /* Increased for better visual separation */
-            box-shadow: 0 0 10px rgba(0,0,0,0.5) inset, 0 2px 5px rgba(0,0,0,0.3);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) inset, 0 2px 5px rgba(0, 0, 0, 0.3);
             border: 4px solid var(--burnt-orange);
         }
 
         h1 {
             font-family: 'Monoton', cursive;
-            color: var(--wood-brown);    /* Darker text for better contrast */
+            color: var(--wood-brown);
             text-align: center;
             font-size: 2.5em;
             margin: 0 0 30px;
-            text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.4); /* Light shadow for better readability */
+            text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.4);
         }
 
         nav.menu {
             display: grid;
-            gap: 15px;                  /* Increased spacing between items */
+            gap: 15px;
         }
 
         a {
             background-color: var(--burnt-orange);
-            color: var(--ivory);        /* White text on orange background */
+            color: var(--ivory);
             text-decoration: none;
-            padding: 20px;              /* Larger touch target */
+            padding: 20px;
             border: 3px solid var(--dark-orange);
             border-radius: 8px;
-            font-weight: 700;           /* Bolder text */
+            font-weight: 700;
             text-align: center;
             text-transform: uppercase;
-            font-size: 1.1rem;          /* Larger text */
-            letter-spacing: 0.5px;      /* Better letter spacing */
-            box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease-in-out;
-            position: relative;         /* For focus outline positioning */
+            position: relative;
         }
 
-        /* High contrast hover state */
         a:hover {
             background-color: var(--dark-orange);
             color: var(--ivory);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
             transform: translateY(-2px);
         }
 
-        /* High visibility focus state */
         a:focus {
             outline: 3px solid var(--focus-outline);
             outline-offset: 3px;
@@ -92,14 +88,12 @@
             z-index: 1;
         }
 
-        /* Active state with good contrast */
         a:active {
             background-color: var(--dark-orange);
             transform: translateY(1px);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
-        /* Remove animation that might cause issues for some users */
         @media (prefers-reduced-motion: reduce) {
             * {
                 animation: none !important;
@@ -107,23 +101,21 @@
             }
         }
 
-        /* High contrast mode support */
         @media (forced-colors: active) {
             a {
                 border: 2px solid currentColor;
             }
-            
+
             a:focus {
                 outline: 2px solid currentColor;
             }
         }
 
-        /* Larger text option */
         @media (min-width: 768px) {
             body {
                 font-size: 18px;
             }
-            
+
             h1 {
                 font-size: 3em;
             }
@@ -134,17 +126,23 @@
 <main class="container">
     <h1>MIDI Master Control</h1>
     <nav class="menu">
-        <a href="berlin.html" title="Generative Music: Create evolving, Berlin School-inspired sequences. Features algorithmic pattern generation, modulation matrices, and probability-based variations for endless musical exploration">Berlin Sequencer</a>
-        <a href="sequen.html" title="Groovesynth 70: Classic step sequencer with vintage flair. Create patterns up to 64 steps, adjust gate length, velocity, and swing. Perfect for acid basslines and rhythmic melodies">Sequencer</a>
-        <a href="rhythm.html" title="Rhythm King 77: Advanced Euclidean rhythm generator with up to 32 steps per track. Create complex polyrhythms, adjust rotation, density, and combine multiple patterns for intricate drum sequences">Rhythm King 77</a>
-        <a href="polychain.html" title="MIDI Poly Chain: Advanced MIDI routing tool with voice allocation, splits, and layers. Chain up to 16 synthesizers, set velocity curves, and create complex multi-timbral setups with automatic voice distribution">MIDI Poly Chain</a>
-        <a href="playwithme.html" title="Play With Me: Intelligent MIDI accompaniment system that learns your playing style. Features real-time harmony generation, rhythmic adaptation, and dynamic response to your performance intensity">Play With Me</a>
-        <a href="keyboard.html" title="Virtual MIDI Keyboard: Fully responsive 88-key interface with velocity sensitivity, sustain pedal support, and multiple keyboard layouts. Includes octave shifting and MIDI channel selection">Keyboard</a>
-        <a href="delay.html" title="MIDI Delay: Temporal note manipulation device with adjustable delay time (1-2000ms), feedback control, and ping-pong mode. Create complex echoes, cascading arpeggios, and rhythmic patterns from your MIDI input">Delay</a>
-        <a href="chords.html" title="MIDI Chord Monitor: Real-time chord recognition with extended harmony analysis. Shows inversions, suggested scales, alternative voicings, and common chord substitutions. Perfect for learning and composition">Chords</a>
-        <a href="MusicBuddy.html" title="Music Buddy: Your AI-powered music companion featuring smart harmony suggestions, style analysis, and performance feedback. Includes practice modes, theory lessons, and personalized exercise generation">Music Buddy</a>
-        <a href="synth.html" title="Analog Dreams: Comprehensive MIDI controller interface with multiple LFOs, envelope generators, and modulation options. Control your hardware synths with precision, featuring preset management and CC mapping">Synth</a>
-</nav>
+        <a href="berlin.html"
+           title="Berlin Sequencer: Create evolving, Berlin School-inspired sequences. Features algorithmic pattern generation, modulation matrices, and probability-based variations for endless musical exploration">Berlin
+            Sequencer</a>
+        <a href="chords.html"
+           title="MIDI Chord Monitor: Real-time chord recognition with extended harmony analysis. Shows inversions, suggested scales, alternative voicings, and common chord substitutions">Chords</a>
+        <a href="delay.html"
+           title="MIDI Delay: Temporal note manipulation device with adjustable delay time, feedback control, and ping-pong mode. Create complex echoes, cascading arpeggios, and rhythmic patterns">MIDI
+            Delay</a>
+        <a href="polychain.html"
+           title="MIDI Poly Chain: Advanced MIDI routing tool with voice allocation, splits, and layers. Chain up to 16 synthesizers, set velocity curves, and create complex multi-timbral setups with automatic voice distribution">MIDI
+            Poly Chain</a>
+        <a href="rhythm.html"
+           title="Rhythm Lab: Advanced rhythm generation tool with polyrhythms, euclidean patterns, and probability-based variations. Create complex rhythmic structures with intuitive controls">Rhythm
+            Lab</a>
+        <a href="synth.html"
+           title="Analog Dreams: Comprehensive MIDI controller interface with multiple LFOs, envelope generators, and modulation options. Control your hardware synths with precision">Synth</a>
+    </nav>
 </main>
 </body>
 </html>
