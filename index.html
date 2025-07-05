@@ -5,17 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="MIDI Master Control - Collection of MIDI tools and instruments">
     <title>MIDI Master Control</title>
-    <link rel="icon" href="https://placehold.co/32x32/3a2f2f/f0e6d2?text=MIDI" type="image/x-icon"> <!-- Favicon added for better user experience -->
+    <link rel="icon" href="https://placehold.co/32x32/3a2f2f/f0e6d2?text=MIDI" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --burnt-orange: #f58700;
-            --dark-orange: #d47500;
-            --wood-brown: #3a2f2f;
-            --panel-tan: #c5b8a5;
-
+            /* Enhanced contrast color palette */
+            --burnt-orange: #e65100;     /* Darker, more visible orange */
+            --dark-orange: #bf360c;      /* Higher contrast for active states */
+            --wood-brown: #2b2321;       /* Darker background for better contrast */
+            --panel-tan: #e6d5c1;        /* Lighter panel for better readability */
             --wood-grain: #8a7868;
-            --ivory: #f0e6d2;
+            --ivory: #ffffff;            /* Pure white for maximum contrast where needed */
+            
+            /* High contrast focus colors */
+            --focus-outline: #ffffff;
+            --focus-ring: #000000;
         }
 
         body {
@@ -27,71 +31,101 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            line-height: 1.5;           /* Improved readability */
         }
 
         main.container {
             background-color: var(--panel-tan);
-            max-width: 600px;
+            max-width: 800px;           /* Increased width for better text wrapping */
             width: 100%;
-            padding: 30px;
-            border-radius: 8px;
+            padding: 40px;              /* Increased padding for better spacing */
+            border-radius: 12px;        /* Increased for better visual separation */
             box-shadow: 0 0 10px rgba(0,0,0,0.5) inset, 0 2px 5px rgba(0,0,0,0.3);
-            border: 4px solid transparent;
-            border-image: repeating-linear-gradient(
-                    90deg,
-                    var(--burnt-orange) 0px, var(--burnt-orange) 5px,
-                    transparent 5px, transparent 10px
-            ) 1 round;
-            background-position: 0 0;
-            animation: crawling-ants 2s linear infinite;
+            border: 4px solid var(--burnt-orange);
         }
 
         h1 {
             font-family: 'Monoton', cursive;
-            color: var(--wood-brown);
+            color: var(--wood-brown);    /* Darker text for better contrast */
             text-align: center;
             font-size: 2.5em;
             margin: 0 0 30px;
-            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+            text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.4); /* Light shadow for better readability */
         }
 
         nav.menu {
             display: grid;
-            gap: 10px;
+            gap: 15px;                  /* Increased spacing between items */
         }
 
         a {
             background-color: var(--burnt-orange);
-            color: var(--wood-brown);
+            color: var(--ivory);        /* White text on orange background */
             text-decoration: none;
-            padding: 15px 20px;
-            border: 2px solid var(--dark-orange);
-            border-radius: 6px;
-            font-weight: 600;
+            padding: 20px;              /* Larger touch target */
+            border: 3px solid var(--dark-orange);
+            border-radius: 8px;
+            font-weight: 700;           /* Bolder text */
             text-align: center;
             text-transform: uppercase;
-            box-shadow: 0 2px 3px rgba(0,0,0,0.2), 0 1px 1px rgba(255,255,255,0.3) inset;
-            transition: all 0.1s ease-in-out;
+            font-size: 1.1rem;          /* Larger text */
+            letter-spacing: 0.5px;      /* Better letter spacing */
+            box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+            transition: all 0.2s ease-in-out;
+            position: relative;         /* For focus outline positioning */
         }
 
+        /* High contrast hover state */
         a:hover {
-            background-color: #ff9a1f;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.4) inset;
+            background-color: var(--dark-orange);
+            color: var(--ivory);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
             transform: translateY(-2px);
         }
 
-        a:active {
-            background-color: var(--dark-orange);
-            transform: translateY(0);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.2) inset;
+        /* High visibility focus state */
+        a:focus {
+            outline: 3px solid var(--focus-outline);
+            outline-offset: 3px;
+            box-shadow: 0 0 0 3px var(--focus-ring);
+            position: relative;
+            z-index: 1;
         }
 
-        @keyframes crawling-ants {
-            from {
-                background-position: 0 0;
+        /* Active state with good contrast */
+        a:active {
+            background-color: var(--dark-orange);
+            transform: translateY(1px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Remove animation that might cause issues for some users */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
             }
-            to {
-                background-position: 10px 0;
+        }
+
+        /* High contrast mode support */
+        @media (forced-colors: active) {
+            a {
+                border: 2px solid currentColor;
+            }
+            
+            a:focus {
+                outline: 2px solid currentColor;
+            }
+        }
+
+        /* Larger text option */
+        @media (min-width: 768px) {
+            body {
+                font-size: 18px;
+            }
+            
+            h1 {
+                font-size: 3em;
             }
         }
     </style>
@@ -100,16 +134,17 @@
 <main class="container">
     <h1>MIDI Master Control</h1>
     <nav class="menu">
-        <a href="polychain.html" title="Chain multiple synthesizers together and send notes across your MIDI gear for rich, layered sounds">MIDI Poly Chain</a>
-        <a href="delay.html" title="Add groovy echo effects and rhythmic patterns to your MIDI performance with adjustable timing">Delay</a>
-        <a href="synth.html" title="Twist knobs and shape your sound with this comprehensive MIDI instrument controller">Synth</a>
-        <a href="chords.html" title="Discover instant chord recognition and get hip progression suggestions while you play">Chords</a>
-        <a href="keyboard.html" title="Jam on this funky virtual MIDI keyboard with dynamic velocity control">Keyboard</a>
-        <a href="sequen.html" title="Lay down far-out sequences and grooves with this pattern-making machine">Sequencer</a>
-        <a href="rhythm.html" title="Create complex rhythmic patterns with this Euclidean MIDI sequencer">Rhythm King 77</a>
-        <a href="playwithme.html" title="Get down with this interactive jam buddy that follows your lead">Play With Me</a>
-        <a href="MusicBuddy.html" title="Your intelligent music companion">Music Buddy</a>
-    </nav>
+        <a href="berlin.html" title="Generative Music: Create evolving, Berlin School-inspired sequences. Features algorithmic pattern generation, modulation matrices, and probability-based variations for endless musical exploration">Berlin Sequencer</a>
+        <a href="sequen.html" title="Groovesynth 70: Classic step sequencer with vintage flair. Create patterns up to 64 steps, adjust gate length, velocity, and swing. Perfect for acid basslines and rhythmic melodies">Sequencer</a>
+        <a href="rhythm.html" title="Rhythm King 77: Advanced Euclidean rhythm generator with up to 32 steps per track. Create complex polyrhythms, adjust rotation, density, and combine multiple patterns for intricate drum sequences">Rhythm King 77</a>
+        <a href="polychain.html" title="MIDI Poly Chain: Advanced MIDI routing tool with voice allocation, splits, and layers. Chain up to 16 synthesizers, set velocity curves, and create complex multi-timbral setups with automatic voice distribution">MIDI Poly Chain</a>
+        <a href="playwithme.html" title="Play With Me: Intelligent MIDI accompaniment system that learns your playing style. Features real-time harmony generation, rhythmic adaptation, and dynamic response to your performance intensity">Play With Me</a>
+        <a href="keyboard.html" title="Virtual MIDI Keyboard: Fully responsive 88-key interface with velocity sensitivity, sustain pedal support, and multiple keyboard layouts. Includes octave shifting and MIDI channel selection">Keyboard</a>
+        <a href="delay.html" title="MIDI Delay: Temporal note manipulation device with adjustable delay time (1-2000ms), feedback control, and ping-pong mode. Create complex echoes, cascading arpeggios, and rhythmic patterns from your MIDI input">Delay</a>
+        <a href="chords.html" title="MIDI Chord Monitor: Real-time chord recognition with extended harmony analysis. Shows inversions, suggested scales, alternative voicings, and common chord substitutions. Perfect for learning and composition">Chords</a>
+        <a href="MusicBuddy.html" title="Music Buddy: Your AI-powered music companion featuring smart harmony suggestions, style analysis, and performance feedback. Includes practice modes, theory lessons, and personalized exercise generation">Music Buddy</a>
+        <a href="synth.html" title="Analog Dreams: Comprehensive MIDI controller interface with multiple LFOs, envelope generators, and modulation options. Control your hardware synths with precision, featuring preset management and CC mapping">Synth</a>
+</nav>
 </main>
 </body>
 </html>
