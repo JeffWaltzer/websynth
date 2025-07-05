@@ -34,7 +34,7 @@
 
         main.container {
             background-color: var(--panel-tan);
-            max-width: 800px;
+            max-width: 1000px;
             width: 100%;
             padding: 40px;
             border-radius: 12px;
@@ -51,9 +51,18 @@
             text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.4);
         }
 
-        nav.menu {
+        .menu-item {
             display: grid;
-            gap: 15px;
+            grid-template-columns: 200px 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .menu-description {
+            color: var(--wood-brown);
+            font-size: 0.9rem;
+            line-height: 1.4;
         }
 
         a {
@@ -71,6 +80,7 @@
             box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease-in-out;
             position: relative;
+            display: block;
         }
 
         a:hover {
@@ -111,7 +121,22 @@
             }
         }
 
-        @media (min-width: 768px) {
+        @media (max-width: 768px) {
+            .menu-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .menu-description {
+                font-size: 0.8rem;
+            }
+
+            main.container {
+                padding: 20px;
+            }
+        }
+
+        @media (min-width: 769px) {
             body {
                 font-size: 18px;
             }
@@ -125,23 +150,45 @@
 <body>
 <main class="container">
     <h1>MIDI Master Control</h1>
-    <nav class="menu">
-        <a href="berlin.html"
-           title="Berlin Sequencer: Create evolving, Berlin School-inspired sequences. Features algorithmic pattern generation, modulation matrices, and probability-based variations for endless musical exploration">Berlin
-            Sequencer</a>
-        <a href="chords.html"
-           title="MIDI Chord Monitor: Real-time chord recognition with extended harmony analysis. Shows inversions, suggested scales, alternative voicings, and common chord substitutions">Chords</a>
-        <a href="delay.html"
-           title="MIDI Delay: Temporal note manipulation device with adjustable delay time, feedback control, and ping-pong mode. Create complex echoes, cascading arpeggios, and rhythmic patterns">MIDI
-            Delay</a>
-        <a href="polychain.html"
-           title="MIDI Poly Chain: Advanced MIDI routing tool with voice allocation, splits, and layers. Chain up to 16 synthesizers, set velocity curves, and create complex multi-timbral setups with automatic voice distribution">MIDI
-            Poly Chain</a>
-        <a href="rhythm.html"
-           title="Rhythm Lab: Advanced rhythm generation tool with polyrhythms, euclidean patterns, and probability-based variations. Create complex rhythmic structures with intuitive controls">Rhythm
-            Lab</a>
-        <a href="synth.html"
-           title="Analog Dreams: Comprehensive MIDI controller interface with multiple LFOs, envelope generators, and modulation options. Control your hardware synths with precision">Synth</a>
+    <nav>
+        <div class="menu-item">
+            <a href="berlin.html">Berlin Sequencer</a>
+            <div class="menu-description">Create evolving, Berlin School-inspired sequences. Features algorithmic
+                pattern generation, modulation matrices, and probability-based variations for endless musical
+                exploration.
+            </div>
+        </div>
+        <div class="menu-item">
+            <a href="chords.html">Chords</a>
+            <div class="menu-description">MIDI Chord Monitor: Real-time chord recognition with extended harmony
+                analysis. Shows inversions, suggested scales, alternative voicings, and common chord substitutions.
+            </div>
+        </div>
+        <div class="menu-item">
+            <a href="delay.html">MIDI Delay</a>
+            <div class="menu-description">Temporal note manipulation device with adjustable delay time, feedback
+                control, and ping-pong mode. Create complex echoes, cascading arpeggios, and rhythmic patterns.
+            </div>
+        </div>
+        <div class="menu-item">
+            <a href="polychain.html">MIDI Poly Chain</a>
+            <div class="menu-description">Advanced MIDI routing tool with voice allocation, splits, and layers. Chain up
+                to 16 synthesizers, set velocity curves, and create complex multi-timbral setups with automatic voice
+                distribution.
+            </div>
+        </div>
+        <div class="menu-item">
+            <a href="rhythm.html">Rhythm Lab</a>
+            <div class="menu-description">Advanced rhythm generation tool with polyrhythms, euclidean patterns, and
+                probability-based variations. Create complex rhythmic structures with intuitive controls.
+            </div>
+        </div>
+        <div class="menu-item">
+            <a href="synth.html">Synth</a>
+            <div class="menu-description">Analog Dreams: Comprehensive MIDI controller interface with multiple LFOs,
+                envelope generators, and modulation options. Control your hardware synths with precision.
+            </div>
+        </div>
     </nav>
 </main>
 </body>
