@@ -159,7 +159,7 @@
             <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Global &amp; Rhythm</h2>
             <div class="grid grid-cols-2 gap-x-4 gap-y-2">
                 <div data-instrument="master"><label for="master-vol" class="block mb-1 text-sm font-semibold text-label">Master Volume</label><input type="range" id="master-vol" min="-20" max="6" value="3" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="master-vol-value">3</span> dB</div></div>
-                <div data-instrument="tempo"><label for="tempo" class="block mb-1 text-sm font-semibold text-label">Tempo</label><input type="range" id="tempo" min="70" max="170" value="70" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="tempo-value">70</span> BPM</div></div>
+                <div data-instrument="tempo"><label for="tempo" class="block mb-1 text-sm font-semibold text-label">Tempo</label><input type="range" id="tempo" min="70" max="180" value="70" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="tempo-value">70</span> BPM</div></div>
                 <div data-instrument="reverb"><label for="reverb" class="block mb-1 text-sm font-semibold text-label">Reverb Mix</label><input type="range" id="reverb" min="0" max="1" value="0.9" step="0.05" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="reverb-value">0.9</span></div></div>
                 <div data-instrument="reverbDecay"><label for="reverbDecay" class="block mb-1 text-sm font-semibold text-label">Reverb Decay</label><input type="range" id="reverbDecay" min="1" max="10" value="10" step="0.1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="reverbDecay-value">10.0</span>s</div></div>
             </div>
@@ -177,8 +177,8 @@
             <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Evolve Engine</h2>
             <div class="grid grid-cols-2 gap-x-4 gap-y-2">
                 <div><label for="density" class="block mb-1 text-sm font-semibold text-label">Drum Density</label><input type="range" id="density" min="0.0" max="1.0" value="0.0" step="0.05" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="density-value">0.0</span></div></div>
-                <div><label for="evolve-up" class="block mb-1 text-sm font-semibold text-label">Build Up</label><input type="range" id="evolve-up" min="10" max="360" value="120" step="5" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-up-value">120</span>s</div></div>
-                <div><label for="evolve-breakdown" class="block mb-1 text-sm font-semibold text-label">Break Down</label><input type="range" id="evolve-breakdown" min="10" max="180" value="20" step="5" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-breakdown-value">20</span>s</div></div>
+                <div><label for="evolve-up" class="block mb-1 text-sm font-semibold text-label">Build Up</label><input type="range" id="evolve-up" min="10" max="360" value="240" step="5" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-up-value">240</span>s</div></div>
+                <div><label for="evolve-breakdown" class="block mb-1 text-sm font-semibold text-label">Break Down</label><input type="range" id="evolve-breakdown" min="10" max="180" value="13" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-breakdown-value">13</span>s</div></div>
                 <div><label for="evolve-peak" class="block mb-1 text-sm font-semibold text-label">Peak Time</label><input type="range" id="evolve-peak" min="1" max="90" value="10" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-peak-value">10</span>s</div></div>
             </div>
         </div>
@@ -190,9 +190,9 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1">
                 <div data-instrument="bass"><label for="bass-vol" class="block text-center mb-1 text-sm font-semibold text-label">Bass</label><input type="range" id="bass-vol" min="-40" max="0" value="-4" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="bass-vol-value">-4</span> dB</div></div>
                 <div data-instrument="pluck"><label for="pluck-vol" class="block text-center mb-1 text-sm font-semibold text-label">Pluck</label><input type="range" id="pluck-vol" min="-40" max="0" value="-10" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="pluck-vol-value">-10</span> dB</div></div>
-                <div data-instrument="pad"><label for="pad-vol" class="block text-center mb-1 text-sm font-semibold text-label">Pad</label><input type="range" id="pad-vol" min="-40" max="0" value="-18" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="pad-vol-value">-18</span> dB</div></div>
+                <div data-instrument="pad"><label for="pad-vol" class="block text-center mb-1 text-sm font-semibold text-label">Pad</label><input type="range" id="pad-vol" min="-40" max="0" value="-22" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="pad-vol-value">-22</span> dB</div></div>
                 <div data-instrument="lfoPad"><label for="lfoPad-vol" class="block text-center mb-1 text-sm font-semibold text-label">LFO Pad</label><input type="range" id="lfoPad-vol" min="-40" max="0" value="-20" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="lfoPad-vol-value">-20</span> dB</div></div>
-                <div data-instrument="melody"><label for="melody-vol" class="block text-center mb-1 text-sm font-semibold text-label">Melody</label><input type="range" id="melody-vol" min="-40" max="0" value="-12" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="melody-vol-value">-12</span> dB</div></div>
+                <div data-instrument="melody"><label for="melody-vol" class="block text-center mb-1 text-sm font-semibold text-label">Melody</label><input type="range" id="melody-vol" min="-40" max="0" value="-8" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="melody-vol-value">-8</span> dB</div></div>
                 <div data-instrument="openhat"><label for="openhat-vol" class="block text-center mb-1 text-sm font-semibold text-label">Open Hat</label><input type="range" id="openhat-vol" min="-40" max="0" value="-18" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="openhat-vol-value">-18</span> dB</div></div>
                 <div data-instrument="hat"><label for="hat-vol" class="block text-center mb-1 text-sm font-semibold text-label">Hat</label><input type="range" id="hat-vol" min="-40" max="0" value="-12" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="hat-vol-value">-12</span> dB</div></div>
                 <div data-instrument="rumble"><label for="rumble-vol" class="block text-center mb-1 text-sm font-semibold text-label">Rumble</label><input type="range" id="rumble-vol" min="-40" max="0" value="-20" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="rumble-vol-value">-20</span> dB</div></div>
@@ -205,7 +205,7 @@
                 <div><span class="text-label text-xs">Pluck:</span><br><span id="live-note-pluck" class="live-note-value font-bold text-xl">-</span></div>
                 <div><span class="text-label text-xs">Pad:</span><br><span id="live-note-pad" class="live-note-value font-bold text-xl">-</span></div>
                 <div><span class="text-label text-xs">LFO Pad:</span><br><span id="live-note-lfoPad" class="live-note-value font-bold text-xl">-</span></div>
-                <div><span class="text-label text-xs">Melody:</span><br><span id="live-note-melody" class="live-note-value font-bold text-xl">-</span></div>
+                <div class="col-span-2"><span class="text-label text-xs">Melody:</span><br><span id="live-note-melody" class="live-note-value font-bold text-xl">-</span></div>
                 <div><span class="text-label text-xs">Kick:</span><br><span id="live-note-kick" class="live-note-value font-bold text-xl">-</span></div>
                 <div><span class="text-label text-xs">Snare:</span><br><span id="live-note-snare" class="live-note-value font-bold text-xl">-</span></div>
                 <div><span class="text-label text-xs">Hat:</span><br><span id="live-note-hat" class="live-note-value font-bold text-xl">-</span></div>
@@ -332,14 +332,14 @@
         const panners = [hatPanner, melodyPanner, pluckPanner, lfoPadPanner];
 
         const synths = {
-            kick: new Tone.MembraneSynth({ volume: -2, octaves: 10, pitchDecay: 0.05, envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4, attackCurve: 'exponential' } }).connect(masterVolume),
+            kick: new Tone.MembraneSynth({ volume: -6, octaves: 10, pitchDecay: 0.05, envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4, attackCurve: 'exponential' } }).connect(masterVolume),
             snare: new Tone.NoiseSynth({ volume: -14, noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.2 } }).connect(masterVolume),
             hat: new Tone.MetalSynth({ volume: -18, frequency: 300, envelope: { attack: 0.005, decay: 0.05, release: 0.08 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(hatPanner),
             openhat: new Tone.MetalSynth({ volume: -18, frequency: 250, envelope: { attack: 0.01, decay: 0.4, release: 0.4 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(hatPanner),
             bass: new Tone.MonoSynth({ volume: -4, oscillator: { type: 'fatsquare' }, envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 2 }, filterEnvelope: { attack: 0.01, decay: 0.6, sustain: 0.2, release: 2, baseFrequency: 80, octaves: 4 } }).connect(masterVolume),
             pluck: new Tone.PluckSynth({ volume: -10, attackNoise: 0.8, dampening: 5000, resonance: 0.95 }).connect(pluckPanner),
             pad: new Tone.PolySynth(Tone.FMSynth, { volume: -18, detune: 15, envelope: { attack: 1, decay: 0.5, sustain: 0.5, release: 3 } }).fan(reverb, masterVolume),
-            melody: new Tone.FMSynth({ volume: -12, envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.2 } }).connect(melodyPanner),
+            melody: new Tone.FMSynth({ volume: -8, envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.2 } }).connect(melodyPanner),
             lfoPad: new Tone.FMSynth({ volume: -20, detune: 20, harmonicity: 1.5, modulationIndex: 3, envelope: { attack: 1, decay: 0.5, sustain: 1, release: 2 } }).connect(lfoPadPanner),
             rumble: rumble,
         };
@@ -609,7 +609,7 @@
             const peakTime = parseFloat(controls['evolve-peak'].value);
             const totalCycleTime = buildUpTime + peakTime + buildDownTime;
 
-            evolveState = 'Building Up';
+            evolveState = 'Build Up';
             evolveSignal.rampTo(1, buildUpTime);
 
             Tone.Transport.scheduleOnce(() => { evolveState = 'Peak'; }, `+${buildUpTime}`);
