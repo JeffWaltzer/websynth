@@ -7,12 +7,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23111111' stroke='%234A90E2' stroke-width='5'/><path d='M30 35h40v30H30z' fill='none' stroke='%234A90E2' stroke-width='5'/><circle cx='50' cy='50' r='5' fill='%234A90E2'/><path d='M50 20v60' stroke='%234A90E2' stroke-width='5' stroke-dasharray='5,5'/></svg>"
+          type="image/svg+xml">
     <style>
         body {
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
+
         :root {
             --base-hue: 244;
             --bg-panel: rgba(17, 24, 39, 0.8);
@@ -25,6 +29,7 @@
             --thumb-color: hsl(var(--base-hue), 76%, 58%);
             --note-highlight-color: hsl(var(--base-hue), 100%, 85%);
         }
+
         .theme-vintage {
             --base-hue: 28;
             --bg-body-vintage: #e7e2d8;
@@ -59,69 +64,129 @@
             border-color: var(--border-color);
             transition: border-color 2s ease-in-out;
         }
+
         .control-group {
             background-color: var(--bg-control);
             border-color: var(--border-color);
             transition: border-color 2s ease-in-out;
         }
+
         h1 {
             transition: color 2s ease-in-out;
         }
-        h2.section-header { color: var(--text-header); letter-spacing: 0.05em; }
-        label, .text-label { color: var(--text-label); }
-        .text-display { color: var(--text-display); }
+
+        h2.section-header {
+            color: var(--text-header);
+            letter-spacing: 0.05em;
+        }
+
+        label, .text-label {
+            color: var(--text-label);
+        }
+
+        .text-display {
+            color: var(--text-display);
+        }
+
         select {
-            background-color: rgba(0,0,0,0.2);
+            background-color: rgba(0, 0, 0, 0.2);
             border-color: var(--border-color);
             color: var(--text-label);
         }
+
         .theme-vintage select {
-            background-color: rgba(0,0,0,0.1);
+            background-color: rgba(0, 0, 0, 0.1);
         }
 
-        input[type="range"]::-webkit-slider-thumb { background: var(--thumb-color); transition: background-color 2s ease-in-out; }
-        input[type="range"]::-moz-range-thumb { background: var(--thumb-color); transition: background-color 2s ease-in-out; }
+        input[type="range"]::-webkit-slider-thumb {
+            background: var(--thumb-color);
+            transition: background-color 2s ease-in-out;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            background: var(--thumb-color);
+            transition: background-color 2s ease-in-out;
+        }
 
         button {
             transition: background-color 2s ease-in-out;
         }
 
         select {
-            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
             background-image: var(--select-arrow-url);
-            background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.2em; padding-right: 2.5rem;
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.2em;
+            padding-right: 2.5rem;
         }
 
         .seq-step {
-            width: 1rem; height: 1rem; border: 1px solid var(--border-color); transition: all 0.1s ease;
+            width: 1rem;
+            height: 1rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.1s ease;
             cursor: pointer;
             background-color: rgba(0, 0, 0, 0.4);
         }
-        @media (min-width: 640px) { .seq-step { width: 1.25rem; height: 1.25rem; } }
-        @media (min-width: 1024px) { .seq-step { width: 1.5rem; height: 1.5rem; } }
 
-        .seq-step.active { background-color: var(--thumb-color); }
-        .seq-step.playing { box-shadow: 0 0 15px 3px var(--note-highlight-color); transform: scale(1.1); }
-        .seq-step:hover { border-color: var(--note-highlight-color); }
+        @media (min-width: 640px) {
+            .seq-step {
+                width: 1.25rem;
+                height: 1.25rem;
+            }
+        }
 
-        .status-bar-item { @apply text-center p-2 rounded-lg bg-black/10 flex-1 min-w-[120px]; }
-        .status-bar-value { @apply block text-lg sm:text-xl font-bold text-display; }
+        @media (min-width: 1024px) {
+            .seq-step {
+                width: 1.5rem;
+                height: 1.5rem;
+            }
+        }
+
+        .seq-step.active {
+            background-color: var(--thumb-color);
+        }
+
+        .seq-step.playing {
+            box-shadow: 0 0 15px 3px var(--note-highlight-color);
+            transform: scale(1.1);
+        }
+
+        .seq-step:hover {
+            border-color: var(--note-highlight-color);
+        }
+
+        .status-bar-item {
+            @apply text-center p-2 rounded-lg bg-black/10 flex-1 min-w-[120px];
+        }
+
+        .status-bar-value {
+            @apply block text-lg sm:text-xl font-bold text-display;
+        }
 
         .live-note-value {
             transition: all 0.1s ease-out;
             width: 2rem; /* Fixed width to prevent layout shift */
             display: inline-block;
         }
+
         .note-flash {
             color: var(--note-highlight-color) !important;
             transform: scale(1.2);
+            transition: transform 0.1s ease-out;
         }
+
         #live-note-bass { color: hsl(190, 80%, 60%); }
         #live-note-pluck { color: hsl(280, 80%, 70%); }
         #live-note-pad { color: hsl(40, 80%, 65%); }
         #live-note-lfoPad { color: hsl(100, 80%, 60%); }
         #live-note-melody { color: hsl(0, 80%, 70%); }
-        #live-note-kick, #live-note-snare, #live-note-hat, #live-note-openhat { color: var(--text-display); }
+        #live-note-drums, #live-note-spaceFx {
+            color: var(--text-display);
+        }
     </style>
 </head>
 <body class="transition-colors duration-500">
@@ -131,9 +196,18 @@
     <div class="relative text-center mb-1">
         <h1 id="main-title" class="text-3xl sm:text-4xl font-bold tracking-tight">Generative Sequencer</h1>
         <div class="absolute top-0 right-2">
-            <button id="theme-switcher" title="Toggle theme" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--bg-panel)] focus:ring-[var(--thumb-color)]">
-                <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" /></svg>
-                <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-1.414 8.486a1 1 0 010-1.414l.707-.707a1 1 0 111.414 1.414l-.707-.707a1 1 0 01-1.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1z" clip-rule="evenodd" /></svg>
+            <button id="theme-switcher" title="Toggle theme"
+                    class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--bg-panel)] focus:ring-[var(--thumb-color)]">
+                <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                     fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+                </svg>
+                <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20"
+                     fill="currentColor">
+                    <path fill-rule="evenodd"
+                          d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-1.414 8.486a1 1 0 010-1.414l.707-.707a1 1 0 111.414 1.414l-.707-.707a1 1 0 01-1.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1z"
+                          clip-rule="evenodd"/>
+                </svg>
             </button>
         </div>
     </div>
@@ -141,7 +215,10 @@
     <div id="message-box" class="text-center text-yellow-400 mb-1 h-5"></div>
 
     <div class="mb-1">
-        <button id="play-stop-button" title="Start or stop the music" class="bg-[var(--thumb-color)] hover:opacity-80 text-white font-bold py-3 px-4 rounded-full text-xl w-full transition-all duration-300 ease-in-out shadow-lg transform hover:scale-105">Start</button>
+        <button id="play-stop-button" title="Start or stop the music"
+                class="bg-[var(--thumb-color)] hover:opacity-80 text-white font-bold py-3 px-4 rounded-full text-xl w-full transition-all duration-300 ease-in-out shadow-lg transform hover:scale-105">
+            Start
+        </button>
     </div>
 
     <!-- Status Bar -->
@@ -158,28 +235,99 @@
         <div class="control-group p-3 rounded-xl">
             <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Global &amp; Rhythm</h2>
             <div class="grid grid-cols-2 gap-x-4 gap-y-2">
-                <div data-instrument="master"><label for="master-vol" class="block mb-1 text-sm font-semibold text-label">Master Volume</label><input type="range" id="master-vol" min="-20" max="6" value="3" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="master-vol-value">3</span> dB</div></div>
-                <div data-instrument="tempo"><label for="tempo" class="block mb-1 text-sm font-semibold text-label">Tempo</label><input type="range" id="tempo" min="70" max="180" value="70" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="tempo-value">70</span> BPM</div></div>
-                <div data-instrument="reverb"><label for="reverb" class="block mb-1 text-sm font-semibold text-label">Reverb Mix</label><input type="range" id="reverb" min="0" max="1" value="0.9" step="0.05" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="reverb-value">0.9</span></div></div>
-                <div data-instrument="reverbDecay"><label for="reverbDecay" class="block mb-1 text-sm font-semibold text-label">Reverb Decay</label><input type="range" id="reverbDecay" min="1" max="10" value="10" step="0.1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="reverbDecay-value">10.0</span>s</div></div>
+                <div data-instrument="master"><label for="master-vol"
+                                                     class="block mb-1 text-sm font-semibold text-label">Master
+                    Volume</label><input type="range" id="master-vol" min="-20" max="6" value="3" step="1"
+                                         class="w-full">
+                    <div class="text-center mt-0 text-display font-mono text-sm"><span id="master-vol-value">3</span> dB
+                    </div>
+                </div>
+                <div data-instrument="tempo"><label for="tempo" class="block mb-1 text-sm font-semibold text-label">Tempo</label><input
+                        type="range" id="tempo" min="70" max="180" value="70" class="w-full">
+                    <div class="text-center mt-0 text-display font-mono text-sm"><span id="tempo-value">70</span> BPM
+                    </div>
+                </div>
+                <div data-instrument="reverb"><label for="reverb" class="block mb-1 text-sm font-semibold text-label">Reverb
+                    Mix</label><input type="range" id="reverb" min="0" max="1" value="0.9" step="0.05" class="w-full">
+                    <div class="text-center mt-0 text-display font-mono text-sm"><span id="reverb-value">0.9</span>
+                    </div>
+                </div>
+                <div data-instrument="reverbDecay"><label for="reverbDecay"
+                                                          class="block mb-1 text-sm font-semibold text-label">Reverb
+                    Decay</label><input type="range" id="reverbDecay" min="1" max="10" value="10" step="0.1"
+                                        class="w-full">
+                    <div class="text-center mt-0 text-display font-mono text-sm"><span
+                            id="reverbDecay-value">10.0</span>s
+                    </div>
+                </div>
             </div>
         </div>
         <div class="control-group p-3 rounded-xl">
             <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Foundation</h2>
             <div class="grid grid-cols-3 gap-2">
-                <select id="root-note-select" title="Select root note" class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5"><option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option></select>
-                <select id="scale-type-select" title="Select scale" class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5"><option value="majorPentatonic">Major Pentatonic</option><option value="minorPentatonic">Minor Pentatonic</option><option value="major">Major</option><option value="minor" selected>Natural Minor</option><option value="dorian">Dorian</option></select>
-                <select id="octave-select" title="Select octave" class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+                <select id="root-note-select" title="Select root note"
+                        class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5">
+                    <option>C</option>
+                    <option>C#</option>
+                    <option>D</option>
+                    <option>D#</option>
+                    <option>E</option>
+                    <option>F</option>
+                    <option>F#</option>
+                    <option>G</option>
+                    <option>G#</option>
+                    <option>A</option>
+                    <option>A#</option>
+                    <option>B</option>
+                </select>
+                <select id="scale-type-select" title="Select scale"
+                        class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5">
+                    <option value="majorPentatonic">Major Pentatonic</option>
+                    <option value="minorPentatonic">Minor Pentatonic</option>
+                    <option value="major">Major</option>
+                    <option value="minor" selected>Natural Minor</option>
+                    <option value="dorian">Dorian</option>
+                </select>
+                <select id="octave-select" title="Select octave"
+                        class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5">
+                    <option>1</option>
+                    <option>2</option>
+                    <option selected>3</option>
+                    <option>4</option>
+                    <option>5</option>
+                </select>
             </div>
-            <button id="new-mood-button" class="w-full mt-3 p-2 rounded-lg bg-[var(--thumb-color)] text-white font-semibold hover:opacity-80">New Mood</button>
+            <button id="new-mood-button"
+                    class="w-full mt-3 p-2 rounded-lg bg-[var(--thumb-color)] text-white font-semibold hover:opacity-80">
+                New Mood
+            </button>
         </div>
         <div class="control-group p-3 rounded-xl">
             <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Evolve Engine</h2>
             <div class="grid grid-cols-2 gap-x-4 gap-y-2">
-                <div><label for="density" class="block mb-1 text-sm font-semibold text-label">Drum Density</label><input type="range" id="density" min="0.0" max="1.0" value="0.0" step="0.05" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="density-value">0.0</span></div></div>
-                <div><label for="evolve-up" class="block mb-1 text-sm font-semibold text-label">Build Up</label><input type="range" id="evolve-up" min="10" max="360" value="240" step="5" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-up-value">240</span>s</div></div>
-                <div><label for="evolve-breakdown" class="block mb-1 text-sm font-semibold text-label">Break Down</label><input type="range" id="evolve-breakdown" min="10" max="180" value="13" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-breakdown-value">13</span>s</div></div>
-                <div><label for="evolve-peak" class="block mb-1 text-sm font-semibold text-label">Peak Time</label><input type="range" id="evolve-peak" min="1" max="90" value="10" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-peak-value">10</span>s</div></div>
+                <div><label for="density" class="block mb-1 text-sm font-semibold text-label">Drum Density</label><input
+                        type="range" id="density" min="0.0" max="1.0" value="0.0" step="0.05" class="w-full">
+                    <div class="text-center mt-0 text-display font-mono text-sm"><span id="density-value">0.0</span>
+                    </div>
+                </div>
+                <div><label for="evolve-up" class="block mb-1 text-sm font-semibold text-label">Build Up</label><input
+                        type="range" id="evolve-up" min="10" max="360" value="180" step="5" class="w-full">
+                    <div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-up-value">180</span>s
+                    </div>
+                </div>
+                <div><label for="evolve-breakdown" class="block mb-1 text-sm font-semibold text-label">Break
+                    Down</label><input type="range" id="evolve-breakdown" min="10" max="180" value="13" step="1"
+                                       class="w-full">
+                    <div class="text-center mt-0 text-display font-mono text-sm"><span
+                            id="evolve-breakdown-value">13</span>s
+                    </div>
+                </div>
+                <div><label for="evolve-peak" class="block mb-1 text-sm font-semibold text-label">Peak
+                    Time</label><input type="range" id="evolve-peak" min="1" max="90" value="30" step="1"
+                                       class="w-full">
+                    <div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-peak-value">30</span>s
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -188,28 +336,25 @@
         <div class="lg:col-span-2 control-group p-3 rounded-xl mb-1">
             <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Mixer</h2>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1">
-                <div data-instrument="bass"><label for="bass-vol" class="block text-center mb-1 text-sm font-semibold text-label">Bass</label><input type="range" id="bass-vol" min="-40" max="0" value="-4" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="bass-vol-value">-4</span> dB</div></div>
+                <div data-instrument="bass"><label for="bass-vol" class="block text-center mb-1 text-sm font-semibold text-label">Bass</label><input type="range" id="bass-vol" min="-40" max="0" value="-12" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="bass-vol-value">-12</span> dB</div></div>
                 <div data-instrument="pluck"><label for="pluck-vol" class="block text-center mb-1 text-sm font-semibold text-label">Pluck</label><input type="range" id="pluck-vol" min="-40" max="0" value="-10" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="pluck-vol-value">-10</span> dB</div></div>
-                <div data-instrument="pad"><label for="pad-vol" class="block text-center mb-1 text-sm font-semibold text-label">Pad</label><input type="range" id="pad-vol" min="-40" max="0" value="-22" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="pad-vol-value">-22</span> dB</div></div>
+                <div data-instrument="pad"><label for="pad-vol" class="block text-center mb-1 text-sm font-semibold text-label">Pad</label><input type="range" id="pad-vol" min="-40" max="0" value="-24" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="pad-vol-value">-24</span> dB</div></div>
                 <div data-instrument="lfoPad"><label for="lfoPad-vol" class="block text-center mb-1 text-sm font-semibold text-label">LFO Pad</label><input type="range" id="lfoPad-vol" min="-40" max="0" value="-20" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="lfoPad-vol-value">-20</span> dB</div></div>
                 <div data-instrument="melody"><label for="melody-vol" class="block text-center mb-1 text-sm font-semibold text-label">Melody</label><input type="range" id="melody-vol" min="-40" max="0" value="-8" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="melody-vol-value">-8</span> dB</div></div>
-                <div data-instrument="openhat"><label for="openhat-vol" class="block text-center mb-1 text-sm font-semibold text-label">Open Hat</label><input type="range" id="openhat-vol" min="-40" max="0" value="-18" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="openhat-vol-value">-18</span> dB</div></div>
-                <div data-instrument="hat"><label for="hat-vol" class="block text-center mb-1 text-sm font-semibold text-label">Hat</label><input type="range" id="hat-vol" min="-40" max="0" value="-12" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="hat-vol-value">-12</span> dB</div></div>
-                <div data-instrument="rumble"><label for="rumble-vol" class="block text-center mb-1 text-sm font-semibold text-label">Rumble</label><input type="range" id="rumble-vol" min="-40" max="0" value="-20" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="rumble-vol-value">-20</span> dB</div></div>
+                <div data-instrument="drums"><label for="drums-vol" class="block text-center mb-1 text-sm font-semibold text-label">Drums</label><input type="range" id="drums-vol" min="-40" max="0" value="-12" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="drums-vol-value">-12</span> dB</div></div>
+                <div data-instrument="spaceFx"><label for="spaceFx-vol" class="block text-center mb-1 text-sm font-semibold text-label">Space FX</label><input type="range" id="spaceFx-vol" min="-40" max="0" value="0" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="spaceFx-vol-value">0</span> dB</div></div>
             </div>
         </div>
         <div class="control-group p-3 rounded-xl mb-1">
             <h2 class="section-header text-lg font-bold text-center mb-1">Live Notes</h2>
-            <div id="live-notes-display" class="grid grid-cols-3 gap-1 text-center font-mono text-xs">
+            <div id="live-notes-display" class="grid grid-cols-3 sm:grid-cols-4 gap-1 text-center font-mono text-xs">
                 <div><span class="text-label text-xs">Bass:</span><br><span id="live-note-bass" class="live-note-value font-bold text-xl">-</span></div>
                 <div><span class="text-label text-xs">Pluck:</span><br><span id="live-note-pluck" class="live-note-value font-bold text-xl">-</span></div>
                 <div><span class="text-label text-xs">Pad:</span><br><span id="live-note-pad" class="live-note-value font-bold text-xl">-</span></div>
                 <div><span class="text-label text-xs">LFO Pad:</span><br><span id="live-note-lfoPad" class="live-note-value font-bold text-xl">-</span></div>
                 <div class="col-span-2"><span class="text-label text-xs">Melody:</span><br><span id="live-note-melody" class="live-note-value font-bold text-xl">-</span></div>
-                <div><span class="text-label text-xs">Kick:</span><br><span id="live-note-kick" class="live-note-value font-bold text-xl">-</span></div>
-                <div><span class="text-label text-xs">Snare:</span><br><span id="live-note-snare" class="live-note-value font-bold text-xl">-</span></div>
-                <div><span class="text-label text-xs">Hat:</span><br><span id="live-note-hat" class="live-note-value font-bold text-xl">-</span></div>
-                <div><span class="text-label text-xs">Open Hat:</span><br><span id="live-note-openhat" class="live-note-value font-bold text-xl">-</span></div>
+                <div><span class="text-label text-xs">Drums:</span><br><span id="live-note-drums" class="live-note-value font-bold text-xl">-</span></div>
+                <div><span class="text-label text-xs">Space FX:</span><br><span id="live-note-spaceFx" class="live-note-value font-bold text-xl">-</span></div>
             </div>
         </div>
     </div>
@@ -237,63 +382,42 @@
             minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10],
         };
         const MOOD_COLORS = {
-            'Frenetic & Euphoric': 'hsl(320, 100%, 65%)',
-            'Frenetic & Intense': 'hsl(350, 100%, 65%)',
-            'Frenetic & Mystical': 'hsl(290, 100%, 75%)',
-            'Energetic & Euphoric': 'hsl(340, 89%, 60%)',
-            'Driving & Euphoric': 'hsl(45, 100%, 58%)',
-            'Relaxed & Hopeful': 'hsl(145, 63%, 49%)',
-            'Meditative & Hopeful': 'hsl(195, 74%, 65%)',
-            'Energetic & Intense': 'hsl(3, 90%, 61%)',
-            'Driving & Intense': 'hsl(25, 84%, 55%)',
-            'Relaxed & Somber': 'hsl(262, 47%, 56%)',
-            'Meditative & Somber': 'hsl(220, 47%, 56%)',
-            'Energetic & Mystical': 'hsl(283, 89%, 70%)',
-            'Driving & Mystical': 'hsl(283, 60%, 60%)',
-            'Relaxed & Mystical': 'hsl(283, 40%, 50%)',
-            'Meditative & Mystical': 'hsl(283, 30%, 40%)',
+            'Frenetic & Euphoric': 'hsl(320, 100%, 65%)', 'Frenetic & Intense': 'hsl(350, 100%, 65%)', 'Frenetic & Mystical': 'hsl(290, 100%, 75%)',
+            'Energetic & Euphoric': 'hsl(340, 89%, 60%)', 'Driving & Euphoric': 'hsl(45, 100%, 58%)', 'Relaxed & Hopeful': 'hsl(145, 63%, 49%)',
+            'Meditative & Hopeful': 'hsl(195, 74%, 65%)', 'Energetic & Intense': 'hsl(3, 90%, 61%)', 'Driving & Intense': 'hsl(25, 84%, 55%)',
+            'Relaxed & Somber': 'hsl(262, 47%, 56%)', 'Meditative & Somber': 'hsl(220, 47%, 56%)', 'Energetic & Mystical': 'hsl(283, 89%, 70%)',
+            'Driving & Mystical': 'hsl(283, 60%, 60%)', 'Relaxed & Mystical': 'hsl(283, 40%, 50%)', 'Meditative & Mystical': 'hsl(283, 30%, 40%)',
         };
         let NUM_STEPS = 16;
         let seq_data = {
-            kick: Array(NUM_STEPS).fill(false),
-            snare: Array(NUM_STEPS).fill(false),
-            hat: Array(NUM_STEPS).fill(false),
-            openhat: Array(NUM_STEPS).fill(false)
+            kick: Array(NUM_STEPS).fill(false), snare: Array(NUM_STEPS).fill(false),
+            hat: Array(NUM_STEPS).fill(false), openhat: Array(NUM_STEPS).fill(false),
+            tom1: Array(NUM_STEPS).fill(false), tom2: Array(NUM_STEPS).fill(false),
+            crash: Array(NUM_STEPS).fill(false), bell: Array(NUM_STEPS).fill(false),
         };
         let controls = {};
         let drumSequence;
+        let initialDrumRamp = new Tone.Signal(0);
+        let evolveSignal = new Tone.Signal(0);
 
         // --- DOM Element References ---
         const dom = {
-            mainTitle: document.getElementById('main-title'),
-            playStopButton: document.getElementById('play-stop-button'),
-            newMoodButton: document.getElementById('new-mood-button'),
-            messageBox: document.getElementById('message-box'),
-            rootNoteSelect: document.getElementById('root-note-select'),
-            scaleTypeSelect: document.getElementById('scale-type-select'),
-            octaveSelect: document.getElementById('octave-select'),
-            sequencerGrid: document.getElementById('sequencer-grid'),
-            sequencerLabels: document.getElementById('sequencer-labels'),
-            sequencerSteps: document.getElementById('sequencer-steps'),
-            themeSwitcher: document.getElementById('theme-switcher'),
-            themeIconDark: document.getElementById('theme-icon-dark'),
+            mainTitle: document.getElementById('main-title'), playStopButton: document.getElementById('play-stop-button'),
+            newMoodButton: document.getElementById('new-mood-button'), messageBox: document.getElementById('message-box'),
+            rootNoteSelect: document.getElementById('root-note-select'), scaleTypeSelect: document.getElementById('scale-type-select'),
+            octaveSelect: document.getElementById('octave-select'), sequencerGrid: document.getElementById('sequencer-grid'),
+            sequencerLabels: document.getElementById('sequencer-labels'), sequencerSteps: document.getElementById('sequencer-steps'),
+            themeSwitcher: document.getElementById('theme-switcher'), themeIconDark: document.getElementById('theme-icon-dark'),
             themeIconLight: document.getElementById('theme-icon-light'),
             liveNotes: {
-                bass: document.getElementById('live-note-bass'),
-                pluck: document.getElementById('live-note-pluck'),
-                pad: document.getElementById('live-note-pad'),
-                lfoPad: document.getElementById('live-note-lfoPad'),
-                melody: document.getElementById('live-note-melody'),
-                kick: document.getElementById('live-note-kick'),
-                snare: document.getElementById('live-note-snare'),
-                hat: document.getElementById('live-note-hat'),
-                openhat: document.getElementById('live-note-openhat'),
+                bass: document.getElementById('live-note-bass'), pluck: document.getElementById('live-note-pluck'),
+                pad: document.getElementById('live-note-pad'), lfoPad: document.getElementById('live-note-lfoPad'),
+                melody: document.getElementById('live-note-melody'), drums: document.getElementById('live-note-drums'),
+                spaceFx: document.getElementById('live-note-spaceFx'),
             },
             statusBar: {
-                evolveState: document.getElementById('evolve-state-display'),
-                mood: document.getElementById('mood-display'),
-                tempo: document.getElementById('tempo-display'),
-                chord: document.getElementById('chord-display'),
+                evolveState: document.getElementById('evolve-state-display'), mood: document.getElementById('mood-display'),
+                tempo: document.getElementById('tempo-display'), chord: document.getElementById('chord-display'),
                 scale: document.getElementById('scale-display'),
             }
         };
@@ -302,46 +426,44 @@
         const limiter = new Tone.Limiter(-0.5).toDestination();
         const compressor = new Tone.Compressor(-24, 3).connect(limiter);
         const masterVolume = new Tone.Volume(0).connect(compressor);
-
-        const reverb = new Tone.Reverb({ decay: 10, wet: 0.9 }).connect(masterVolume);
+        const reverb = new Tone.Reverb({decay: 10, wet: 0.9}).connect(masterVolume);
         const delay = new Tone.PingPongDelay("8n.", 0.2).connect(reverb);
 
-        // LFO Pad setup
+        // --- Busses ---
+        const drumBus = new Tone.Channel({volume: -12}).connect(masterVolume);
+        const spaceFxBus = new Tone.Channel({volume: 0}).connect(masterVolume);
+
         const lfoPadFilter = new Tone.Filter(400, "lowpass");
         const lfoPadPanner = new Tone.AutoPanner("10m").connect(lfoPadFilter).start();
-        const lfo = new Tone.LFO({
-            type: "sine",
-            min: 200,
-            max: 4000,
-            frequency: "4n",
-        }).connect(lfoPadFilter.frequency).start();
-
-        // Rumble Setup
-        const rumbleReverb = new Tone.Reverb({ decay: 4, wet: 0.8 }).connect(masterVolume);
-        const rumbleFilter = new Tone.Filter(80, "lowpass").connect(rumbleReverb);
-        const rumble = new Tone.MonoSynth({
-            volume: -20,
-            oscillator: { type: "sine" },
-            envelope: { attack: 0.01, decay: 0.4, sustain: 1, release: 0.8 }
-        }).connect(rumbleFilter);
-
-        // Panners
-        const hatPanner = new Tone.AutoPanner("16m").connect(masterVolume).start();
+        const lfo = new Tone.LFO({type: "sine", min: 200, max: 4000, frequency: "4n"}).connect(lfoPadFilter.frequency).start();
+        const hatPanner = new Tone.AutoPanner("16m").connect(drumBus).start();
         const melodyPanner = new Tone.AutoPanner("12m").fan(delay, masterVolume).start();
         const pluckPanner = new Tone.AutoPanner("8m").fan(delay, masterVolume).start();
         const panners = [hatPanner, melodyPanner, pluckPanner, lfoPadPanner];
 
+        // Space FX Setup
+        const spacePanner = new Tone.Panner(0).connect(spaceFxBus);
+        const spaceFreqShifter = new Tone.FrequencyShifter(0).connect(spacePanner);
+        const spacePhaser = new Tone.Phaser({ frequency: 0.3, octaves: 5, baseFrequency: 350, Q: 8 }).connect(spaceFreqShifter);
+        const spaceDelay = new Tone.PingPongDelay("2n", 0.7).connect(spacePhaser);
+        const spaceLfo = new Tone.LFO({frequency: "8n", min: -50, max: 50}).connect(spaceFreqShifter.frequency).start();
+
+
         const synths = {
-            kick: new Tone.MembraneSynth({ volume: -6, octaves: 10, pitchDecay: 0.05, envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4, attackCurve: 'exponential' } }).connect(masterVolume),
-            snare: new Tone.NoiseSynth({ volume: -14, noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.2 } }).connect(masterVolume),
-            hat: new Tone.MetalSynth({ volume: -18, frequency: 300, envelope: { attack: 0.005, decay: 0.05, release: 0.08 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(hatPanner),
-            openhat: new Tone.MetalSynth({ volume: -18, frequency: 250, envelope: { attack: 0.01, decay: 0.4, release: 0.4 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(hatPanner),
-            bass: new Tone.MonoSynth({ volume: -4, oscillator: { type: 'fatsquare' }, envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 2 }, filterEnvelope: { attack: 0.01, decay: 0.6, sustain: 0.2, release: 2, baseFrequency: 80, octaves: 4 } }).connect(masterVolume),
+            kick: new Tone.MembraneSynth({ volume: -10, octaves: 10, pitchDecay: 0.05, envelope: {attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4, attackCurve: 'exponential'} }).connect(drumBus),
+            snare: new Tone.NoiseSynth({ volume: -18, noise: {type: 'white'}, envelope: {attack: 0.001, decay: 0.15, sustain: 0, release: 0.2} }).connect(drumBus),
+            hat: new Tone.MetalSynth({ volume: -24, frequency: 300, envelope: {attack: 0.005, decay: 0.05, release: 0.08}, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(hatPanner),
+            openhat: new Tone.MetalSynth({ volume: -20, frequency: 250, envelope: {attack: 0.01, decay: 0.4, release: 0.4}, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(hatPanner),
+            crash: new Tone.MetalSynth({ volume: -18, frequency: 150, envelope: { attack: 0.01, decay: 1.5, release: 1.5 }, harmonicity: 6.1, modulationIndex: 20, resonance: 3000, octaves: 2 }).connect(drumBus),
+            tom1: new Tone.MembraneSynth({ volume: -14, pitchDecay: 0.08, octaves: 4, oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.5, sustain: 0.01, release: 0.4 } }).connect(drumBus),
+            tom2: new Tone.MembraneSynth({ volume: -16, pitchDecay: 0.1, octaves: 3, oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.6, sustain: 0.01, release: 0.5 } }).connect(drumBus),
+            bell: new Tone.MetalSynth({ volume: -18, frequency: 800, envelope: { attack: 0.001, decay: 1, release: 1.4 }, harmonicity: 8.1, modulationIndex: 10, resonance: 6000, octaves: 1.5 }).connect(drumBus),
+            bass: new Tone.MonoSynth({ volume: -12, oscillator: {type: 'fatsquare'}, envelope: {attack: 0.05, decay: 0.3, sustain: 0.4, release: 2}, filterEnvelope: {attack: 0.01, decay: 0.6, sustain: 0.2, release: 2, baseFrequency: 80, octaves: 4} }).connect(masterVolume),
             pluck: new Tone.PluckSynth({ volume: -10, attackNoise: 0.8, dampening: 5000, resonance: 0.95 }).connect(pluckPanner),
-            pad: new Tone.PolySynth(Tone.FMSynth, { volume: -18, detune: 15, envelope: { attack: 1, decay: 0.5, sustain: 0.5, release: 3 } }).fan(reverb, masterVolume),
-            melody: new Tone.FMSynth({ volume: -8, envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.2 } }).connect(melodyPanner),
-            lfoPad: new Tone.FMSynth({ volume: -20, detune: 20, harmonicity: 1.5, modulationIndex: 3, envelope: { attack: 1, decay: 0.5, sustain: 1, release: 2 } }).connect(lfoPadPanner),
-            rumble: rumble,
+            pad: new Tone.PolySynth(Tone.FMSynth, { volume: -24, detune: 15, envelope: {attack: 1, decay: 0.5, sustain: 0.5, release: 3} }).fan(reverb, masterVolume),
+            melody: new Tone.FMSynth({ volume: -8, envelope: {attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.2} }).connect(melodyPanner),
+            lfoPad: new Tone.FMSynth({ volume: -20, detune: 20, harmonicity: 1.5, modulationIndex: 3, envelope: {attack: 1, decay: 0.5, sustain: 1, release: 2} }).connect(lfoPadPanner),
+            spaceFx: new Tone.FMSynth({ volume: -20, harmonicity: 0.7, modulationIndex: 18, envelope: { attack: 4, decay: 8, sustain: 0.5, release: 12 } }).connect(spaceDelay),
         };
 
         // --- UI & Control Logic ---
@@ -364,7 +486,9 @@
                     const container = slider.closest('[data-instrument]');
                     if (container) {
                         const instrumentId = container.dataset.instrument;
-                        if (synths[instrumentId]) synths[instrumentId].volume.value = value;
+                        if (instrumentId === 'drums') drumBus.volume.value = value;
+                        else if (instrumentId === 'spaceFx') spaceFxBus.volume.value = value;
+                        else if (synths[instrumentId]) synths[instrumentId].volume.value = value;
                         else if (instrumentId === 'master') masterVolume.volume.value = value;
                         else if (instrumentId === 'tempo') Tone.Transport.bpm.value = value;
                         else if (instrumentId === 'reverb') reverb.wet.value = value;
@@ -378,13 +502,11 @@
         function createSequencerGrid(steps) {
             dom.sequencerLabels.innerHTML = '';
             dom.sequencerSteps.innerHTML = '';
-
             Object.keys(seq_data).forEach(instrument => {
                 const label = document.createElement('div');
                 label.className = 'h-full flex items-center justify-end font-bold text-label';
                 label.textContent = instrument.charAt(0).toUpperCase() + instrument.slice(1);
                 dom.sequencerLabels.appendChild(label);
-
                 const row = document.createElement('div');
                 row.className = 'flex gap-1 sm:gap-2';
                 row.dataset.instrument = instrument;
@@ -414,31 +536,35 @@
         function randomizeDrumPattern(steps) {
             Object.keys(seq_data).forEach(instrument => {
                 seq_data[instrument] = Array(steps).fill(false);
-                for (let i = 0; i < steps; i++) {
-                    let probability = 0.25;
-                    if (instrument === 'kick') {
-                        probability = (i % (steps / (Tone.Transport.timeSignature[0]))) === 0 ? 0.8 : 0.1;
-                    } else if (instrument === 'snare') {
-                        probability = (i === Math.floor(steps/4) || i === Math.floor(steps*3/4)) ? 0.75 : 0.05;
-                    } else if (instrument === 'hat') {
-                        probability = (i % 2 !== 0) ? 0.6 : 0.2;
-                    } else if (instrument === 'openhat') {
-                        probability = (i === steps - 2) ? 0.5 : 0.05;
-                    }
-                    seq_data[instrument][i] = Math.random() < probability;
-                }
             });
+            // Generate base pattern
+            for (let i = 0; i < steps; i++) {
+                if (Math.random() < ((i % (steps / (Tone.Transport.timeSignature[0]))) === 0 ? 0.9 : 0.25)) seq_data.kick[i] = true;
+                if (Math.random() < ((i === Math.floor(steps / 4) || i === Math.floor(steps * 3 / 4)) ? 0.9 : 0.15)) seq_data.snare[i] = true;
+                if (Math.random() < ((i % 2 !== 0) ? 0.9 : 0.5)) seq_data.hat[i] = true;
+                if (Math.random() < ((i === steps - 2) ? 0.7 : 0.15)) seq_data.openhat[i] = true;
+            }
+            // Always add crash and bell
+            seq_data.crash[0] = true;
+            seq_data.bell[0] = true;
+
+            // Always add a tom fill
+            const fillStart = steps - Math.floor(Math.random() * 4 + 2);
+            for (let i = fillStart; i < steps; i++) {
+                if (Math.random() < 0.7) {
+                    const tomChoice = Math.floor(Math.random() * 2) + 1;
+                    seq_data[`tom${tomChoice}`][i] = true;
+                }
+            }
         }
 
         function changeMood() {
             const scaleOptions = dom.scaleTypeSelect.options;
             const newScaleIndex = Math.floor(Math.random() * scaleOptions.length);
             dom.scaleTypeSelect.selectedIndex = newScaleIndex;
-
             const rootOptions = dom.rootNoteSelect.options;
             const newRootIndex = Math.floor(Math.random() * rootOptions.length);
             dom.rootNoteSelect.selectedIndex = newRootIndex;
-
             updateMusicTheory();
         }
 
@@ -451,7 +577,7 @@
         }
 
         function getChordFromProgression(degree) {
-            const degreeMap = { 'I': 0, 'V': 4, 'vi': 5, 'IV': 3 };
+            const degreeMap = {'I': 0, 'V': 4, 'vi': 5, 'IV': 3};
             const rootIdx = degreeMap[degree];
             if (currentScale.length < rootIdx + 5) return [];
             return [currentScale[rootIdx], currentScale[rootIdx + 2], currentScale[rootIdx + 4]];
@@ -472,52 +598,57 @@
             return scale;
         }
 
-        function displayLiveNote(instrument, note) {
+        function displayLiveNote(instrument, note, duration) {
             const noteEl = dom.liveNotes[instrument];
-            if (noteEl) {
-                const isDrum = ['kick', 'snare', 'hat', 'openhat'].includes(instrument);
-                noteEl.textContent = isDrum ? '🥁' : note.replace(/#/g, '♯').replace(/\d/g, '');
-                noteEl.classList.add('note-flash');
-                setTimeout(() => {
-                    noteEl.classList.remove('note-flash');
-                    if (isDrum) {
-                        noteEl.textContent = '-';
-                    }
-                }, 150);
-            }
+            if (!noteEl) return;
+
+            let symbol = '🎵';
+            if (instrument === 'drums') symbol = '🥁';
+            if (instrument === 'spaceFx' && !note) symbol = '✨';
+
+            noteEl.textContent = note ? note.replace(/#/g, '♯').replace(/\d/g, '') : symbol;
+            noteEl.classList.add('note-flash');
+
+            const displayDurationMs = duration ? duration * 1000 : 150;
+
+            setTimeout(() => {
+                noteEl.classList.remove('note-flash');
+                noteEl.textContent = '-';
+            }, displayDurationMs);
         }
 
         const bassSequence = new Tone.Sequence((time, note) => {
             synths.bass.triggerAttackRelease(note, "8n", time);
-            Tone.Draw.schedule(() => displayLiveNote('bass', note), time);
+            Tone.Draw.schedule(() => displayLiveNote('bass', note, Tone.Time("8n").toSeconds()), time);
         }, [], "4n").start(0);
 
         const arpSequence = new Tone.Sequence((time, note) => {
             if (note !== null && Math.random() < 0.7) {
                 synths.pluck.triggerAttackRelease(note, "16n", time);
-                Tone.Draw.schedule(() => displayLiveNote('pluck', note), time);
+                Tone.Draw.schedule(() => displayLiveNote('pluck', note, Tone.Time("16n").toSeconds()), time);
             }
         }, [], "16n").start(0);
 
         const lfoPadSequence = new Tone.Sequence((time, note) => {
             const droneNote = Tone.Frequency(note).transpose(-12);
             synths.lfoPad.triggerAttackRelease(droneNote, "1m", time);
-            Tone.Draw.schedule(() => displayLiveNote('lfoPad', droneNote.toNote()), time);
+            Tone.Draw.schedule(() => displayLiveNote('lfoPad', droneNote.toNote(), Tone.Time("1m").toSeconds()), time);
         }, [], "1m").start(0);
 
         const melodySequence = new Tone.Sequence((time, note) => {
-            if (Math.random() < 0.25) { // Melody is sparse
+            const melodyProbability = 0.1 + (evolveSignal.value * 0.7);
+            if (Math.random() < melodyProbability) {
                 synths.melody.triggerAttackRelease(note, "8n", time);
-                Tone.Draw.schedule(() => displayLiveNote('melody', note), time);
+                Tone.Draw.schedule(() => displayLiveNote('melody', note, Tone.Time("8n").toSeconds()), time);
             }
         }, [], "8n").start(0);
 
         function updateArpeggiatorNotes() {
-            if (currentChord.length === 0) return;
+            if (currentScale.length === 0) return;
             bassSequence.events = [currentChord[0], currentChord[1], currentChord[2], currentChord[1]];
             const arpNotes = currentChord.flatMap(note => [note, null, Tone.Frequency(note).transpose(12).toNote(), null]);
             arpSequence.events = arpNotes;
-            lfoPadSequence.events = [currentChord[0]]; // Drone on the root note
+            lfoPadSequence.events = [currentChord[0]];
             melodySequence.events = currentScale.slice(5, 12);
         }
 
@@ -529,29 +660,27 @@
             }
             drumSequence = new Tone.Sequence((time, step) => {
                 const density = parseFloat(controls['density'].value);
+                const initialRampValue = initialDrumRamp.value;
+                const playbackProbability = initialRampValue * (0.4 + Math.pow(density, 2) * 0.6);
+
+                let drumPlayed = false;
                 Object.keys(seq_data).forEach(instrument => {
-                    if (seq_data[instrument][step] && Math.random() < Math.pow(density, 3)) {
-                        if (instrument === 'kick') {
-                            synths.kick.triggerAttackRelease("C1", "8n", time);
-                            synths.rumble.triggerAttackRelease("C0", "2n", time);
-                            Tone.Draw.schedule(() => displayLiveNote('kick'), time);
-                        }
-                        if (instrument === 'snare') {
-                            synths.snare.triggerAttack(time);
-                            Tone.Draw.schedule(() => displayLiveNote('snare'), time);
-                        }
-                        if (instrument === 'hat') {
-                            synths.hat.triggerAttackRelease('C6', '16n', time, Math.random() * 0.3 + 0.5);
-                            Tone.Draw.schedule(() => displayLiveNote('hat'), time);
-                        }
-                        if (instrument === 'openhat') {
-                            synths.openhat.triggerAttack(time);
-                            Tone.Draw.schedule(() => displayLiveNote('openhat'), time);
-                        }
+                    if (seq_data[instrument][step] && Math.random() < playbackProbability) {
+                        drumPlayed = true;
+                        if (instrument === 'kick') { synths.kick.triggerAttackRelease("C1", "8n", time); }
+                        if (instrument === 'snare') { synths.snare.triggerAttack(time); }
+                        if (instrument === 'hat') { synths.hat.triggerAttackRelease('C6', '16n', time, Math.random() * 0.3 + 0.5); }
+                        if (instrument === 'openhat') { synths.openhat.triggerAttack(time); }
+                        if (instrument === 'crash') { synths.crash.triggerAttack(time); }
+                        if (instrument === 'tom1') { synths.tom1.triggerAttackRelease('G4', '16n', time); }
+                        if (instrument === 'tom2') { synths.tom2.triggerAttackRelease('D4', '16n', time); }
+                        if (instrument === 'bell') { synths.bell.triggerAttack(time); }
                     }
                 });
+                if(drumPlayed) {
+                    Tone.Draw.schedule(() => displayLiveNote('drums', null, 0.1), time);
+                }
                 Tone.Draw.schedule(() => {
-                    const lastStep = (step - 1 + steps) % steps;
                     document.querySelectorAll(`[data-step]`).forEach(el => el.classList.remove('playing'));
                     document.querySelectorAll(`[data-step="${step}"]`).forEach(el => el.classList.add('playing'));
                 }, time);
@@ -564,54 +693,48 @@
             updateArpeggiatorNotes();
             const padChord = currentChord.map(note => Tone.Frequency(note).transpose(-12).toNote());
             synths.pad.triggerAttackRelease(padChord, "1m", time);
-            Tone.Draw.schedule(() => {
-                if(padChord[0]) displayLiveNote('pad', padChord[0]);
-            }, time);
+            Tone.Draw.schedule(() => { if (padChord[0]) displayLiveNote('pad', padChord[0], Tone.Time("1m").toSeconds()); }, time);
         }, "1m").start(0);
 
+        // Space FX Loop
+        new Tone.Loop(time => {
+            const density = controls['density'] ? parseFloat(controls['density'].value) : 0;
+            const spaceFxProbability = 0.8 * (1 - density); // Inversely proportional to density
+
+            if (Math.random() < spaceFxProbability && currentScale.length > 0) {
+                const note = currentScale[Math.floor(Math.random() * currentScale.length)];
+                const highNote = Tone.Frequency(note).transpose(24).toNote();
+                spacePanner.pan.rampTo(Math.random() * 2 - 1, 8, time);
+                synths.spaceFx.triggerAttackRelease(highNote, '2m', time);
+                Tone.Draw.schedule(() => displayLiveNote('spaceFx', highNote, Tone.Time('2m').toSeconds()), time);
+            }
+        }, "1m").start("2m");
+
+
         // --- Evolve Engine ---
-        let evolveSignal = new Tone.Signal(0);
         const evolveParams = {
-            tempo: { min: 70, max: 170, target: Tone.Transport.bpm },
-            density: { min: 0.0, max: 1.0, target: null },
-            lfoRate: { min: 0.1, max: 8, target: lfo.frequency },
-            lfoDepth: { min: 200, max: 4000, target: lfo },
-            reverb: { min: 0.1, max: 0.9, target: reverb.wet },
-            reverbDecay: { min: 1, max: 10, target: reverb.decay },
+            tempo: {min: 70, max: 180, target: Tone.Transport.bpm}, density: {min: 0.0, max: 1.0, target: null},
+            lfoRate: {min: 0.1, max: 8, target: lfo.frequency}, lfoDepth: {min: 200, max: 4000, target: lfo},
+            reverb: {min: 0.1, max: 0.9, target: reverb.wet}, reverbDecay: {min: 1, max: 10, target: reverb.decay},
         };
-        const TIME_SIGNATURES = [ { sig: [4, 4], steps: 16 }, { sig: [3, 4], steps: 12 }, { sig: [7, 8], steps: 14 } ];
+        const TIME_SIGNATURES = [{sig: [4, 4], steps: 16}, {sig: [3, 4], steps: 12}, {sig: [7, 8], steps: 14}];
 
         function startEvolveCycle() {
             if (!isPlaying) return;
-
-            // Change meter and rhythm
             const newTimeSig = TIME_SIGNATURES[Math.floor(Math.random() * TIME_SIGNATURES.length)];
             Tone.Transport.timeSignature = newTimeSig.sig;
             NUM_STEPS = newTimeSig.steps;
             randomizeDrumPattern(NUM_STEPS);
             createSequencerGrid(NUM_STEPS);
             createDrumSequence(NUM_STEPS);
-
-            // Change mood
             changeMood();
-
-            // Conditional Panning
-            panners.forEach(panner => {
-                if (Math.random() < 0.5) {
-                    panner.wet.value = 1; // Panning is active
-                } else {
-                    panner.wet.value = 0; // Panning is off
-                }
-            });
-
+            panners.forEach(panner => { panner.wet.value = Math.random() < 0.5 ? 1 : 0; });
             const buildUpTime = parseFloat(controls['evolve-up'].value);
             const buildDownTime = parseFloat(controls['evolve-breakdown'].value);
             const peakTime = parseFloat(controls['evolve-peak'].value);
             const totalCycleTime = buildUpTime + peakTime + buildDownTime;
-
             evolveState = 'Build Up';
             evolveSignal.rampTo(1, buildUpTime);
-
             Tone.Transport.scheduleOnce(() => { evolveState = 'Peak'; }, `+${buildUpTime}`);
             Tone.Transport.scheduleOnce(() => { evolveState = 'Breaking Down'; evolveSignal.rampTo(0, buildDownTime) }, `+${buildUpTime + peakTime}`);
             Tone.Transport.scheduleOnce(startEvolveCycle, `+${totalCycleTime}`);
@@ -621,21 +744,14 @@
         function inferMood() {
             const tempo = Tone.Transport.bpm.value;
             const scaleType = dom.scaleTypeSelect.value;
-
             let tempoDescriptor;
-            if (tempo > 150) tempoDescriptor = "Frenetic";
-            else if (tempo > 120) tempoDescriptor = "Energetic";
-            else if (tempo < 90) tempoDescriptor = "Meditative";
-            else tempoDescriptor = "Relaxed";
-
+            if (tempo > 150) tempoDescriptor = "Frenetic"; else if (tempo > 120) tempoDescriptor = "Energetic";
+            else if (tempo < 90) tempoDescriptor = "Meditative"; else tempoDescriptor = "Relaxed";
             let scaleDescriptor;
-            switch(scaleType) {
-                case 'major': case 'majorPentatonic':
-                    scaleDescriptor = tempo > 110 ? 'Euphoric' : 'Hopeful'; break;
-                case 'minor': case 'minorPentatonic':
-                    scaleDescriptor = tempo > 110 ? 'Intense' : 'Somber'; break;
-                case 'dorian':
-                    scaleDescriptor = 'Mystical'; break;
+            switch (scaleType) {
+                case 'major': case 'majorPentatonic': scaleDescriptor = tempo > 110 ? 'Euphoric' : 'Hopeful'; break;
+                case 'minor': case 'minorPentatonic': scaleDescriptor = tempo > 110 ? 'Intense' : 'Somber'; break;
+                case 'dorian': scaleDescriptor = 'Mystical'; break;
                 default: scaleDescriptor = 'Neutral';
             }
             return `${tempoDescriptor} & ${scaleDescriptor}`;
@@ -644,22 +760,15 @@
         function updateStatusBar() {
             const currentMood = isPlaying ? inferMood() : '...';
             const moodColor = MOOD_COLORS[currentMood] || 'var(--text-display)';
-
             dom.statusBar.evolveState.textContent = evolveState;
             dom.statusBar.mood.textContent = currentMood;
             dom.statusBar.tempo.textContent = `${Math.round(Tone.Transport.bpm.value)} BPM`;
-
             if (currentChord && currentChord.length > 0) {
-                dom.statusBar.chord.textContent = currentChord.map(n => n.replace(/#/g, '♯').slice(0,-1)).join(' - ');
-            } else {
-                dom.statusBar.chord.textContent = '-';
-            }
-
+                dom.statusBar.chord.textContent = currentChord.map(n => n.replace(/#/g, '♯').slice(0, -1)).join(' - ');
+            } else { dom.statusBar.chord.textContent = '-'; }
             const root = dom.rootNoteSelect.value.replace(/#/g, '♯');
             const type = dom.scaleTypeSelect.options[dom.scaleTypeSelect.selectedIndex].text;
             dom.statusBar.scale.textContent = `${root} ${type}`;
-
-            // Update colors
             if (!document.body.classList.contains('theme-vintage')) {
                 dom.mainTitle.style.color = moodColor;
                 document.documentElement.style.setProperty('--border-color', moodColor);
@@ -679,24 +788,20 @@
             if (!isPlaying) return;
             const evolveValue = evolveSignal.value;
             for (const param in evolveParams) {
-                const { min, max, target } = evolveParams[param];
-                let newValue;
+                const {min, max, target} = evolveParams[param];
+                let newValue = (param === 'reverb' || param === 'reverbDecay') ? max - (max - min) * evolveValue : min + (max - min) * evolveValue;
 
-                if (param === 'reverb' || param === 'reverbDecay') {
-                    newValue = max - (max - min) * evolveValue;
-                } else {
-                    newValue = min + (max - min) * evolveValue;
-                }
-
-                if(param === 'lfoDepth') {
+                if (param === 'lfoDepth') {
                     lfo.max = newValue;
+                } else if (param === 'reverbDecay') { // FIX: Handle reverb.decay separately as it's a number
+                    reverb.decay = newValue;
                 } else if (target) {
                     target.value = newValue;
                 }
 
                 if (controls[param]) {
                     controls[param].value = newValue;
-                    updateDisplay(param, target ? Math.round(newValue).toFixed(1) : newValue.toFixed(2));
+                    updateDisplay(param, target && target.value !== undefined ? newValue.toFixed(1) : newValue.toFixed(2));
                 }
             }
             updateStatusBar();
@@ -714,12 +819,17 @@
             if (isPlaying) {
                 Tone.Transport.start();
                 dom.playStopButton.textContent = 'Stop';
+                initialDrumRamp.cancelScheduledValues(Tone.now());
+                initialDrumRamp.setValueAtTime(0, Tone.now());
+                initialDrumRamp.linearRampToValueAtTime(1, Tone.now() + 15);
                 startEvolveCycle();
             } else {
                 Tone.Transport.stop();
                 Tone.Transport.cancel(0);
                 evolveSignal.cancelScheduledValues(Tone.now());
                 evolveSignal.value = 0;
+                initialDrumRamp.cancelScheduledValues(Tone.now());
+                initialDrumRamp.value = 0;
                 evolveState = 'Idle';
                 updateStatusBar();
                 dom.playStopButton.textContent = 'Start';
@@ -727,40 +837,27 @@
         });
 
         dom.newMoodButton.addEventListener('click', changeMood);
-
-        dom.themeSwitcher.addEventListener('click', () => {
-            document.body.classList.toggle('theme-vintage');
-            updateStatusBar();
-        });
-
-        [dom.rootNoteSelect, dom.scaleTypeSelect, dom.octaveSelect].forEach(el => {
-            el.addEventListener('change', updateMusicTheory);
-        });
+        dom.themeSwitcher.addEventListener('click', () => { document.body.classList.toggle('theme-vintage'); updateStatusBar(); });
+        [dom.rootNoteSelect, dom.scaleTypeSelect, dom.octaveSelect].forEach(el => { el.addEventListener('change', updateMusicTheory); });
 
         // --- Initialization ---
         function initialize() {
+            const defaultPattern = {
+                kick: [0, 4, 8, 12], snare: [], hat: [2, 6, 10, 14], openhat: [14],
+                crash: [0], tom1: [], tom2: [], bell: []
+            };
+            Object.keys(defaultPattern).forEach(inst => {
+                if (seq_data[inst]) {
+                    defaultPattern[inst].forEach(stepIdx => { seq_data[inst][stepIdx] = true; });
+                }
+            });
             createSequencerGrid(NUM_STEPS);
             setupControls();
             Tone.Transport.swing = 0;
             Tone.Transport.swingSubdivision = '16n';
             updateMusicTheory();
-            // Default Berlin-style pattern
-            const defaultPattern = {
-                kick: [0, 4, 8, 12],
-                snare: [],
-                hat: [2, 6, 10, 14],
-                openhat: [14]
-            };
-            Object.keys(defaultPattern).forEach(inst => {
-                defaultPattern[inst].forEach(stepIdx => {
-                    seq_data[inst][stepIdx] = true;
-                    const el = document.querySelector(`[data-instrument=${inst}] [data-step="${stepIdx}"]`);
-                    if (el) el.classList.add('active');
-                });
-            });
             updateStatusBar();
         }
-
         initialize();
     });
 </script>
