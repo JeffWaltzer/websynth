@@ -70,7 +70,14 @@
         h2.section-header { color: var(--text-header); letter-spacing: 0.05em; }
         label, .text-label { color: var(--text-label); }
         .text-display { color: var(--text-display); }
-        select { background-color: var(--bg-control); border-color: var(--border-color); color: var(--text-label); }
+        select {
+            background-color: rgba(0,0,0,0.2);
+            border-color: var(--border-color);
+            color: var(--text-label);
+        }
+        .theme-vintage select {
+            background-color: rgba(0,0,0,0.1);
+        }
 
         input[type="range"]::-webkit-slider-thumb { background: var(--thumb-color); transition: background-color 2s ease-in-out; }
         input[type="range"]::-moz-range-thumb { background: var(--thumb-color); transition: background-color 2s ease-in-out; }
@@ -84,39 +91,45 @@
             background-image: var(--select-arrow-url);
             background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.2em; padding-right: 2.5rem;
         }
-        .note-playing { color: var(--note-highlight-color); transform: scale(1.2); transition: all 0.1s ease-out; }
 
         .seq-step {
-            width: 1.75rem; height: 1.75rem; border: 1px solid var(--border-color); transition: all 0.1s ease;
+            width: 1rem; height: 1rem; border: 1px solid var(--border-color); transition: all 0.1s ease;
             cursor: pointer;
+            background-color: rgba(0, 0, 0, 0.4);
         }
-        @media (min-width: 640px) { .seq-step { width: 2rem; height: 2rem; } }
-        @media (min-width: 1024px) { .seq-step { width: 2.5rem; height: 2.5rem; } }
+        @media (min-width: 640px) { .seq-step { width: 1.25rem; height: 1.25rem; } }
+        @media (min-width: 1024px) { .seq-step { width: 1.5rem; height: 1.5rem; } }
 
-        .seq-step.active { background-color: var(--thumb-color); opacity: 0.75; }
-        .seq-step.playing { box-shadow: 0 0 10px 2px var(--note-highlight-color); transform: scale(1.1); opacity: 1; }
+        .seq-step.active { background-color: var(--thumb-color); }
+        .seq-step.playing { box-shadow: 0 0 15px 3px var(--note-highlight-color); transform: scale(1.1); }
         .seq-step:hover { border-color: var(--note-highlight-color); }
 
         .status-bar-item { @apply text-center p-2 rounded-lg bg-black/10 flex-1 min-w-[120px]; }
-        .status-bar-label { @apply block text-xs font-semibold uppercase tracking-wider text-label opacity-70; }
-        .status-bar-value { @apply block text-lg font-bold text-display; }
+        .status-bar-value { @apply block text-lg sm:text-xl font-bold text-display; }
 
-        .live-note {
-            opacity: 1;
-            transition: opacity 0.5s ease-out;
+        .live-note-value {
+            transition: all 0.1s ease-out;
+            width: 2rem; /* Fixed width to prevent layout shift */
+            display: inline-block;
         }
-        .live-note.fade-out {
-            opacity: 0;
+        .note-flash {
+            color: var(--note-highlight-color) !important;
+            transform: scale(1.2);
         }
+        #live-note-bass { color: hsl(190, 80%, 60%); }
+        #live-note-pluck { color: hsl(280, 80%, 70%); }
+        #live-note-pad { color: hsl(40, 80%, 65%); }
+        #live-note-lfoPad { color: hsl(100, 80%, 60%); }
+        #live-note-melody { color: hsl(0, 80%, 70%); }
+        #live-note-kick, #live-note-snare, #live-note-hat, #live-note-openhat { color: var(--text-display); }
     </style>
 </head>
 <body class="transition-colors duration-500">
 
-<div class="main-panel w-full max-w-7xl mx-auto p-2 my-2 rounded-2xl shadow-2xl border">
+<div class="main-panel w-full max-w-7xl mx-auto p-2 my-1 rounded-2xl shadow-2xl border">
     <!-- Header -->
-    <div class="relative text-center mb-2">
+    <div class="relative text-center mb-1">
         <h1 id="main-title" class="text-3xl sm:text-4xl font-bold tracking-tight">Generative Sequencer</h1>
-        <p class="mt-1 text-sm text-label">Craft your own evolving soundscape</p>
         <div class="absolute top-0 right-2">
             <button id="theme-switcher" title="Toggle theme" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--bg-panel)] focus:ring-[var(--thumb-color)]">
                 <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" /></svg>
@@ -125,32 +138,35 @@
         </div>
     </div>
 
-    <div id="message-box" class="text-center text-yellow-400 mb-2 h-5"></div>
+    <div id="message-box" class="text-center text-yellow-400 mb-1 h-5"></div>
 
-    <div class="mb-2">
+    <div class="mb-1">
         <button id="play-stop-button" title="Start or stop the music" class="bg-[var(--thumb-color)] hover:opacity-80 text-white font-bold py-3 px-4 rounded-full text-xl w-full transition-all duration-300 ease-in-out shadow-lg transform hover:scale-105">Start</button>
     </div>
 
     <!-- Status Bar -->
-    <div id="status-bar" class="control-group p-2 rounded-xl mb-2 flex flex-wrap justify-around gap-2">
-        <div class="status-bar-item"><span class="status-bar-label">Evolve State</span><span id="evolve-state-display" class="status-bar-value">Idle</span></div>
-        <div class="status-bar-item"><span class="status-bar-label">Mood</span><span id="mood-display" class="status-bar-value">...</span></div>
-        <div class="status-bar-item"><span class="status-bar-label">Tempo</span><span id="tempo-display" class="status-bar-value">70 BPM</span></div>
-        <div class="status-bar-item"><span class="status-bar-label">Current Chord</span><span id="chord-display" class="status-bar-value">-</span></div>
-        <div class="status-bar-item"><span class="status-bar-label">Key</span><span id="scale-display" class="status-bar-value">-</span></div>
+    <div id="status-bar" class="control-group p-1 rounded-xl mb-1 flex flex-wrap justify-around gap-1">
+        <div class="status-bar-item"><span id="evolve-state-display" class="status-bar-value">Idle</span></div>
+        <div class="status-bar-item"><span id="mood-display" class="status-bar-value">...</span></div>
+        <div class="status-bar-item"><span id="tempo-display" class="status-bar-value">70 BPM</span></div>
+        <div class="status-bar-item"><span id="chord-display" class="status-bar-value">-</span></div>
+        <div class="status-bar-item"><span id="scale-display" class="status-bar-value">-</span></div>
     </div>
 
     <!-- Main Control Panels -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-2">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 mb-1">
         <div class="control-group p-3 rounded-xl">
             <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Global &amp; Rhythm</h2>
-            <div data-instrument="master"><label for="master-vol" class="block mb-1 text-sm font-semibold text-label">Master Volume</label><input type="range" id="master-vol" min="-20" max="6" value="3" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="master-vol-value">3</span> dB</div></div>
-            <div data-instrument="tempo" class="mt-2"><label for="tempo" class="block mb-1 text-sm font-semibold text-label">Tempo</label><input type="range" id="tempo" min="70" max="170" value="70" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="tempo-value">70</span> BPM</div></div>
-            <div data-instrument="swing" class="mt-2"><label for="swing" class="block mb-1 text-sm font-semibold text-label">Swing</label><input type="range" id="swing" min="0" max="0.8" value="0" step="0.05" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="swing-value">0.0</span></div></div>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+                <div data-instrument="master"><label for="master-vol" class="block mb-1 text-sm font-semibold text-label">Master Volume</label><input type="range" id="master-vol" min="-20" max="6" value="3" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="master-vol-value">3</span> dB</div></div>
+                <div data-instrument="tempo"><label for="tempo" class="block mb-1 text-sm font-semibold text-label">Tempo</label><input type="range" id="tempo" min="70" max="170" value="70" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="tempo-value">70</span> BPM</div></div>
+                <div data-instrument="reverb"><label for="reverb" class="block mb-1 text-sm font-semibold text-label">Reverb Mix</label><input type="range" id="reverb" min="0" max="1" value="0.9" step="0.05" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="reverb-value">0.9</span></div></div>
+                <div data-instrument="reverbDecay"><label for="reverbDecay" class="block mb-1 text-sm font-semibold text-label">Reverb Decay</label><input type="range" id="reverbDecay" min="1" max="10" value="10" step="0.1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="reverbDecay-value">10.0</span>s</div></div>
+            </div>
         </div>
         <div class="control-group p-3 rounded-xl">
             <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Foundation</h2>
-            <div class="space-y-3">
+            <div class="grid grid-cols-3 gap-2">
                 <select id="root-note-select" title="Select root note" class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5"><option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option></select>
                 <select id="scale-type-select" title="Select scale" class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5"><option value="majorPentatonic">Major Pentatonic</option><option value="minorPentatonic">Minor Pentatonic</option><option value="major">Major</option><option value="minor" selected>Natural Minor</option><option value="dorian">Dorian</option></select>
                 <select id="octave-select" title="Select octave" class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
@@ -159,30 +175,42 @@
         </div>
         <div class="control-group p-3 rounded-xl">
             <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Evolve Engine</h2>
-            <div data-instrument="density"><label for="density" class="block mb-1 text-sm font-semibold text-label">Drum Density</label><input type="range" id="density" min="0.0" max="1.0" value="0.0" step="0.05" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="density-value">0.0</span></div></div>
-            <div data-instrument="evolve-up" class="mt-2"><label for="evolve-up" class="block mb-1 text-sm font-semibold text-label">Build Up</label><input type="range" id="evolve-up" min="10" max="360" value="120" step="5" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-up-value">120</span>s</div></div>
-            <div data-instrument="evolve-breakdown" class="mt-2"><label for="evolve-breakdown" class="block mb-1 text-sm font-semibold text-label">Break Down</label><input type="range" id="evolve-breakdown" min="10" max="180" value="20" step="5" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-breakdown-value">20</span>s</div></div>
-            <div data-instrument="evolve-peak" class="mt-2"><label for="evolve-peak" class="block mb-1 text-sm font-semibold text-label">Peak Time</label><input type="range" id="evolve-peak" min="1" max="90" value="10" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-peak-value">10</span>s</div></div>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+                <div><label for="density" class="block mb-1 text-sm font-semibold text-label">Drum Density</label><input type="range" id="density" min="0.0" max="1.0" value="0.0" step="0.05" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="density-value">0.0</span></div></div>
+                <div><label for="evolve-up" class="block mb-1 text-sm font-semibold text-label">Build Up</label><input type="range" id="evolve-up" min="10" max="360" value="120" step="5" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-up-value">120</span>s</div></div>
+                <div><label for="evolve-breakdown" class="block mb-1 text-sm font-semibold text-label">Break Down</label><input type="range" id="evolve-breakdown" min="10" max="180" value="20" step="5" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-breakdown-value">20</span>s</div></div>
+                <div><label for="evolve-peak" class="block mb-1 text-sm font-semibold text-label">Peak Time</label><input type="range" id="evolve-peak" min="1" max="90" value="10" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-peak-value">10</span>s</div></div>
+            </div>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-2">
-        <div class="lg:col-span-2 control-group p-3 rounded-xl mb-2">
+        <div class="lg:col-span-2 control-group p-3 rounded-xl mb-1">
             <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Mixer</h2>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1">
                 <div data-instrument="bass"><label for="bass-vol" class="block text-center mb-1 text-sm font-semibold text-label">Bass</label><input type="range" id="bass-vol" min="-40" max="0" value="-4" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="bass-vol-value">-4</span> dB</div></div>
                 <div data-instrument="pluck"><label for="pluck-vol" class="block text-center mb-1 text-sm font-semibold text-label">Pluck</label><input type="range" id="pluck-vol" min="-40" max="0" value="-10" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="pluck-vol-value">-10</span> dB</div></div>
-                <div data-instrument="pad"><label for="pad-vol" class="block text-center mb-1 text-sm font-semibold text-label">Pad</label><input type="range" id="pad-vol" min="-40" max="0" value="-12" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="pad-vol-value">-12</span> dB</div></div>
-                <div data-instrument="lfoPad"><label for="lfoPad-vol" class="block text-center mb-1 text-sm font-semibold text-label">LFO Pad</label><input type="range" id="lfoPad-vol" min="-40" max="0" value="-24" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="lfoPad-vol-value">-24</span> dB</div></div>
+                <div data-instrument="pad"><label for="pad-vol" class="block text-center mb-1 text-sm font-semibold text-label">Pad</label><input type="range" id="pad-vol" min="-40" max="0" value="-18" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="pad-vol-value">-18</span> dB</div></div>
+                <div data-instrument="lfoPad"><label for="lfoPad-vol" class="block text-center mb-1 text-sm font-semibold text-label">LFO Pad</label><input type="range" id="lfoPad-vol" min="-40" max="0" value="-20" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="lfoPad-vol-value">-20</span> dB</div></div>
                 <div data-instrument="melody"><label for="melody-vol" class="block text-center mb-1 text-sm font-semibold text-label">Melody</label><input type="range" id="melody-vol" min="-40" max="0" value="-12" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="melody-vol-value">-12</span> dB</div></div>
                 <div data-instrument="openhat"><label for="openhat-vol" class="block text-center mb-1 text-sm font-semibold text-label">Open Hat</label><input type="range" id="openhat-vol" min="-40" max="0" value="-18" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="openhat-vol-value">-18</span> dB</div></div>
                 <div data-instrument="hat"><label for="hat-vol" class="block text-center mb-1 text-sm font-semibold text-label">Hat</label><input type="range" id="hat-vol" min="-40" max="0" value="-12" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="hat-vol-value">-12</span> dB</div></div>
                 <div data-instrument="rumble"><label for="rumble-vol" class="block text-center mb-1 text-sm font-semibold text-label">Rumble</label><input type="range" id="rumble-vol" min="-40" max="0" value="-20" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="rumble-vol-value">-20</span> dB</div></div>
             </div>
         </div>
-        <div class="control-group p-3 rounded-xl mb-2">
-            <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Live Notes</h2>
-            <div id="live-notes-display" class="grid grid-cols-3 sm:grid-cols-4 gap-1 text-center font-mono text-sm h-full min-h-[6rem]"></div>
+        <div class="control-group p-3 rounded-xl mb-1">
+            <h2 class="section-header text-lg font-bold text-center mb-1">Live Notes</h2>
+            <div id="live-notes-display" class="grid grid-cols-3 gap-1 text-center font-mono text-xs">
+                <div><span class="text-label text-xs">Bass:</span><br><span id="live-note-bass" class="live-note-value font-bold text-xl">-</span></div>
+                <div><span class="text-label text-xs">Pluck:</span><br><span id="live-note-pluck" class="live-note-value font-bold text-xl">-</span></div>
+                <div><span class="text-label text-xs">Pad:</span><br><span id="live-note-pad" class="live-note-value font-bold text-xl">-</span></div>
+                <div><span class="text-label text-xs">LFO Pad:</span><br><span id="live-note-lfoPad" class="live-note-value font-bold text-xl">-</span></div>
+                <div><span class="text-label text-xs">Melody:</span><br><span id="live-note-melody" class="live-note-value font-bold text-xl">-</span></div>
+                <div><span class="text-label text-xs">Kick:</span><br><span id="live-note-kick" class="live-note-value font-bold text-xl">-</span></div>
+                <div><span class="text-label text-xs">Snare:</span><br><span id="live-note-snare" class="live-note-value font-bold text-xl">-</span></div>
+                <div><span class="text-label text-xs">Hat:</span><br><span id="live-note-hat" class="live-note-value font-bold text-xl">-</span></div>
+                <div><span class="text-label text-xs">Open Hat:</span><br><span id="live-note-openhat" class="live-note-value font-bold text-xl">-</span></div>
+            </div>
         </div>
     </div>
 
@@ -190,10 +218,8 @@
         <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Drum Sequencer</h2>
         <div id="sequencer-grid" class="flex gap-1 sm:gap-2 justify-center">
             <div id="sequencer-labels" class="flex flex-col gap-1 sm:gap-2 justify-around text-right pr-2">
-                <!-- Labels will be generated here -->
             </div>
             <div id="sequencer-steps" class="flex flex-col gap-1 sm:gap-2">
-                <!-- Steps will be generated here -->
             </div>
         </div>
     </div>
@@ -252,7 +278,17 @@
             themeSwitcher: document.getElementById('theme-switcher'),
             themeIconDark: document.getElementById('theme-icon-dark'),
             themeIconLight: document.getElementById('theme-icon-light'),
-            liveNotesDisplay: document.getElementById('live-notes-display'),
+            liveNotes: {
+                bass: document.getElementById('live-note-bass'),
+                pluck: document.getElementById('live-note-pluck'),
+                pad: document.getElementById('live-note-pad'),
+                lfoPad: document.getElementById('live-note-lfoPad'),
+                melody: document.getElementById('live-note-melody'),
+                kick: document.getElementById('live-note-kick'),
+                snare: document.getElementById('live-note-snare'),
+                hat: document.getElementById('live-note-hat'),
+                openhat: document.getElementById('live-note-openhat'),
+            },
             statusBar: {
                 evolveState: document.getElementById('evolve-state-display'),
                 mood: document.getElementById('mood-display'),
@@ -264,10 +300,15 @@
 
         // --- Audio Setup ---
         const limiter = new Tone.Limiter(-0.5).toDestination();
-        const masterVolume = new Tone.Volume(0).connect(limiter);
+        const compressor = new Tone.Compressor(-24, 3).connect(limiter);
+        const masterVolume = new Tone.Volume(0).connect(compressor);
+
+        const reverb = new Tone.Reverb({ decay: 10, wet: 0.9 }).connect(masterVolume);
+        const delay = new Tone.PingPongDelay("8n.", 0.2).connect(reverb);
 
         // LFO Pad setup
-        const lfoPadFilter = new Tone.Filter(400, "lowpass").connect(masterVolume);
+        const lfoPadFilter = new Tone.Filter(400, "lowpass");
+        const lfoPadPanner = new Tone.AutoPanner("10m").connect(lfoPadFilter).start();
         const lfo = new Tone.LFO({
             type: "sine",
             min: 200,
@@ -284,16 +325,22 @@
             envelope: { attack: 0.01, decay: 0.4, sustain: 1, release: 0.8 }
         }).connect(rumbleFilter);
 
+        // Panners
+        const hatPanner = new Tone.AutoPanner("16m").connect(masterVolume).start();
+        const melodyPanner = new Tone.AutoPanner("12m").fan(delay, masterVolume).start();
+        const pluckPanner = new Tone.AutoPanner("8m").fan(delay, masterVolume).start();
+        const panners = [hatPanner, melodyPanner, pluckPanner, lfoPadPanner];
+
         const synths = {
             kick: new Tone.MembraneSynth({ volume: -2, octaves: 10, pitchDecay: 0.05, envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4, attackCurve: 'exponential' } }).connect(masterVolume),
             snare: new Tone.NoiseSynth({ volume: -14, noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.2 } }).connect(masterVolume),
-            hat: new Tone.MetalSynth({ volume: -18, frequency: 300, envelope: { attack: 0.005, decay: 0.05, release: 0.08 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(masterVolume),
-            openhat: new Tone.MetalSynth({ volume: -18, frequency: 250, envelope: { attack: 0.01, decay: 0.4, release: 0.4 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(masterVolume),
+            hat: new Tone.MetalSynth({ volume: -18, frequency: 300, envelope: { attack: 0.005, decay: 0.05, release: 0.08 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(hatPanner),
+            openhat: new Tone.MetalSynth({ volume: -18, frequency: 250, envelope: { attack: 0.01, decay: 0.4, release: 0.4 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(hatPanner),
             bass: new Tone.MonoSynth({ volume: -4, oscillator: { type: 'fatsquare' }, envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 2 }, filterEnvelope: { attack: 0.01, decay: 0.6, sustain: 0.2, release: 2, baseFrequency: 80, octaves: 4 } }).connect(masterVolume),
-            pluck: new Tone.PluckSynth({ volume: -10, attackNoise: 0.8, dampening: 5000, resonance: 0.95 }).connect(masterVolume),
-            pad: new Tone.PolySynth(Tone.FMSynth, { volume: -12, envelope: { attack: 1, decay: 0.5, sustain: 0.5, release: 3 } }).set({ maxPolyphony: 6 }).connect(masterVolume),
-            melody: new Tone.FMSynth({ volume: -12, envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.2 } }).set({ maxPolyphony: 4 }).connect(masterVolume),
-            lfoPad: new Tone.FMSynth({ volume: -24, harmonicity: 1.5, modulationIndex: 3, envelope: { attack: 1, decay: 0.5, sustain: 1, release: 2 } }).connect(lfoPadFilter),
+            pluck: new Tone.PluckSynth({ volume: -10, attackNoise: 0.8, dampening: 5000, resonance: 0.95 }).connect(pluckPanner),
+            pad: new Tone.PolySynth(Tone.FMSynth, { volume: -18, detune: 15, envelope: { attack: 1, decay: 0.5, sustain: 0.5, release: 3 } }).fan(reverb, masterVolume),
+            melody: new Tone.FMSynth({ volume: -12, envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.2 } }).connect(melodyPanner),
+            lfoPad: new Tone.FMSynth({ volume: -20, detune: 20, harmonicity: 1.5, modulationIndex: 3, envelope: { attack: 1, decay: 0.5, sustain: 1, release: 2 } }).connect(lfoPadPanner),
             rumble: rumble,
         };
 
@@ -320,7 +367,8 @@
                         if (synths[instrumentId]) synths[instrumentId].volume.value = value;
                         else if (instrumentId === 'master') masterVolume.volume.value = value;
                         else if (instrumentId === 'tempo') Tone.Transport.bpm.value = value;
-                        else if (instrumentId === 'swing') Tone.Transport.swing = value;
+                        else if (instrumentId === 'reverb') reverb.wet.value = value;
+                        else if (instrumentId === 'reverbDecay') reverb.decay = value;
                     }
                 });
             });
@@ -424,36 +472,45 @@
             return scale;
         }
 
-        function displayLiveNote(instrument, note, duration) {
-            const noteEl = document.createElement('div');
-            noteEl.className = 'live-note p-1 bg-black/20 rounded-md text-center';
-            noteEl.textContent = `${instrument}: ${note.replace(/\d/g, '')}`;
-            dom.liveNotesDisplay.appendChild(noteEl);
-            setTimeout(() => {
-                noteEl.classList.add('fade-out');
-                setTimeout(() => noteEl.remove(), 500);
-            }, Tone.Time(duration).toMilliseconds() - 100);
+        function displayLiveNote(instrument, note) {
+            const noteEl = dom.liveNotes[instrument];
+            if (noteEl) {
+                const isDrum = ['kick', 'snare', 'hat', 'openhat'].includes(instrument);
+                noteEl.textContent = isDrum ? '🥁' : note.replace(/#/g, '♯').replace(/\d/g, '');
+                noteEl.classList.add('note-flash');
+                setTimeout(() => {
+                    noteEl.classList.remove('note-flash');
+                    if (isDrum) {
+                        noteEl.textContent = '-';
+                    }
+                }, 150);
+            }
         }
 
         const bassSequence = new Tone.Sequence((time, note) => {
             synths.bass.triggerAttackRelease(note, "8n", time);
-            Tone.Draw.schedule(() => displayLiveNote('Bass', note, '8n'), time);
+            Tone.Draw.schedule(() => displayLiveNote('bass', note), time);
         }, [], "4n").start(0);
 
         const arpSequence = new Tone.Sequence((time, note) => {
             if (note !== null && Math.random() < 0.7) {
                 synths.pluck.triggerAttackRelease(note, "16n", time);
-                Tone.Draw.schedule(() => displayLiveNote('Pluck', note, '16n'), time);
+                Tone.Draw.schedule(() => displayLiveNote('pluck', note), time);
             }
         }, [], "16n").start(0);
 
         const lfoPadSequence = new Tone.Sequence((time, note) => {
-            if (Math.random() < 0.5) {
-                const droneNote = Tone.Frequency(note).transpose(-12);
-                synths.lfoPad.triggerAttackRelease(droneNote, "1m", time);
-                Tone.Draw.schedule(() => displayLiveNote('LFO Pad', droneNote.toNote(), '1m'), time);
-            }
+            const droneNote = Tone.Frequency(note).transpose(-12);
+            synths.lfoPad.triggerAttackRelease(droneNote, "1m", time);
+            Tone.Draw.schedule(() => displayLiveNote('lfoPad', droneNote.toNote()), time);
         }, [], "1m").start(0);
+
+        const melodySequence = new Tone.Sequence((time, note) => {
+            if (Math.random() < 0.25) { // Melody is sparse
+                synths.melody.triggerAttackRelease(note, "8n", time);
+                Tone.Draw.schedule(() => displayLiveNote('melody', note), time);
+            }
+        }, [], "8n").start(0);
 
         function updateArpeggiatorNotes() {
             if (currentChord.length === 0) return;
@@ -461,6 +518,7 @@
             const arpNotes = currentChord.flatMap(note => [note, null, Tone.Frequency(note).transpose(12).toNote(), null]);
             arpSequence.events = arpNotes;
             lfoPadSequence.events = [currentChord[0]]; // Drone on the root note
+            melodySequence.events = currentScale.slice(5, 12);
         }
 
         // --- Main Loop & Transport ---
@@ -476,10 +534,20 @@
                         if (instrument === 'kick') {
                             synths.kick.triggerAttackRelease("C1", "8n", time);
                             synths.rumble.triggerAttackRelease("C0", "2n", time);
+                            Tone.Draw.schedule(() => displayLiveNote('kick'), time);
                         }
-                        if (instrument === 'snare') synths.snare.triggerAttack(time);
-                        if (instrument === 'hat') synths.hat.triggerAttackRelease('C6', '16n', time, Math.random() * 0.3 + 0.5);
-                        if (instrument === 'openhat') synths.openhat.triggerAttack(time);
+                        if (instrument === 'snare') {
+                            synths.snare.triggerAttack(time);
+                            Tone.Draw.schedule(() => displayLiveNote('snare'), time);
+                        }
+                        if (instrument === 'hat') {
+                            synths.hat.triggerAttackRelease('C6', '16n', time, Math.random() * 0.3 + 0.5);
+                            Tone.Draw.schedule(() => displayLiveNote('hat'), time);
+                        }
+                        if (instrument === 'openhat') {
+                            synths.openhat.triggerAttack(time);
+                            Tone.Draw.schedule(() => displayLiveNote('openhat'), time);
+                        }
                     }
                 });
                 Tone.Draw.schedule(() => {
@@ -494,11 +562,10 @@
             progressionIndex = (progressionIndex + 1) % chordProgression.length;
             currentChord = getChordFromProgression(chordProgression[progressionIndex]);
             updateArpeggiatorNotes();
-            synths.pad.triggerAttackRelease(currentChord, "1m", time);
+            const padChord = currentChord.map(note => Tone.Frequency(note).transpose(-12).toNote());
+            synths.pad.triggerAttackRelease(padChord, "1m", time);
             Tone.Draw.schedule(() => {
-                displayLiveNote('Pad', currentChord[0], '1m');
-                displayLiveNote('Pad', currentChord[1], '1m');
-                displayLiveNote('Pad', currentChord[2], '1m');
+                if(padChord[0]) displayLiveNote('pad', padChord[0]);
             }, time);
         }, "1m").start(0);
 
@@ -509,6 +576,8 @@
             density: { min: 0.0, max: 1.0, target: null },
             lfoRate: { min: 0.1, max: 8, target: lfo.frequency },
             lfoDepth: { min: 200, max: 4000, target: lfo },
+            reverb: { min: 0.1, max: 0.9, target: reverb.wet },
+            reverbDecay: { min: 1, max: 10, target: reverb.decay },
         };
         const TIME_SIGNATURES = [ { sig: [4, 4], steps: 16 }, { sig: [3, 4], steps: 12 }, { sig: [7, 8], steps: 14 } ];
 
@@ -526,15 +595,14 @@
             // Change mood
             changeMood();
 
-            // Conditional Swing
-            if (Math.random() < 0.1) {
-                Tone.Transport.swing = 0.5;
-                controls['swing'].value = 0.5;
-            } else {
-                Tone.Transport.swing = 0;
-                controls['swing'].value = 0;
-            }
-            updateDisplay('swing', Tone.Transport.swing.toFixed(1));
+            // Conditional Panning
+            panners.forEach(panner => {
+                if (Math.random() < 0.5) {
+                    panner.wet.value = 1; // Panning is active
+                } else {
+                    panner.wet.value = 0; // Panning is off
+                }
+            });
 
             const buildUpTime = parseFloat(controls['evolve-up'].value);
             const buildDownTime = parseFloat(controls['evolve-breakdown'].value);
@@ -582,12 +650,12 @@
             dom.statusBar.tempo.textContent = `${Math.round(Tone.Transport.bpm.value)} BPM`;
 
             if (currentChord && currentChord.length > 0) {
-                dom.statusBar.chord.textContent = currentChord.map(n => n.slice(0,-1)).join(' - ');
+                dom.statusBar.chord.textContent = currentChord.map(n => n.replace(/#/g, '♯').slice(0,-1)).join(' - ');
             } else {
                 dom.statusBar.chord.textContent = '-';
             }
 
-            const root = dom.rootNoteSelect.value;
+            const root = dom.rootNoteSelect.value.replace(/#/g, '♯');
             const type = dom.scaleTypeSelect.options[dom.scaleTypeSelect.selectedIndex].text;
             dom.statusBar.scale.textContent = `${root} ${type}`;
 
@@ -612,7 +680,14 @@
             const evolveValue = evolveSignal.value;
             for (const param in evolveParams) {
                 const { min, max, target } = evolveParams[param];
-                const newValue = min + (max - min) * evolveValue;
+                let newValue;
+
+                if (param === 'reverb' || param === 'reverbDecay') {
+                    newValue = max - (max - min) * evolveValue;
+                } else {
+                    newValue = min + (max - min) * evolveValue;
+                }
+
                 if(param === 'lfoDepth') {
                     lfo.max = newValue;
                 } else if (target) {
@@ -621,7 +696,7 @@
 
                 if (controls[param]) {
                     controls[param].value = newValue;
-                    updateDisplay(param, target ? Math.round(newValue) : newValue.toFixed(2));
+                    updateDisplay(param, target ? Math.round(newValue).toFixed(1) : newValue.toFixed(2));
                 }
             }
             updateStatusBar();
