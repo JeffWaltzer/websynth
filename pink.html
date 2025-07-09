@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative Prog Rock Music</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Tailwind gray-900 */
+        }
+        .prism-border {
+            position: relative;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            padding: 2px;
+            transition: background 0.5s ease;
+        }
+        .control-button {
+            transition: all 0.2s ease;
+        }
+        .control-button:hover {
+            transform: scale(1.05);
+        }
+        .play-button-glow {
+            box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.2), 0 0 30px 10px rgba(255, 255, 255, 0.1);
+        }
+        .play-button-glow:hover {
+            box-shadow: 0 0 25px 8px rgba(255, 255, 255, 0.4), 0 0 40px 15px rgba(255, 255, 255, 0.2);
+        }
+        .playing .play-icon { display: none; }
+        .playing .pause-icon { display: block; }
+        .paused .play-icon { display: block; }
+        .paused .pause-icon { display: none; }
+
+        .style-button {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .style-button.active {
+            border-color: #fff;
+            background-color: rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+
+<div class="w-full max-w-md mx-auto p-4">
+    <div id="prism-container" class="prism-border">
+        <div class="bg-gray-900 p-8 rounded-lg shadow-2xl flex flex-col items-center space-y-6">
+
+            <!-- Style Selection -->
+            <div class="w-full">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button class="style-button py-2 px-3 rounded-lg text-xs sm:text-sm" data-style="Pink Floyd">Pink Floyd</button>
+                    <button class="style-button py-2 px-3 rounded-lg text-xs sm:text-sm" data-style="Yes">Yes</button>
+                    <button class="style-button py-2 px-3 rounded-lg text-xs sm:text-sm" data-style="Genesis">Genesis</button>
+                    <button class="style-button py-2 px-3 rounded-lg text-xs sm:text-sm" data-style="Gentle Giant">Gentle Giant</button>
+                </div>
+            </div>
+
+            <!-- Album Art Placeholder -->
+            <div class="w-48 h-48 bg-black flex items-center justify-center rounded-full relative">
+                <div class="absolute w-full h-full bg-no-repeat bg-center" style="background-image: url('https://placehold.co/200x200/000000/FFFFFF?text='); background-size: 50%;"></div>
+                <div id="visualizer" class="absolute w-full h-full rounded-full opacity-20"></div>
+            </div>
+
+            <div class="text-center">
+                <h1 id="title" class="text-2xl font-bold tracking-wider">Select a Style</h1>
+                <p class="text-gray-400 mt-1">A Generative Soundscape</p>
+            </div>
+
+            <!-- Player Controls -->
+            <div class="flex items-center justify-center space-x-8">
+                <button id="play-pause-btn" class="paused w-20 h-20 bg-white text-gray-900 rounded-full flex items-center justify-center play-button-glow focus:outline-none control-button">
+                    <svg class="play-icon w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path d="M4.53 15.596l8.94-5.79a.5.5 0 000-.812L4.53 3.204A.5.5 0 003.75 3.61v11.78a.5.5 0 00.78.406z"></path></svg>
+                    <svg class="pause-icon hidden w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path d="M5.75 4.5a.75.75 0 00-.75.75v10.5a.75.75 0 001.5 0V5.25a.75.75 0 00-.75-.75zm7 0a.75.75 0 00-.75.75v10.5a.75.75 0 001.5 0V5.25a.75.75 0 00-.75-.75z"></path></svg>
+                </button>
+                <button id="next-section-btn" class="w-16 h-16 bg-gray-700 text-white rounded-full flex items-center justify-center focus:outline-none control-button hover:bg-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </button>
+            </div>
+
+            <!-- Volume and Status -->
+            <div class="w-full pt-4 space-y-4">
+                <div>
+                    <label for="volume-slider" class="sr-only">Volume</label>
+                    <input type="range" id="volume-slider" min="-40" max="0" value="-10" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div id="status" class="text-xs text-center text-gray-500 h-4">Stopped</div>
+                <div id="section-status" class="text-sm text-center text-gray-400 h-5 font-semibold tracking-wider"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- DOM Elements ---
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const nextSectionBtn = document.getElementById('next-section-btn');
+    const volumeSlider = document.getElementById('volume-slider');
+    const statusDiv = document.getElementById('status');
+    const sectionStatusDiv = document.getElementById('section-status');
+    const titleEl = document.getElementById('title');
+    const prismContainer = document.getElementById('prism-container');
+    const styleButtons = document.querySelectorAll('.style-button');
+
+    // --- Global State ---
+    let isInitialized = false;
+    let currentStyle = null;
+    let activeLoops = [];
+    let activeInstruments = [];
+
+    const styleConfig = {
+        "Pink Floyd": {
+            color: 'linear-gradient(45deg, #f87171, #fb923c, #facc15, #4ade80, #38bdf8, #818cf8, #c084fc)',
+            title: 'Echoes in the Machine',
+            setup: setupPinkFloyd
+        },
+        "Yes": {
+            color: 'linear-gradient(45deg, #6ee7b7, #3b82f6, #9333ea)',
+            title: 'Close to the Edge of Sound',
+            setup: setupYes
+        },
+        "Genesis": {
+            color: 'linear-gradient(45deg, #fde68a, #fca5a5, #fda4af)',
+            title: 'The Musical Box',
+            setup: setupGenesis
+        },
+        "Gentle Giant": {
+            color: 'linear-gradient(45deg, #a78bfa, #f472b6, #fb923c)',
+            title: 'Acquiring the Taste',
+            setup: setupGentleGiant
+        }
+    };
+
+    // --- Main Cleanup and Setup ---
+    function cleanup() {
+        Tone.Transport.cancel(0);
+        activeLoops.forEach(loop => loop.dispose());
+        activeInstruments.forEach(inst => inst.dispose());
+        activeLoops = [];
+        activeInstruments = [];
+    }
+
+    async function setStyle(styleName) {
+        if (currentStyle === styleName) return;
+        currentStyle = styleName;
+
+        const wasPlaying = Tone.Transport.state === 'started';
+        if (wasPlaying) Tone.Transport.stop();
+
+        cleanup();
+
+        const config = styleConfig[styleName];
+        titleEl.textContent = config.title;
+        prismContainer.style.background = config.color;
+
+        styleButtons.forEach(btn => {
+            if (btn.dataset.style === styleName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        await config.setup();
+
+        if (wasPlaying) {
+            Tone.Transport.start();
+        }
+        updateUI();
+    }
+
+    function updateUI() {
+        if (Tone.Transport.state === 'started') {
+            playPauseBtn.classList.remove('paused');
+            playPauseBtn.classList.add('playing');
+        } else {
+            playPauseBtn.classList.remove('playing');
+            playPauseBtn.classList.add('paused');
+            statusDiv.textContent = "Stopped";
+            sectionStatusDiv.textContent = currentStyle ? "Ready" : "";
+        }
+    }
+
+    // --- Generic Music Setup ---
+    async function initializeAudio() {
+        if (isInitialized) return;
+        await Tone.start();
+        console.log("Audio Context started");
+        Tone.getDestination().volume.value = volumeSlider.value;
+        isInitialized = true;
+    }
+
+    // --- Event Listeners ---
+    playPauseBtn.addEventListener('click', async () => {
+        await initializeAudio();
+        if (!currentStyle) {
+            alert("Please select a style first.");
+            return;
+        }
+
+        if (Tone.Transport.state !== 'started') {
+            Tone.Transport.start();
+        } else {
+            Tone.Transport.stop();
+        }
+        updateUI();
+    });
+
+    styleButtons.forEach(button => {
+        button.addEventListener('click', () => setStyle(button.dataset.style));
+    });
+
+    volumeSlider.addEventListener('input', () => {
+        if (isInitialized) Tone.getDestination().volume.value = volumeSlider.value;
+    });
+
+    // --- Style-Specific Setups ---
+
+    function setupPinkFloyd() {
+        Tone.Transport.bpm.value = 90;
+        const masterReverb = new Tone.Reverb({ decay: 10, wet: 0.7 }).toDestination();
+        const leadDelay = new Tone.FeedbackDelay("4n.", 0.6).connect(masterReverb);
+
+        const padSynth = new Tone.PolySynth(Tone.AMSynth, { envelope: { attack: 4, release: 7 } }).connect(masterReverb);
+        padSynth.volume.value = -18;
+
+        const leadSynth = new Tone.FMSynth({ harmonicity: 1.2, modulationIndex: 10, envelope: { attack: 0.1, release: 2 } }).connect(leadDelay);
+        leadSynth.volume.value = -15;
+
+        const bassSynth = new Tone.MonoSynth({ oscillator: { type: "fmsine" }, envelope: { attack: 0.01, release: 0.8 } }).toDestination();
+        bassSynth.volume.value = -8;
+
+        const kick = new Tone.MembraneSynth().toDestination();
+        kick.volume.value = -6;
+
+        activeInstruments.push(masterReverb, leadDelay, padSynth, leadSynth, bassSynth, kick);
+
+        const chordProgression = ["Am7", "G", "Cmaj7", "Fmaj7"];
+        let currentChordIndex = -1;
+
+        const chordLoop = new Tone.Loop(time => {
+            currentChordIndex = (currentChordIndex + 1) % chordProgression.length;
+            const chord = chordProgression[currentChordIndex];
+            statusDiv.textContent = `Chord: ${chord}`;
+            const chordMap = { "Am7": ["A2", "C3", "E3"], "G": ["G2", "B2", "D3"], "Cmaj7": ["C3", "E3", "G3"], "Fmaj7": ["F2", "A2", "C3"] };
+            padSynth.triggerAttackRelease(chordMap[chord], "4m", time);
+        }, "4m").start(0);
+
+        const leadLoop = new Tone.Loop(time => {
+            if (currentChordIndex < 0 || Math.random() < 0.4) return;
+            const melodicMap = { "Am7": ["A4", "C5", "E5", "G5"], "G": ["G4", "B4", "D5"], "Cmaj7": ["C5", "E5", "G5", "B5"], "Fmaj7": ["A4", "C5", "E5"] };
+            const notes = melodicMap[chordProgression[currentChordIndex]];
+            leadSynth.triggerAttackRelease(notes[0], "8n", time);
+            leadSynth.triggerAttackRelease(notes[1], "4n", time + Tone.Time("8n"));
+        }, "2m").start("1m");
+
+        const bassLoop = new Tone.Loop(time => {
+            if (currentChordIndex < 0) return;
+            const root = chordProgression[currentChordIndex][0] + "2";
+            bassSynth.triggerAttackRelease(root, "4n", time);
+            kick.triggerAttackRelease("C1", "8n", time);
+        }, "2n").start(0);
+
+        activeLoops.push(chordLoop, leadLoop, bassLoop);
+        sectionStatusDiv.textContent = "Psychedelic Rock";
+    }
+
+    function setupYes() {
+        Tone.Transport.bpm.value = 130;
+        const reverb = new Tone.Reverb({ decay: 2, wet: 0.5 }).toDestination();
+        const organ = new Tone.PolySynth(Tone.FMSynth, {
+            harmonicity: 3, modulationIndex: 0.5,
+            envelope: { attack: 0.1, release: 1 },
+            modulation: { type: 'square' }
+        }).connect(reverb);
+        organ.volume.value = -20;
+
+        const lead = new Tone.MonoSynth({ oscillator: {type: 'sawtooth'}, filter: {Q: 2}, envelope: {attack: 0.01, release: 0.5}}).connect(reverb);
+        lead.volume.value = -15;
+
+        const bass = new Tone.MonoSynth({oscillator: {type: 'triangle'}, filter: {Q: 4}, envelope: {attack: 0.01, release: 0.4}}).toDestination();
+        bass.volume.value = -10;
+
+        const kick = new Tone.MembraneSynth({octaves: 4}).toDestination();
+        const snare = new Tone.NoiseSynth().toDestination();
+        snare.volume.value = -15;
+
+        activeInstruments.push(reverb, organ, lead, bass, kick, snare);
+
+        const chordProgression = ["Emaj7", "F#m7", "G#m7", "Amaj7"];
+        let chordIndex = -1;
+
+        const chordLoop = new Tone.Loop(time => {
+            chordIndex = (chordIndex + 1) % chordProgression.length;
+            statusDiv.textContent = `Chord: ${chordProgression[chordIndex]}`;
+            const chordMap = { "Emaj7": ["E3", "G#3", "B3", "D#4"], "F#m7": ["F#3", "A3", "C#4", "E4"], "G#m7": ["G#3", "B3", "D#4", "F#4"], "Amaj7": ["A3", "C#4", "E4", "G#4"] };
+            organ.triggerAttackRelease(chordMap[chordProgression[chordIndex]], "2n", time);
+        }, "2n").start(0);
+
+        const leadPattern = new Tone.Sequence((time, note) => {
+            lead.triggerAttackRelease(note, "16n", time);
+        }, ["E5", "F#5", "G#5", "B5", "A5", "G#5", "F#5", "E5"], "2n").start(0);
+
+        const bassLoop = new Tone.Loop(time => {
+            if (chordIndex < 0) return;
+            const chordName = chordProgression[chordIndex];
+            const rootMatch = chordName.match(/^[A-G]#?/);
+            if (!rootMatch) return;
+            const root = rootMatch[0] + "2";
+            // This pattern fits within the 2n loop interval
+            bass.triggerAttackRelease(root, "8n", time);         // Beat 1
+            bass.triggerAttackRelease(root, "8n", time + "+8n");    // Beat 1 &
+            bass.triggerAttackRelease(root, "8n", time + "+4n");    // Beat 2
+        }, "2n").start(0); // FIX: Changed interval from "4n" to "2n"
+
+        const drumLoop = new Tone.Loop(time => {
+            kick.triggerAttackRelease("C2", "8n", time);
+            snare.triggerAttackRelease("16n", time + "+4n");
+        }, "2n").start(0);
+
+        activeLoops.push(chordLoop, leadPattern, bassLoop, drumLoop);
+        sectionStatusDiv.textContent = "Symphonic Prog";
+    }
+
+    function setupGenesis() {
+        Tone.Transport.bpm.value = 75;
+        const reverb = new Tone.Reverb({ decay: 6, wet: 0.6 }).toDestination();
+        const mellotron = new Tone.PolySynth(Tone.AMSynth, {
+            harmonicity: 1.5,
+            envelope: { attack: 1.5, release: 2 },
+        }).connect(reverb);
+        mellotron.volume.value = -12;
+
+        const twelveString = new Tone.PolySynth(Tone.FMSynth, {
+            harmonicity: 2, modulationIndex: 1.2, envelope: { attack: 0.01, release: 1 }
+        }).connect(reverb);
+        twelveString.volume.value = -18;
+
+        const flute = new Tone.MonoSynth({ oscillator: {type: 'sine'}, envelope: {attack: 0.2, release: 0.8}}).connect(reverb);
+        flute.volume.value = -10;
+
+        activeInstruments.push(reverb, mellotron, twelveString, flute);
+
+        const chordProgression = ["Am", "Am/G", "Fmaj7", "E"];
+        let chordIndex = -1;
+
+        const chordLoop = new Tone.Loop(time => {
+            chordIndex = (chordIndex + 1) % chordProgression.length;
+            statusDiv.textContent = `Chord: ${chordProgression[chordIndex]}`;
+            const chordMap = { "Am": ["A2", "E3", "A3"], "Am/G": ["G2", "E3", "C4"], "Fmaj7": ["F2", "A3", "C4", "E4"], "E": ["E2", "G#3", "B3"] };
+            mellotron.triggerAttackRelease(chordMap[chordProgression[chordIndex]], "1m", time);
+        }, "1m").start(0);
+
+        const arpeggioPattern = new Tone.Pattern((time, note) => {
+            twelveString.triggerAttackRelease(note, '8n', time);
+        }, ["A4", "E5", "C5", "E5", "G4", "E5", "B4", "E5"], "upDown").start(0);
+        arpeggioPattern.interval = "16n";
+
+        const fluteLoop = new Tone.Loop(time => {
+            if (Math.random() > 0.6) {
+                flute.triggerAttackRelease("A5", "2n", time);
+            }
+        }, "1m").start("2m");
+
+        activeLoops.push(chordLoop, arpeggioPattern, fluteLoop);
+        sectionStatusDiv.textContent = "Theatrical Prog";
+    }
+
+    function setupGentleGiant() {
+        Tone.Transport.bpm.value = 110;
+        const reverb = new Tone.Reverb({ decay: 1, wet: 0.3 }).toDestination();
+
+        const clav = new Tone.MonoSynth({oscillator: {type: 'square'}, filter: {Q: 6}, envelope: {attack: 0.01, decay: 0.2}}).connect(reverb);
+        clav.volume.value = -15;
+
+        const vibes = new Tone.MonoSynth({oscillator: {type: 'sine'}, envelope: {attack: 0.01, decay: 0.5}}).connect(reverb);
+        vibes.volume.value = -12;
+
+        const recorder = new Tone.MonoSynth({oscillator: {type: 'triangle'}, envelope: {attack: 0.1, decay: 0.3}}).connect(reverb);
+        recorder.volume.value = -18;
+
+        activeInstruments.push(reverb, clav, vibes, recorder);
+
+        const p1 = new Tone.Sequence((time, note) => {
+            clav.triggerAttackRelease(note, '16n', time);
+        }, ["C4", null, "G4", "Eb4", null, "Bb4"], "4n").start(0);
+
+        const p2 = new Tone.Sequence((time, note) => {
+            vibes.triggerAttackRelease(note, '8n', time);
+        }, [null, "G5", "F5", null, "D5"], "4n").start("8n");
+
+        const p3 = new Tone.Sequence((time, note) => {
+            recorder.triggerAttackRelease(note, '4n', time);
+        }, ["C6", "A5"], "2n").start("4n");
+
+        activeLoops.push(p1, p2, p3);
+        statusDiv.textContent = "Counterpoint";
+        sectionStatusDiv.textContent = "Contrapuntal Prog";
+    }
+
+</script>
+</body>
+</html>
