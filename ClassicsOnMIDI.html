@@ -38,65 +38,65 @@
         }
     </style>
 </head>
-<body class="bg-gray-800 text-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-800 text-gray-100 flex items-center justify-center min-h-screen p-2">
 
-<div id="app-container" class="w-full max-w-2xl mx-auto p-6 md:p-8 bg-gray-900 rounded-2xl shadow-2xl border border-gray-700">
+<div id="app-container" class="w-full max-w-2xl mx-auto p-4 md:p-6 bg-gray-900 rounded-2xl shadow-2xl border border-gray-700">
 
-    <header class="text-center mb-6">
-        <h1 class="text-3xl md:text-4xl font-bold text-white">Classical MIDI Player</h1>
-        <p id="status-message" class="text-blue-400 mt-2 h-6">Move your mouse to initialize MIDI...</p>
+    <header class="text-center mb-4">
+        <h1 class="text-2xl md:text-3xl font-bold text-white">Classical MIDI Player</h1>
+        <p id="status-message" class="text-blue-400 mt-2 h-6 text-sm">Move your mouse to initialize MIDI...</p>
     </header>
 
     <main>
         <!-- Piece Selection -->
-        <div class="mb-4">
-            <label for="piece-select" class="block mb-2 text-sm font-medium text-gray-300">Select a Piece</label>
-            <select id="piece-select" title="Select a classical piece to play" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 disabled:opacity-50" disabled>
+        <div class="mb-3">
+            <label for="piece-select" class="block mb-1 text-xs font-medium text-gray-300">Select a Piece</label>
+            <select id="piece-select" title="Select a classical piece to play" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 disabled:opacity-50" disabled>
                 <!-- Options will be populated by JavaScript -->
             </select>
         </div>
 
         <!-- MIDI Device and Channel Selection -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
             <div>
-                <label for="device-select" class="block mb-2 text-sm font-medium text-gray-300">MIDI Output Device</label>
-                <select id="device-select" title="Select your MIDI output device" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 disabled:opacity-50" disabled>
+                <label for="device-select" class="block mb-1 text-xs font-medium text-gray-300">MIDI Output Device</label>
+                <select id="device-select" title="Select your MIDI output device" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 disabled:opacity-50" disabled>
                     <option>No devices found</option>
                 </select>
             </div>
             <div>
-                <label for="channel-select" class="block mb-2 text-sm font-medium text-gray-300">MIDI Channel</label>
-                <select id="channel-select" title="Select the MIDI channel for playback" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 disabled:opacity-50" disabled>
+                <label for="channel-select" class="block mb-1 text-xs font-medium text-gray-300">MIDI Channel</label>
+                <select id="channel-select" title="Select the MIDI channel for playback" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 disabled:opacity-50" disabled>
                     <!-- Channel options 1-16 will be populated by JavaScript -->
                 </select>
             </div>
         </div>
 
         <!-- Playback Controls -->
-        <div class="flex items-center justify-center space-x-4">
-            <button id="play-button" title="Play the selected piece" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+        <div class="flex items-center justify-center space-x-2">
+            <button id="play-button" title="Play the selected piece" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 <i class="fas fa-play mr-2"></i> Play
             </button>
-            <button id="pause-button" title="Pause the current piece" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <button id="pause-button" title="Pause the current piece" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 <i class="fas fa-pause mr-2"></i> Pause
             </button>
-            <button id="stop-button" title="Stop playback and rewind" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <button id="stop-button" title="Stop playback and rewind" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 <i class="fas fa-stop mr-2"></i> Stop
             </button>
         </div>
     </main>
 
     <!-- Log and Notes Panels -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
         <div>
-            <label for="log-panel" class="block mb-2 text-sm font-medium text-gray-400">Log</label>
-            <div id="log-panel" class="w-full h-32 bg-gray-950 rounded-lg p-3 text-sm font-mono overflow-y-auto text-gray-300 border border-gray-700">
+            <label for="log-panel" class="block mb-1 text-xs font-medium text-gray-400">Log</label>
+            <div id="log-panel" class="w-full h-28 bg-gray-950 rounded-lg p-2 text-xs font-mono overflow-y-auto text-gray-300 border border-gray-700">
                 <!-- Log messages will appear here -->
             </div>
         </div>
         <div>
-            <label for="notes-panel" class="block mb-2 text-sm font-medium text-gray-400">Recently Played Notes</label>
-            <div id="notes-panel" class="w-full h-32 bg-gray-950 rounded-lg p-3 text-sm font-mono overflow-y-auto text-gray-300 border border-gray-700">
+            <label for="notes-panel" class="block mb-1 text-xs font-medium text-gray-400">Recently Played Notes</label>
+            <div id="notes-panel" class="w-full h-28 bg-gray-950 rounded-lg p-2 text-xs font-mono overflow-y-auto text-gray-300 border border-gray-700">
                 <!-- Notes will appear here -->
             </div>
         </div>
@@ -104,7 +104,7 @@
 </div>
 
 <!-- Error Modal -->
-<div id="error-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50">
+<div id="error-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
     <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg border border-gray-700">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-bold text-red-500">Error</h3>
@@ -138,21 +138,37 @@
     let midiOutputs = [];
     let player = null;
     let isMidiInitialized = false;
+    let wasPausedByBlur = false; // Flag to handle page focus changes
     const corsProxy = 'https://corsproxy.io/?';
 
     // --- MIDI Data ---
-    const classicalPieces = {
-        "beethoven_fur_elise": { name: "Beethoven - Für Elise", url: `${corsProxy}https://bitmidi.com/uploads/88448.mid` },
-        "bach_toccata_fugue": { name: "Bach - Toccata and Fugue in D minor", url: `${corsProxy}https://bitmidi.com/uploads/7347.mid` },
-        "mozart_eine_kleine": { name: "Mozart - Eine kleine Nachtmusik", url: `${corsProxy}https://bitmidi.com/uploads/1931.mid` },
-        "pachelbel_canon_d": { name: "Pachelbel - Canon in D", url: `${corsProxy}https://bitmidi.com/uploads/48.mid` },
-        "vivaldi_spring": { name: "Vivaldi - The Four Seasons (Spring)", url: `${corsProxy}https://bitmidi.com/uploads/2481.mid` },
-        "chopin_nocturne_op9_no2": { name: "Chopin - Nocturne in E-flat major", url: `${corsProxy}https://bitmidi.com/uploads/213.mid` },
-        "debussy_clair_de_lune": { name: "Debussy - Clair de Lune", url: `${corsProxy}https://bitmidi.com/uploads/22.mid` },
-        "satie_gymnopedie_1": { name: "Satie - Gymnopédie No. 1", url: `${corsProxy}https://bitmidi.com/uploads/12.mid` },
-        "mozart_rondo_alla_turca": { name: "Mozart - Rondo Alla Turca", url: `${corsProxy}https://bitmidi.com/uploads/1929.mid` },
-        "beethoven_moonlight_sonata": { name: "Beethoven - Moonlight Sonata (1st mvt)", url: `${corsProxy}https://bitmidi.com/uploads/88449.mid` }
-    };
+    const classicalPieces = [
+        { id: "beethoven_fur_elise", name: "Beethoven - Für Elise", url: `https://bitmidi.com/uploads/88448.mid` },
+        { id: "bach_toccata_fugue", name: "Bach - Toccata and Fugue in D minor", url: `https://bitmidi.com/uploads/7347.mid` },
+        { id: "mozart_eine_kleine", name: "Mozart - Eine kleine Nachtmusik", url: `https://bitmidi.com/uploads/1931.mid` },
+        { id: "pachelbel_canon_d", name: "Pachelbel - Canon in D", url: `https://bitmidi.com/uploads/48.mid` },
+        { id: "vivaldi_spring", name: "Vivaldi - The Four Seasons (Spring)", url: `https://bitmidi.com/uploads/2481.mid` },
+        { id: "chopin_nocturne_op9_no2", name: "Chopin - Nocturne Op.9 No.2", url: `https://bitmidi.com/uploads/213.mid` },
+        { id: "debussy_clair_de_lune", name: "Debussy - Clair de Lune", url: `https://bitmidi.com/uploads/22.mid` },
+        { id: "satie_gymnopedie_1", name: "Satie - Gymnopédie No. 1", url: `https://bitmidi.com/uploads/12.mid` },
+        { id: "mozart_rondo_alla_turca", name: "Mozart - Rondo Alla Turca", url: `https://bitmidi.com/uploads/1929.mid` },
+        { id: "beethoven_moonlight_sonata", name: "Beethoven - Moonlight Sonata (1st mvt)", url: `https://bitmidi.com/uploads/88449.mid` },
+        { id: "handel_hallelujah", name: "Handel - Hallelujah Chorus", url: `https://bitmidi.com/uploads/104.mid` },
+        { id: "wagner_ride_of_the_valkyries", name: "Wagner - Ride of the Valkyries", url: `https://bitmidi.com/uploads/248.mid` },
+        { id: "rossini_william_tell_overture", name: "Rossini - William Tell Overture", url: `https://bitmidi.com/uploads/193.mid` },
+        { id: "strauss_blue_danube", name: "Strauss - The Blue Danube", url: `https://bitmidi.com/uploads/195.mid` },
+        { id: "tchaikovsky_1812_overture", name: "Tchaikovsky - 1812 Overture", url: `https://bitmidi.com/uploads/221.mid` },
+        { id: "bizet_carmen_overture", name: "Bizet - Carmen Overture", url: `https://bitmidi.com/uploads/19.mid` },
+        { id: "dvorak_new_world_symphony", name: "Dvořák - Symphony No. 9 (New World)", url: `https://bitmidi.com/uploads/1012.mid` },
+        { id: "grieg_in_the_hall_of_the_mountain_king", name: "Grieg - In the Hall of the Mountain King", url: `https://bitmidi.com/uploads/102.mid` },
+        { id: "bach_air_on_the_g_string", name: "Bach - Air on the G String", url: `https://bitmidi.com/uploads/7348.mid` },
+        { id: "beethoven_symphony_5", name: "Beethoven - Symphony No. 5", url: `https://bitmidi.com/uploads/88450.mid` },
+        { id: "brahms_hungarian_dance_5", name: "Brahms - Hungarian Dance No. 5", url: `https://bitmidi.com/uploads/20.mid` },
+        { id: "chopin_minute_waltz", name: "Chopin - Minute Waltz", url: `https://bitmidi.com/uploads/214.mid` },
+        { id: "liszt_hungarian_rhapsody_2", name: "Liszt - Hungarian Rhapsody No. 2", url: `https://bitmidi.com/uploads/149.mid` },
+        { id: "schubert_ave_maria", name: "Schubert - Ave Maria", url: `https://bitmidi.com/uploads/194.mid` },
+        { id: "verdi_la_donna_e_mobile", name: "Verdi - La donna è mobile", url: `https://bitmidi.com/uploads/222.mid` }
+    ];
 
     // --- Custom MIDI Parser and Player ---
     class SimpleMidiPlayer {
@@ -311,8 +327,6 @@
             this.isPaused = true;
             this.elapsedTime = performance.now() - this.startTime;
             clearTimeout(this.timeoutId);
-            this.nextEventIndex = this.events.findIndex(event => event.absoluteMs >= this.elapsedTime);
-            if (this.nextEventIndex === -1) this.nextEventIndex = this.events.length;
         }
 
         stop() {
@@ -365,21 +379,22 @@
     const CHORD_INTERVALS = {
         'maj': [0, 4, 7], 'm': [0, 3, 7], 'dim': [0, 3, 6], 'aug': [0, 4, 8],
         'maj7': [0, 4, 7, 11], 'm7': [0, 3, 7, 10], '7': [0, 4, 7, 10],
-        'dim7': [0, 3, 6, 9], 'm7b5': [0, 3, 6, 10]
+        'dim7': [0, 3, 6, 9], 'm7b5': [0, 3, 6, 10], 'sus2': [0, 2, 7], 'sus4': [0, 5, 7],
+        '6': [0, 4, 7, 9], 'm6': [0, 3, 7, 9]
     };
 
     function getChordName(noteNumbers) {
-        if (!noteNumbers || noteNumbers.length < 3) return null;
+        if (!noteNumbers || noteNumbers.length < 2) return null;
         const pitchClasses = [...new Set(noteNumbers.map(n => n % 12))].sort((a, b) => a - b);
-        if (pitchClasses.length < 3) return null;
+        if (pitchClasses.length < 2) return null;
 
         for (let i = 0; i < pitchClasses.length; i++) {
             const root = pitchClasses[i];
             const intervals = pitchClasses.map(p => (p - root + 12) % 12).sort((a, b) => a - b);
-            const intervalsString = JSON.stringify(intervals);
 
             for (const chordType in CHORD_INTERVALS) {
-                if (JSON.stringify(CHORD_INTERVALS[chordType]) === intervalsString) {
+                const chordIntervals = CHORD_INTERVALS[chordType];
+                if (chordIntervals.length === intervals.length && chordIntervals.every((val, index) => val === intervals[index])) {
                     return NOTE_NAMES[root] + chordType;
                 }
             }
@@ -400,7 +415,7 @@
         if (chordName) {
             p.innerHTML = `<span class="text-cyan-400 w-20 inline-block">${chordName}</span> ${noteString}`;
         } else {
-            p.innerHTML = `<span class="text-cyan-400 w-20 inline-block">${noteNumbers.length > 1 ? 'Cluster:' : 'Note:'}</span> ${noteString}`;
+            p.innerHTML = `<span class="w-20 inline-block"></span> ${noteString}`;
         }
         notesPanel.prepend(p);
         while (notesPanel.children.length > 20) {
@@ -465,12 +480,12 @@
     }
 
     function populateDropdowns() {
-        for (const key in classicalPieces) {
+        classicalPieces.forEach(piece => {
             const option = document.createElement('option');
-            option.value = key;
-            option.textContent = classicalPieces[key].name;
+            option.value = piece.id;
+            option.textContent = piece.name;
             pieceSelect.appendChild(option);
-        }
+        });
         for (let i = 1; i <= 16; i++) {
             const option = document.createElement('option');
             option.value = i - 1;
@@ -488,21 +503,27 @@
             return;
         }
 
-        if (player && player.isPlaying) {
-            if (player.isPaused) {
-                player.play();
-                logMessage('Playback resumed.', 'info');
-            }
+        if (player && player.isPaused) {
+            player.play();
+            logMessage('Playback resumed.', 'info');
+            playButton.disabled = true;
+            pauseButton.disabled = false;
+            wasPausedByBlur = false;
             return;
         }
 
         if (player) player.stop();
 
         try {
-            const pieceKey = pieceSelect.value;
-            const fetchUrl = classicalPieces[pieceKey].url;
-            const originalUrl = fetchUrl.replace(corsProxy, '');
-            const pieceName = classicalPieces[pieceKey].name;
+            const pieceId = pieceSelect.value;
+            const piece = classicalPieces.find(p => p.id === pieceId);
+            if (!piece) {
+                throw new Error(`Could not find song with ID: ${pieceId}`);
+            }
+
+            const fetchUrl = `${corsProxy}${encodeURIComponent(piece.url)}?cb=${new Date().getTime()}`; // Cache-busting
+            const originalUrl = piece.url;
+            const pieceName = piece.name;
 
             logMessage(`Loading "${pieceName}"...`, 'info');
             logMessage(`Fetching URL: <a href="${originalUrl}" target="_blank" class="text-cyan-400 hover:underline">${originalUrl}</a>`, 'info');
@@ -527,6 +548,7 @@
             playButton.disabled = true;
             pauseButton.disabled = false;
             stopButton.disabled = false;
+            wasPausedByBlur = false;
 
         } catch (error) {
             const errorMsg = `Error: ${error.message}`;
@@ -537,12 +559,13 @@
         }
     }
 
-    function pause() {
+    function pause(isBlur = false) {
         if (player) {
             player.pause();
             playButton.disabled = false;
             pauseButton.disabled = true;
             logMessage('Playback paused.', 'info');
+            wasPausedByBlur = isBlur;
         }
     }
 
@@ -557,6 +580,7 @@
         playButton.disabled = false;
         pauseButton.disabled = true;
         stopButton.disabled = true;
+        wasPausedByBlur = false;
         if (statusMessage.textContent.startsWith('Playing')) {
             statusMessage.textContent = 'Playback finished.';
             logMessage('Playback finished.', 'info');
@@ -566,10 +590,22 @@
     // --- Event Listeners ---
     document.body.addEventListener('mousemove', initializeMidi, { once: true });
     playButton.addEventListener('click', play);
-    pauseButton.addEventListener('click', pause);
+    pauseButton.addEventListener('click', () => pause(false));
     stopButton.addEventListener('click', stop);
     pieceSelect.addEventListener('change', play);
     closeModalButton.addEventListener('click', hideErrorModal);
+    document.addEventListener('visibilitychange', () => {
+        if (!player) return;
+        if (document.hidden) {
+            if (player.isPlaying) {
+                pause(true); // Pass true to indicate it's a blur event
+            }
+        } else {
+            if (wasPausedByBlur) {
+                play();
+            }
+        }
+    });
 
     // --- Initial Setup ---
     window.addEventListener('load', () => {

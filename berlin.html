@@ -3,641 +3,691 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MIDI Starfield Visualizer</title>
+    <title>Generative Music Sequencer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Bungee&family=Inter:wght@400;700&family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #000;
-            color: #fff;
             font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        #app-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
+        :root {
+            --base-hue: 244;
+            --bg-panel: rgba(17, 24, 39, 0.8);
+            --bg-control: rgba(255, 255, 255, 0.1);
+            --text-header: hsl(var(--base-hue), 91%, 74%);
+            --text-body: #f9fafb;
+            --text-label: #f3f4f6;
+            --text-display: hsl(var(--base-hue), 93%, 82%);
+            --border-color: #374151;
+            --thumb-color: hsl(var(--base-hue), 76%, 58%);
+            --note-highlight-color: hsl(var(--base-hue), 100%, 85%);
         }
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1; /* Behind other elements */
+        .theme-vintage {
+            --base-hue: 28;
+            --bg-body-vintage: #e7e2d8;
+            --bg-panel: rgba(212, 206, 195, 0.8);
+            --bg-control: rgba(0, 0, 0, 0.05);
+            --text-header: hsl(var(--base-hue), 39%, 39%);
+            --text-body: #1c1917;
+            --text-label: #292524;
+            --text-display: hsl(var(--base-hue), 96%, 44%);
+            --border-color: #c7c1b8;
+            --thumb-color: hsl(var(--base-hue), 57%, 49%);
+            --note-highlight-color: hsl(var(--base-hue), 100%, 50%);
         }
-        #info {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 1.5rem;
-            box-sizing: border-box;
-            text-align: center;
-            z-index: 10;
-            pointer-events: none;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0));
-            transition: opacity 0.5s ease-in-out; /* Add transition for smooth fade */
+
+        body {
+            background-color: #1a202c;
+            background-image: linear-gradient(to bottom right, #1e3a8a, #5b21b6);
+            color: var(--text-body);
+            background-attachment: fixed;
         }
-        #status {
-            font-weight: bold;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            display: inline-block;
-            transition: all 0.3s ease;
+
+        body.theme-vintage {
+            background-image: none;
+            background-color: var(--bg-body-vintage);
+            color: var(--text-body);
         }
-        .connected {
-            background-color: #10B981; /* Emerald 500 */
-            color: #fff;
-            box-shadow: 0 0 15px #10B981;
+
+        .main-panel {
+            background: var(--bg-panel);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-color: var(--border-color);
+            transition: border-color 2s ease-in-out;
         }
-        .disconnected {
-            background-color: #EF4444; /* Red 500 */
-            color: #fff;
+        .control-group {
+            background-color: var(--bg-control);
+            border-color: var(--border-color);
+            transition: border-color 2s ease-in-out;
         }
-        #connect-button {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 20;
-            padding: 1rem 2rem;
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: white;
-            background-color: #3B82F6; /* Blue 500 */
-            border: none;
-            border-radius: 0.75rem;
+        h1 {
+            transition: color 2s ease-in-out;
+        }
+        h2.section-header { color: var(--text-header); letter-spacing: 0.05em; }
+        label, .text-label { color: var(--text-label); }
+        .text-display { color: var(--text-display); }
+        select { background-color: var(--bg-control); border-color: var(--border-color); color: var(--text-label); }
+
+        input[type="range"]::-webkit-slider-thumb { background: var(--thumb-color); transition: background-color 2s ease-in-out; }
+        input[type="range"]::-moz-range-thumb { background: var(--thumb-color); transition: background-color 2s ease-in-out; }
+
+        button {
+            transition: background-color 2s ease-in-out;
+        }
+
+        select {
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+            background-image: var(--select-arrow-url);
+            background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.2em; padding-right: 2.5rem;
+        }
+        .note-playing { color: var(--note-highlight-color); transform: scale(1.2); transition: all 0.1s ease-out; }
+
+        .seq-step {
+            width: 1.75rem; height: 1.75rem; border: 1px solid var(--border-color); transition: all 0.1s ease;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 0 20px rgba(59, 130, 246, 0.7);
-            transition: all 0.3s ease;
         }
-        #connect-button:hover {
-            background-color: #2563EB; /* Blue 600 */
-            transform: translate(-50%, -50%) scale(1.05);
+        @media (min-width: 640px) { .seq-step { width: 2rem; height: 2rem; } }
+        @media (min-width: 1024px) { .seq-step { width: 2.5rem; height: 2.5rem; } }
+
+        .seq-step.active { background-color: var(--thumb-color); opacity: 0.75; }
+        .seq-step.playing { box-shadow: 0 0 10px 2px var(--note-highlight-color); transform: scale(1.1); opacity: 1; }
+        .seq-step:hover { border-color: var(--note-highlight-color); }
+
+        .status-bar-item { @apply text-center p-2 rounded-lg bg-black/10 flex-1 min-w-[120px]; }
+        .status-bar-label { @apply block text-xs font-semibold uppercase tracking-wider text-label opacity-70; }
+        .status-bar-value { @apply block text-lg font-bold text-display; }
+
+        .live-note {
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
         }
-        #object-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 5; /* Ensure this is above the canvas */
-        }
-        .space-object {
-            position: absolute;
-            color: white;
-            text-shadow: 0 0 8px #fff, 0 0 15px #fff;
-            will-change: transform;
-            transition: opacity 0.5s linear;
-        }
-        .astrological {
-            text-shadow: none;
-            color: #ffef99;
-        }
-        #floating-message-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            pointer-events: none;
-            z-index: 100; /* On top of everything */
-            perspective: 800px; /* Add perspective for 3D transforms */
-        }
-        .floating-message {
-            padding: 1rem 2rem;
-            border-radius: 0.75rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-align: center;
-            color: white;
+        .live-note.fade-out {
             opacity: 0;
-            transform-style: preserve-3d; /* Enable 3D transforms for children */
-        }
-        .error-message {
-            background-color: rgba(239, 68, 68, 0.85);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-            animation: message-appear 4s ease-in-out forwards;
-        }
-        .quote-message {
-            position: absolute;
-            text-shadow: 0 0 8px #00ffff, 0 0 15px #00ffff;
-            animation: float-around 8s ease-in-out forwards;
-        }
-        .message-fragment {
-            position: absolute;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: white;
-            text-shadow: 0 0 8px #ff8c00, 0 0 15px #ffddab;
-            animation: fragment-fly-out 1.5s ease-out forwards;
-        }
-        @keyframes message-appear {
-            0% { opacity: 0; transform: scale(0.8); }
-            10% { opacity: 1; transform: scale(1.05); }
-            15%, 100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes float-around {
-            0% { opacity: 0; transform: translate(0, 0) scale(0.9) rotateZ(0deg); }
-            15% { opacity: 1; transform: translate(var(--float-x1), var(--float-y1)) scale(1) rotateZ(var(--spin-z1)) rotateY(var(--spin-y1)) rotateX(var(--spin-x1)); }
-            75% { opacity: 1; transform: translate(var(--float-x2), var(--float-y2)) scale(1) rotateZ(var(--spin-z2)) rotateY(var(--spin-y2)) rotateX(var(--spin-x2)); }
-            100% { opacity: 0; transform: translate(var(--float-x2), var(--float-y2)) scale(0.9) rotateZ(var(--spin-z2)) rotateY(var(--spin-y2)) rotateX(var(--spin-x2)); }
-        }
-        @keyframes fragment-fly-out {
-            from { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-            to { transform: translate(var(--frag-x), var(--frag-y)) rotate(var(--frag-rot)); opacity: 0; }
-        }
-        @keyframes impact-explode {
-            0% { transform: scale(1); opacity: 1; text-shadow: 0 0 25px #ffddab, 0 0 50px #ff8c00; }
-            100% { transform: scale(2.5); opacity: 0; }
         }
     </style>
 </head>
-<body>
+<body class="transition-colors duration-500">
 
-<div id="app-container">
-    <div id="info">
-        <h1 class="text-2xl md:text-3xl font-bold mb-2">MIDI Starfield Visualizer</h1>
-        <div id="status" class="disconnected">Waiting for MIDI Connection...</div>
-        <p id="instructions" class="mt-2 text-gray-300">Play notes on your MIDI device to fly through the stars.</p>
+<div class="main-panel w-full max-w-7xl mx-auto p-2 my-2 rounded-2xl shadow-2xl border">
+    <!-- Header -->
+    <div class="relative text-center mb-2">
+        <h1 id="main-title" class="text-3xl sm:text-4xl font-bold tracking-tight">Generative Sequencer</h1>
+        <p class="mt-1 text-sm text-label">Craft your own evolving soundscape</p>
+        <div class="absolute top-0 right-2">
+            <button id="theme-switcher" title="Toggle theme" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--bg-panel)] focus:ring-[var(--thumb-color)]">
+                <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" /></svg>
+                <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-1.414 8.486a1 1 0 010-1.414l.707-.707a1 1 0 111.414 1.414l-.707-.707a1 1 0 01-1.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1z" clip-rule="evenodd" /></svg>
+            </button>
+        </div>
     </div>
 
-    <button id="connect-button">Connect to MIDI</button>
+    <div id="message-box" class="text-center text-yellow-400 mb-2 h-5"></div>
 
-    <canvas id="starfield"></canvas>
-    <div id="object-container"></div>
-    <div id="floating-message-container"></div>
+    <div class="mb-2">
+        <button id="play-stop-button" title="Start or stop the music" class="bg-[var(--thumb-color)] hover:opacity-80 text-white font-bold py-3 px-4 rounded-full text-xl w-full transition-all duration-300 ease-in-out shadow-lg transform hover:scale-105">Start</button>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="status-bar" class="control-group p-2 rounded-xl mb-2 flex flex-wrap justify-around gap-2">
+        <div class="status-bar-item"><span class="status-bar-label">Evolve State</span><span id="evolve-state-display" class="status-bar-value">Idle</span></div>
+        <div class="status-bar-item"><span class="status-bar-label">Mood</span><span id="mood-display" class="status-bar-value">...</span></div>
+        <div class="status-bar-item"><span class="status-bar-label">Tempo</span><span id="tempo-display" class="status-bar-value">70 BPM</span></div>
+        <div class="status-bar-item"><span class="status-bar-label">Current Chord</span><span id="chord-display" class="status-bar-value">-</span></div>
+        <div class="status-bar-item"><span class="status-bar-label">Key</span><span id="scale-display" class="status-bar-value">-</span></div>
+    </div>
+
+    <!-- Main Control Panels -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-2">
+        <div class="control-group p-3 rounded-xl">
+            <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Global &amp; Rhythm</h2>
+            <div data-instrument="master"><label for="master-vol" class="block mb-1 text-sm font-semibold text-label">Master Volume</label><input type="range" id="master-vol" min="-20" max="6" value="3" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="master-vol-value">3</span> dB</div></div>
+            <div data-instrument="tempo" class="mt-2"><label for="tempo" class="block mb-1 text-sm font-semibold text-label">Tempo</label><input type="range" id="tempo" min="70" max="170" value="70" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="tempo-value">70</span> BPM</div></div>
+            <div data-instrument="swing" class="mt-2"><label for="swing" class="block mb-1 text-sm font-semibold text-label">Swing</label><input type="range" id="swing" min="0" max="0.8" value="0" step="0.05" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="swing-value">0.0</span></div></div>
+        </div>
+        <div class="control-group p-3 rounded-xl">
+            <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Foundation</h2>
+            <div class="space-y-3">
+                <select id="root-note-select" title="Select root note" class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5"><option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option></select>
+                <select id="scale-type-select" title="Select scale" class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5"><option value="majorPentatonic">Major Pentatonic</option><option value="minorPentatonic">Minor Pentatonic</option><option value="major">Major</option><option value="minor" selected>Natural Minor</option><option value="dorian">Dorian</option></select>
+                <select id="octave-select" title="Select octave" class="text-base rounded-lg focus:ring-[var(--thumb-color)] focus:border-[var(--thumb-color)] block w-full p-2.5"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+            </div>
+            <button id="new-mood-button" class="w-full mt-3 p-2 rounded-lg bg-[var(--thumb-color)] text-white font-semibold hover:opacity-80">New Mood</button>
+        </div>
+        <div class="control-group p-3 rounded-xl">
+            <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Evolve Engine</h2>
+            <div data-instrument="density"><label for="density" class="block mb-1 text-sm font-semibold text-label">Drum Density</label><input type="range" id="density" min="0.0" max="1.0" value="0.0" step="0.05" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="density-value">0.0</span></div></div>
+            <div data-instrument="evolve-up" class="mt-2"><label for="evolve-up" class="block mb-1 text-sm font-semibold text-label">Build Up</label><input type="range" id="evolve-up" min="10" max="360" value="120" step="5" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-up-value">120</span>s</div></div>
+            <div data-instrument="evolve-breakdown" class="mt-2"><label for="evolve-breakdown" class="block mb-1 text-sm font-semibold text-label">Break Down</label><input type="range" id="evolve-breakdown" min="10" max="180" value="20" step="5" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-breakdown-value">20</span>s</div></div>
+            <div data-instrument="evolve-peak" class="mt-2"><label for="evolve-peak" class="block mb-1 text-sm font-semibold text-label">Peak Time</label><input type="range" id="evolve-peak" min="1" max="90" value="10" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="evolve-peak-value">10</span>s</div></div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-2">
+        <div class="lg:col-span-2 control-group p-3 rounded-xl mb-2">
+            <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Mixer</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1">
+                <div data-instrument="bass"><label for="bass-vol" class="block text-center mb-1 text-sm font-semibold text-label">Bass</label><input type="range" id="bass-vol" min="-40" max="0" value="-4" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="bass-vol-value">-4</span> dB</div></div>
+                <div data-instrument="pluck"><label for="pluck-vol" class="block text-center mb-1 text-sm font-semibold text-label">Pluck</label><input type="range" id="pluck-vol" min="-40" max="0" value="-10" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="pluck-vol-value">-10</span> dB</div></div>
+                <div data-instrument="pad"><label for="pad-vol" class="block text-center mb-1 text-sm font-semibold text-label">Pad</label><input type="range" id="pad-vol" min="-40" max="0" value="-12" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="pad-vol-value">-12</span> dB</div></div>
+                <div data-instrument="lfoPad"><label for="lfoPad-vol" class="block text-center mb-1 text-sm font-semibold text-label">LFO Pad</label><input type="range" id="lfoPad-vol" min="-40" max="0" value="-24" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="lfoPad-vol-value">-24</span> dB</div></div>
+                <div data-instrument="melody"><label for="melody-vol" class="block text-center mb-1 text-sm font-semibold text-label">Melody</label><input type="range" id="melody-vol" min="-40" max="0" value="-12" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="melody-vol-value">-12</span> dB</div></div>
+                <div data-instrument="openhat"><label for="openhat-vol" class="block text-center mb-1 text-sm font-semibold text-label">Open Hat</label><input type="range" id="openhat-vol" min="-40" max="0" value="-18" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="openhat-vol-value">-18</span> dB</div></div>
+                <div data-instrument="hat"><label for="hat-vol" class="block text-center mb-1 text-sm font-semibold text-label">Hat</label><input type="range" id="hat-vol" min="-40" max="0" value="-12" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="hat-vol-value">-12</span> dB</div></div>
+                <div data-instrument="rumble"><label for="rumble-vol" class="block text-center mb-1 text-sm font-semibold text-label">Rumble</label><input type="range" id="rumble-vol" min="-40" max="0" value="-20" step="1" class="w-full"><div class="text-center mt-0 text-display font-mono text-sm"><span id="rumble-vol-value">-20</span> dB</div></div>
+            </div>
+        </div>
+        <div class="control-group p-3 rounded-xl mb-2">
+            <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Live Notes</h2>
+            <div id="live-notes-display" class="grid grid-cols-3 sm:grid-cols-4 gap-1 text-center font-mono text-sm h-full min-h-[6rem]"></div>
+        </div>
+    </div>
+
+    <div class="control-group p-2 rounded-xl">
+        <h2 class="section-header text-lg font-bold text-center mb-2 uppercase">Drum Sequencer</h2>
+        <div id="sequencer-grid" class="flex gap-1 sm:gap-2 justify-center">
+            <div id="sequencer-labels" class="flex flex-col gap-1 sm:gap-2 justify-around text-right pr-2">
+                <!-- Labels will be generated here -->
+            </div>
+            <div id="sequencer-steps" class="flex flex-col gap-1 sm:gap-2">
+                <!-- Steps will be generated here -->
+            </div>
+        </div>
+    </div>
 </div>
 
-<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-<script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/"
-        }
-    }
-</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Global State & Constants ---
+        let isPlaying = false;
+        let currentScale = [];
+        let evolveState = 'Idle';
+        const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const SCALE_INTERVALS = {
+            majorPentatonic: [0, 2, 4, 7, 9], minorPentatonic: [0, 3, 5, 7, 10], major: [0, 2, 4, 5, 7, 9, 11],
+            minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10],
+        };
+        const MOOD_COLORS = {
+            'Frenetic & Euphoric': 'hsl(320, 100%, 65%)',
+            'Frenetic & Intense': 'hsl(350, 100%, 65%)',
+            'Frenetic & Mystical': 'hsl(290, 100%, 75%)',
+            'Energetic & Euphoric': 'hsl(340, 89%, 60%)',
+            'Driving & Euphoric': 'hsl(45, 100%, 58%)',
+            'Relaxed & Hopeful': 'hsl(145, 63%, 49%)',
+            'Meditative & Hopeful': 'hsl(195, 74%, 65%)',
+            'Energetic & Intense': 'hsl(3, 90%, 61%)',
+            'Driving & Intense': 'hsl(25, 84%, 55%)',
+            'Relaxed & Somber': 'hsl(262, 47%, 56%)',
+            'Meditative & Somber': 'hsl(220, 47%, 56%)',
+            'Energetic & Mystical': 'hsl(283, 89%, 70%)',
+            'Driving & Mystical': 'hsl(283, 60%, 60%)',
+            'Relaxed & Mystical': 'hsl(283, 40%, 50%)',
+            'Meditative & Mystical': 'hsl(283, 30%, 40%)',
+        };
+        let NUM_STEPS = 16;
+        let seq_data = {
+            kick: Array(NUM_STEPS).fill(false),
+            snare: Array(NUM_STEPS).fill(false),
+            hat: Array(NUM_STEPS).fill(false),
+            openhat: Array(NUM_STEPS).fill(false)
+        };
+        let controls = {};
+        let drumSequence;
 
-<script type="module">
-    import * as THREE from 'three';
-    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-    import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-
-    let scene, camera, renderer, composer;
-    let starGeo, stars;
-    let connectButton = document.getElementById('connect-button');
-    const infoEl = document.getElementById('info');
-    const statusEl = document.getElementById('status');
-    const instructionsEl = document.getElementById('instructions');
-    const objectContainer = document.getElementById('object-container');
-    let baseSpeed = 0.05;
-    let speed = baseSpeed;
-    let activeNotes = new Map();
-    let psychedelicPass;
-    let activeGameObjects = [];
-    const MAX_OBJECTS = 40;
-
-    const sciFiFonts = ['Orbitron', 'Audiowide', 'Share Tech Mono', 'Bungee'];
-    const sciFiQuotes = [
-        "I've seen things you people wouldn't believe.", "May the Force be with you.", "I'll be back.",
-        "Open the pod bay doors, HAL.", "Live long and prosper.", "It's a trap!", "That's no moon.",
-        "Get away from her, you bitch!", "They're here.", "Roads? Where we're going, we don't need roads.",
-        "To infinity, and beyond!", "I find your lack of faith disturbing.", "This is the way.",
-        "So say we all.", "The spice must flow.", "I am your father."
-    ];
-    const astrologicalSigns = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
-    const spaceMonsters = ['👾', '🐙', '🦑'];
-    const otherSpaceObjects = ['�', '🪐', '🌟', '🛰️', '✨', '☄️', '🛸', '🌌', '🌠', '🌍', '🌕', '👨‍🚀', '🔭', '💫', '💥', '⚫'];
-
-    const PsychedelicShader = {
-        uniforms: { 'tDiffuse': { value: null }, 'amount': { value: 0.0 }, 'time': { value: 0.0 } },
-        vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-        fragmentShader: `
-                uniform sampler2D tDiffuse; uniform float amount; uniform float time; varying vec2 vUv;
-                void main() {
-                    vec2 p = vUv - 0.5; float len = length(p);
-                    float distortion = smoothstep(0.2, 0.5, len) * amount;
-                    vec2 distortedUv = vUv;
-                    distortedUv += p / len * distortion * (sin(time + len * 10.0) * 0.1);
-                    float chromatic = smoothstep(0.3, 0.6, len) * amount * 0.1;
-                    vec4 r = texture2D(tDiffuse, distortedUv + vec2(chromatic, 0.0));
-                    vec4 g = texture2D(tDiffuse, distortedUv);
-                    vec4 b = texture2D(tDiffuse, distortedUv - vec2(chromatic, 0.0));
-                    gl_FragColor = vec4(r.r, g.g, b.b, 1.0);
-                }`
-    };
-
-    function init() {
-        scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-        camera.position.z = 1;
-
-        renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('starfield'), antialias: true, alpha: true });
-        renderer.setClearColor(0x000000, 0);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-
-        const canvas = document.createElement('canvas');
-        canvas.width = 64; canvas.height = 64;
-        const context = canvas.getContext('2d');
-        const gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
-        gradient.addColorStop(0, 'rgba(255,255,255,1)');
-        gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
-        gradient.addColorStop(0.5, 'rgba(200,200,255,0.3)');
-        gradient.addColorStop(1, 'rgba(255,255,255,0)');
-        context.fillStyle = gradient;
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        const starTexture = new THREE.CanvasTexture(canvas);
-
-        const starCount = 6000;
-        const positions = new Float32Array(starCount * 3);
-        const colors = new Float32Array(starCount * 3);
-        const sizes = new Float32Array(starCount);
-
-        for (let i = 0; i < starCount; i++) {
-            const i3 = i * 3;
-            positions[i3] = (Math.random() - 0.5) * 600;
-            positions[i3 + 1] = (Math.random() - 0.5) * 600;
-            positions[i3 + 2] = (Math.random() - 0.5) * 1000;
-            const color = new THREE.Color();
-            color.setHSL(Math.random(), 0.7, 0.8);
-            colors[i3] = color.r; colors[i3 + 1] = color.g; colors[i3 + 2] = color.b;
-            sizes[i] = Math.random() * 20 + 10; // Increased star size and variation
-        }
-        starGeo = new THREE.BufferGeometry();
-        starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        starGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        starGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-        const starMaterial = new THREE.PointsMaterial({ map: starTexture, vertexColors: true, sizeAttenuation: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
-
-        stars = new THREE.Points(starGeo, starMaterial);
-        scene.add(stars);
-
-        composer = new EffectComposer(renderer);
-        composer.addPass(new RenderPass(scene, camera));
-        psychedelicPass = new ShaderPass(PsychedelicShader);
-        psychedelicPass.renderToScreen = true;
-        composer.addPass(psychedelicPass);
-
-        window.addEventListener('resize', onWindowResize, false);
-        connectButton.addEventListener('click', setupMidi);
-
-        setInterval(() => {
-            const quote = sciFiQuotes[Math.floor(Math.random() * sciFiQuotes.length)];
-            showFloatingMessage(quote, 'quote');
-        }, 15000);
-
-        animate();
-    }
-
-    function onWindowResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        composer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    function animate() {
-        requestAnimationFrame(animate);
-        const time = Date.now() * 0.0005;
-
-        starGeo.attributes.position.array.forEach((_, i) => {
-            if (i % 3 === 2) {
-                starGeo.attributes.position.array[i] += speed;
-                if (starGeo.attributes.position.array[i] > camera.position.z) starGeo.attributes.position.array[i] -= 1000;
+        // --- DOM Element References ---
+        const dom = {
+            mainTitle: document.getElementById('main-title'),
+            playStopButton: document.getElementById('play-stop-button'),
+            newMoodButton: document.getElementById('new-mood-button'),
+            messageBox: document.getElementById('message-box'),
+            rootNoteSelect: document.getElementById('root-note-select'),
+            scaleTypeSelect: document.getElementById('scale-type-select'),
+            octaveSelect: document.getElementById('octave-select'),
+            sequencerGrid: document.getElementById('sequencer-grid'),
+            sequencerLabels: document.getElementById('sequencer-labels'),
+            sequencerSteps: document.getElementById('sequencer-steps'),
+            themeSwitcher: document.getElementById('theme-switcher'),
+            themeIconDark: document.getElementById('theme-icon-dark'),
+            themeIconLight: document.getElementById('theme-icon-light'),
+            liveNotesDisplay: document.getElementById('live-notes-display'),
+            statusBar: {
+                evolveState: document.getElementById('evolve-state-display'),
+                mood: document.getElementById('mood-display'),
+                tempo: document.getElementById('tempo-display'),
+                chord: document.getElementById('chord-display'),
+                scale: document.getElementById('scale-display'),
             }
-        });
-        starGeo.attributes.position.needsUpdate = true;
-        stars.rotation.z += speed * 0.01;
-        stars.scale.setScalar(1.0 + Math.sin(time * 5) * 0.02);
+        };
 
-        updateGameObjects();
+        // --- Audio Setup ---
+        const limiter = new Tone.Limiter(-0.5).toDestination();
+        const masterVolume = new Tone.Volume(0).connect(limiter);
 
-        if (activeNotes.size > 0) {
-            const latestNote = Array.from(activeNotes.values()).pop();
-            speed = baseSpeed + latestNote.velocity * 0.5;
-            psychedelicPass.uniforms.amount.value = THREE.MathUtils.lerp(psychedelicPass.uniforms.amount.value, latestNote.velocity * 0.8, 0.1);
+        // LFO Pad setup
+        const lfoPadFilter = new Tone.Filter(400, "lowpass").connect(masterVolume);
+        const lfo = new Tone.LFO({
+            type: "sine",
+            min: 200,
+            max: 4000,
+            frequency: "4n",
+        }).connect(lfoPadFilter.frequency).start();
 
-            const hue = (latestNote.number % 12) / 12;
-            const colors = starGeo.attributes.color.array;
-            for (let i = 0; i < colors.length; i += 3) {
-                const color = new THREE.Color().setHSL(hue, 1.0, 0.5 + Math.random() * 0.4);
-                colors[i] = THREE.MathUtils.lerp(colors[i], color.r, 0.05);
-                colors[i+1] = THREE.MathUtils.lerp(colors[i+1], color.g, 0.05);
-                colors[i+2] = THREE.MathUtils.lerp(colors[i+2], color.b, 0.05);
-            }
-            starGeo.attributes.color.needsUpdate = true;
-        } else {
-            speed = THREE.MathUtils.lerp(speed, baseSpeed, 0.05);
-            psychedelicPass.uniforms.amount.value = THREE.MathUtils.lerp(psychedelicPass.uniforms.amount.value, 0.0, 0.05);
+        // Rumble Setup
+        const rumbleReverb = new Tone.Reverb({ decay: 4, wet: 0.8 }).connect(masterVolume);
+        const rumbleFilter = new Tone.Filter(80, "lowpass").connect(rumbleReverb);
+        const rumble = new Tone.MonoSynth({
+            volume: -20,
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.01, decay: 0.4, sustain: 1, release: 0.8 }
+        }).connect(rumbleFilter);
+
+        const synths = {
+            kick: new Tone.MembraneSynth({ volume: -2, octaves: 10, pitchDecay: 0.05, envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4, attackCurve: 'exponential' } }).connect(masterVolume),
+            snare: new Tone.NoiseSynth({ volume: -14, noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.2 } }).connect(masterVolume),
+            hat: new Tone.MetalSynth({ volume: -18, frequency: 300, envelope: { attack: 0.005, decay: 0.05, release: 0.08 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(masterVolume),
+            openhat: new Tone.MetalSynth({ volume: -18, frequency: 250, envelope: { attack: 0.01, decay: 0.4, release: 0.4 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(masterVolume),
+            bass: new Tone.MonoSynth({ volume: -4, oscillator: { type: 'fatsquare' }, envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 2 }, filterEnvelope: { attack: 0.01, decay: 0.6, sustain: 0.2, release: 2, baseFrequency: 80, octaves: 4 } }).connect(masterVolume),
+            pluck: new Tone.PluckSynth({ volume: -10, attackNoise: 0.8, dampening: 5000, resonance: 0.95 }).connect(masterVolume),
+            pad: new Tone.PolySynth(Tone.FMSynth, { volume: -12, envelope: { attack: 1, decay: 0.5, sustain: 0.5, release: 3 } }).set({ maxPolyphony: 6 }).connect(masterVolume),
+            melody: new Tone.FMSynth({ volume: -12, envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.2 } }).set({ maxPolyphony: 4 }).connect(masterVolume),
+            lfoPad: new Tone.FMSynth({ volume: -24, harmonicity: 1.5, modulationIndex: 3, envelope: { attack: 1, decay: 0.5, sustain: 1, release: 2 } }).connect(lfoPadFilter),
+            rumble: rumble,
+        };
+
+        // --- UI & Control Logic ---
+        function updateDisplay(id, value, suffix = '') {
+            const display = document.getElementById(`${id}-value`);
+            if (display) display.textContent = value + suffix;
         }
 
-        psychedelicPass.uniforms.time.value += 0.01;
-        composer.render();
-    }
-
-    function showFloatingMessage(messageText, type = 'error') {
-        const messageContainer = document.getElementById('floating-message-container');
-        while (messageContainer.firstChild) {
-            messageContainer.removeChild(messageContainer.firstChild);
-        }
-
-        const messageEl = document.createElement('div');
-        messageEl.classList.add('floating-message');
-
-        if (type === 'error') {
-            messageEl.classList.add('error-message');
-        } else {
-            messageEl.classList.add('quote-message');
-            messageEl.style.fontFamily = sciFiFonts[Math.floor(Math.random() * sciFiFonts.length)];
-            messageEl.style.top = `${15 + Math.random() * 70}%`;
-            messageEl.style.left = `${15 + Math.random() * 70}%`;
-            messageEl.style.setProperty('--float-x1', `${(Math.random() - 0.5) * 50}px`);
-            messageEl.style.setProperty('--float-y1', `${(Math.random() - 0.5) * 50}px`);
-            messageEl.style.setProperty('--float-x2', `${(Math.random() - 0.5) * 50}px`);
-            messageEl.style.setProperty('--float-y2', `${(Math.random() - 0.5) * 50}px`);
-            messageEl.style.setProperty('--spin-x1', `${(Math.random() - 0.5) * 270}deg`);
-            messageEl.style.setProperty('--spin-y1', `${(Math.random() - 0.5) * 270}deg`);
-            messageEl.style.setProperty('--spin-z1', `${(Math.random() - 0.5) * 720}deg`);
-            messageEl.style.setProperty('--spin-x2', `${(Math.random() - 0.5) * 270}deg`);
-            messageEl.style.setProperty('--spin-y2', `${(Math.random() - 0.5) * 270}deg`);
-            messageEl.style.setProperty('--spin-z2', `${(Math.random() - 0.5) * 720}deg`);
-        }
-
-        messageEl.textContent = messageText;
-        messageContainer.appendChild(messageEl);
-
-        const explosionTimeout = type === 'quote' ? 8000 : 4000;
-
-        setTimeout(() => {
-            const rect = messageEl.getBoundingClientRect();
-            const fragmentsContainer = document.createElement('div');
-            fragmentsContainer.style.position = 'fixed';
-            fragmentsContainer.style.left = `${rect.left}px`;
-            fragmentsContainer.style.top = `${rect.top}px`;
-            fragmentsContainer.style.width = `${rect.width}px`;
-            fragmentsContainer.style.height = `${rect.height}px`;
-            fragmentsContainer.style.display = 'flex';
-            fragmentsContainer.style.justifyContent = 'center';
-            fragmentsContainer.style.alignItems = 'center';
-            fragmentsContainer.style.zIndex = 101;
-            fragmentsContainer.style.perspective = '800px';
-
-            messageText.split('').forEach(char => {
-                if (char.trim() === '') {
-                    const spacer = document.createElement('span');
-                    spacer.innerHTML = '&nbsp;';
-                    spacer.classList.add('message-fragment');
-                    spacer.style.opacity = '0';
-                    fragmentsContainer.appendChild(spacer);
-                    return;
-                }
-
-                const frag = document.createElement('span');
-                frag.classList.add('message-fragment');
-                frag.textContent = char;
-                frag.style.fontFamily = messageEl.style.fontFamily;
-
-                const x = (Math.random() - 0.5) * 400;
-                const y = (Math.random() - 0.5) * 400;
-                const rot = (Math.random() - 0.5) * 720;
-
-                frag.style.setProperty('--frag-x', `${x}px`);
-                frag.style.setProperty('--frag-y', `${y}px`);
-                frag.style.setProperty('--frag-rot', `${rot}deg`);
-
-                fragmentsContainer.appendChild(frag);
-            });
-
-            if(document.body.contains(messageEl)) {
-                messageEl.remove();
-            }
-            document.body.appendChild(fragmentsContainer);
-
-            setTimeout(() => fragmentsContainer.remove(), 1500);
-
-        }, explosionTimeout);
-    }
-
-    async function setupMidi() {
-        if (!navigator.requestMIDIAccess) {
-            showFloatingMessage('Web MIDI API Not Supported');
-            connectButton.style.display = 'block';
-            return;
-        }
-        try {
-            const midiAccess = await navigator.requestMIDIAccess({ sysex: false });
-            connectButton.style.display = 'none';
-            const inputs = midiAccess.inputs.values();
-            let deviceFound = false;
-            const inputNames = [];
-            for (const input of inputs) {
-                deviceFound = true;
-                inputNames.push(input.name);
-                input.onmidimessage = getMIDIMessage;
-            }
-            if (!deviceFound) {
-                showFloatingMessage('No MIDI Device Found');
-                statusEl.textContent = 'No MIDI Device Found';
-                return;
-            }
-            statusEl.textContent = 'MIDI Connected!';
-            statusEl.classList.remove('disconnected');
-            statusEl.classList.add('connected');
-            instructionsEl.textContent = `Listening on ${inputNames.join(', ')}.`;
-        } catch (err) {
-            console.error("Could not get MIDI access.", err);
-            showFloatingMessage('MIDI Access Denied');
-            connectButton.style.display = 'block';
-        }
-    }
-
-    function getMIDIMessage(message) {
-        const command = message.data[0] >> 4;
-        const noteNumber = message.data[1];
-        const velocity = message.data.length > 2 ? message.data[2] / 127 : 0;
-        if (command === 9 && velocity > 0) { handleNoteOn({ note: { number: noteNumber }, velocity: velocity }); }
-        else if (command === 8 || (command === 9 && velocity === 0)) { handleNoteOff({ note: { number: noteNumber } }); }
-    }
-
-    function createSpaceObject(velocity, noteNumber) {
-        if (activeGameObjects.length >= MAX_OBJECTS) {
-            let oldestLifespan = Infinity;
-            let oldestObjIndex = -1;
-            for (let i = 0; i < activeGameObjects.length; i++) {
-                if (!activeGameObjects[i].isFading && activeGameObjects[i].lifespan < oldestLifespan) {
-                    oldestLifespan = activeGameObjects[i].lifespan;
-                    oldestObjIndex = i;
-                }
-            }
-            if (oldestObjIndex !== -1) {
-                activeGameObjects[oldestObjIndex].lifespan = 60; // Start fading out
-                activeGameObjects[oldestObjIndex].isFading = true;
-            }
-        }
-
-        const obj = document.createElement('div');
-        obj.classList.add('space-object');
-
-        const pitchClass = noteNumber % 12;
-        const diatonicNotes = [0, 2, 4, 5, 7, 9, 11];
-        const diatonicObjects = [...otherSpaceObjects, ...astrologicalSigns, ...spaceMonsters];
-        const chromaticObject = '👽';
-
-        const objectChar = diatonicNotes.includes(pitchClass)
-            ? diatonicObjects[Math.floor(Math.random() * diatonicObjects.length)]
-            : chromaticObject;
-
-        obj.innerText = objectChar;
-
-        const isAstrological = astrologicalSigns.includes(objectChar);
-        if (isAstrological) {
-            obj.classList.add('astrological');
-        }
-
-        const size = 40 + velocity * 150; // Increased size variation
-        obj.style.fontSize = `${size}px`;
-
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 1 + Math.random() * 2 + velocity * 2;
-
-        const startX = Math.random() * window.innerWidth;
-        const startY = Math.random() * window.innerHeight;
-
-        activeGameObjects.push({
-            el: obj, x: startX, y: startY,
-            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-            rotation: 0, rotationSpeed: (Math.random() - 0.5) * 4,
-            radius: size / 2, lifespan: 300 + Math.random() * 200,
-            isAstrological: isAstrological, isExploding: false, isFading: false
-        });
-
-        objectContainer.appendChild(obj);
-    }
-
-    function triggerExplosion(obj) {
-        if (obj.isExploding) return;
-        obj.isExploding = true;
-        obj.lifespan = 30; // 0.5s
-        obj.vx = 0; obj.vy = 0;
-        obj.el.style.animation = `impact-explode 0.5s ease-out forwards`;
-        obj.el.style.transform = `translate(${obj.x - obj.radius}px, ${obj.y - obj.radius}px)`;
-    }
-
-    function updateGameObjects() {
-        for (let i = 0; i < activeGameObjects.length; i++) {
-            const objA = activeGameObjects[i];
-            if (objA.isExploding) continue;
-
-            objA.x += objA.vx;
-            objA.y += objA.vy;
-            objA.rotation += objA.rotationSpeed;
-
-            // Wall collisions
-            if (objA.x - objA.radius < 0 || objA.x + objA.radius > window.innerWidth) {
-                if (objA.isAstrological) triggerExplosion(objA);
-                else {
-                    objA.vx *= -1;
-                    objA.x = objA.x - objA.radius < 0 ? objA.radius : window.innerWidth - objA.radius;
-                }
-            }
-            if (objA.y - objA.radius < 0 || objA.y + objA.radius > window.innerHeight) {
-                if (objA.isAstrological) triggerExplosion(objA);
-                else {
-                    objA.vy *= -1;
-                    objA.y = objA.y - objA.radius < 0 ? objA.radius : window.innerHeight - objA.radius;
-                }
-            }
-            if (objA.isExploding) continue;
-
-            // Object collisions
-            for (let j = i + 1; j < activeGameObjects.length; j++) {
-                const objB = activeGameObjects[j];
-                if (objB.isExploding) continue;
-
-                const dx = objB.x - objA.x;
-                const dy = objB.y - objA.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                const minDistance = objA.radius + objB.radius;
-
-                if (distance < minDistance) {
-                    if (objA.isAstrological) triggerExplosion(objA);
-                    if (objB.isAstrological) triggerExplosion(objB);
-
-                    if (!objA.isExploding && !objB.isExploding) {
-                        const angle = Math.atan2(dy, dx);
-                        const sin = Math.sin(angle);
-                        const cos = Math.cos(angle);
-                        const vx1 = objA.vx * cos + objA.vy * sin;
-                        const vy1 = objA.vy * cos - objA.vx * sin;
-                        const vx2 = objB.vx * cos + objB.vy * sin;
-                        const vy2 = objB.vy * cos - objB.vx * sin;
-
-                        const finalVx1 = vx2;
-                        const finalVx2 = vx1;
-
-                        objA.vx = finalVx1 * cos - vy1 * sin;
-                        objA.vy = vy1 * cos + finalVx1 * sin;
-                        objB.vx = finalVx2 * cos - vy2 * sin;
-                        objB.vy = vy2 * cos + finalVx2 * sin;
-
-                        const overlap = (minDistance - distance) / 2;
-                        objA.x -= overlap * (dx / distance);
-                        objA.y -= overlap * (dy / distance);
-                        objB.x += overlap * (dx / distance);
-                        objB.y += overlap * (dy / distance);
+        function setupControls() {
+            document.querySelectorAll('input[type="range"]').forEach(slider => {
+                const id = slider.id;
+                controls[id] = slider;
+                const display = document.querySelector(`span[id="${id}-value"]`);
+                const suffix = display ? display.parentElement.textContent.replace(/[\d.-]/g, '') : '';
+                updateDisplay(id, slider.value, suffix);
+                slider.addEventListener('input', e => {
+                    const value = parseFloat(e.target.value);
+                    const displayValue = e.target.step.includes('.') ? value.toFixed(2) : value;
+                    updateDisplay(id, displayValue, suffix);
+                    const container = slider.closest('[data-instrument]');
+                    if (container) {
+                        const instrumentId = container.dataset.instrument;
+                        if (synths[instrumentId]) synths[instrumentId].volume.value = value;
+                        else if (instrumentId === 'master') masterVolume.volume.value = value;
+                        else if (instrumentId === 'tempo') Tone.Transport.bpm.value = value;
+                        else if (instrumentId === 'swing') Tone.Transport.swing = value;
                     }
+                });
+            });
+        }
+
+        // --- Sequencer UI ---
+        function createSequencerGrid(steps) {
+            dom.sequencerLabels.innerHTML = '';
+            dom.sequencerSteps.innerHTML = '';
+
+            Object.keys(seq_data).forEach(instrument => {
+                const label = document.createElement('div');
+                label.className = 'h-full flex items-center justify-end font-bold text-label';
+                label.textContent = instrument.charAt(0).toUpperCase() + instrument.slice(1);
+                dom.sequencerLabels.appendChild(label);
+
+                const row = document.createElement('div');
+                row.className = 'flex gap-1 sm:gap-2';
+                row.dataset.instrument = instrument;
+                for (let i = 0; i < steps; i++) {
+                    const step = document.createElement('div');
+                    step.className = 'seq-step rounded-md';
+                    if ((i > 3 && i < 8) || (i > 11 && i < 16)) step.classList.add('bg-black/20');
+                    step.dataset.step = i;
+                    step.addEventListener('click', () => {
+                        const isActive = step.classList.toggle('active');
+                        seq_data[instrument][i] = isActive;
+                    });
+                    if (seq_data[instrument][i]) {
+                        step.classList.add('active');
+                    }
+                    row.appendChild(step);
+                }
+                dom.sequencerSteps.appendChild(row);
+            });
+        }
+
+        // --- Music Generation ---
+        let currentChord = [];
+        let chordProgression = ['I', 'V', 'vi', 'IV'];
+        let progressionIndex = 0;
+
+        function randomizeDrumPattern(steps) {
+            Object.keys(seq_data).forEach(instrument => {
+                seq_data[instrument] = Array(steps).fill(false);
+                for (let i = 0; i < steps; i++) {
+                    let probability = 0.25;
+                    if (instrument === 'kick') {
+                        probability = (i % (steps / (Tone.Transport.timeSignature[0]))) === 0 ? 0.8 : 0.1;
+                    } else if (instrument === 'snare') {
+                        probability = (i === Math.floor(steps/4) || i === Math.floor(steps*3/4)) ? 0.75 : 0.05;
+                    } else if (instrument === 'hat') {
+                        probability = (i % 2 !== 0) ? 0.6 : 0.2;
+                    } else if (instrument === 'openhat') {
+                        probability = (i === steps - 2) ? 0.5 : 0.05;
+                    }
+                    seq_data[instrument][i] = Math.random() < probability;
+                }
+            });
+        }
+
+        function changeMood() {
+            const scaleOptions = dom.scaleTypeSelect.options;
+            const newScaleIndex = Math.floor(Math.random() * scaleOptions.length);
+            dom.scaleTypeSelect.selectedIndex = newScaleIndex;
+
+            const rootOptions = dom.rootNoteSelect.options;
+            const newRootIndex = Math.floor(Math.random() * rootOptions.length);
+            dom.rootNoteSelect.selectedIndex = newRootIndex;
+
+            updateMusicTheory();
+        }
+
+        function updateMusicTheory() {
+            currentScale = generateScale(dom.rootNoteSelect.value, dom.scaleTypeSelect.value, parseInt(dom.octaveSelect.value, 10));
+            progressionIndex = 0;
+            currentChord = getChordFromProgression(chordProgression[progressionIndex]);
+            updateArpeggiatorNotes();
+            updateStatusBar();
+        }
+
+        function getChordFromProgression(degree) {
+            const degreeMap = { 'I': 0, 'V': 4, 'vi': 5, 'IV': 3 };
+            const rootIdx = degreeMap[degree];
+            if (currentScale.length < rootIdx + 5) return [];
+            return [currentScale[rootIdx], currentScale[rootIdx + 2], currentScale[rootIdx + 4]];
+        }
+
+        function generateScale(root, type, startOctave, numOctaves = 3) {
+            const rootIndex = NOTES.indexOf(root);
+            const intervals = SCALE_INTERVALS[type];
+            if (rootIndex === -1 || !intervals) return [];
+            const scale = [];
+            for (let oct = 0; oct < numOctaves; oct++) {
+                for (const interval of intervals) {
+                    const noteIndex = rootIndex + interval;
+                    const currentOctave = startOctave + oct + Math.floor(noteIndex / 12);
+                    scale.push(NOTES[noteIndex % 12] + currentOctave);
                 }
             }
+            return scale;
+        }
 
-            objA.el.style.transform = `translate(${objA.x - objA.radius}px, ${objA.y - objA.radius}px) rotate(${objA.rotation}deg)`;
+        function displayLiveNote(instrument, note, duration) {
+            const noteEl = document.createElement('div');
+            noteEl.className = 'live-note p-1 bg-black/20 rounded-md text-center';
+            noteEl.textContent = `${instrument}: ${note.replace(/\d/g, '')}`;
+            dom.liveNotesDisplay.appendChild(noteEl);
+            setTimeout(() => {
+                noteEl.classList.add('fade-out');
+                setTimeout(() => noteEl.remove(), 500);
+            }, Tone.Time(duration).toMilliseconds() - 100);
+        }
 
-            objA.lifespan--;
-            if (objA.lifespan <= 60) {
-                objA.el.style.opacity = objA.lifespan / 60;
+        const bassSequence = new Tone.Sequence((time, note) => {
+            synths.bass.triggerAttackRelease(note, "8n", time);
+            Tone.Draw.schedule(() => displayLiveNote('Bass', note, '8n'), time);
+        }, [], "4n").start(0);
+
+        const arpSequence = new Tone.Sequence((time, note) => {
+            if (note !== null && Math.random() < 0.7) {
+                synths.pluck.triggerAttackRelease(note, "16n", time);
+                Tone.Draw.schedule(() => displayLiveNote('Pluck', note, '16n'), time);
+            }
+        }, [], "16n").start(0);
+
+        const lfoPadSequence = new Tone.Sequence((time, note) => {
+            if (Math.random() < 0.5) {
+                const droneNote = Tone.Frequency(note).transpose(-12);
+                synths.lfoPad.triggerAttackRelease(droneNote, "1m", time);
+                Tone.Draw.schedule(() => displayLiveNote('LFO Pad', droneNote.toNote(), '1m'), time);
+            }
+        }, [], "1m").start(0);
+
+        function updateArpeggiatorNotes() {
+            if (currentChord.length === 0) return;
+            bassSequence.events = [currentChord[0], currentChord[1], currentChord[2], currentChord[1]];
+            const arpNotes = currentChord.flatMap(note => [note, null, Tone.Frequency(note).transpose(12).toNote(), null]);
+            arpSequence.events = arpNotes;
+            lfoPadSequence.events = [currentChord[0]]; // Drone on the root note
+        }
+
+        // --- Main Loop & Transport ---
+        function createDrumSequence(steps) {
+            if (drumSequence) {
+                drumSequence.stop();
+                drumSequence.dispose();
+            }
+            drumSequence = new Tone.Sequence((time, step) => {
+                const density = parseFloat(controls['density'].value);
+                Object.keys(seq_data).forEach(instrument => {
+                    if (seq_data[instrument][step] && Math.random() < Math.pow(density, 3)) {
+                        if (instrument === 'kick') {
+                            synths.kick.triggerAttackRelease("C1", "8n", time);
+                            synths.rumble.triggerAttackRelease("C0", "2n", time);
+                        }
+                        if (instrument === 'snare') synths.snare.triggerAttack(time);
+                        if (instrument === 'hat') synths.hat.triggerAttackRelease('C6', '16n', time, Math.random() * 0.3 + 0.5);
+                        if (instrument === 'openhat') synths.openhat.triggerAttack(time);
+                    }
+                });
+                Tone.Draw.schedule(() => {
+                    const lastStep = (step - 1 + steps) % steps;
+                    document.querySelectorAll(`[data-step]`).forEach(el => el.classList.remove('playing'));
+                    document.querySelectorAll(`[data-step="${step}"]`).forEach(el => el.classList.add('playing'));
+                }, time);
+            }, Array.from(Array(steps).keys()), "16n").start(0);
+        }
+
+        new Tone.Loop(time => {
+            progressionIndex = (progressionIndex + 1) % chordProgression.length;
+            currentChord = getChordFromProgression(chordProgression[progressionIndex]);
+            updateArpeggiatorNotes();
+            synths.pad.triggerAttackRelease(currentChord, "1m", time);
+            Tone.Draw.schedule(() => {
+                displayLiveNote('Pad', currentChord[0], '1m');
+                displayLiveNote('Pad', currentChord[1], '1m');
+                displayLiveNote('Pad', currentChord[2], '1m');
+            }, time);
+        }, "1m").start(0);
+
+        // --- Evolve Engine ---
+        let evolveSignal = new Tone.Signal(0);
+        const evolveParams = {
+            tempo: { min: 70, max: 170, target: Tone.Transport.bpm },
+            density: { min: 0.0, max: 1.0, target: null },
+            lfoRate: { min: 0.1, max: 8, target: lfo.frequency },
+            lfoDepth: { min: 200, max: 4000, target: lfo },
+        };
+        const TIME_SIGNATURES = [ { sig: [4, 4], steps: 16 }, { sig: [3, 4], steps: 12 }, { sig: [7, 8], steps: 14 } ];
+
+        function startEvolveCycle() {
+            if (!isPlaying) return;
+
+            // Change meter and rhythm
+            const newTimeSig = TIME_SIGNATURES[Math.floor(Math.random() * TIME_SIGNATURES.length)];
+            Tone.Transport.timeSignature = newTimeSig.sig;
+            NUM_STEPS = newTimeSig.steps;
+            randomizeDrumPattern(NUM_STEPS);
+            createSequencerGrid(NUM_STEPS);
+            createDrumSequence(NUM_STEPS);
+
+            // Change mood
+            changeMood();
+
+            // Conditional Swing
+            if (Math.random() < 0.1) {
+                Tone.Transport.swing = 0.5;
+                controls['swing'].value = 0.5;
+            } else {
+                Tone.Transport.swing = 0;
+                controls['swing'].value = 0;
+            }
+            updateDisplay('swing', Tone.Transport.swing.toFixed(1));
+
+            const buildUpTime = parseFloat(controls['evolve-up'].value);
+            const buildDownTime = parseFloat(controls['evolve-breakdown'].value);
+            const peakTime = parseFloat(controls['evolve-peak'].value);
+            const totalCycleTime = buildUpTime + peakTime + buildDownTime;
+
+            evolveState = 'Building Up';
+            evolveSignal.rampTo(1, buildUpTime);
+
+            Tone.Transport.scheduleOnce(() => { evolveState = 'Peak'; }, `+${buildUpTime}`);
+            Tone.Transport.scheduleOnce(() => { evolveState = 'Breaking Down'; evolveSignal.rampTo(0, buildDownTime) }, `+${buildUpTime + peakTime}`);
+            Tone.Transport.scheduleOnce(startEvolveCycle, `+${totalCycleTime}`);
+        }
+
+        // --- Status Bar Update ---
+        function inferMood() {
+            const tempo = Tone.Transport.bpm.value;
+            const scaleType = dom.scaleTypeSelect.value;
+
+            let tempoDescriptor;
+            if (tempo > 150) tempoDescriptor = "Frenetic";
+            else if (tempo > 120) tempoDescriptor = "Energetic";
+            else if (tempo < 90) tempoDescriptor = "Meditative";
+            else tempoDescriptor = "Relaxed";
+
+            let scaleDescriptor;
+            switch(scaleType) {
+                case 'major': case 'majorPentatonic':
+                    scaleDescriptor = tempo > 110 ? 'Euphoric' : 'Hopeful'; break;
+                case 'minor': case 'minorPentatonic':
+                    scaleDescriptor = tempo > 110 ? 'Intense' : 'Somber'; break;
+                case 'dorian':
+                    scaleDescriptor = 'Mystical'; break;
+                default: scaleDescriptor = 'Neutral';
+            }
+            return `${tempoDescriptor} & ${scaleDescriptor}`;
+        }
+
+        function updateStatusBar() {
+            const currentMood = isPlaying ? inferMood() : '...';
+            const moodColor = MOOD_COLORS[currentMood] || 'var(--text-display)';
+
+            dom.statusBar.evolveState.textContent = evolveState;
+            dom.statusBar.mood.textContent = currentMood;
+            dom.statusBar.tempo.textContent = `${Math.round(Tone.Transport.bpm.value)} BPM`;
+
+            if (currentChord && currentChord.length > 0) {
+                dom.statusBar.chord.textContent = currentChord.map(n => n.slice(0,-1)).join(' - ');
+            } else {
+                dom.statusBar.chord.textContent = '-';
+            }
+
+            const root = dom.rootNoteSelect.value;
+            const type = dom.scaleTypeSelect.options[dom.scaleTypeSelect.selectedIndex].text;
+            dom.statusBar.scale.textContent = `${root} ${type}`;
+
+            // Update colors
+            if (!document.body.classList.contains('theme-vintage')) {
+                dom.mainTitle.style.color = moodColor;
+                document.documentElement.style.setProperty('--border-color', moodColor);
+                document.documentElement.style.setProperty('--thumb-color', moodColor);
+                dom.playStopButton.style.backgroundColor = moodColor;
+                dom.newMoodButton.style.backgroundColor = moodColor;
+            } else {
+                dom.mainTitle.style.color = '';
+                document.documentElement.style.setProperty('--border-color', '');
+                document.documentElement.style.setProperty('--thumb-color', '');
+                dom.playStopButton.style.backgroundColor = '';
+                dom.newMoodButton.style.backgroundColor = '';
             }
         }
 
-        activeGameObjects = activeGameObjects.filter(obj => {
-            if (obj.lifespan <= 0) {
-                obj.el.remove();
-                return false;
+        new Tone.Loop(time => {
+            if (!isPlaying) return;
+            const evolveValue = evolveSignal.value;
+            for (const param in evolveParams) {
+                const { min, max, target } = evolveParams[param];
+                const newValue = min + (max - min) * evolveValue;
+                if(param === 'lfoDepth') {
+                    lfo.max = newValue;
+                } else if (target) {
+                    target.value = newValue;
+                }
+
+                if (controls[param]) {
+                    controls[param].value = newValue;
+                    updateDisplay(param, target ? Math.round(newValue) : newValue.toFixed(2));
+                }
             }
-            return true;
+            updateStatusBar();
+        }, "0.5s").start(0);
+
+        // --- Event Handlers ---
+        dom.playStopButton.addEventListener('click', async () => {
+            if (Tone.context.state !== 'running') {
+                dom.messageBox.textContent = 'Initializing Audio Engine...';
+                await Tone.start();
+                dom.messageBox.textContent = 'Ready!';
+                setTimeout(() => dom.messageBox.textContent = '', 2000);
+            }
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                Tone.Transport.start();
+                dom.playStopButton.textContent = 'Stop';
+                startEvolveCycle();
+            } else {
+                Tone.Transport.stop();
+                Tone.Transport.cancel(0);
+                evolveSignal.cancelScheduledValues(Tone.now());
+                evolveSignal.value = 0;
+                evolveState = 'Idle';
+                updateStatusBar();
+                dom.playStopButton.textContent = 'Start';
+            }
         });
-    }
 
-    function handleNoteOn(e) {
-        if (activeNotes.size === 0) {
-            infoEl.style.opacity = '0';
+        dom.newMoodButton.addEventListener('click', changeMood);
+
+        dom.themeSwitcher.addEventListener('click', () => {
+            document.body.classList.toggle('theme-vintage');
+            updateStatusBar();
+        });
+
+        [dom.rootNoteSelect, dom.scaleTypeSelect, dom.octaveSelect].forEach(el => {
+            el.addEventListener('change', updateMusicTheory);
+        });
+
+        // --- Initialization ---
+        function initialize() {
+            createSequencerGrid(NUM_STEPS);
+            setupControls();
+            Tone.Transport.swing = 0;
+            Tone.Transport.swingSubdivision = '16n';
+            updateMusicTheory();
+            // Default Berlin-style pattern
+            const defaultPattern = {
+                kick: [0, 4, 8, 12],
+                snare: [],
+                hat: [2, 6, 10, 14],
+                openhat: [14]
+            };
+            Object.keys(defaultPattern).forEach(inst => {
+                defaultPattern[inst].forEach(stepIdx => {
+                    seq_data[inst][stepIdx] = true;
+                    const el = document.querySelector(`[data-instrument=${inst}] [data-step="${stepIdx}"]`);
+                    if (el) el.classList.add('active');
+                });
+            });
+            updateStatusBar();
         }
-        const note = { number: e.note.number, velocity: e.velocity };
-        activeNotes.set(e.note.number, note);
-        createSpaceObject(e.velocity, e.note.number);
-    }
 
-    function handleNoteOff(e) {
-        activeNotes.delete(e.note.number);
-        if (activeNotes.size === 0) {
-            infoEl.style.opacity = '1';
-        }
-    }
-
-    init();
+        initialize();
+    });
 </script>
 </body>
 </html>
-�
