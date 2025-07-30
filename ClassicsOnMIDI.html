@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classical MIDI Player</title>
+    <title>Baroque MIDI Player</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
@@ -21,13 +21,13 @@
             transform: scale(0.95);
         }
         /* Style for the log panel scrollbar */
-        #log-panel::-webkit-scrollbar, #notes-panel::-webkit-scrollbar {
+        #log-panel::-webkit-scrollbar, #notes-panel::-webkit-scrollbar, #file-info-panel::-webkit-scrollbar, #header-info-panel::-webkit-scrollbar, #tracks-panel::-webkit-scrollbar {
             width: 8px;
         }
-        #log-panel::-webkit-scrollbar-track, #notes-panel::-webkit-scrollbar-track {
+        #log-panel::-webkit-scrollbar-track, #notes-panel::-webkit-scrollbar-track, #file-info-panel::-webkit-scrollbar-track, #header-info-panel::-webkit-scrollbar-track, #tracks-panel::-webkit-scrollbar-track {
             background: #1f2937; /* bg-gray-800 */
         }
-        #log-panel::-webkit-scrollbar-thumb, #notes-panel::-webkit-scrollbar-thumb {
+        #log-panel::-webkit-scrollbar-thumb, #notes-panel::-webkit-scrollbar-thumb, #file-info-panel::-webkit-scrollbar-thumb, #header-info-panel::-webkit-scrollbar-thumb, #tracks-panel::-webkit-scrollbar-thumb {
             background: #4b5563; /* bg-gray-600 */
             border-radius: 4px;
         }
@@ -36,16 +36,6 @@
             white-space: pre-wrap;
             word-break: break-all;
         }
-        .p-2 { padding: 0.25rem; }
-        .p-4 { padding: 0.5rem; }
-        .md\:p-6 { padding: 0.75rem; }
-        .mb-4 { margin-bottom: 0.5rem; }
-        .mb-3 { margin-bottom: 0.375rem; }
-        .mb-1 { margin-bottom: 0.125rem; }
-        .gap-3 { gap: 0.375rem; }
-        .space-x-2 { gap: 0.25rem; }
-        .py-2 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-        .px-4 { padding-left: 0.5rem; padding-right: 0.5rem; }
     </style>
 </head>
 <body class="bg-gray-800 text-gray-100 flex items-center justify-center min-h-screen p-2">
@@ -53,7 +43,7 @@
 <div id="app-container" class="w-full max-w-2xl mx-auto p-4 md:p-6 bg-gray-900 rounded-2xl shadow-2xl border border-gray-700">
 
     <header class="text-center mb-4">
-        <h1 class="text-2xl md:text-3xl font-bold text-white">Classical MIDI Player</h1>
+        <h1 class="text-2xl md:text-3xl font-bold text-white">Baroque MIDI Player</h1>
         <p id="status-message" class="text-blue-400 mt-2 h-6 text-sm">Move your mouse to initialize MIDI...</p>
     </header>
 
@@ -96,18 +86,40 @@
         </div>
     </main>
 
-    <!-- Log and Notes Panels -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-        <div>
-            <label for="log-panel" class="block mb-1 text-xs font-medium text-gray-400">Log</label>
-            <div id="log-panel" class="w-full h-28 bg-gray-950 rounded-lg p-2 text-xs font-mono overflow-y-auto text-gray-300 border border-gray-700">
-                <!-- Log messages will appear here -->
+    <!-- Info Panels -->
+    <div class="mt-4 space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+                <label for="file-info-panel" class="block mb-1 text-xs font-medium text-gray-400">MIDI File Location</label>
+                <div id="file-info-panel" class="w-full h-28 bg-gray-950 rounded-lg p-2 text-xs font-mono overflow-y-auto text-gray-300 border border-gray-700">
+                    <!-- File URL will appear here -->
+                </div>
+            </div>
+            <div>
+                <label for="header-info-panel" class="block mb-1 text-xs font-medium text-gray-400">MIDI Header Info</label>
+                <div id="header-info-panel" class="w-full h-28 bg-gray-950 rounded-lg p-2 text-xs font-mono overflow-y-auto text-gray-300 border border-gray-700">
+                    <!-- Header info will appear here -->
+                </div>
             </div>
         </div>
-        <div>
-            <label for="notes-panel" class="block mb-1 text-xs font-medium text-gray-400">Recently Played Notes</label>
-            <div id="notes-panel" class="w-full h-28 bg-gray-950 rounded-lg p-2 text-xs font-mono overflow-y-auto text-gray-300 border border-gray-700">
-                <!-- Notes will appear here -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+                <label for="tracks-panel" class="block mb-1 text-xs font-medium text-gray-400">MIDI Tracks</label>
+                <div id="tracks-panel" class="w-full h-28 bg-gray-950 rounded-lg p-2 text-xs font-mono overflow-y-auto text-gray-300 border border-gray-700">
+                    <!-- Track names will appear here -->
+                </div>
+            </div>
+            <div>
+                <label for="log-panel" class="block mb-1 text-xs font-medium text-gray-400">Log</label>
+                <div id="log-panel" class="w-full h-28 bg-gray-950 rounded-lg p-2 text-xs font-mono overflow-y-auto text-gray-300 border border-gray-700">
+                    <!-- Log messages will appear here -->
+                </div>
+            </div>
+            <div>
+                <label for="notes-panel" class="block mb-1 text-xs font-medium text-gray-400">Recently Played Notes</label>
+                <div id="notes-panel" class="w-full h-28 bg-gray-950 rounded-lg p-2 text-xs font-mono overflow-y-auto text-gray-300 border border-gray-700">
+                    <!-- Notes will appear here -->
+                </div>
             </div>
         </div>
     </div>
@@ -138,6 +150,9 @@
     const stopButton = document.getElementById('stop-button');
     const logPanel = document.getElementById('log-panel');
     const notesPanel = document.getElementById('notes-panel');
+    const fileInfoPanel = document.getElementById('file-info-panel');
+    const headerInfoPanel = document.getElementById('header-info-panel');
+    const tracksPanel = document.getElementById('tracks-panel'); // New panel reference
     const errorModal = document.getElementById('error-modal');
     const closeModalButton = document.getElementById('close-modal-button');
     const errorMessageElem = document.getElementById('error-message');
@@ -151,33 +166,33 @@
     let wasPausedByBlur = false; // Flag to handle page focus changes
     const corsProxy = 'https://corsproxy.io/?';
 
-    // --- MIDI Data ---
-    const classicalPieces = [
-        { id: "beethoven_fur_elise", name: "Beethoven - Für Elise", url: `https://bitmidi.com/uploads/88448.mid` },
-        { id: "bach_toccata_fugue", name: "Bach - Toccata and Fugue in D minor", url: `https://bitmidi.com/uploads/7347.mid` },
-        { id: "mozart_eine_kleine", name: "Mozart - Eine kleine Nachtmusik", url: `https://bitmidi.com/uploads/1931.mid` },
-        { id: "pachelbel_canon_d", name: "Pachelbel - Canon in D", url: `https://bitmidi.com/uploads/48.mid` },
-        { id: "vivaldi_spring", name: "Vivaldi - The Four Seasons (Spring)", url: `https://bitmidi.com/uploads/2481.mid` },
-        { id: "chopin_nocturne_op9_no2", name: "Chopin - Nocturne Op.9 No.2", url: `https://bitmidi.com/uploads/213.mid` },
-        { id: "debussy_clair_de_lune", name: "Debussy - Clair de Lune", url: `https://bitmidi.com/uploads/22.mid` },
-        { id: "satie_gymnopedie_1", name: "Satie - Gymnopédie No. 1", url: `https://bitmidi.com/uploads/12.mid` },
-        { id: "mozart_rondo_alla_turca", name: "Mozart - Rondo Alla Turca", url: `https://bitmidi.com/uploads/1929.mid` },
-        { id: "beethoven_moonlight_sonata", name: "Beethoven - Moonlight Sonata (1st mvt)", url: `https://bitmidi.com/uploads/88449.mid` },
-        { id: "handel_hallelujah", name: "Handel - Hallelujah Chorus", url: `https://bitmidi.com/uploads/104.mid` },
-        { id: "wagner_ride_of_the_valkyries", name: "Wagner - Ride of the Valkyries", url: `https://bitmidi.com/uploads/248.mid` },
-        { id: "rossini_william_tell_overture", name: "Rossini - William Tell Overture", url: `https://bitmidi.com/uploads/193.mid` },
-        { id: "strauss_blue_danube", name: "Strauss - The Blue Danube", url: `https://bitmidi.com/uploads/195.mid` },
-        { id: "tchaikovsky_1812_overture", name: "Tchaikovsky - 1812 Overture", url: `https://bitmidi.com/uploads/221.mid` },
-        { id: "bizet_carmen_overture", name: "Bizet - Carmen Overture", url: `https://bitmidi.com/uploads/19.mid` },
-        { id: "dvorak_new_world_symphony", name: "Dvořák - Symphony No. 9 (New World)", url: `https://bitmidi.com/uploads/1012.mid` },
-        { id: "grieg_in_the_hall_of_the_mountain_king", name: "Grieg - In the Hall of the Mountain King", url: `https://bitmidi.com/uploads/102.mid` },
-        { id: "bach_air_on_the_g_string", name: "Bach - Air on the G String", url: `https://bitmidi.com/uploads/7348.mid` },
-        { id: "beethoven_symphony_5", name: "Beethoven - Symphony No. 5", url: `https://bitmidi.com/uploads/88450.mid` },
-        { id: "brahms_hungarian_dance_5", name: "Brahms - Hungarian Dance No. 5", url: `https://bitmidi.com/uploads/20.mid` },
-        { id: "chopin_minute_waltz", name: "Chopin - Minute Waltz", url: `https://bitmidi.com/uploads/214.mid` },
-        { id: "liszt_hungarian_rhapsody_2", name: "Liszt - Hungarian Rhapsody No. 2", url: `https://bitmidi.com/uploads/149.mid` },
-        { id: "schubert_ave_maria", name: "Schubert - Ave Maria", url: `https://bitmidi.com/uploads/194.mid` },
-        { id: "verdi_la_donna_e_mobile", name: "Verdi - La donna è mobile", url: `https://bitmidi.com/uploads/222.mid` }
+    // --- MIDI Data (Baroque Playlist with original table URLs) ---
+    let classicalPieces = [
+        { id: "pachelbel_canon_d", name: "Pachelbel - Canon in D", url: "https://bitmidi.com/uploads/48.mid" },
+        { id: "bach_toccata_fugue_d_minor", name: "Bach - Toccata and Fugue in D minor, BWV 565", url: "https://bitmidi.com/uploads/7347.mid" },
+        { id: "vivaldi_four_seasons_spring", name: "Vivaldi - The Four Seasons: Spring", url: "https://bitmidi.com/uploads/2481.mid" },
+        { id: "bach_air_g_string", name: "Bach - Air on the G String", url: "https://bitmidi.com/uploads/7348.mid" },
+        { id: "handel_hallelujah_chorus", name: "Handel - Hallelujah Chorus (from Messiah)", url: "https://bitmidi.com/uploads/104.mid" },
+        { id: "bach_jesu_joy_of_mans_desiring", name: "Bach - Jesu, Joy of Man's Desiring", url: "https://bitmidi.com/uploads/1000.mid" },
+        { id: "vivaldi_four_seasons_winter", name: "Vivaldi - The Four Seasons: Winter", url: "https://bitmidi.com/uploads/2482.mid" },
+        { id: "bach_cello_suite_1_prelude", name: "Bach - Cello Suite No. 1 in G, Prelude", url: "https://bitmidi.com/uploads/1001.mid" },
+        { id: "handel_water_music_alla_hornpipe", name: "Handel - Water Music, Suite No. 2: Alla Hornpipe", url: "https://bitmidi.com/uploads/105.mid" },
+        { id: "albinoni_adagio_g_minor", name: "Albinoni - Adagio in G minor", url: "https://bitmidi.com/uploads/1002.mid" },
+        { id: "bach_brandenburg_concerto_3", name: "Bach - Brandenburg Concerto No. 3 in G", url: "https://bitmidi.com/uploads/1003.mid" },
+        { id: "purcell_rondeau_abdelazer", name: "Purcell - Rondeau (from Abdelazer)", url: "https://bitmidi.com/uploads/1004.mid" },
+        { id: "bach_wachet_auf", name: "Bach - Wachet auf, ruft uns die Stimme, BWV 140", url: "https://bitmidi.com/uploads/1005.mid" },
+        { id: "handel_arrival_of_the_queen_of_sheba", name: "Handel - The Arrival of the Queen of Sheba", url: "https://bitmidi.com/uploads/106.mid" },
+        { id: "corelli_christmas_concerto", name: "Corelli - Christmas Concerto, Op. 6, No. 8", url: "https://bitmidi.com/uploads/1006.mid" },
+        { id: "bach_minuet_in_g_major", name: "Bach - Minuet in G Major, BWV Anh. 114", url: "https://bitmidi.com/uploads/1007.mid" },
+        { id: "vivaldi_gloria_rv589", name: "Vivaldi - Gloria in D Major, RV 589", url: "https://bitmidi.com/uploads/1008.mid" },
+        { id: "handel_sarabande", name: "Handel - Sarabande (from Keyboard Suite in Dm)", url: "https://bitmidi.com/uploads/1009.mid" },
+        { id: "bach_brandenburg_concerto_5", name: "Bach - Brandenburg Concerto No. 5 in D", url: "https://bitmidi.com/uploads/1010.mid" },
+        { id: "clarke_trumpet_voluntary", name: "Clarke - Trumpet Voluntary (Prince of Denmark's March)", url: "https://bitmidi.com/uploads/1011.mid" },
+        { id: "scarlatti_sonata_k380", name: "Scarlatti - Keyboard Sonata in E major, K.380", url: "https://bitmidi.com/uploads/1013.mid" },
+        { id: "bach_badinerie", name: "Bach - Badinerie (from Orchestral Suite No. 2)", url: "https://bitmidi.com/uploads/1014.mid" },
+        { id: "vivaldi_lute_concerto_rv93", name: "Vivaldi - Lute Concerto in D major, RV 93", url: "https://bitmidi.com/uploads/1015.mid" },
+        { id: "handel_lascia_chio_pianga", name: "Handel - Lascia ch'io pianga (from Rinaldo)", url: "https://bitmidi.com/uploads/1016.mid" },
+        { id: "bach_prelude_in_c_major", name: "Bach - Prelude in C Major (Well-Tempered Clavier, Book 1)", url: "https://bitmidi.com/uploads/1017.mid" }
     ];
 
     // --- Custom MIDI Parser and Player ---
@@ -186,7 +201,9 @@
             this.dataView = new DataView(arrayBuffer);
             this.outputPort = outputPort;
             this.events = [];
+            this.trackNames = [];
             this.ticksPerBeat = 120;
+            this.format = 0;
             this.timeoutId = null;
             this.isPlaying = false;
             this.isPaused = false;
@@ -200,7 +217,8 @@
         parse() {
             let offset = 0;
             if (this.getString(offset, 4) !== 'MThd') throw new Error('Invalid MIDI file header.');
-            offset += 8;
+            offset += 8; // Skip ID and length
+            this.format = this.dataView.getUint16(offset, false);
             this.ticksPerBeat = this.dataView.getUint16(offset + 4, false);
             offset += 6;
 
@@ -280,7 +298,10 @@
                 } else if (statusByte === 0xFF) {
                     const type = this.dataView.getUint8(offsetObj.offset++);
                     const length = this.readVarInt(offsetObj);
-                    if (type === 0x51) {
+                    if (type === 0x03) { // Track Name
+                        const name = this.getString(offsetObj.offset, length);
+                        this.trackNames.push(name);
+                    } else if (type === 0x51) { // Set Tempo
                         const tempoValue = (this.dataView.getUint8(offsetObj.offset) << 16) | (this.dataView.getUint8(offsetObj.offset + 1) << 8) | this.dataView.getUint8(offsetObj.offset + 2);
                         this.events.push({ time: currentTime, tempo: 60000000 / tempoValue });
                     }
@@ -433,6 +454,20 @@
         }
     }
 
+    function populateTracksPanel(trackNames) {
+        tracksPanel.innerHTML = '';
+        if (trackNames && trackNames.length > 0) {
+            trackNames.forEach((name, index) => {
+                const p = document.createElement('p');
+                const sanitizedName = name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                p.innerHTML = `<span class="text-gray-500">${index + 1}:</span> ${sanitizedName}`;
+                tracksPanel.appendChild(p);
+            });
+        } else {
+            tracksPanel.innerHTML = '<p class="text-gray-500">No track names found.</p>';
+        }
+    }
+
     function showErrorModal(message, body) {
         errorMessageElem.textContent = message;
         errorBodyElem.textContent = body || 'No additional details available.';
@@ -489,8 +524,9 @@
         playButton.disabled = false;
     }
 
-    function populateDropdowns() {
-        classicalPieces.forEach(piece => {
+    function populateDropdowns(playlist) {
+        pieceSelect.innerHTML = '';
+        playlist.forEach(piece => {
             const option = document.createElement('option');
             option.value = piece.id;
             option.textContent = piece.name;
@@ -536,7 +572,8 @@
             const pieceName = piece.name;
 
             logMessage(`Loading "${pieceName}"...`, 'info');
-            logMessage(`Fetching URL: <a href="${originalUrl}" target="_blank" class="text-cyan-400 hover:underline">${originalUrl}</a>`, 'info');
+
+            fileInfoPanel.innerHTML = `<a href="${originalUrl}" target="_blank" class="text-cyan-400 hover:underline break-all">${originalUrl}</a>`;
 
             const response = await fetch(fetchUrl);
             if (!response.ok) {
@@ -550,7 +587,19 @@
 
             player = new SimpleMidiPlayer(arrayBuffer, outputPort);
             player.parse();
+            populateTracksPanel(player.trackNames);
             player.play();
+
+            headerInfoPanel.innerHTML = `
+                    <p><span class="font-bold text-gray-400">Format:</span> ${player.format}</p>
+                    <p><span class="font-bold text-gray-400">Ticks/Beat:</span> ${player.ticksPerBeat}</p>
+                `;
+
+            if (player.trackNames.length > 0) {
+                logMessage(`Track Name(s): ${player.trackNames.join(', ')}`, 'info');
+            } else {
+                logMessage('No embedded track name found in MIDI file.', 'warning');
+            }
 
             statusMessage.textContent = `Playing: ${pieceName}`;
             logMessage(`Playing: ${pieceName}`, 'success');
@@ -565,7 +614,12 @@
             console.error(errorMsg, error);
             statusMessage.textContent = 'Error loading file.';
             logMessage(errorMsg, 'error');
-            showErrorModal(error.message, error.body || error.stack);
+
+            if (error.message.includes('522')) {
+                logMessage('Server connection timed out (522). Please try another song or check back later.', 'error');
+            } else {
+                showErrorModal(error.message, error.body || error.stack);
+            }
         }
     }
 
@@ -595,6 +649,7 @@
             statusMessage.textContent = 'Playback finished.';
             logMessage('Playback finished.', 'info');
         }
+        tracksPanel.innerHTML = '';
     }
 
     // --- Event Listeners ---
@@ -619,7 +674,7 @@
 
     // --- Initial Setup ---
     window.addEventListener('load', () => {
-        populateDropdowns();
+        populateDropdowns(classicalPieces);
         logMessage('Application loaded. Move mouse to start MIDI engine.', 'info');
     });
 </script>
