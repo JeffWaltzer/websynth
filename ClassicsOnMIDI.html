@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classical MIDI Player</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom font and minor style adjustments */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        select, button {
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        /* Style for the log panel scrollbar */
+        #log-panel::-webkit-scrollbar, #notes-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        #log-panel::-webkit-scrollbar-track, #notes-panel::-webkit-scrollbar-track {
+            background: #1f2937; /* bg-gray-800 */
+        }
+        #log-panel::-webkit-scrollbar-thumb, #notes-panel::-webkit-scrollbar-thumb {
+            background: #4b5563; /* bg-gray-600 */
+            border-radius: 4px;
+        }
+        /* Styles for the error modal body to enable word wrapping */
+        #error-body {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body class="bg-gray-800 text-gray-100 flex items-center justify-center min-h-screen p-4">
+
+<div id="app-container" class="w-full max-w-2xl mx-auto p-6 md:p-8 bg-gray-900 rounded-2xl shadow-2xl border border-gray-700">
+
+    <header class="text-center mb-6">
+        <h1 class="text-3xl md:text-4xl font-bold text-white">Classical MIDI Player</h1>
+        <p id="status-message" class="text-blue-400 mt-2 h-6">Move your mouse to initialize MIDI...</p>
+    </header>
+
+    <main>
+        <!-- Piece Selection -->
+        <div class="mb-4">
+            <label for="piece-select" class="block mb-2 text-sm font-medium text-gray-300">Select a Piece</label>
+            <select id="piece-select" title="Select a classical piece to play" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 disabled:opacity-50" disabled>
+                <!-- Options will be populated by JavaScript -->
+            </select>
+        </div>
+
+        <!-- MIDI Device and Channel Selection -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+                <label for="device-select" class="block mb-2 text-sm font-medium text-gray-300">MIDI Output Device</label>
+                <select id="device-select" title="Select your MIDI output device" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 disabled:opacity-50" disabled>
+                    <option>No devices found</option>
+                </select>
+            </div>
+            <div>
+                <label for="channel-select" class="block mb-2 text-sm font-medium text-gray-300">MIDI Channel</label>
+                <select id="channel-select" title="Select the MIDI channel for playback" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 disabled:opacity-50" disabled>
+                    <!-- Channel options 1-16 will be populated by JavaScript -->
+                </select>
+            </div>
+        </div>
+
+        <!-- Playback Controls -->
+        <div class="flex items-center justify-center space-x-4">
+            <button id="play-button" title="Play the selected piece" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <i class="fas fa-play mr-2"></i> Play
+            </button>
+            <button id="pause-button" title="Pause the current piece" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <i class="fas fa-pause mr-2"></i> Pause
+            </button>
+            <button id="stop-button" title="Stop playback and rewind" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <i class="fas fa-stop mr-2"></i> Stop
+            </button>
+        </div>
+    </main>
+
+    <!-- Log and Notes Panels -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div>
+            <label for="log-panel" class="block mb-2 text-sm font-medium text-gray-400">Log</label>
+            <div id="log-panel" class="w-full h-32 bg-gray-950 rounded-lg p-3 text-sm font-mono overflow-y-auto text-gray-300 border border-gray-700">
+                <!-- Log messages will appear here -->
+            </div>
+        </div>
+        <div>
+            <label for="notes-panel" class="block mb-2 text-sm font-medium text-gray-400">Recently Played Notes</label>
+            <div id="notes-panel" class="w-full h-32 bg-gray-950 rounded-lg p-3 text-sm font-mono overflow-y-auto text-gray-300 border border-gray-700">
+                <!-- Notes will appear here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="error-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg border border-gray-700">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-red-500">Error</h3>
+            <button id="close-modal-button" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+        </div>
+        <div>
+            <p id="error-message" class="text-gray-300 mb-4"></p>
+            <pre id="error-body" class="bg-gray-950 text-gray-400 text-xs p-3 rounded-md overflow-auto max-h-60 border border-gray-700"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- DOM Element References ---
+    const statusMessage = document.getElementById('status-message');
+    const pieceSelect = document.getElementById('piece-select');
+    const deviceSelect = document.getElementById('device-select');
+    const channelSelect = document.getElementById('channel-select');
+    const playButton = document.getElementById('play-button');
+    const pauseButton = document.getElementById('pause-button');
+    const stopButton = document.getElementById('stop-button');
+    const logPanel = document.getElementById('log-panel');
+    const notesPanel = document.getElementById('notes-panel');
+    const errorModal = document.getElementById('error-modal');
+    const closeModalButton = document.getElementById('close-modal-button');
+    const errorMessageElem = document.getElementById('error-message');
+    const errorBodyElem = document.getElementById('error-body');
+
+    // --- State Variables ---
+    let midiAccess = null;
+    let midiOutputs = [];
+    let player = null;
+    let isMidiInitialized = false;
+    const corsProxy = 'https://corsproxy.io/?';
+
+    // --- MIDI Data ---
+    const classicalPieces = {
+        "beethoven_fur_elise": { name: "Beethoven - Für Elise", url: `${corsProxy}https://bitmidi.com/uploads/88448.mid` },
+        "bach_toccata_fugue": { name: "Bach - Toccata and Fugue in D minor", url: `${corsProxy}https://bitmidi.com/uploads/7347.mid` },
+        "mozart_eine_kleine": { name: "Mozart - Eine kleine Nachtmusik", url: `${corsProxy}https://bitmidi.com/uploads/1931.mid` },
+        "pachelbel_canon_d": { name: "Pachelbel - Canon in D", url: `${corsProxy}https://bitmidi.com/uploads/48.mid` },
+        "vivaldi_spring": { name: "Vivaldi - The Four Seasons (Spring)", url: `${corsProxy}https://bitmidi.com/uploads/2481.mid` },
+        "chopin_nocturne_op9_no2": { name: "Chopin - Nocturne in E-flat major", url: `${corsProxy}https://bitmidi.com/uploads/213.mid` },
+        "debussy_clair_de_lune": { name: "Debussy - Clair de Lune", url: `${corsProxy}https://bitmidi.com/uploads/22.mid` },
+        "satie_gymnopedie_1": { name: "Satie - Gymnopédie No. 1", url: `${corsProxy}https://bitmidi.com/uploads/12.mid` },
+        "mozart_rondo_alla_turca": { name: "Mozart - Rondo Alla Turca", url: `${corsProxy}https://bitmidi.com/uploads/1929.mid` },
+        "beethoven_moonlight_sonata": { name: "Beethoven - Moonlight Sonata (1st mvt)", url: `${corsProxy}https://bitmidi.com/uploads/88449.mid` }
+    };
+
+    // --- Custom MIDI Parser and Player ---
+    class SimpleMidiPlayer {
+        constructor(arrayBuffer, outputPort) {
+            this.dataView = new DataView(arrayBuffer);
+            this.outputPort = outputPort;
+            this.events = [];
+            this.ticksPerBeat = 120;
+            this.timeoutId = null;
+            this.isPlaying = false;
+            this.isPaused = false;
+            this.startTime = 0;
+            this.elapsedTime = 0;
+            this.nextEventIndex = 0;
+            this.noteBuffer = [];
+            this.chordTimeout = null;
+        }
+
+        parse() {
+            let offset = 0;
+            if (this.getString(offset, 4) !== 'MThd') throw new Error('Invalid MIDI file header.');
+            offset += 8;
+            this.ticksPerBeat = this.dataView.getUint16(offset + 4, false);
+            offset += 6;
+
+            while (offset < this.dataView.byteLength) {
+                const chunkId = this.getString(offset, 4);
+                const chunkLength = this.dataView.getUint32(offset + 4, false);
+                offset += 8;
+                if (chunkId === 'MTrk') {
+                    this.parseTrack(offset);
+                }
+                offset += chunkLength;
+            }
+            this.finalizeEvents();
+        }
+
+        finalizeEvents() {
+            this.events.sort((a, b) => a.time - b.time);
+
+            let currentTempo = 120.0;
+            let lastEventTick = 0;
+            let lastEventMs = 0;
+
+            for (const event of this.events) {
+                const deltaTicks = event.time - lastEventTick;
+                const deltaMs = (deltaTicks / this.ticksPerBeat) * (60000 / currentTempo);
+
+                event.absoluteMs = lastEventMs + deltaMs;
+
+                if (event.tempo) {
+                    currentTempo = event.tempo;
+                }
+
+                lastEventTick = event.time;
+                lastEventMs = event.absoluteMs;
+            }
+        }
+
+        getString(offset, length) {
+            let str = '';
+            for (let i = 0; i < length; i++) str += String.fromCharCode(this.dataView.getUint8(offset + i));
+            return str;
+        }
+
+        readVarInt(offsetObj) {
+            let value = 0, byte;
+            do {
+                byte = this.dataView.getUint8(offsetObj.offset++);
+                value = (value << 7) + (byte & 0x7F);
+            } while (byte & 0x80);
+            return value;
+        }
+
+        parseTrack(offset) {
+            let currentTime = 0, lastStatusByte = null;
+            const endOffset = offset + this.dataView.getUint32(offset - 4, false);
+            let offsetObj = { offset: offset };
+
+            while (offsetObj.offset < endOffset) {
+                currentTime += this.readVarInt(offsetObj);
+                let statusByte = this.dataView.getUint8(offsetObj.offset);
+                if (statusByte < 0x80) {
+                    statusByte = lastStatusByte;
+                    offsetObj.offset--;
+                }
+                lastStatusByte = statusByte;
+                offsetObj.offset++;
+                const command = statusByte & 0xF0;
+
+                if (command >= 0x80 && command <= 0xE0) {
+                    if (command === 0x80 || command === 0x90) {
+                        const note = this.dataView.getUint8(offsetObj.offset++);
+                        const velocity = this.dataView.getUint8(offsetObj.offset++);
+                        this.events.push({ time: currentTime, message: [statusByte, note, velocity] });
+                    } else {
+                        offsetObj.offset += (command === 0xC0 || command === 0xD0) ? 1 : 2;
+                    }
+                } else if (statusByte === 0xFF) {
+                    const type = this.dataView.getUint8(offsetObj.offset++);
+                    const length = this.readVarInt(offsetObj);
+                    if (type === 0x51) {
+                        const tempoValue = (this.dataView.getUint8(offsetObj.offset) << 16) | (this.dataView.getUint8(offsetObj.offset + 1) << 8) | this.dataView.getUint8(offsetObj.offset + 2);
+                        this.events.push({ time: currentTime, tempo: 60000000 / tempoValue });
+                    }
+                    offsetObj.offset += length;
+                } else {
+                    while (this.dataView.getUint8(offsetObj.offset++) !== 0xF7) {}
+                }
+            }
+        }
+
+        scheduleNextEvent() {
+            if (this.nextEventIndex >= this.events.length || !this.isPlaying) {
+                if (this.isPlaying) { // Reached the end
+                    this.stop();
+                    onPlaybackEnd();
+                }
+                return;
+            }
+
+            const event = this.events[this.nextEventIndex];
+            const timeToWait = (this.startTime + event.absoluteMs) - performance.now();
+
+            this.timeoutId = setTimeout(() => {
+                if (!this.isPlaying) return;
+
+                if (event.message && this.outputPort) {
+                    const selectedChannel = parseInt(channelSelect.value);
+                    const originalCmd = event.message[0] & 0xF0;
+                    const newCmd = originalCmd | selectedChannel;
+                    const messageToSend = [newCmd, event.message[1], event.message[2]];
+                    this.outputPort.send(messageToSend);
+
+                    if (originalCmd === 0x90 && messageToSend[2] > 0) {
+                        this.handleNoteLogging(event.message[1]);
+                    }
+                }
+
+                this.nextEventIndex++;
+                this.scheduleNextEvent();
+            }, timeToWait > 0 ? timeToWait : 0);
+        }
+
+        play() {
+            if (this.isPlaying && !this.isPaused) return;
+            this.isPlaying = true;
+            this.isPaused = false;
+            this.startTime = performance.now() - this.elapsedTime;
+            this.scheduleNextEvent();
+        }
+
+        pause() {
+            if (!this.isPlaying || this.isPaused) return;
+            this.isPlaying = false;
+            this.isPaused = true;
+            this.elapsedTime = performance.now() - this.startTime;
+            clearTimeout(this.timeoutId);
+            this.nextEventIndex = this.events.findIndex(event => event.absoluteMs >= this.elapsedTime);
+            if (this.nextEventIndex === -1) this.nextEventIndex = this.events.length;
+        }
+
+        stop() {
+            this.isPlaying = false;
+            this.isPaused = false;
+            this.elapsedTime = 0;
+            this.nextEventIndex = 0;
+            clearTimeout(this.timeoutId);
+            for (let channel = 0; channel < 16; channel++) {
+                this.outputPort.send([0xB0 | channel, 120, 0]); // All Sound Off
+                this.outputPort.send([0xB0 | channel, 123, 0]); // All Notes Off
+            }
+        }
+
+        handleNoteLogging(noteNumber) {
+            clearTimeout(this.chordTimeout);
+            this.noteBuffer.push(noteNumber);
+            this.chordTimeout = setTimeout(() => {
+                logPlayedNotes(this.noteBuffer);
+                this.noteBuffer = [];
+            }, 50); // Group notes played within 50ms as a chord
+        }
+    }
+
+    /**
+     * Adds a message to the log panel.
+     * @param {string} message The message to log (can be HTML).
+     * @param {string} type The type of message ('info', 'success', 'warning', 'error').
+     */
+    function logMessage(message, type = 'info') {
+        const now = new Date();
+        const timestamp = now.toLocaleTimeString();
+        const p = document.createElement('p');
+        let colorClass = 'text-gray-400';
+        if (type === 'success') colorClass = 'text-green-400';
+        if (type === 'warning') colorClass = 'text-yellow-400';
+        if (type === 'error') colorClass = 'text-red-400';
+
+        if (message.includes('<a href')) {
+            p.innerHTML = `<span class="text-gray-500">${timestamp}:</span> ${message}`;
+        } else {
+            p.innerHTML = `<span class="text-gray-500">${timestamp}:</span> <span class="${colorClass}">${message}</span>`;
+        }
+
+        logPanel.appendChild(p);
+        logPanel.scrollTop = logPanel.scrollHeight;
+    }
+
+    const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const CHORD_INTERVALS = {
+        'maj': [0, 4, 7], 'm': [0, 3, 7], 'dim': [0, 3, 6], 'aug': [0, 4, 8],
+        'maj7': [0, 4, 7, 11], 'm7': [0, 3, 7, 10], '7': [0, 4, 7, 10],
+        'dim7': [0, 3, 6, 9], 'm7b5': [0, 3, 6, 10]
+    };
+
+    function getChordName(noteNumbers) {
+        if (!noteNumbers || noteNumbers.length < 3) return null;
+        const pitchClasses = [...new Set(noteNumbers.map(n => n % 12))].sort((a, b) => a - b);
+        if (pitchClasses.length < 3) return null;
+
+        for (let i = 0; i < pitchClasses.length; i++) {
+            const root = pitchClasses[i];
+            const intervals = pitchClasses.map(p => (p - root + 12) % 12).sort((a, b) => a - b);
+            const intervalsString = JSON.stringify(intervals);
+
+            for (const chordType in CHORD_INTERVALS) {
+                if (JSON.stringify(CHORD_INTERVALS[chordType]) === intervalsString) {
+                    return NOTE_NAMES[root] + chordType;
+                }
+            }
+        }
+        return null;
+    }
+
+    function noteNumberToName(noteNumber) {
+        const octave = Math.floor(noteNumber / 12) - 1;
+        const name = NOTE_NAMES[noteNumber % 12];
+        return `${name}${octave}`;
+    }
+
+    function logPlayedNotes(noteNumbers) {
+        const chordName = getChordName(noteNumbers);
+        const noteString = noteNumbers.map(noteNumberToName).join(', ');
+        const p = document.createElement('p');
+        if (chordName) {
+            p.innerHTML = `<span class="text-cyan-400 w-20 inline-block">${chordName}</span> ${noteString}`;
+        } else {
+            p.innerHTML = `<span class="text-cyan-400 w-20 inline-block">${noteNumbers.length > 1 ? 'Cluster:' : 'Note:'}</span> ${noteString}`;
+        }
+        notesPanel.prepend(p);
+        while (notesPanel.children.length > 20) {
+            notesPanel.removeChild(notesPanel.lastChild);
+        }
+    }
+
+    function showErrorModal(message, body) {
+        errorMessageElem.textContent = message;
+        errorBodyElem.textContent = body || 'No additional details available.';
+        errorModal.classList.remove('hidden');
+        errorModal.classList.add('flex');
+    }
+
+    function hideErrorModal() {
+        errorModal.classList.add('hidden');
+        errorModal.classList.remove('flex');
+    }
+
+    async function initializeMidi() {
+        if (isMidiInitialized) return;
+        isMidiInitialized = true;
+        logMessage('Initializing MIDI...', 'info');
+        try {
+            if (!navigator.requestMIDIAccess) throw new Error('Web MIDI API is not supported in this browser.');
+            midiAccess = await navigator.requestMIDIAccess();
+            statusMessage.textContent = 'MIDI Initialized. Select a device.';
+            logMessage('MIDI Initialized.', 'success');
+            setupMidiDevices(Array.from(midiAccess.outputs.values()));
+            enableControls();
+        } catch (error) {
+            const errorMsg = `MIDI initialization failed: ${error.message}`;
+            statusMessage.textContent = 'MIDI initialization failed.';
+            logMessage(errorMsg, 'error');
+            showErrorModal('MIDI Error', error.message);
+        }
+    }
+
+    function setupMidiDevices(outputs) {
+        midiOutputs = outputs;
+        deviceSelect.innerHTML = '';
+        if (outputs.length > 0) {
+            outputs.forEach(output => {
+                const option = document.createElement('option');
+                option.value = output.id;
+                option.textContent = output.name;
+                deviceSelect.appendChild(option);
+            });
+            logMessage(`Found ${outputs.length} MIDI devices. Auto-selected "${outputs[0].name}".`, 'info');
+        } else {
+            deviceSelect.innerHTML = '<option>No MIDI devices found</option>';
+            playButton.disabled = true;
+            logMessage('No MIDI output devices found.', 'warning');
+        }
+    }
+
+    function enableControls() {
+        pieceSelect.disabled = false;
+        deviceSelect.disabled = false;
+        channelSelect.disabled = false;
+        playButton.disabled = false;
+    }
+
+    function populateDropdowns() {
+        for (const key in classicalPieces) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = classicalPieces[key].name;
+            pieceSelect.appendChild(option);
+        }
+        for (let i = 1; i <= 16; i++) {
+            const option = document.createElement('option');
+            option.value = i - 1;
+            option.textContent = `Channel ${i}`;
+            channelSelect.appendChild(option);
+        }
+    }
+
+    async function play() {
+        const selectedOutputId = deviceSelect.value;
+        const outputPort = midiOutputs.find(o => o.id === selectedOutputId);
+
+        if (!outputPort) {
+            logMessage('Please select a valid MIDI output device.', 'error');
+            return;
+        }
+
+        if (player && player.isPlaying) {
+            if (player.isPaused) {
+                player.play();
+                logMessage('Playback resumed.', 'info');
+            }
+            return;
+        }
+
+        if (player) player.stop();
+
+        try {
+            const pieceKey = pieceSelect.value;
+            const fetchUrl = classicalPieces[pieceKey].url;
+            const originalUrl = fetchUrl.replace(corsProxy, '');
+            const pieceName = classicalPieces[pieceKey].name;
+
+            logMessage(`Loading "${pieceName}"...`, 'info');
+            logMessage(`Fetching URL: <a href="${originalUrl}" target="_blank" class="text-cyan-400 hover:underline">${originalUrl}</a>`, 'info');
+
+            const response = await fetch(fetchUrl);
+            if (!response.ok) {
+                const errorBody = await response.text();
+                const error = new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+                error.body = errorBody;
+                throw error;
+            }
+
+            const arrayBuffer = await response.arrayBuffer();
+
+            player = new SimpleMidiPlayer(arrayBuffer, outputPort);
+            player.parse();
+            player.play();
+
+            statusMessage.textContent = `Playing: ${pieceName}`;
+            logMessage(`Playing: ${pieceName}`, 'success');
+
+            playButton.disabled = true;
+            pauseButton.disabled = false;
+            stopButton.disabled = false;
+
+        } catch (error) {
+            const errorMsg = `Error: ${error.message}`;
+            console.error(errorMsg, error);
+            statusMessage.textContent = 'Error loading file.';
+            logMessage(errorMsg, 'error');
+            showErrorModal(error.message, error.body || error.stack);
+        }
+    }
+
+    function pause() {
+        if (player) {
+            player.pause();
+            playButton.disabled = false;
+            pauseButton.disabled = true;
+            logMessage('Playback paused.', 'info');
+        }
+    }
+
+    function stop() {
+        if (player) {
+            player.stop();
+        }
+        onPlaybackEnd();
+    }
+
+    function onPlaybackEnd() {
+        playButton.disabled = false;
+        pauseButton.disabled = true;
+        stopButton.disabled = true;
+        if (statusMessage.textContent.startsWith('Playing')) {
+            statusMessage.textContent = 'Playback finished.';
+            logMessage('Playback finished.', 'info');
+        }
+    }
+
+    // --- Event Listeners ---
+    document.body.addEventListener('mousemove', initializeMidi, { once: true });
+    playButton.addEventListener('click', play);
+    pauseButton.addEventListener('click', pause);
+    stopButton.addEventListener('click', stop);
+    pieceSelect.addEventListener('change', play);
+    closeModalButton.addEventListener('click', hideErrorModal);
+
+    // --- Initial Setup ---
+    window.addEventListener('load', () => {
+        populateDropdowns();
+        logMessage('Application loaded. Move mouse to start MIDI engine.', 'info');
+    });
+</script>
+</body>
+</html>

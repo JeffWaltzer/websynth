@@ -96,10 +96,6 @@
             will-change: transform;
             transition: opacity 0.5s linear;
         }
-        .astrological {
-            text-shadow: none;
-            color: #ffef99;
-        }
         #floating-message-container {
             position: absolute;
             top: 0;
@@ -111,7 +107,6 @@
             align-items: center;
             pointer-events: none;
             z-index: 100; /* On top of everything */
-            perspective: 800px; /* Add perspective for 3D transforms */
         }
         .floating-message {
             padding: 1rem 2rem;
@@ -121,7 +116,6 @@
             text-align: center;
             color: white;
             opacity: 0;
-            transform-style: preserve-3d; /* Enable 3D transforms for children */
         }
         .error-message {
             background-color: rgba(239, 68, 68, 0.85);
@@ -143,23 +137,46 @@
             animation: fragment-fly-out 1.5s ease-out forwards;
         }
         @keyframes message-appear {
-            0% { opacity: 0; transform: scale(0.8); }
-            10% { opacity: 1; transform: scale(1.05); }
-            15%, 100% { opacity: 1; transform: scale(1); }
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            10% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            15%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
         @keyframes float-around {
-            0% { opacity: 0; transform: translate(0, 0) scale(0.9) rotateZ(0deg); }
-            15% { opacity: 1; transform: translate(var(--float-x1), var(--float-y1)) scale(1) rotateZ(var(--spin-z1)) rotateY(var(--spin-y1)) rotateX(var(--spin-x1)); }
-            75% { opacity: 1; transform: translate(var(--float-x2), var(--float-y2)) scale(1) rotateZ(var(--spin-z2)) rotateY(var(--spin-y2)) rotateX(var(--spin-x2)); }
-            100% { opacity: 0; transform: translate(var(--float-x2), var(--float-y2)) scale(0.9) rotateZ(var(--spin-z2)) rotateY(var(--spin-y2)) rotateX(var(--spin-x2)); }
+            0% {
+                opacity: 0;
+                transform: translate(0, 0) scale(0.9) rotate(0deg);
+            }
+            15% {
+                opacity: 1;
+                transform: translate(var(--float-x1), var(--float-y1)) scale(1) rotate(var(--spin-1));
+            }
+            75% {
+                opacity: 1;
+                transform: translate(var(--float-x2), var(--float-y2)) scale(1) rotate(var(--spin-2));
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--float-x2), var(--float-y2)) scale(0.9) rotate(var(--spin-2));
+            }
         }
         @keyframes fragment-fly-out {
-            from { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-            to { transform: translate(var(--frag-x), var(--frag-y)) rotate(var(--frag-rot)); opacity: 0; }
-        }
-        @keyframes impact-explode {
-            0% { transform: scale(1); opacity: 1; text-shadow: 0 0 25px #ffddab, 0 0 50px #ff8c00; }
-            100% { transform: scale(2.5); opacity: 0; }
+            from {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 1;
+            }
+            to {
+                transform: translate(var(--frag-x), var(--frag-y)) rotate(var(--frag-rot));
+                opacity: 0;
+            }
         }
     </style>
 </head>
@@ -207,19 +224,20 @@
     let activeNotes = new Map();
     let psychedelicPass;
     let activeGameObjects = [];
-    const MAX_OBJECTS = 40;
 
     const sciFiFonts = ['Orbitron', 'Audiowide', 'Share Tech Mono', 'Bungee'];
     const sciFiQuotes = [
-        "I've seen things you people wouldn't believe.", "May the Force be with you.", "I'll be back.",
-        "Open the pod bay doors, HAL.", "Live long and prosper.", "It's a trap!", "That's no moon.",
-        "Get away from her, you bitch!", "They're here.", "Roads? Where we're going, we don't need roads.",
-        "To infinity, and beyond!", "I find your lack of faith disturbing.", "This is the way.",
-        "So say we all.", "The spice must flow.", "I am your father."
+        "I've seen things you people wouldn't believe.",
+        "May the Force be with you.",
+        "I'll be back.",
+        "Open the pod bay doors, HAL.",
+        "Live long and prosper.",
+        "It's a trap!",
+        "That's no moon.",
+        "Get away from her, you bitch!",
+        "They're here.",
+        "Roads? Where we're going, we don't need roads."
     ];
-    const astrologicalSigns = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
-    const spaceMonsters = ['👾', '🐙', '🦑'];
-    const otherSpaceObjects = ['�', '🪐', '🌟', '🛰️', '✨', '☄️', '🛸', '🌌', '🌠', '🌍', '🌕', '👨‍🚀', '🔭', '💫', '💥', '⚫'];
 
     const PsychedelicShader = {
         uniforms: { 'tDiffuse': { value: null }, 'amount': { value: 0.0 }, 'time': { value: 0.0 } },
@@ -274,7 +292,7 @@
             const color = new THREE.Color();
             color.setHSL(Math.random(), 0.7, 0.8);
             colors[i3] = color.r; colors[i3 + 1] = color.g; colors[i3 + 2] = color.b;
-            sizes[i] = Math.random() * 20 + 10; // Increased star size and variation
+            sizes[i] = Math.random() * 8 + 4;
         }
         starGeo = new THREE.BufferGeometry();
         starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -314,6 +332,7 @@
         requestAnimationFrame(animate);
         const time = Date.now() * 0.0005;
 
+        // Animate stars
         starGeo.attributes.position.array.forEach((_, i) => {
             if (i % 3 === 2) {
                 starGeo.attributes.position.array[i] += speed;
@@ -324,6 +343,7 @@
         stars.rotation.z += speed * 0.01;
         stars.scale.setScalar(1.0 + Math.sin(time * 5) * 0.02);
 
+        // Animate space objects
         updateGameObjects();
 
         if (activeNotes.size > 0) {
@@ -365,16 +385,12 @@
             messageEl.style.fontFamily = sciFiFonts[Math.floor(Math.random() * sciFiFonts.length)];
             messageEl.style.top = `${15 + Math.random() * 70}%`;
             messageEl.style.left = `${15 + Math.random() * 70}%`;
-            messageEl.style.setProperty('--float-x1', `${(Math.random() - 0.5) * 50}px`);
-            messageEl.style.setProperty('--float-y1', `${(Math.random() - 0.5) * 50}px`);
-            messageEl.style.setProperty('--float-x2', `${(Math.random() - 0.5) * 50}px`);
-            messageEl.style.setProperty('--float-y2', `${(Math.random() - 0.5) * 50}px`);
-            messageEl.style.setProperty('--spin-x1', `${(Math.random() - 0.5) * 270}deg`);
-            messageEl.style.setProperty('--spin-y1', `${(Math.random() - 0.5) * 270}deg`);
-            messageEl.style.setProperty('--spin-z1', `${(Math.random() - 0.5) * 720}deg`);
-            messageEl.style.setProperty('--spin-x2', `${(Math.random() - 0.5) * 270}deg`);
-            messageEl.style.setProperty('--spin-y2', `${(Math.random() - 0.5) * 270}deg`);
-            messageEl.style.setProperty('--spin-z2', `${(Math.random() - 0.5) * 720}deg`);
+            messageEl.style.setProperty('--float-x1', `${(Math.random() - 0.5) * 40}px`);
+            messageEl.style.setProperty('--float-y1', `${(Math.random() - 0.5) * 40}px`);
+            messageEl.style.setProperty('--float-x2', `${(Math.random() - 0.5) * 40}px`);
+            messageEl.style.setProperty('--float-y2', `${(Math.random() - 0.5) * 40}px`);
+            messageEl.style.setProperty('--spin-1', `${(Math.random() - 0.5) * 40}deg`);
+            messageEl.style.setProperty('--spin-2', `${(Math.random() - 0.5) * 40}deg`);
         }
 
         messageEl.textContent = messageText;
@@ -394,7 +410,6 @@
             fragmentsContainer.style.justifyContent = 'center';
             fragmentsContainer.style.alignItems = 'center';
             fragmentsContainer.style.zIndex = 101;
-            fragmentsContainer.style.perspective = '800px';
 
             messageText.split('').forEach(char => {
                 if (char.trim() === '') {
@@ -474,150 +489,95 @@
     }
 
     function createSpaceObject(velocity, noteNumber) {
-        if (activeGameObjects.length >= MAX_OBJECTS) {
-            let oldestLifespan = Infinity;
-            let oldestObjIndex = -1;
-            for (let i = 0; i < activeGameObjects.length; i++) {
-                if (!activeGameObjects[i].isFading && activeGameObjects[i].lifespan < oldestLifespan) {
-                    oldestLifespan = activeGameObjects[i].lifespan;
-                    oldestObjIndex = i;
-                }
-            }
-            if (oldestObjIndex !== -1) {
-                activeGameObjects[oldestObjIndex].lifespan = 60; // Start fading out
-                activeGameObjects[oldestObjIndex].isFading = true;
-            }
-        }
-
         const obj = document.createElement('div');
         obj.classList.add('space-object');
 
         const pitchClass = noteNumber % 12;
         const diatonicNotes = [0, 2, 4, 5, 7, 9, 11];
-        const diatonicObjects = [...otherSpaceObjects, ...astrologicalSigns, ...spaceMonsters];
+        const diatonicObjects = ['🚀', '🪐', '🌟', '🛰️', '✨', '☄️', '🛸', '🌌', '🌠', '🌍', '🌕', '👨‍🚀', '🔭'];
         const chromaticObject = '👽';
 
-        const objectChar = diatonicNotes.includes(pitchClass)
-            ? diatonicObjects[Math.floor(Math.random() * diatonicObjects.length)]
-            : chromaticObject;
+        obj.innerText = diatonicNotes.includes(pitchClass) ? diatonicObjects[Math.floor(Math.random() * diatonicObjects.length)] : chromaticObject;
 
-        obj.innerText = objectChar;
-
-        const isAstrological = astrologicalSigns.includes(objectChar);
-        if (isAstrological) {
-            obj.classList.add('astrological');
-        }
-
-        const size = 40 + velocity * 150; // Increased size variation
+        const size = 30 + velocity * 100;
         obj.style.fontSize = `${size}px`;
 
         const angle = Math.random() * Math.PI * 2;
         const speed = 1 + Math.random() * 2 + velocity * 2;
 
-        const startX = Math.random() * window.innerWidth;
-        const startY = Math.random() * window.innerHeight;
+        const spawnRadius = 50;
+        const spawnAngle = Math.random() * Math.PI * 2;
+        const startX = window.innerWidth / 2 + Math.cos(spawnAngle) * spawnRadius * Math.random();
+        const startY = window.innerHeight / 2 + Math.sin(spawnAngle) * spawnRadius * Math.random();
 
         activeGameObjects.push({
-            el: obj, x: startX, y: startY,
-            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-            rotation: 0, rotationSpeed: (Math.random() - 0.5) * 4,
-            radius: size / 2, lifespan: 300 + Math.random() * 200,
-            isAstrological: isAstrological, isExploding: false, isFading: false
+            el: obj,
+            x: startX,
+            y: startY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            rotation: 0,
+            rotationSpeed: (Math.random() - 0.5) * 4,
+            radius: size / 2,
+            lifespan: 300 + Math.random() * 200 // Frames
         });
 
         objectContainer.appendChild(obj);
     }
 
-    function triggerExplosion(obj) {
-        if (obj.isExploding) return;
-        obj.isExploding = true;
-        obj.lifespan = 30; // 0.5s
-        obj.vx = 0; obj.vy = 0;
-        obj.el.style.animation = `impact-explode 0.5s ease-out forwards`;
-        obj.el.style.transform = `translate(${obj.x - obj.radius}px, ${obj.y - obj.radius}px)`;
-    }
-
     function updateGameObjects() {
+        // Update positions and handle collisions
         for (let i = 0; i < activeGameObjects.length; i++) {
             const objA = activeGameObjects[i];
-            if (objA.isExploding) continue;
 
+            // Update position
             objA.x += objA.vx;
             objA.y += objA.vy;
             objA.rotation += objA.rotationSpeed;
 
             // Wall collisions
-            if (objA.x - objA.radius < 0 || objA.x + objA.radius > window.innerWidth) {
-                if (objA.isAstrological) triggerExplosion(objA);
-                else {
-                    objA.vx *= -1;
-                    objA.x = objA.x - objA.radius < 0 ? objA.radius : window.innerWidth - objA.radius;
-                }
-            }
-            if (objA.y - objA.radius < 0 || objA.y + objA.radius > window.innerHeight) {
-                if (objA.isAstrological) triggerExplosion(objA);
-                else {
-                    objA.vy *= -1;
-                    objA.y = objA.y - objA.radius < 0 ? objA.radius : window.innerHeight - objA.radius;
-                }
-            }
-            if (objA.isExploding) continue;
+            if (objA.x - objA.radius < 0 || objA.x + objA.radius > window.innerWidth) objA.vx *= -1;
+            if (objA.y - objA.radius < 0 || objA.y + objA.radius > window.innerHeight) objA.vy *= -1;
 
             // Object collisions
             for (let j = i + 1; j < activeGameObjects.length; j++) {
                 const objB = activeGameObjects[j];
-                if (objB.isExploding) continue;
-
                 const dx = objB.x - objA.x;
                 const dy = objB.y - objA.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 const minDistance = objA.radius + objB.radius;
 
                 if (distance < minDistance) {
-                    if (objA.isAstrological) triggerExplosion(objA);
-                    if (objB.isAstrological) triggerExplosion(objB);
-
-                    if (!objA.isExploding && !objB.isExploding) {
-                        const angle = Math.atan2(dy, dx);
-                        const sin = Math.sin(angle);
-                        const cos = Math.cos(angle);
-                        const vx1 = objA.vx * cos + objA.vy * sin;
-                        const vy1 = objA.vy * cos - objA.vx * sin;
-                        const vx2 = objB.vx * cos + objB.vy * sin;
-                        const vy2 = objB.vy * cos - objB.vx * sin;
-
-                        const finalVx1 = vx2;
-                        const finalVx2 = vx1;
-
-                        objA.vx = finalVx1 * cos - vy1 * sin;
-                        objA.vy = vy1 * cos + finalVx1 * sin;
-                        objB.vx = finalVx2 * cos - vy2 * sin;
-                        objB.vy = vy2 * cos + finalVx2 * sin;
-
-                        const overlap = (minDistance - distance) / 2;
-                        objA.x -= overlap * (dx / distance);
-                        objA.y -= overlap * (dy / distance);
-                        objB.x += overlap * (dx / distance);
-                        objB.y += overlap * (dy / distance);
-                    }
+                    // Basic collision response: swap velocities
+                    const tempVx = objA.vx;
+                    const tempVy = objA.vy;
+                    objA.vx = objB.vx;
+                    objA.vy = objB.vy;
+                    objB.vx = tempVx;
+                    objB.vy = tempVy;
                 }
             }
 
+            // Update DOM element
             objA.el.style.transform = `translate(${objA.x - objA.radius}px, ${objA.y - objA.radius}px) rotate(${objA.rotation}deg)`;
 
+            // Decrease lifespan
             objA.lifespan--;
             if (objA.lifespan <= 60) {
                 objA.el.style.opacity = objA.lifespan / 60;
             }
         }
 
-        activeGameObjects = activeGameObjects.filter(obj => {
-            if (obj.lifespan <= 0) {
+        // Remove dead objects
+        const newActiveObjects = [];
+        for(const obj of activeGameObjects) {
+            if(obj.lifespan > 0) {
+                newActiveObjects.push(obj);
+            } else {
                 obj.el.remove();
-                return false;
             }
-            return true;
-        });
+        }
+        activeGameObjects = newActiveObjects;
     }
 
     function handleNoteOn(e) {
@@ -640,4 +600,3 @@
 </script>
 </body>
 </html>
-�
