@@ -306,8 +306,10 @@
                         this.events.push({ time: currentTime, tempo: 60000000 / tempoValue });
                     }
                     offsetObj.offset += length;
-                } else {
-                    while (this.dataView.getUint8(offsetObj.offset++) !== 0xF7) {}
+                } else if (statusByte === 0xF0 || statusByte === 0xF7) {
+                    // SysEx event. Read the variable-length quantity for the length and skip it.
+                    const length = this.readVarInt(offsetObj);
+                    offsetObj.offset += length;
                 }
             }
         }
