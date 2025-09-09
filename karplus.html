@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI Karplus-Strong Flute</title>
+    <!-- Basic styling for the page -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        h1 {
+            color: #ffffff;
+            font-weight: 500;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #3d3d3d;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background-color: #4a4a4a;
+        }
+        button:active {
+            background-color: #555555;
+            transform: scale(0.98);
+        }
+        #statusContainer {
+            margin-top: 15px;
+            padding: 15px 20px;
+            border: 1px solid #333;
+            background-color: #252525;
+            min-width: 300px;
+            max-width: 90%;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #cccccc;
+            line-height: 1.6;
+        }
+        p {
+            margin-top: 10px;
+            color: #aaaaaa;
+        }
+    </style>
+</head>
+<body>
+
+<h1>MIDI Controlled Karplus-Strong Flute</h1>
+<p>Connect a MIDI controller, click the "Test Sound" button once to activate audio, then play!</p>
+
+<!-- Button to test sound generation and activate AudioContext -->
+<button id="testSoundButton">Test Sound (C5)</button>
+
+<!-- Status area for MIDI and Audio feedback -->
+<div id="statusContainer">Initializing...</div>
+
+<!-- All JavaScript logic is included here -->
+<script>
+    // --- MIDI Karplus-Strong Flute Synthesis (Version 3 - Robust and Self-Contained) ---
+
+    const testSoundButton = document.getElementById('testSoundButton');
+    const statusContainer = document.getElementById('statusContainer');
+
+    let audioCtx = null;
+    let midiAccess = null; // Store midiAccess globally
+    const activeNotes = {}; // Object to store active GainNodes, keyed by MIDI note number
+
+    // --- AudioContext Management ---
+    // Async function to handle creating and resuming the AudioContext reliably
+    async function ensureAudioContext() {
+        if (!audioCtx) {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                console.log("AudioContext created.");
+                audioCtx.onstatechange = () => {
+                    console.log(`AudioContext state changed to: ${audioCtx.state}`);
+                    updateStatusDisplay(); // Update UI on state change
+                };
+            } catch (e) {
+                console.error("Web Audio API is not supported in this browser", e);
+                statusContainer.innerHTML = "<strong>Error:</strong><br/>Web Audio API not supported.";
+                alert("Web Audio API is not supported in this browser.");
+                return null;
+            }
+        }
+
+        // If context is suspended, user interaction is needed to resume it.
+        if (audioCtx.state === 'suspended') {
+            try {
+                console.log("Attempting to resume AudioContext...");
+                await audioCtx.resume();
+                console.log(`AudioContext resumed. State: ${audioCtx.state}`);
+            } catch (e) {
+                console.error("Failed to resume AudioContext:", e);
+                statusContainer.innerHTML = "<strong>Error:</strong><br/>Failed to resume audio. Click the page.";
+                return null;
+            }
+        }
+
+        updateStatusDisplay();
+        // Return the context only if it's running
+        return audioCtx.state === 'running' ? audioCtx : null;
+    }
+
+    // --- Karplus-Strong Sound Generation ---
+    function playKarplusStrongFlute(freq, duration, decay, velocity, currentAudioCtx) {
+        if (!currentAudioCtx) {
+            console.error("Cannot play sound, AudioContext not running.");
+            return null;
+        }
+
+        const sampleRate = currentAudioCtx.sampleRate;
+        const N = Math.round(sampleRate / freq);
+        const totalSamples = Math.floor(sampleRate * duration);
+
+        let ringBuffer = new Float32Array(N);
+
+        // Filtered Noise Excitation for a softer, more flute-like attack
+        let tempNoise = new Float32Array(N);
+        for (let i = 0; i < N; i++) tempNoise[i] = Math.random() * 2 - 1;
+        ringBuffer[0] = (tempNoise[0] + tempNoise[N - 1]) * 0.5; // Wrap around for filter
+        for (let i = 1; i < N; i++) {
+            ringBuffer[i] = (tempNoise[i] + tempNoise[i - 1]) * 0.5;
+        }
+
+        let outputBuffer = new Float32Array(totalSamples);
+        let writeIndex = 0;
+        // The Karplus-Strong algorithm loop
+        for (let i = 0; i < totalSamples; i++) {
+            const currentSample = ringBuffer[writeIndex];
+            outputBuffer[i] = currentSample;
+            const nextIndex = (writeIndex + 1) % N;
+            // Averaging filter and decay
+            const newValue = (currentSample + ringBuffer[nextIndex]) * 0.5 * decay;
+            ringBuffer[writeIndex] = newValue;
+            writeIndex = nextIndex;
+        }
+
+        // Web Audio API setup for playback
+        const audioBuffer = currentAudioCtx.createBuffer(1, totalSamples, sampleRate);
+        audioBuffer.getChannelData(0).set(outputBuffer);
+        const source = currentAudioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+
+        // GainNode for volume control (velocity) and stopping the note
+        const gainNode = currentAudioCtx.createGain();
+        const initialGain = Math.min(1.0, Math.max(0.0, velocity / 127));
+        gainNode.gain.setValueAtTime(initialGain, currentAudioCtx.currentTime);
+
+        source.connect(gainNode);
+        gainNode.connect(currentAudioCtx.destination);
+        source.start();
+
+        console.log(`Playing KS: Freq=${freq.toFixed(2)}Hz, Vel=${velocity}, Gain=${initialGain.toFixed(2)}`);
+        return gainNode; // Return gain node for external control (note off)
+    }
+
+    // --- MIDI Handling ---
+    function midiNoteToFrequency(note) {
+        return 440 * Math.pow(2, (note - 69) / 12);
+    }
+
+    async function handleMIDIMessage(event) {
+        const currentAudioCtx = await ensureAudioContext();
+        if (!currentAudioCtx) {
+            console.warn("AudioContext not available, skipping MIDI message.");
+            return;
+        }
+
+        const command = event.data[0] >> 4;
+        const note = event.data[1];
+        const velocity = event.data[2];
+
+        // Note On
+        if (command === 9 && velocity > 0) {
+            const frequency = midiNoteToFrequency(note);
+            if (activeNotes[note]) { // Re-triggering the same note
+                stopNote(note, currentAudioCtx);
+            }
+            const gainNode = playKarplusStrongFlute(frequency, 2.0, 0.997, velocity, currentAudioCtx);
+            if (gainNode) {
+                activeNotes[note] = gainNode;
+            }
+        }
+        // Note Off
+        else if (command === 8 || (command === 9 && velocity === 0)) {
+            stopNote(note, currentAudioCtx);
+        }
+    }
+
+    function stopNote(note, currentAudioCtx) {
+        if (!currentAudioCtx || !activeNotes[note]) return;
+
+        const gainNode = activeNotes[note];
+        const now = currentAudioCtx.currentTime;
+
+        // Fade out gracefully to prevent clicks
+        if (gainNode.gain.value > 0.001) {
+            gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+        }
+        delete activeNotes[note];
+    }
+
+    // --- MIDI Initialization and State Change Handling ---
+    function updateMIDIInputs() {
+        if (!midiAccess) return;
+
+        for (let input of midiAccess.inputs.values()) {
+            input.onmidimessage = null;
+        }
+
+        if (midiAccess.inputs.size === 0) {
+            console.log("No MIDI input devices found.");
+        } else {
+            for (let input of midiAccess.inputs.values()) {
+                input.onmidimessage = handleMIDIMessage;
+                console.log(`Listening to MIDI device: ${input.name}`);
+            }
+        }
+        updateStatusDisplay(); // Update UI after scanning
+    }
+
+    function updateStatusDisplay() {
+        const audioState = audioCtx ? audioCtx.state : "Inactive";
+        let midiState = "No Access";
+        let devicesFound = [];
+
+        if(midiAccess) {
+            midiState = "Ready";
+            if (midiAccess.inputs.size > 0) {
+                for(let input of midiAccess.inputs.values()){
+                    devicesFound.push(input.name);
+                }
+            } else {
+                midiState = "No devices found";
+            }
+        }
+
+        let html = `<strong>Audio Status:</strong> ${audioState}<br/>`;
+        html += `<strong>MIDI Status:</strong> ${midiState}`;
+        if(devicesFound.length > 0) {
+            html += `<br/><strong>Listening to:</strong><br/>${devicesFound.join('<br/>')}`;
+        }
+
+        statusContainer.innerHTML = html;
+    }
+
+    function onMIDISuccess(ma) {
+        console.log("MIDI Access Granted");
+        midiAccess = ma;
+        updateMIDIInputs(); // Initial setup
+
+        // Listen for device connections/disconnections
+        midiAccess.onstatechange = (event) => {
+            console.log(`MIDI state change: ${event.port.name}, state: ${event.port.state}`);
+            updateMIDIInputs(); // Re-scan devices
+        };
+    }
+
+    function onMIDIFailure(msg) {
+        console.error(`Failed to get MIDI access - ${msg}`);
+        statusContainer.innerHTML = "<strong>Error:</strong><br/>Failed to get MIDI access.";
+    }
+
+    function initializeMIDI() {
+        if (navigator.requestMIDIAccess) {
+            statusContainer.innerHTML = "Requesting MIDI access...";
+            navigator.requestMIDIAccess({ sysex: false })
+                .then(onMIDISuccess, onMIDIFailure);
+        } else {
+            statusContainer.innerHTML = "<strong>Error:</strong><br/>Web MIDI API not supported.";
+        }
+    }
+
+    // --- Initialization on User Interaction ---
+    testSoundButton.addEventListener('click', async () => {
+        const currentAudioCtx = await ensureAudioContext();
+        if (currentAudioCtx) {
+            console.log("Playing test sound C5");
+            // Play C5 (MIDI note 72) with medium velocity
+            const testGain = playKarplusStrongFlute(midiNoteToFrequency(72), 1.5, 0.997, 100, currentAudioCtx);
+            if (testGain) {
+                // Fade out the test sound
+                setTimeout(() => {
+                    const now = currentAudioCtx.currentTime;
+                    if (testGain.gain.value > 0.001) {
+                        testGain.gain.setValueAtTime(testGain.gain.value, now);
+                        testGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+                    }
+                }, 1300);
+            }
+        } else {
+            console.error("Could not play test sound, AudioContext not running.");
+        }
+    });
+
+    // Start the MIDI initialization process when the page loads
+    initializeMIDI();
+</script>
+
+</body>
+</html>
