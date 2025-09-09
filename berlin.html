@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
+            padding-top: 35px; /* Make space for toolbar */
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -108,10 +109,79 @@
         .live-note.fade-out {
             opacity: 0;
         }
+        .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--wood-brown, #2b2321);
+            display: flex;
+            justify-content: center;
+            padding: 2px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        .toolbar a {
+            background-color: var(--burnt-orange, #e65100);
+            color: var(--ivory, #ffffff);
+            text-decoration: none;
+            padding: 5px 10px;
+            margin: 0 2px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            border: 1px solid var(--dark-orange, #bf360c);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            transition: all 0.2s ease-in-out;
+        }
+        .toolbar a:hover {
+            background-color: var(--dark-orange, #bf360c);
+            transform: translateY(-1px);
+        }
     </style>
+<style>
+  .toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #333;
+    padding: 2px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 1000;
+  }
+  .toolbar button {
+    background: #555;
+    color: white;
+    border: 1px solid #888;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin: 1px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .toolbar button:disabled {
+    background: #777;
+    color: #ccc;
+    cursor: default;
+  }
+</style>
 </head>
 <body class="transition-colors duration-500">
-
+<div class="toolbar">
+  <button disabled>berlin</button>
+  <button onclick="window.location.href='chords.html'">chords</button>
+  <button onclick="window.location.href='Circles.html'">Circles</button>
+  <button onclick="window.location.href='ClassicsOnMIDI.html'">ClassicsOnMIDI</button>
+  <button onclick="window.location.href='delay.html'">delay</button>
+  <button onclick="window.location.href='index.html'">index</button>
+  <button onclick="window.location.href='polychain.html'">polychain</button>
+  <button onclick="window.location.href='rhythm.html'">rhythm</button>
+  <button onclick="window.location.href='starfield.html'">starfield</button>
+</div>
 <div class="main-panel w-full max-w-7xl mx-auto p-2 my-2 rounded-2xl shadow-2xl border">
     <!-- Header -->
     <div class="relative text-center mb-2">

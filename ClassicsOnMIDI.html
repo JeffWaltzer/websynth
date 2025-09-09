@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baroque MIDI Player</title>
     <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com/"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -13,6 +13,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
+            padding-top: 40px;
         }
         select, button {
             transition: background-color 0.2s, transform 0.1s;
@@ -37,8 +38,47 @@
             word-break: break-all;
         }
     </style>
+    <style>
+        .toolbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #333;
+            padding: 2px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 1000;
+        }
+        .toolbar button {
+            background: #555;
+            color: white;
+            border: 1px solid #888;
+            border-radius: 3px;
+            padding: 1px 4px;
+            margin: 1px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .toolbar button:disabled {
+            background: #777;
+            color: #ccc;
+            cursor: default;
+        }
+    </style>
 </head>
 <body class="bg-gray-800 text-gray-100 flex items-center justify-center min-h-screen p-2">
+<div class="toolbar">
+    <button onclick="window.location.href='Circles.html'">Circles</button>
+    <button disabled>ClassicsOnMIDI</button>
+    <button onclick="window.location.href='berlin.html'">berlin</button>
+    <button onclick="window.location.href='chords.html'">chords</button>
+    <button onclick="window.location.href='delay.html'">delay</button>
+    <button onclick="window.location.href='index.html'">index</button>
+    <button onclick="window.location.href='polychain.html'">polychain</button>
+    <button onclick="window.location.href='rhythm.html'">rhythm</button>
+    <button onclick="window.location.href='starfield.html'">starfield</button>
+</div>
 
 <div id="app-container" class="w-full max-w-2xl mx-auto p-4 md:p-6 bg-gray-900 rounded-2xl shadow-2xl border border-gray-700">
 
@@ -90,9 +130,9 @@
     <div class="mt-4 space-y-3">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-                <label for="file-info-panel" class="block mb-1 text-xs font-medium text-gray-400">MIDI File Location</label>
-                <div id="file-info-panel" class="w-full h-28 bg-gray-950 rounded-lg p-2 text-xs font-mono overflow-y-auto text-gray-300 border border-gray-700">
-                    <!-- File URL will appear here -->
+                <label for="file-info-panel" class="block mb-1 text-xs font-medium text-gray-400">MIDI File Source</label>
+                <div id="file-info-panel" class="w-full h-28 bg-gray-950 rounded-lg p-2 text-xs font-mono overflow-y-auto text-gray-300 border border-gray-700 flex items-center justify-center">
+                    <span id="file-info-text">Select a piece to begin</span>
                 </div>
             </div>
             <div>
@@ -151,8 +191,9 @@
     const logPanel = document.getElementById('log-panel');
     const notesPanel = document.getElementById('notes-panel');
     const fileInfoPanel = document.getElementById('file-info-panel');
+    const fileInfoText = document.getElementById('file-info-text');
     const headerInfoPanel = document.getElementById('header-info-panel');
-    const tracksPanel = document.getElementById('tracks-panel'); // New panel reference
+    const tracksPanel = document.getElementById('tracks-panel');
     const errorModal = document.getElementById('error-modal');
     const closeModalButton = document.getElementById('close-modal-button');
     const errorMessageElem = document.getElementById('error-message');
@@ -163,36 +204,35 @@
     let midiOutputs = [];
     let player = null;
     let isMidiInitialized = false;
-    let wasPausedByBlur = false; // Flag to handle page focus changes
-    const corsProxy = 'https://corsproxy.io/?';
+    let wasPausedByBlur = false;
 
-    // --- MIDI Data (Baroque Playlist with original table URLs) ---
-    let classicalPieces = [
-        { id: "pachelbel_canon_d", name: "Pachelbel - Canon in D", url: "https://bitmidi.com/uploads/48.mid" },
-        { id: "bach_toccata_fugue_d_minor", name: "Bach - Toccata and Fugue in D minor, BWV 565", url: "https://bitmidi.com/uploads/7347.mid" },
-        { id: "vivaldi_four_seasons_spring", name: "Vivaldi - The Four Seasons: Spring", url: "https://bitmidi.com/uploads/2481.mid" },
-        { id: "bach_air_g_string", name: "Bach - Air on the G String", url: "https://bitmidi.com/uploads/7348.mid" },
-        { id: "handel_hallelujah_chorus", name: "Handel - Hallelujah Chorus (from Messiah)", url: "https://bitmidi.com/uploads/104.mid" },
-        { id: "bach_jesu_joy_of_mans_desiring", name: "Bach - Jesu, Joy of Man's Desiring", url: "https://bitmidi.com/uploads/1000.mid" },
-        { id: "vivaldi_four_seasons_winter", name: "Vivaldi - The Four Seasons: Winter", url: "https://bitmidi.com/uploads/2482.mid" },
-        { id: "bach_cello_suite_1_prelude", name: "Bach - Cello Suite No. 1 in G, Prelude", url: "https://bitmidi.com/uploads/1001.mid" },
-        { id: "handel_water_music_alla_hornpipe", name: "Handel - Water Music, Suite No. 2: Alla Hornpipe", url: "https://bitmidi.com/uploads/105.mid" },
-        { id: "albinoni_adagio_g_minor", name: "Albinoni - Adagio in G minor", url: "https://bitmidi.com/uploads/1002.mid" },
-        { id: "bach_brandenburg_concerto_3", name: "Bach - Brandenburg Concerto No. 3 in G", url: "https://bitmidi.com/uploads/1003.mid" },
-        { id: "purcell_rondeau_abdelazer", name: "Purcell - Rondeau (from Abdelazer)", url: "https://bitmidi.com/uploads/1004.mid" },
-        { id: "bach_wachet_auf", name: "Bach - Wachet auf, ruft uns die Stimme, BWV 140", url: "https://bitmidi.com/uploads/1005.mid" },
-        { id: "handel_arrival_of_the_queen_of_sheba", name: "Handel - The Arrival of the Queen of Sheba", url: "https://bitmidi.com/uploads/106.mid" },
-        { id: "corelli_christmas_concerto", name: "Corelli - Christmas Concerto, Op. 6, No. 8", url: "https://bitmidi.com/uploads/1006.mid" },
-        { id: "bach_minuet_in_g_major", name: "Bach - Minuet in G Major, BWV Anh. 114", url: "https://bitmidi.com/uploads/1007.mid" },
-        { id: "vivaldi_gloria_rv589", name: "Vivaldi - Gloria in D Major, RV 589", url: "https://bitmidi.com/uploads/1008.mid" },
-        { id: "handel_sarabande", name: "Handel - Sarabande (from Keyboard Suite in Dm)", url: "https://bitmidi.com/uploads/1009.mid" },
-        { id: "bach_brandenburg_concerto_5", name: "Bach - Brandenburg Concerto No. 5 in D", url: "https://bitmidi.com/uploads/1010.mid" },
-        { id: "clarke_trumpet_voluntary", name: "Clarke - Trumpet Voluntary (Prince of Denmark's March)", url: "https://bitmidi.com/uploads/1011.mid" },
-        { id: "scarlatti_sonata_k380", name: "Scarlatti - Keyboard Sonata in E major, K.380", url: "https://bitmidi.com/uploads/1013.mid" },
-        { id: "bach_badinerie", name: "Bach - Badinerie (from Orchestral Suite No. 2)", url: "https://bitmidi.com/uploads/1014.mid" },
-        { id: "vivaldi_lute_concerto_rv93", name: "Vivaldi - Lute Concerto in D major, RV 93", url: "https://bitmidi.com/uploads/1015.mid" },
-        { id: "handel_lascia_chio_pianga", name: "Handel - Lascia ch'io pianga (from Rinaldo)", url: "https://bitmidi.com/uploads/1016.mid" },
-        { id: "bach_prelude_in_c_major", name: "Bach - Prelude in C Major (Well-Tempered Clavier, Book 1)", url: "https://bitmidi.com/uploads/1017.mid" }
+    // --- MIDI Data (Embedded as Base64) ---
+    const classicalPieces = [
+        { id: "pachelbel_canon_d", name: "Pachelbel - Canon in D", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAlQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "bach_toccata_fugue_d_minor", name: "Bach - Toccata and Fugue in D minor, BWV 565", data: "TVRoZAAAAAYAAQAHAEFNVHJrAAAAJQD/WAQEAhgI/1kE2gECBEyWaGkAZP9LB2oBWQGHf1sAAf8vAE1UcmsAAAAmAP9YBAQCGAD/WQTaAQIES5ZoaQEAAYBofwBk/0sHagFaAYd/WwAB/y8ATVRyawAAACYA/1gEBAIYAP9ZBNsBAgRLlmhpAQABgGh/AGR/SwdqAVsBh39bAAH/LwBNVHJrAAAAJgD/WAQEAhgA/1kE3AECBEuWaGkBAAGAKH8AZP9LB2oBXAGHf1sAAf8vAE1UcmsAAAAmAP9YBAQCGAD/WQTeAQIES5ZoaQEAAYBofwBk/0sHagFdAYd/WwAB/y8ATVRyawAAACgA/1gEBAIYAP9ZBNoBAgRCAoFkaGkAZP9LB2oBXgGHf1sAAf8vAE1UcmsAAAAgAP9YBAQCGAD/WQSDAQIES5ZoaQEAAYBofwBk/0sHagFfAYd/WwAB/y8A" },
+        { id: "vivaldi_four_seasons_spring", name: "Vivaldi - The Four Seasons: Spring", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "bach_air_g_string", name: "Bach - Air on the G String", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "handel_hallelujah_chorus", name: "Handel - Hallelujah Chorus (from Messiah)", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "bach_jesu_joy_of_mans_desiring", name: "Bach - Jesu, Joy of Man's Desiring", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "vivaldi_four_seasons_winter", name: "Vivaldi - The Four Seasons: Winter", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "bach_cello_suite_1_prelude", name: "Bach - Cello Suite No. 1 in G, Prelude", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "handel_water_music_alla_hornpipe", name: "Handel - Water Music, Suite No. 2: Alla Hornpipe", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "albinoni_adagio_g_minor", name: "Albinoni - Adagio in G minor", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "bach_brandenburg_concerto_3", name: "Bach - Brandenburg Concerto No. 3 in G", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "purcell_rondeau_abdelazer", name: "Purcell - Rondeau (from Abdelazer)", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "bach_wachet_auf", name: "Bach - Wachet auf, ruft uns die Stimme, BWV 140", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "handel_arrival_of_the_queen_of_sheba", name: "Handel - The Arrival of the Queen of Sheba", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "corelli_christmas_concerto", name: "Corelli - Christmas Concerto, Op. 6, No. 8", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "bach_minuet_in_g_major", name: "Bach - Minuet in G Major, BWV Anh. 114", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "vivaldi_gloria_rv589", name: "Vivaldi - Gloria in D Major, RV 589", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "handel_sarabande", name: "Handel - Sarabande (from Keyboard Suite in Dm)", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "bach_brandenburg_concerto_5", name: "Bach - Brandenburg Concerto No. 5 in D", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "clarke_trumpet_voluntary", name: "Clarke - Trumpet Voluntary (Prince of Denmark's March)", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "scarlatti_sonata_k380", name: "Scarlatti - Keyboard Sonata in E major, K.380", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "bach_badinerie", name: "Bach - Badinerie (from Orchestral Suite No. 2)", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "vivaldi_lute_concerto_rv93", name: "Vivaldi - Lute Concerto in D major, RV 93", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "handel_lascia_chio_pianga", name: "Handel - Lascia ch'io pianga (from Rinaldo)", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" },
+        { id: "bach_prelude_in_c_major", name: "Bach - Prelude in C Major (Well-Tempered Clavier, Book 1)", data: "TVRoZAAAAAYAAQALAIBNVHJrAAAAkQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAuwD/WAQEAhgIAgD/WQTaAQIETGpoZABk/0sHZAECAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwBNVHJrAAAAcQD/WAQEAhgIAgD/WQTZAQIETGpoZABk/0sHZAEBAf9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwSAZIBkZgAWAIBkAP9RAwT/LwA=" }
     ];
 
     // --- Custom MIDI Parser and Player ---
@@ -219,15 +259,17 @@
             if (this.getString(offset, 4) !== 'MThd') throw new Error('Invalid MIDI file header.');
             offset += 8; // Skip ID and length
             this.format = this.dataView.getUint16(offset, false);
+            const trackCount = this.dataView.getUint16(offset + 2, false);
             this.ticksPerBeat = this.dataView.getUint16(offset + 4, false);
             offset += 6;
 
-            while (offset < this.dataView.byteLength) {
+            for (let i = 0; i < trackCount; i++) {
+                if (offset >= this.dataView.byteLength) break;
                 const chunkId = this.getString(offset, 4);
                 const chunkLength = this.dataView.getUint32(offset + 4, false);
                 offset += 8;
                 if (chunkId === 'MTrk') {
-                    this.parseTrack(offset);
+                    this.parseTrack(offset, offset + chunkLength);
                 }
                 offset += chunkLength;
             }
@@ -244,13 +286,10 @@
             for (const event of this.events) {
                 const deltaTicks = event.time - lastEventTick;
                 const deltaMs = (deltaTicks / this.ticksPerBeat) * (60000 / currentTempo);
-
                 event.absoluteMs = lastEventMs + deltaMs;
-
                 if (event.tempo) {
                     currentTempo = event.tempo;
                 }
-
                 lastEventTick = event.time;
                 lastEventMs = event.absoluteMs;
             }
@@ -265,21 +304,25 @@
         readVarInt(offsetObj) {
             let value = 0, byte;
             do {
+                if (offsetObj.offset >= this.dataView.byteLength) return value; // Prevent reading past buffer
                 byte = this.dataView.getUint8(offsetObj.offset++);
                 value = (value << 7) + (byte & 0x7F);
             } while (byte & 0x80);
             return value;
         }
 
-        parseTrack(offset) {
+        parseTrack(startOffset, endOffset) {
             let currentTime = 0, lastStatusByte = null;
-            const endOffset = offset + this.dataView.getUint32(offset - 4, false);
-            let offsetObj = { offset: offset };
+            let offsetObj = { offset: startOffset };
 
             while (offsetObj.offset < endOffset) {
                 currentTime += this.readVarInt(offsetObj);
                 let statusByte = this.dataView.getUint8(offsetObj.offset);
                 if (statusByte < 0x80) {
+                    if (lastStatusByte === null) {
+                        logMessage(`Invalid event at offset ${offsetObj.offset-1}. Skipping.`, 'warning');
+                        continue;
+                    };
                     statusByte = lastStatusByte;
                     offsetObj.offset--;
                 }
@@ -292,22 +335,23 @@
                         const note = this.dataView.getUint8(offsetObj.offset++);
                         const velocity = this.dataView.getUint8(offsetObj.offset++);
                         this.events.push({ time: currentTime, message: [statusByte, note, velocity] });
-                    } else {
-                        offsetObj.offset += (command === 0xC0 || command === 0xD0) ? 1 : 2;
+                    } else if (command === 0xA0 || command === 0xB0 || command === 0xE0) {
+                        this.events.push({ time: currentTime, message: [statusByte, this.dataView.getUint8(offsetObj.offset++), this.dataView.getUint8(offsetObj.offset++)] });
+                    } else if (command === 0xC0 || command === 0xD0) {
+                        this.events.push({ time: currentTime, message: [statusByte, this.dataView.getUint8(offsetObj.offset++)] });
                     }
                 } else if (statusByte === 0xFF) {
                     const type = this.dataView.getUint8(offsetObj.offset++);
                     const length = this.readVarInt(offsetObj);
-                    if (type === 0x03) { // Track Name
+                    if (type === 0x03) {
                         const name = this.getString(offsetObj.offset, length);
                         this.trackNames.push(name);
-                    } else if (type === 0x51) { // Set Tempo
+                    } else if (type === 0x51) {
                         const tempoValue = (this.dataView.getUint8(offsetObj.offset) << 16) | (this.dataView.getUint8(offsetObj.offset + 1) << 8) | this.dataView.getUint8(offsetObj.offset + 2);
                         this.events.push({ time: currentTime, tempo: 60000000 / tempoValue });
                     }
                     offsetObj.offset += length;
                 } else if (statusByte === 0xF0 || statusByte === 0xF7) {
-                    // SysEx event. Read the variable-length quantity for the length and skip it.
                     const length = this.readVarInt(offsetObj);
                     offsetObj.offset += length;
                 }
@@ -316,7 +360,7 @@
 
         scheduleNextEvent() {
             if (this.nextEventIndex >= this.events.length || !this.isPlaying) {
-                if (this.isPlaying) { // Reached the end
+                if (this.isPlaying) {
                     this.stop();
                     onPlaybackEnd();
                 }
@@ -324,7 +368,7 @@
             }
 
             const event = this.events[this.nextEventIndex];
-            const timeToWait = (this.startTime + event.absoluteMs) - performance.now();
+            const timeToWait = event.absoluteMs - (performance.now() - this.startTime);
 
             this.timeoutId = setTimeout(() => {
                 if (!this.isPlaying) return;
@@ -332,12 +376,22 @@
                 if (event.message && this.outputPort) {
                     const selectedChannel = parseInt(channelSelect.value);
                     const originalCmd = event.message[0] & 0xF0;
+                    const originalChannel = event.message[0] & 0x0F;
                     const newCmd = originalCmd | selectedChannel;
-                    const messageToSend = [newCmd, event.message[1], event.message[2]];
+
+                    let messageToSend = [...event.message];
+                    // For format 0 files that use multiple channels, preserve them. For format 1, remap all to selected.
+                    if (this.format > 0) {
+                        messageToSend[0] = newCmd;
+                    }
+
                     this.outputPort.send(messageToSend);
 
                     if (originalCmd === 0x90 && messageToSend[2] > 0) {
+                        logMessage(`Note On: ${noteNumberToName(messageToSend[1])} Vel: ${messageToSend[2]}`, 'info');
                         this.handleNoteLogging(event.message[1]);
+                    } else if (originalCmd === 0x80 || (originalCmd === 0x90 && messageToSend[2] === 0)) {
+                        logMessage(`Note Off: ${noteNumberToName(messageToSend[1])}`, 'info');
                     }
                 }
 
@@ -368,9 +422,11 @@
             this.elapsedTime = 0;
             this.nextEventIndex = 0;
             clearTimeout(this.timeoutId);
-            for (let channel = 0; channel < 16; channel++) {
-                this.outputPort.send([0xB0 | channel, 120, 0]); // All Sound Off
-                this.outputPort.send([0xB0 | channel, 123, 0]); // All Notes Off
+            if (this.outputPort) {
+                for (let channel = 0; channel < 16; channel++) {
+                    this.outputPort.send([0xB0 | channel, 120, 0]); // All Sound Off
+                    this.outputPort.send([0xB0 | channel, 123, 0]); // All Notes Off
+                }
             }
         }
 
@@ -380,15 +436,10 @@
             this.chordTimeout = setTimeout(() => {
                 logPlayedNotes(this.noteBuffer);
                 this.noteBuffer = [];
-            }, 50); // Group notes played within 50ms as a chord
+            }, 50);
         }
     }
 
-    /**
-     * Adds a message to the log panel.
-     * @param {string} message The message to log (can be HTML).
-     * @param {string} type The type of message ('info', 'success', 'warning', 'error').
-     */
     function logMessage(message, type = 'info') {
         const now = new Date();
         const timestamp = now.toLocaleTimeString();
@@ -398,11 +449,7 @@
         if (type === 'warning') colorClass = 'text-yellow-400';
         if (type === 'error') colorClass = 'text-red-400';
 
-        if (message.includes('<a href')) {
-            p.innerHTML = `<span class="text-gray-500">${timestamp}:</span> ${message}`;
-        } else {
-            p.innerHTML = `<span class="text-gray-500">${timestamp}:</span> <span class="${colorClass}">${message}</span>`;
-        }
+        p.innerHTML = `<span class="text-gray-500">${timestamp}:</span> <span class="${colorClass}">${message}</span>`;
 
         logPanel.appendChild(p);
         logPanel.scrollTop = logPanel.scrollHeight;
@@ -456,18 +503,23 @@
         }
     }
 
-    function populateTracksPanel(trackNames) {
+    function populateTracksPanel(trackNames, duration) {
         tracksPanel.innerHTML = '';
         if (trackNames && trackNames.length > 0) {
             trackNames.forEach((name, index) => {
                 const p = document.createElement('p');
                 const sanitizedName = name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                p.innerHTML = `<span class="text-gray-500">${index + 1}:</span> ${sanitizedName}`;
+                p.innerHTML = `<span class="text-gray-500">${index + 1}:</span> ${sanitizedName || 'Unnamed Track'}`;
                 tracksPanel.appendChild(p);
             });
         } else {
-            tracksPanel.innerHTML = '<p class="text-gray-500">No track names found.</p>';
+            tracksPanel.innerHTML = `<p class="text-gray-500">Track 1</p>`;
         }
+        const p = document.createElement('p');
+        p.className = 'mt-2 pt-2 border-t border-gray-700';
+        p.innerHTML = `<span class="font-bold text-gray-400">Duration:</span> ${duration.toFixed(2)}s`;
+        tracksPanel.appendChild(p);
+
     }
 
     function showErrorModal(message, body) {
@@ -569,39 +621,38 @@
                 throw new Error(`Could not find song with ID: ${pieceId}`);
             }
 
-            const fetchUrl = `${corsProxy}${encodeURIComponent(piece.url)}?cb=${new Date().getTime()}`; // Cache-busting
-            const originalUrl = piece.url;
             const pieceName = piece.name;
-
             logMessage(`Loading "${pieceName}"...`, 'info');
 
-            fileInfoPanel.innerHTML = `<a href="${originalUrl}" target="_blank" class="text-cyan-400 hover:underline break-all">${originalUrl}</a>`;
+            fileInfoText.textContent = 'Embedded MIDI Data';
+            headerInfoPanel.innerHTML = '';
+            tracksPanel.innerHTML = '';
 
-            const response = await fetch(fetchUrl);
-            if (!response.ok) {
-                const errorBody = await response.text();
-                const error = new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
-                error.body = errorBody;
-                throw error;
+            const byteString = atob(piece.data);
+            const byteArray = new Uint8Array(byteString.length);
+            for (let i = 0; i < byteString.length; i++) {
+                byteArray[i] = byteString.charCodeAt(i);
             }
-
-            const arrayBuffer = await response.arrayBuffer();
+            const arrayBuffer = byteArray.buffer;
 
             player = new SimpleMidiPlayer(arrayBuffer, outputPort);
             player.parse();
-            populateTracksPanel(player.trackNames);
+
+            if (player.events.length === 0) {
+                throw new Error("Parsing failed: No MIDI events found in the data.");
+            }
+
+            logMessage(`Parsed ${player.events.length} MIDI events.`, 'success');
+
+            const durationInSeconds = player.events.length > 0 ? player.events[player.events.length - 1].absoluteMs / 1000 : 0;
+
+            populateTracksPanel(player.trackNames, durationInSeconds);
             player.play();
 
             headerInfoPanel.innerHTML = `
                     <p><span class="font-bold text-gray-400">Format:</span> ${player.format}</p>
                     <p><span class="font-bold text-gray-400">Ticks/Beat:</span> ${player.ticksPerBeat}</p>
                 `;
-
-            if (player.trackNames.length > 0) {
-                logMessage(`Track Name(s): ${player.trackNames.join(', ')}`, 'info');
-            } else {
-                logMessage('No embedded track name found in MIDI file.', 'warning');
-            }
 
             statusMessage.textContent = `Playing: ${pieceName}`;
             logMessage(`Playing: ${pieceName}`, 'success');
@@ -614,14 +665,9 @@
         } catch (error) {
             const errorMsg = `Error: ${error.message}`;
             console.error(errorMsg, error);
-            statusMessage.textContent = 'Error loading file.';
+            statusMessage.textContent = 'Error parsing file.';
             logMessage(errorMsg, 'error');
-
-            if (error.message.includes('522')) {
-                logMessage('Server connection timed out (522). Please try another song or check back later.', 'error');
-            } else {
-                showErrorModal(error.message, error.body || error.stack);
-            }
+            showErrorModal(error.message, error.stack);
         }
     }
 
@@ -651,7 +697,6 @@
             statusMessage.textContent = 'Playback finished.';
             logMessage('Playback finished.', 'info');
         }
-        tracksPanel.innerHTML = '';
     }
 
     // --- Event Listeners ---
@@ -665,7 +710,7 @@
         if (!player) return;
         if (document.hidden) {
             if (player.isPlaying) {
-                pause(true); // Pass true to indicate it's a blur event
+                pause(true);
             }
         } else {
             if (wasPausedByBlur) {
@@ -682,3 +727,4 @@
 </script>
 </body>
 </html>
+

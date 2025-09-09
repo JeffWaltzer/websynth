@@ -146,8 +146,47 @@
             }
         }
     </style>
+<style>
+  .toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #333;
+    padding: 2px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 1000;
+  }
+  .toolbar button {
+    background: #555;
+    color: white;
+    border: 1px solid #888;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin: 1px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .toolbar button:disabled {
+    background: #777;
+    color: #ccc;
+    cursor: default;
+  }
+</style>
 </head>
 <body>
+<div class="toolbar">
+  <button onclick="window.location.href='berlin.html'">berlin</button>
+  <button onclick="window.location.href='chords.html'">chords</button>
+  <button onclick="window.location.href='Circles.html'">Circles</button>
+  <button onclick="window.location.href='ClassicsOnMIDI.html'">ClassicsOnMIDI</button>
+  <button onclick="window.location.href='delay.html'">delay</button>
+  <button disabled>index</button>
+  <button onclick="window.location.href='polychain.html'">polychain</button>
+  <button onclick="window.location.href='rhythm.html'">rhythm</button>
+  <button onclick="window.location.href='starfield.html'">starfield</button>
+</div>
 <main class="container">
     <h1>Music Master</h1>
     <nav>
@@ -176,22 +215,6 @@
         </div>
     </div>
     <div class="menu-item">
-        <a href="chords.html" title="Analyze MIDI chord progressions">Chord Monitor</a>
-        <div class="menu-description">Real-time MIDI chord recognition with extended harmony analysis.
-            Displays chord inversions, suggests compatible scales, and offers alternative voicings.
-            Features comprehensive music theory tools and chord progression memory.
-            Includes harmonic analysis with Roman numeral notation.
-        </div>
-    </div>
-    <div class="menu-item">
-        <a href="polychain.html" title="Set up MIDI voice distribution">MIDI Poly Chain</a>
-        <div class="menu-description">Sophisticated MIDI routing system for intelligent voice allocation.
-            Chain multiple synthesizers with customizable velocity curves, splits, and layers.
-            Features dynamic voice stealing, channel routing, and note distribution.
-            Create rich, layered soundscapes across multiple MIDI devices.
-        </div>
-    </div>
-    <div class="menu-item">
         <a href="delay.html" title="Create complex MIDI delay effects">MIDI Delay</a>
         <div class="menu-description">Creative MIDI delay processor with adjustable time, feedback, and
             ping-pong capabilities. Perfect for creating complex echoes, evolving arpeggios, and
@@ -205,6 +228,18 @@
             Features works from Beethoven, Mozart, Bach, and other renowned composers with precise tempo control
             and authentic instrument mappings. Perfect for music study, practice, or appreciation of classical works.
         </div>
+    </div>
+    <div class="menu-item">
+        <a href="Circles.html" title="A tool to visualize MIDI data in a circular pattern.">Circles</a>
+        <div class="menu-description">A tool to visualize MIDI data in a circular pattern.</div>
+    </div>
+    <div class="menu-item">
+        <a href="chords.html" title="A tool to explore and visualize chord progressions.">Chord Explorer</a>
+        <div class="menu-description">A tool to explore and visualize chord progressions.</div>
+    </div>
+    <div class="menu-item">
+        <a href="polychain.html" title="A tool to chain multiple MIDI devices together.">Polychain</a>
+        <div class="menu-description">A tool to chain multiple MIDI devices together.</div>
     </div>
 </nav>
 </main>

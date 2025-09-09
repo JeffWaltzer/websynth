@@ -48,6 +48,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            padding-top: 40px;
         }
         .main-container {
             margin-bottom: 2rem;
@@ -222,7 +223,7 @@
         #channelVolumesContainer label { font-size: 0.65rem; }
 
         #octaveSelector { display: flex; justify-content: center; }
-        #musicModePresetContainer { display: grid; grid-template-columns: repeat(auto-fit, minmax(55px, 1fr)); gap: 0.25rem;}
+        #musicModePresetContainer { display: grid; grid-template-columns: repeat(auto-fit, minmax(55px, 1fr)); gap: 0.25rem; }
         #musicModePresetContainer .radio-label { font-size: 0.7rem; }
 
         .radio-label {
@@ -347,8 +348,47 @@
         }
 
     </style>
+<style>
+  .toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #333;
+    padding: 2px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 1000;
+  }
+  .toolbar button {
+    background: #555;
+    color: white;
+    border: 1px solid #888;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin: 1px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .toolbar button:disabled {
+    background: #777;
+    color: #ccc;
+    cursor: default;
+  }
+</style>
 </head>
 <body class="p-1 md:p-2">
+<div class="toolbar">
+  <button onclick="window.location.href='berlin.html'">berlin</button>
+  <button onclick="window.location.href='chords.html'">chords</button>
+  <button onclick="window.location.href='Circles.html'">Circles</button>
+  <button onclick="window.location.href='ClassicsOnMIDI.html'">ClassicsOnMIDI</button>
+  <button onclick="window.location.href='delay.html'">delay</button>
+  <button onclick="window.location.href='index.html'">index</button>
+  <button onclick="window.location.href='polychain.html'">polychain</button>
+  <button disabled>rhythm</button>
+  <button onclick="window.location.href='starfield.html'">starfield</button>
+</div>
 
 <div id="app-background" class="bg-default"></div>
 
@@ -373,7 +413,7 @@
                         <button id="playStopButton" class="push-button icon-button" title="Start or stop all sequences (Spacebar)">&#x25B6;</button>
                         <button id="tryMeButton" class="push-button icon-button try-me-button" title="Try a new harmonious setup (T)">✨</button>
                         <button id="refineButton" class="push-button icon-button refine-button" title="Refine current notes (R)">⚖️</button>
-                        <button id="quantizeNotesButton" class="push-button icon-button quantize-button" title="Quantize all notes to scale (Q)">🎼</button>
+                        <button id="quantizeNotesButton" class="push-button icon-button quantize-button" title="Quantize all notes to the selected scale (Q)">🎼</button>
                         <button id="saveStateButton" class="push-button save-load-button icon-button" title="Save current state (S)">&#128190;</button>
                         <button id="loadStateButton" class="push-button save-load-button icon-button" title="Load last saved state (L)">&#128193;</button>
                     </div>

@@ -10,6 +10,7 @@
         body {
             font-family: 'Inter', sans-serif;
             overscroll-behavior: none;
+            padding-top: 40px;
         }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #1f2937; }
@@ -88,8 +89,47 @@
             border-color: #2563eb;
         }
     </style>
+<style>
+  .toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #333;
+    padding: 2px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 1000;
+  }
+  .toolbar button {
+    background: #555;
+    color: white;
+    border: 1px solid #888;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin: 1px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .toolbar button:disabled {
+    background: #777;
+    color: #ccc;
+    cursor: default;
+  }
+</style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen h-screen flex flex-col items-center justify-center p-1 sm:p-2 overflow-hidden">
+<div class="toolbar">
+  <button onclick="window.location.href='berlin.html'">berlin</button>
+  <button disabled>chords</button>
+  <button onclick="window.location.href='Circles.html'">Circles</button>
+  <button onclick="window.location.href='ClassicsOnMIDI.html'">ClassicsOnMIDI</button>
+  <button onclick="window.location.href='delay.html'">delay</button>
+  <button onclick="window.location.href='index.html'">index</button>
+  <button onclick="window.location.href='polychain.html'">polychain</button>
+  <button onclick="window.location.href='rhythm.html'">rhythm</button>
+  <button onclick="window.location.href='starfield.html'">starfield</button>
+</div>
 
 <div class="w-full max-w-5xl flex flex-col h-full">
     <header class="mb-1 text-center">
