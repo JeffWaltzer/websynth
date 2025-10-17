@@ -215,22 +215,25 @@
     </svg>
 </button>
 
-<!-- Recording Controls --><div id="recordContainer">
+<!-- Recording and Stop Controls --><div id="recordContainer">
     <button id="recordButton">START RECORDING (WebM)</button>
     <div id="recordingStatus">Recording...</div>
+    <!-- NEW STOP VISUALIZER BUTTON --><button id="stopVisualizerButton" class="button-style" style="background-color: #6c757d; margin-top: 10px; width: 100%; padding: 10px 20px; font-size: 1rem;">STOP VISUALIZER</button>
 </div>
 
 
 <div id="overlay">
     <div id="loadingText">
-        Choose your audio source to start the Visualizer.
+        Choose your audio source and visual effect to start.
     </div>
 
     <!-- Effect Selector --><div class="control-group">
     <h3>Visual Effect Mode</h3>
     <select id="visualEffectSelector">
         <option value="waves">Grid Waves (Plasma + Sinusoidal)</option>
+        <option value="circles">Concentric Circles (Plasma + Radial Waves)</option>
         <option value="analyzer">Radial Analyzer (Plasma + Spectrograph)</option>
+        <option value="fusion" selected>Fusion Core (Circles + Analyzer)</option>
         <option value="vortex">Vortex Plasma (Plasma Only)</option>
     </select>
 </div>
@@ -273,6 +276,7 @@
     const recordButton = document.getElementById('recordButton');
     const recordingStatus = document.getElementById('recordingStatus');
     const visualEffectSelector = document.getElementById('visualEffectSelector');
+    const stopVisualizerButton = document.getElementById('stopVisualizerButton');
 
     // OPTIMIZATION: Low-Resolution Off-Screen Canvas Setup
     const LOW_RES_WIDTH = 240;
@@ -312,12 +316,12 @@
     let controlsTimeout = null;
     const INACTIVITY_TIMEOUT = 10000; // 10 seconds
 
-    /** Sets the visibility state of the overlay controls (Record button, Fullscreen button). */
+    /** Sets the visibility state of the overlay controls (Record button, Fullscreen button, Stop button). */
     function updateControlsVisibility(visible) {
         const opacityValue = visible ? '1' : '0';
         const eventsValue = visible ? 'auto' : 'none';
 
-        // Apply to Record Container
+        // Apply to Record Container (includes both record and stop buttons)
         recordContainer.style.opacity = opacityValue;
         recordContainer.style.pointerEvents = eventsValue;
 
@@ -396,6 +400,37 @@
         }
     }
 
+    /**
+     * Stops all visual and audio playback and returns to the start screen.
+     */
+    function stopVisualizer() {
+        isRunning = false;
+
+        // Stop recording if active
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            stopRecording();
+        }
+
+        // Stop audio source if it's a BufferSourceNode (file playback)
+        if (audioSourceNode && audioSourceNode.stop) {
+            try {
+                audioSourceNode.stop();
+            } catch (e) {
+                // Ignore errors if source is already stopped
+            }
+        }
+
+        // Hide controls
+        updateControlsVisibility(false);
+
+        // Show overlay/start screen
+        overlay.style.display = 'flex';
+        setTimeout(() => { overlay.style.opacity = 1; }, 10); // Fade in
+
+        // Reset message
+        messageDiv.innerText = "";
+    }
+
 
     // --- Audio Setup Functions ---
 
@@ -461,7 +496,7 @@
                         stopRecording();
                         messageDiv.innerText = "Audio finished and recording stopped automatically. Download is ready!";
                     } else if (isRunning) {
-                        messageDiv.innerText = "Audio playback finished. Load a new file or use the microphone.";
+                        stopVisualizer(); // Return to start screen after file playback ends
                     }
                 };
 
@@ -483,6 +518,7 @@
     // --- Event Listeners ---
     startButton.addEventListener('click', setupAudioFromMic);
     fullscreenButton.addEventListener('click', toggleFullscreen);
+    stopVisualizerButton.addEventListener('click', stopVisualizer);
 
     loadFromFileButton.addEventListener('click', () => {
         fileInput.click(); // Trigger the hidden file input
@@ -702,25 +738,22 @@
         const height = viewHeight;
         const t = frameCount * 0.05; // Time base for movement
 
-        const numWaves = 10;
+        const numWaves = 8;
         const verticalSpacing = height / (numWaves + 1);
 
         ctx.save();
-        ctx.translate(offsetX, offsetY); // Start drawing inside the 16:9 view area
-
-        ctx.globalAlpha = 0.6; // Keep it semi-transparent
+        ctx.translate(offsetX, offsetY);
+        ctx.globalAlpha = 0.6;
         ctx.lineWidth = 3;
         ctx.shadowBlur = 10;
-        ctx.lineJoin = 'round'; // Smoother lines
+        ctx.lineJoin = 'round';
 
         for (let i = 0; i < numWaves; i++) {
-            // Map the 10 waves to the 10 lowest frequency bins (for bass/mid reaction)
-            const freqIndex = Math.floor(i * (frequencyData.length / 10));
-            const frequencyValue = frequencyData[freqIndex] / 255.0; // 0 to 1
+            const freqIndex = Math.floor(i * (frequencyData.length / 8));
+            const frequencyValue = frequencyData[freqIndex] / 255.0;
 
-            // Use frequency data to drive amplitude and wave speed
-            const amplitude = frequencyValue * 70 + 20; // Max vertical movement
-            const waveFrequency = 0.01 + (frequencyValue * 0.03); // Wave density
+            const amplitude = frequencyValue * 70 + 20;
+            const waveFrequency = 0.01 + (frequencyValue * 0.03);
 
             const hue = (i * 30 + frameCount * 0.8) % 360;
             ctx.strokeStyle = `hsl(${hue}, 100%, 75%)`;
@@ -729,14 +762,84 @@
             ctx.beginPath();
             const startY = (i + 1) * verticalSpacing;
 
-            // Draw the line starting from the left
-            ctx.moveTo(0, startY + (Math.sin(t * 0.5) * 10)); // Subtle overall movement
+            ctx.moveTo(0, startY + (Math.sin(t * 0.5) * 10));
 
             for (let x = 0; x <= width; x += 5) {
-                // Calculate the y position using a sine wave
                 const y = startY + amplitude * Math.sin((x * waveFrequency) + t * (0.8 + frequencyValue * 0.5));
                 ctx.lineTo(x, y);
             }
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+    /**
+     * Draws full-screen, audio-reactive circular waves with oscilloscope ripples.
+     */
+    function drawCircularWaves() {
+        if (!analyser) return;
+
+        const width = viewWidth;
+        const height = viewHeight;
+        const t = frameCount * 0.03;
+
+        // OPTIMIZATION: Move context setup outside the loop.
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+
+        ctx.globalAlpha = 0.7;
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 15;
+
+        const numCircles = 8;
+        const maxRadius = Math.min(width, height) / 2;
+        const radiusStep = maxRadius / (numCircles + 1);
+
+        const numSegments = 64;
+        const angleIncrement = (2 * Math.PI) / numSegments;
+
+        const ampScale = 0.05;
+        const rippleMaxOffset = 30;
+
+        for (let i = 0; i < numCircles; i++) {
+            const baseFreqIndex = Math.floor((i + 1) * (frequencyData.length / (numCircles * 2)) + 10);
+            const frequencyValue = frequencyData[baseFreqIndex] / 255.0;
+
+            const baseRadius = (i + 1) * radiusStep;
+            const rippleAmplitude = frequencyValue * 30 * (1 + config.maxAmplitude * 0.5);
+            const overallRadius = baseRadius + rippleAmplitude * Math.sin(t * 2 + i * 0.5);
+
+            const hue = (i * 45 + frameCount * 0.5) % 360;
+            ctx.strokeStyle = `hsl(${hue}, 100%, 80%)`;
+            ctx.shadowColor = `hsl(${hue}, 100%, 60%)`;
+
+            ctx.beginPath();
+
+            // Draw the custom polygonal circle with ripples
+            for (let k = 0; k <= numSegments; k++) {
+                const angle = k * angleIncrement;
+
+                const rippleFreqIndex = (baseFreqIndex + Math.floor(k * ampScale * frequencyData.length)) % frequencyData.length;
+
+                const normalizedRipple = frequencyData[rippleFreqIndex] / 255.0;
+                const rippleDisplacement = normalizedRipple * rippleMaxOffset * (1 + config.maxAmplitude * 0.2);
+
+                const finalRadius = overallRadius + rippleDisplacement;
+
+                const x = centerX + finalRadius * Math.cos(angle);
+                const y = centerY + finalRadius * Math.sin(angle);
+
+                if (k === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.closePath();
             ctx.stroke();
         }
 
@@ -749,63 +852,76 @@
     function drawSpectrograph() {
         if (!analyser) return;
 
-        const centerX = viewWidth / 2 + offsetX; // Centered in the 16:9 area
-        const centerY = viewHeight / 2 + offsetY; // Centered in the 16:9 area
-        const radius = Math.min(viewWidth / 2, viewHeight / 2) * 0.2; // Base radius
-        const barWidth = 4;
+        const centerX = viewWidth / 2 + offsetX;
+        const centerY = viewHeight / 2 + offsetY;
+        const radius = Math.min(viewWidth / 2, viewHeight / 2) * 0.3; // MODIFIED: Increased to 0.3
+        const barWidth = 6; // MODIFIED: Increased to 6
         const barSpacing = 1;
-        const maxBarHeight = Math.min(viewWidth / 2, viewHeight / 2) * 0.4; // Max bar height
+        const maxBarHeight = Math.min(viewWidth / 2, viewHeight / 2) * 0.5; // MODIFIED: Increased to 0.5
 
-        // Calculate the total number of frequency bins we will draw
         const numBars = 64;
         const freqStep = Math.floor(frequencyData.length / numBars);
         const angleStep = (2 * Math.PI) / numBars;
 
         ctx.save();
-        ctx.translate(centerX, centerY); // Move context origin to the center of the 16:9 view
+        ctx.translate(centerX, centerY);
 
-        ctx.globalAlpha = 0.9; // Slightly less transparent for visibility
+        ctx.globalAlpha = 0.9;
         ctx.shadowBlur = 12;
 
         for (let j = 0; j < numBars; j++) {
             let amp = frequencyData[j * freqStep];
             let normalizedAmp = amp / 255;
 
-            // Calculate the actual bar height, amplified by the overall music level
             const barHeight = normalizedAmp * maxBarHeight * (1 + config.maxAmplitude * 0.5);
 
             const hue = (j * (360 / numBars) + frameCount * 1.5) % 360;
 
-            // --- Save and restore context for non-cumulative rotation ---
-            ctx.save();
-            ctx.rotate(j * angleStep); // Apply non-cumulative rotation for this bar
+            // OPTIMIZATION: Combine save/restore outside the loop, use transforms.
+            ctx.rotate(angleStep); // Rotate the whole canvas
 
             ctx.fillStyle = `hsl(${hue}, 100%, 70%)`;
             ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
 
             ctx.fillRect(
-                radius,                                 // X start (base of the bar)
-                -barWidth / 2,                          // Y start (centers the bar)
-                barHeight,                              // Width (length of the bar)
-                barWidth - barSpacing                   // Height (thickness of the bar)
+                radius,
+                -barWidth / 2,
+                barHeight,
+                barWidth - barSpacing
             );
-
-            ctx.restore(); // Restore context to the centered state before next rotation
         }
 
-        ctx.restore(); // Restore context to the state before translate(centerX, centerY)
+        // We rotate back by the total rotation amount to keep the canvas aligned for the next frame
+        ctx.rotate(-(angleStep * numBars));
+
+        ctx.restore();
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
     }
 
+
     // --- Main Animation Loop ---
 
+    // Flag to prevent resizing every frame
+    let isResizeNeeded = false;
+    let prevWindowWidth = 0;
+    let prevWindowHeight = 0;
+
     /**
-     * Resizes the canvas and recalculates 16:9 view area.
+     * Checks if a resize is needed and recalculates 16:9 view area.
      */
     function resizeCanvas() {
+        if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
+            isResizeNeeded = true;
+        } else if (prevWindowWidth === window.innerWidth && prevWindowHeight === window.innerHeight) {
+            return; // No change, skip expensive resizing
+        }
+
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+
+        prevWindowWidth = window.innerWidth;
+        prevWindowHeight = window.innerHeight;
 
         const screenRatio = canvas.width / canvas.height;
 
@@ -824,39 +940,37 @@
         }
     }
 
+    // Use a dedicated resize listener instead of checking every frame
+    window.addEventListener('resize', resizeCanvas);
+
+
     /**
      * Main rendering loop, running at native monitor refresh rate (typically 60 FPS).
      */
     function animate() {
         if (isRunning) {
-            // Resize check
-            if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
-                resizeCanvas();
-            }
+            // Audio analysis must happen first and fast
+            getAmplitude();
 
-            // 1. Calculate plasma image (low-res)
-            getAmplitude(); // Always analyze audio
+            // Only run drawPlasma if the frame is actually needed
             drawPlasma();
 
-            // 2. Clear canvas and draw low-res plasma image into the 16:9 view area
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clears entire screen (including potential black bars if background was not black)
+            // Clear canvas once
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // --- 2. Draw Plasma with Fisheye Distortion (GPU-Accelerated) ---
             ctx.save();
 
-            // Fisheye/Barrel Distortion Effect applied to the 16:9 area
             const scaleFactor = 1.2;
-
-            // Translate, Scale, Translate back (centered on the 16:9 view area)
             ctx.translate(offsetX + viewWidth / 2, offsetY + viewHeight / 2);
             ctx.scale(scaleFactor, scaleFactor);
             ctx.translate(-(offsetX + viewWidth / 2), -(offsetY + viewHeight / 2));
 
-            // Draw the scaled plasma content into the 16:9 view area
             ctx.drawImage(tempCanvas, offsetX, offsetY, viewWidth, viewHeight);
 
-            ctx.restore(); // Restore context after drawing distorted plasma
+            ctx.restore();
 
-            // 3. Draw Overlays based on selected mode (Not distorted, drawn on top)
+            // --- 3. Draw Overlays (CPU-Intensive, but optimized) ---
             switch(config.currentVisualMode) {
                 case 'waves':
                     drawSinusoidalOverlay();
@@ -864,8 +978,14 @@
                 case 'analyzer':
                     drawSpectrograph();
                     break;
+                case 'circles':
+                    drawCircularWaves();
+                    break;
+                case 'fusion': // NEW FUSION MODE
+                    drawCircularWaves();
+                    drawSpectrograph();
+                    break;
                 case 'vortex':
-                    // Nothing extra to draw
                     break;
             }
 
@@ -880,8 +1000,7 @@
         resizeCanvas();
     });
 
-    // Handle window resizing
-    window.addEventListener('resize', resizeCanvas);
+    // We removed the redundant resize check from the animate loop and use the event listener instead.
 
 </script>
 </body>
