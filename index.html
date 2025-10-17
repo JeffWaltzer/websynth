@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Music Master - Collection of MIDI tools and instruments">
-    <title>Music Master</title>
+    <meta name="description" content="MIDI Master Control - Collection of MIDI tools and instruments">
+    <title>MIDI Master Control</title>
     <link rel="icon" href="https://placehold.co/32x32/3a2f2f/f0e6d2?text=MIDI" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Inter:wght@400;600;700&display=swap"
           rel="stylesheet">
@@ -28,7 +28,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 10px;
+            padding: 20px;
             line-height: 1.5;
         }
 
@@ -36,7 +36,7 @@
             background-color: var(--panel-tan);
             max-width: 1000px;
             width: 100%;
-            padding: 20px;
+            padding: 40px;
             border-radius: 12px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) inset, 0 2px 5px rgba(0, 0, 0, 0.3);
             border: 4px solid var(--burnt-orange);
@@ -47,29 +47,29 @@
             color: var(--wood-brown);
             text-align: center;
             font-size: 2.5em;
-            margin: 0 0 15px;
+            margin: 0 0 30px;
             text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.4);
         }
 
         .menu-item {
             display: grid;
             grid-template-columns: 200px 1fr;
-            gap: 10px;
-            margin-bottom: 8px;
+            gap: 20px;
+            margin-bottom: 15px;
             align-items: center;
         }
 
         .menu-description {
             color: var(--wood-brown);
-            font-size: 0.85rem;
-            line-height: 1.3;
+            font-size: 0.9rem;
+            line-height: 1.4;
         }
 
         a {
             background-color: var(--burnt-orange);
             color: var(--ivory);
             text-decoration: none;
-            padding: 10px;
+            padding: 20px;
             border: 3px solid var(--dark-orange);
             border-radius: 8px;
             font-weight: 700;
@@ -124,7 +124,7 @@
         @media (max-width: 768px) {
             .menu-item {
                 grid-template-columns: 1fr;
-                gap: 5px;
+                gap: 10px;
             }
 
             .menu-description {
@@ -132,7 +132,7 @@
             }
 
             main.container {
-                padding: 10px;
+                padding: 20px;
             }
         }
 
@@ -146,102 +146,74 @@
             }
         }
     </style>
-<style>
-  .toolbar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: #333;
-    padding: 2px;
-    box-sizing: border-box;
-    text-align: center;
-    z-index: 1000;
-  }
-  .toolbar button {
-    background: #555;
-    color: white;
-    border: 1px solid #888;
-    border-radius: 3px;
-    padding: 1px 4px;
-    margin: 1px;
-    cursor: pointer;
-    font-size: 12px;
-  }
-  .toolbar button:disabled {
-    background: #777;
-    color: #ccc;
-    cursor: default;
-  }
-</style>
 </head>
 <body>
-<div class="toolbar">
-  <button onclick="window.location.href='berlin.html'">berlin</button>
-  <button onclick="window.location.href='chords.html'">chords</button>
-  <button onclick="window.location.href='Circles.html'">Circles</button>
-  <button onclick="window.location.href='ClassicsOnMIDI.html'">ClassicsOnMIDI</button>
-  <button onclick="window.location.href='delay.html'">delay</button>
-  <button disabled>index</button>
-  <button onclick="window.location.href='polychain.html'">polychain</button>
-  <button onclick="window.location.href='rhythm.html'">rhythm</button>
-  <button onclick="window.location.href='starfield.html'">starfield</button>
-</div>
 <main class="container">
-    <h1>Music Master</h1>
+    <h1>MIDI Master Control</h1>
     <nav>
-    <div class="menu-item">
-        <a href="rhythm.html" title="Generate complex rhythmic patterns">Rhythm King</a>
-        <div class="menu-description">Advanced rhythm generation toolkit featuring euclidean patterns,
-            polyrhythms, and probability-based variations. Design intricate rhythmic structures with 
-            an intuitive interface. Create complex time signatures, interlocking patterns, and 
-            dynamic rhythm sequences. Features real-time pattern manipulation and groove quantization.
+        <div class="menu-item">
+            <a href="berlin.html">Berlin Sequencer</a>
+            <div class="menu-description">Create evolving, Berlin School-inspired sequences. Features algorithmic
+                pattern generation, modulation matrices, and probability-based variations for endless musical
+                exploration.
+            </div>
         </div>
-    </div>
-    <div class="menu-item">
-        <a href="berlin.html" title="Create Berlin School sequences">Berlin Sequencer</a>
-        <div class="menu-description">Create evolving, Berlin School-inspired sequences with modular synthesis concepts.
-            Features algorithmic pattern generation, modulation matrices, and probability-based variations.
-            Includes tempo-synced LFOs, advanced step sequencing, and parameter automation.
-            Perfect for creating hypnotic, evolving electronic music.
+        <div class="menu-item">
+            <a href="chords.html">Chords</a>
+            <div class="menu-description">MIDI Chord Monitor: Real-time chord recognition with extended harmony
+                analysis. Shows inversions, suggested scales, alternative voicings, and common chord substitutions.
+            </div>
         </div>
-    </div>
-    <div class="menu-item">
-        <a href="starfield.html" title="MIDI Starfield Visualizer">Starfield Visualizer</a>
-        <div class="menu-description">An immersive MIDI visualization tool that creates a cosmic experience.
-            Transform your MIDI performances into dynamic starfield patterns with real-time visual effects.
-            Features interactive star movements, space-themed animations, and psychedelic visual responses
-            to your music.
+        <div class="menu-item">
+            <a href="chords.html">Chords</a>
+            <div class="menu-description">MIDI Chord Monitor: Real-time chord recognition with extended harmony
+                analysis. Shows inversions, suggested scales, alternative voicings, and common chord substitutions.
+            </div>
         </div>
-    </div>
-    <div class="menu-item">
-        <a href="delay.html" title="Create complex MIDI delay effects">MIDI Delay</a>
-        <div class="menu-description">Creative MIDI delay processor with adjustable time, feedback, and
-            ping-pong capabilities. Perfect for creating complex echoes, evolving arpeggios, and
-            intricate rhythmic patterns. Features tempo-synchronized delays, note transformation,
-            and velocity modulation with vintage-inspired interface.
+        <div class="menu-item">
+            <a href="ClassicsOnMIDI.html">Classics On MIDI</a>
+            <div class="menu-description">Play and explore classical music pieces through MIDI. Interactive piano
+                interface with classic compositions.
+            </div>
         </div>
-    </div>
-    <div class="menu-item">
-        <a href="ClassicsOnMIDI.html" title="Play classical pieces">Classical MIDI Player</a>
-        <div class="menu-description">Explore and play a curated collection of classical masterpieces through MIDI.
-            Features works from Beethoven, Mozart, Bach, and other renowned composers with precise tempo control
-            and authentic instrument mappings. Perfect for music study, practice, or appreciation of classical works.
+        <div class="menu-item">
+            <a href="delay.html">MIDI Delay</a>
+            <div class="menu-description">Temporal note manipulation device with adjustable delay time, feedback
+                control, and ping-pong mode. Create complex echoes, cascading arpeggios, and rhythmic patterns.
+            </div>
         </div>
-    </div>
-    <div class="menu-item">
-        <a href="Circles.html" title="A tool to visualize MIDI data in a circular pattern.">Circles</a>
-        <div class="menu-description">A tool to visualize MIDI data in a circular pattern.</div>
-    </div>
-    <div class="menu-item">
-        <a href="chords.html" title="A tool to explore and visualize chord progressions.">Chord Explorer</a>
-        <div class="menu-description">A tool to explore and visualize chord progressions.</div>
-    </div>
-    <div class="menu-item">
-        <a href="polychain.html" title="A tool to chain multiple MIDI devices together.">Polychain</a>
-        <div class="menu-description">A tool to chain multiple MIDI devices together.</div>
-    </div>
-</nav>
+        <div class="menu-item">
+            <a href="polychain.html">MIDI Poly Chain</a>
+            <div class="menu-description">Advanced MIDI routing tool with voice allocation, splits, and layers. Chain up
+                to 16 synthesizers, set velocity curves, and create complex multi-timbral setups with automatic voice
+                distribution.
+            </div>
+        </div>
+        <div class="menu-item">
+            <a href="rhythm.html">Rhythm Lab</a>
+            <div class="menu-description">Advanced rhythm generation tool with polyrhythms, euclidean patterns, and
+                probability-based variations. Create complex rhythmic structures with intuitive controls.
+            </div>
+        </div>
+        <div class="menu-item">
+            <a href="starfield.html">Starfield</a>
+            <div class="menu-description">Mesmerizing starfield animation with dynamic particle effects. Watch stars
+                fly through space in real-time.
+            </div>
+        </div>
+        <div class="menu-item">
+            <a href="synth.html">Synth</a>
+            <div class="menu-description">Analog Dreams: Comprehensive MIDI controller interface with multiple LFOs,
+                envelope generators, and modulation options. Control your hardware synths with precision.
+            </div>
+        </div>
+        <div class="menu-item">
+            <a href="visualizer1.html">Visualizer 1</a>
+            <div class="menu-description">Audio visualizer with real-time frequency and waveform analysis. Visualize
+                audio input with customizable display modes and color schemes.
+            </div>
+        </div>
+    </nav>
 </main>
 </body>
 </html>

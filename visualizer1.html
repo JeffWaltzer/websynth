@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio-Reactive Plasma Generator</title>
+    <style>
+        /* General Setup */
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #000;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+        }
+
+        /* Canvas Full Screen (Covers entire viewport) */
+        #plasmaCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: black; /* To ensure black bars appear outside 16:9 area */
+            image-rendering: pixelated;
+        }
+
+        /* Overlay & Controls */
+        #overlay {
+            position: fixed;
+            z-index: 100;
+            padding: 30px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+            transition: opacity 0.5s;
+        }
+
+        #loadingText {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #ffcc00;
+        }
+
+        #autoRecordControl {
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #autoRecord {
+            transform: scale(1.5); /* Make checkbox easier to see/click */
+            margin-right: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .control-group h3 {
+            margin-top: 0;
+            color: #ccc;
+        }
+
+        .button-style {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.1s;
+            width: 90%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .button-style:hover {
+            background-color: #45a049;
+        }
+
+        .button-style:active {
+            transform: scale(0.98);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #loadFromFileButton {
+            background-color: #008CBA; /* Blue for file load */
+        }
+        #loadFromFileButton:hover {
+            background-color: #007bb5;
+        }
+
+        #visualEffectSelector {
+            padding: 10px;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            background-color: #2c2c2c;
+            color: white;
+            border: 1px solid #4CAF50;
+            width: 90%;
+            margin-top: 10px;
+        }
+
+
+        .error {
+            color: #ff4d4d;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* Fullscreen Button Style */
+        #fullscreenButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 60;
+            background-color: rgba(30, 30, 30, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out, background-color 0.2s, box-shadow 0.2s;
+        }
+
+        #fullscreenButton:hover {
+            background-color: rgba(50, 50, 50, 0.9);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        #fullscreenButton svg {
+            fill: white;
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Record Button Style */
+        #recordContainer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        #recordButton {
+            background-color: #f44336; /* Red */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s, opacity 0.3s;
+        }
+
+        #recordButton.recording {
+            background-color: #ff0000;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+
+        #recordingStatus {
+            margin-top: 5px;
+            color: #f44336;
+            font-size: 0.9rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="plasmaCanvas"></canvas>
+
+
+<!-- Fullscreen Button --><button id="fullscreenButton" title="Toggle Fullscreen">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+    </svg>
+</button>
+
+<!-- Recording Controls --><div id="recordContainer">
+    <button id="recordButton">START RECORDING (WebM)</button>
+    <div id="recordingStatus">Recording...</div>
+</div>
+
+
+<div id="overlay">
+    <div id="loadingText">
+        Choose your audio source to start the Visualizer.
+    </div>
+
+    <!-- Effect Selector --><div class="control-group">
+    <h3>Visual Effect Mode</h3>
+    <select id="visualEffectSelector">
+        <option value="waves">Grid Waves (Plasma + Sinusoidal)</option>
+        <option value="analyzer">Radial Analyzer (Plasma + Spectrograph)</option>
+        <option value="vortex">Vortex Plasma (Plasma Only)</option>
+    </select>
+</div>
+
+    <!-- Auto Record Checkbox --><div id="autoRecordControl">
+    <input type="checkbox" id="autoRecord">
+    <label for="autoRecord" style="font-size: 1.1rem;">Start recording automatically</label>
+</div>
+
+    <div class="control-group">
+        <h3>Audio Source</h3>
+        <button id="startButton" class="button-style">
+            Grant Microphone Access
+        </button>
+    </div>
+
+    <div class="control-group">
+        <h3>OR</h3>
+        <!-- File Input is hidden, triggered by the styled button --><input type="file" id="fileInput" accept="audio/*">
+        <button id="loadFromFileButton" class="button-style">
+            Load MP3 / Audio File
+        </button>
+    </div>
+
+    <div id="message" class="error"></div>
+</div>
+
+<script>
+    // --- Global Variables ---
+    const canvas = document.getElementById('plasmaCanvas');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('overlay');
+    const startButton = document.getElementById('startButton');
+    const loadFromFileButton = document.getElementById('loadFromFileButton');
+    const fileInput = document.getElementById('fileInput');
+    const autoRecordCheckbox = document.getElementById('autoRecord');
+    const messageDiv = document.getElementById('message');
+    const fullscreenButton = document.getElementById('fullscreenButton');
+    const recordContainer = document.getElementById('recordContainer');
+    const recordButton = document.getElementById('recordButton');
+    const recordingStatus = document.getElementById('recordingStatus');
+    const visualEffectSelector = document.getElementById('visualEffectSelector');
+
+    // OPTIMIZATION: Low-Resolution Off-Screen Canvas Setup
+    const LOW_RES_WIDTH = 240;
+    const LOW_RES_HEIGHT = 135;
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCanvas.width = LOW_RES_WIDTH;
+    tempCanvas.height = LOW_RES_HEIGHT;
+
+    let audioContext;
+    let analyser;
+    let frequencyData;
+    let frameCount = 0;
+    let isRunning = false;
+    let mediaRecorder;
+    let recordedChunks = [];
+    let audioSourceNode;
+
+    // Global Aspect Ratio and View Variables
+    const aspectRatio = 16 / 9;
+    let viewWidth = 0;
+    let viewHeight = 0;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // Configuration for the plasma effect
+    const config = {
+        scale: 0.005,
+        speed: 0.0005,
+        rotation: 0.0000007,
+        audioInfluence: 0.8,
+        maxAmplitude: 0.0,
+        currentVisualMode: visualEffectSelector.value, // 'waves', 'analyzer', or 'vortex'
+    };
+
+    // --- Control Visibility Logic ---
+    let controlsTimeout = null;
+    const INACTIVITY_TIMEOUT = 10000; // 10 seconds
+
+    /** Sets the visibility state of the overlay controls (Record button, Fullscreen button). */
+    function updateControlsVisibility(visible) {
+        const opacityValue = visible ? '1' : '0';
+        const eventsValue = visible ? 'auto' : 'none';
+
+        // Apply to Record Container
+        recordContainer.style.opacity = opacityValue;
+        recordContainer.style.pointerEvents = eventsValue;
+
+        // Apply to Fullscreen Button
+        fullscreenButton.style.opacity = opacityValue;
+        fullscreenButton.style.pointerEvents = eventsValue;
+    }
+
+    /** Shows controls and resets the hide timer. */
+    function showControls() {
+        if (!isRunning) return; // Only show controls after visualizer starts
+
+        // Ensure the record container is display:flex so opacity works
+        if (recordContainer.style.display !== 'flex') {
+            recordContainer.style.display = 'flex';
+        }
+
+        updateControlsVisibility(true);
+
+        clearTimeout(controlsTimeout);
+        controlsTimeout = setTimeout(() => {
+            updateControlsVisibility(false);
+        }, INACTIVITY_TIMEOUT);
+    }
+
+    // Global mousemove listener to trigger controls visibility
+    document.addEventListener('mousemove', showControls);
+    // --- End Control Visibility Logic ---
+
+
+    // --- Utility Functions ---
+
+    /**
+     * Numeric HSL to RGB conversion helper. Avoids string/regex ops.
+     */
+    const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+        return p;
+    };
+
+
+    /**
+     * Toggles fullscreen mode for the entire document.
+     */
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.warn(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+
+    /**
+     * Common function to hide the overlay and start the animation loop.
+     */
+    function startVisualizer() {
+        overlay.style.opacity = 0;
+        setTimeout(() => { overlay.style.display = 'none'; }, 500);
+        isRunning = true;
+        animate();
+
+        // Show controls initially and start the hide timer
+        showControls();
+
+        // Check if auto-recording is requested and start if checked
+        if (autoRecordCheckbox.checked) {
+            startRecording();
+        }
+    }
+
+
+    // --- Audio Setup Functions ---
+
+    /**
+     * Initializes the Web Audio API for microphone access.
+     */
+    async function setupAudioFromMic() {
+        try {
+            // Ensure audio context is ready
+            if (audioContext && audioContext.state === 'suspended') {
+                await audioContext.resume();
+            } else if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            frequencyData = new Uint8Array(analyser.frequencyBinCount);
+
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioSourceNode = audioContext.createMediaStreamSource(stream);
+
+            // Connect: Source -> Analyser -> Destination (silently)
+            audioSourceNode.connect(analyser);
+
+            startVisualizer();
+        } catch (err) {
+            console.error("Microphone access failed:", err);
+            messageDiv.innerText = "Error: Could not access microphone. Check permissions.";
+        }
+    }
+
+    /**
+     * Initializes the Web Audio API for local file access.
+     */
+    function setupAudioFromFile(file) {
+        // Ensure audio context is ready
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        } else if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        frequencyData = new Uint8Array(analyser.frequencyBinCount);
+
+        messageDiv.innerText = "Loading and decoding audio...";
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            audioContext.decodeAudioData(e.target.result, function(buffer) {
+                audioSourceNode = audioContext.createBufferSource();
+                audioSourceNode.buffer = buffer;
+
+                // Connect: Source -> Analyser -> Destination (so we can hear it)
+                audioSourceNode.connect(analyser);
+                audioSourceNode.connect(audioContext.destination);
+
+                // Set handler to stop recording when the file finishes
+                audioSourceNode.onended = () => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        stopRecording();
+                        messageDiv.innerText = "Audio finished and recording stopped automatically. Download is ready!";
+                    } else if (isRunning) {
+                        messageDiv.innerText = "Audio playback finished. Load a new file or use the microphone.";
+                    }
+                };
+
+                audioSourceNode.start(0);
+
+                messageDiv.innerText = "Audio loaded and playing. Recording will stop when track ends.";
+
+                startVisualizer();
+            }, function(e) {
+                messageDiv.innerText = `Error decoding audio data: ${e.err}`;
+            });
+        };
+        reader.onerror = function(e) {
+            messageDiv.innerText = `Error reading file: ${e.target.error}`;
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    // --- Event Listeners ---
+    startButton.addEventListener('click', setupAudioFromMic);
+    fullscreenButton.addEventListener('click', toggleFullscreen);
+
+    loadFromFileButton.addEventListener('click', () => {
+        fileInput.click(); // Trigger the hidden file input
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setupAudioFromFile(file);
+        }
+    });
+
+    visualEffectSelector.addEventListener('change', (e) => {
+        config.currentVisualMode = e.target.value;
+    });
+
+    // --- Recording Logic ---
+
+    /**
+     * Starts capturing the canvas video stream and audio stream into a WebM file.
+     */
+    function startRecording() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') return; // Prevent double recording
+
+        try {
+            // Get the video stream from the plasma canvas (60 FPS default)
+            const videoStream = canvas.captureStream(60);
+
+            // Get the audio stream from the Analyser Node (or the source, depending on what is available)
+            const audioDest = audioContext.createMediaStreamDestination();
+            // Ensure the analyser node is correctly connected to the stream destination for recording
+            analyser.connect(audioDest);
+
+            const audioStream = audioDest.stream;
+
+            // Combine video and audio tracks
+            const combinedStream = new MediaStream();
+            videoStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
+            audioStream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
+
+            // Create the Media Recorder instance
+            mediaRecorder = new MediaRecorder(combinedStream, {
+                mimeType: 'video/webm; codecs=vp8,opus'
+            });
+
+            mediaRecorder.ondataavailable = function(e) {
+                if (e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = function() {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+
+                // Create a link to download the video
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `plasma-${config.currentVisualMode}-${Date.now()}.webm`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+
+                // Reset state
+                recordedChunks = [];
+                recordButton.classList.remove('recording');
+                recordingStatus.style.opacity = 0;
+                recordButton.innerText = "START RECORDING (WebM)";
+
+                // Disconnect analyser from audioDest to clean up recording chain
+                analyser.disconnect(audioDest);
+            };
+
+            recordedChunks = [];
+            mediaRecorder.start();
+            recordButton.classList.add('recording');
+            recordingStatus.style.opacity = 1;
+            recordButton.innerText = "STOP RECORDING";
+
+        } catch (error) {
+            console.error("Recording setup failed:", error);
+            messageDiv.innerText = "Error: Recording is not supported in this browser or context.";
+        }
+    }
+
+    /**
+     * Stops the recording process.
+     */
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+        }
+    }
+
+    recordButton.addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            stopRecording();
+        } else {
+            startRecording();
+        }
+    });
+
+
+    // --- Visualization Logic ---
+
+    /**
+     * Calculates the overall amplitude (loudness) from the current frequency data.
+     * @returns {number} Normalized amplitude (0.0 to 1.0)
+     */
+    function getAmplitude() {
+        // Only update amplitude if analyser is ready
+        if (!analyser) return 0;
+
+        // Get frequency data (used by spectrograph)
+        analyser.getByteFrequencyData(frequencyData);
+
+        let sum = 0;
+        for (const byte of frequencyData) {
+            sum += byte;
+        }
+        const average = sum / frequencyData.length;
+        const normalized = average / 255.0;
+
+        // Smoothed value for visuals (0.7 decay, 0.3 new value for rapid response)
+        config.maxAmplitude = config.maxAmplitude * 0.7 + normalized * 0.3;
+
+        return config.maxAmplitude;
+    }
+
+
+    /**
+     * Generates the plasma effect on the low-resolution tempCanvas.
+     */
+    function drawPlasma() {
+        const width = LOW_RES_WIDTH;
+        const height = LOW_RES_HEIGHT;
+        const t = frameCount * config.speed;
+        const audioAmp = config.maxAmplitude; // Use smoothed amplitude
+
+        // Adjust parameters based on audio (HIGH INFLUENCE)
+        const colorShift = audioAmp * 400 + t * 800;
+        const rotationFactor = config.rotation + audioAmp * 0.000005;
+        const dynamicScale = config.scale + audioAmp * 0.01;
+
+        const imageData = tempCtx.getImageData(0, 0, width, height);
+        const data = imageData.data;
+
+        const cx = width / 2;
+        const cy = height / 2;
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const i = (y * width + x) * 4;
+
+                // Original Plasma Layer
+                const rx = (x - cx) * rotationFactor;
+                const ry = (y - cy) * rotationFactor;
+                const r = Math.sqrt(rx * rx + ry * ry) * dynamicScale;
+                const angle = Math.atan2(ry, rx);
+
+                let v1 = 0;
+                v1 += Math.sin((x * dynamicScale) + t);
+                v1 += Math.sin((y * dynamicScale) + t * 0.5);
+                v1 += Math.sin((x * dynamicScale + y * dynamicScale) + t * 0.25);
+                v1 += Math.sin((r * 25 + angle * 2.5) * (1 + audioAmp * 1.5) + t * 0.8);
+
+                // Second Noise Layer (more fractal/turbulent)
+                const x2 = x - width / 2;
+                const y2 = y - height / 2;
+                let v2 = 0;
+                v2 += Math.sin(x2 * 0.03 + t * 1.2 + y2 * 0.01);
+                v2 += Math.sin(y2 * 0.02 + t * 0.9 - x2 * 0.01);
+                v2 += Math.sin(Math.sqrt(x2 * x2 + y2 * y2) * 0.01 + t * 0.5);
+                v2 = v2 * (1 + audioAmp * 2.0); // Amplify this layer with audio
+
+                // Blend the two layers, audio influence decides blend strength
+                const blendFactor = 0.5 + audioAmp * 0.8;
+                let v = v1 * (1 - blendFactor) + v2 * blendFactor;
+
+
+                // --- Highly Optimized HSL to RGB Conversion (Numeric Only) ---
+                const h = ((v * 30 + colorShift) % 360) / 360; // Normalize hue to [0, 1]
+                const s = 1.0;
+                const l = 0.5 + audioAmp * 0.3; // Lightness [0.5, 0.8]
+
+                let r_norm, g_norm, b_norm;
+
+                if (s === 0) {
+                    r_norm = g_norm = b_norm = l; // Achromatic
+                } else {
+                    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                    const p = 2 * l - q;
+                    r_norm = hue2rgb(p, q, h + 1 / 3);
+                    g_norm = hue2rgb(p, q, h);
+                    b_norm = hue2rgb(p, q, h - 1 / 3);
+                }
+
+                // Write RGB integers (0-255) to the data array
+                data[i] = Math.round(r_norm * 255);
+                data[i + 1] = Math.round(g_norm * 255);
+                data[i + 2] = Math.round(b_norm * 255);
+                data[i + 3] = 255;
+            }
+        }
+
+        tempCtx.putImageData(imageData, 0, 0);
+    }
+
+    /**
+     * Draws full-screen, audio-reactive sinusoidal waves.
+     */
+    function drawSinusoidalOverlay() {
+        if (!analyser) return;
+
+        const width = viewWidth;
+        const height = viewHeight;
+        const t = frameCount * 0.05; // Time base for movement
+
+        const numWaves = 10;
+        const verticalSpacing = height / (numWaves + 1);
+
+        ctx.save();
+        ctx.translate(offsetX, offsetY); // Start drawing inside the 16:9 view area
+
+        ctx.globalAlpha = 0.6; // Keep it semi-transparent
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 10;
+        ctx.lineJoin = 'round'; // Smoother lines
+
+        for (let i = 0; i < numWaves; i++) {
+            // Map the 10 waves to the 10 lowest frequency bins (for bass/mid reaction)
+            const freqIndex = Math.floor(i * (frequencyData.length / 10));
+            const frequencyValue = frequencyData[freqIndex] / 255.0; // 0 to 1
+
+            // Use frequency data to drive amplitude and wave speed
+            const amplitude = frequencyValue * 70 + 20; // Max vertical movement
+            const waveFrequency = 0.01 + (frequencyValue * 0.03); // Wave density
+
+            const hue = (i * 30 + frameCount * 0.8) % 360;
+            ctx.strokeStyle = `hsl(${hue}, 100%, 75%)`;
+            ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+
+            ctx.beginPath();
+            const startY = (i + 1) * verticalSpacing;
+
+            // Draw the line starting from the left
+            ctx.moveTo(0, startY + (Math.sin(t * 0.5) * 10)); // Subtle overall movement
+
+            for (let x = 0; x <= width; x += 5) {
+                // Calculate the y position using a sine wave
+                const y = startY + amplitude * Math.sin((x * waveFrequency) + t * (0.8 + frequencyValue * 0.5));
+                ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+    /**
+     * Draws a circular, trippy spectrograph on the main canvas.
+     */
+    function drawSpectrograph() {
+        if (!analyser) return;
+
+        const centerX = viewWidth / 2 + offsetX; // Centered in the 16:9 area
+        const centerY = viewHeight / 2 + offsetY; // Centered in the 16:9 area
+        const radius = Math.min(viewWidth / 2, viewHeight / 2) * 0.2; // Base radius
+        const barWidth = 4;
+        const barSpacing = 1;
+        const maxBarHeight = Math.min(viewWidth / 2, viewHeight / 2) * 0.4; // Max bar height
+
+        // Calculate the total number of frequency bins we will draw
+        const numBars = 64;
+        const freqStep = Math.floor(frequencyData.length / numBars);
+        const angleStep = (2 * Math.PI) / numBars;
+
+        ctx.save();
+        ctx.translate(centerX, centerY); // Move context origin to the center of the 16:9 view
+
+        ctx.globalAlpha = 0.9; // Slightly less transparent for visibility
+        ctx.shadowBlur = 12;
+
+        for (let j = 0; j < numBars; j++) {
+            let amp = frequencyData[j * freqStep];
+            let normalizedAmp = amp / 255;
+
+            // Calculate the actual bar height, amplified by the overall music level
+            const barHeight = normalizedAmp * maxBarHeight * (1 + config.maxAmplitude * 0.5);
+
+            const hue = (j * (360 / numBars) + frameCount * 1.5) % 360;
+
+            // --- Save and restore context for non-cumulative rotation ---
+            ctx.save();
+            ctx.rotate(j * angleStep); // Apply non-cumulative rotation for this bar
+
+            ctx.fillStyle = `hsl(${hue}, 100%, 70%)`;
+            ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+
+            ctx.fillRect(
+                radius,                                 // X start (base of the bar)
+                -barWidth / 2,                          // Y start (centers the bar)
+                barHeight,                              // Width (length of the bar)
+                barWidth - barSpacing                   // Height (thickness of the bar)
+            );
+
+            ctx.restore(); // Restore context to the centered state before next rotation
+        }
+
+        ctx.restore(); // Restore context to the state before translate(centerX, centerY)
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
+    }
+
+    // --- Main Animation Loop ---
+
+    /**
+     * Resizes the canvas and recalculates 16:9 view area.
+     */
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const screenRatio = canvas.width / canvas.height;
+
+        if (screenRatio > aspectRatio) {
+            // Screen is wider than 16:9 (constrained by height)
+            viewHeight = canvas.height;
+            viewWidth = viewHeight * aspectRatio;
+            offsetX = (canvas.width - viewWidth) / 2;
+            offsetY = 0;
+        } else {
+            // Screen is taller than 16:9 (constrained by width)
+            viewWidth = canvas.width;
+            viewHeight = viewWidth / aspectRatio;
+            offsetX = 0;
+            offsetY = (canvas.height - viewHeight) / 2;
+        }
+    }
+
+    /**
+     * Main rendering loop, running at native monitor refresh rate (typically 60 FPS).
+     */
+    function animate() {
+        if (isRunning) {
+            // Resize check
+            if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
+                resizeCanvas();
+            }
+
+            // 1. Calculate plasma image (low-res)
+            getAmplitude(); // Always analyze audio
+            drawPlasma();
+
+            // 2. Clear canvas and draw low-res plasma image into the 16:9 view area
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clears entire screen (including potential black bars if background was not black)
+
+            ctx.save();
+
+            // Fisheye/Barrel Distortion Effect applied to the 16:9 area
+            const scaleFactor = 1.2;
+
+            // Translate, Scale, Translate back (centered on the 16:9 view area)
+            ctx.translate(offsetX + viewWidth / 2, offsetY + viewHeight / 2);
+            ctx.scale(scaleFactor, scaleFactor);
+            ctx.translate(-(offsetX + viewWidth / 2), -(offsetY + viewHeight / 2));
+
+            // Draw the scaled plasma content into the 16:9 view area
+            ctx.drawImage(tempCanvas, offsetX, offsetY, viewWidth, viewHeight);
+
+            ctx.restore(); // Restore context after drawing distorted plasma
+
+            // 3. Draw Overlays based on selected mode (Not distorted, drawn on top)
+            switch(config.currentVisualMode) {
+                case 'waves':
+                    drawSinusoidalOverlay();
+                    break;
+                case 'analyzer':
+                    drawSpectrograph();
+                    break;
+                case 'vortex':
+                    // Nothing extra to draw
+                    break;
+            }
+
+            frameCount++;
+
+            requestAnimationFrame(animate);
+        }
+    }
+
+    // Initial setup on load
+    window.addEventListener('load', () => {
+        resizeCanvas();
+    });
+
+    // Handle window resizing
+    window.addEventListener('resize', resizeCanvas);
+
+</script>
+</body>
+</html>
