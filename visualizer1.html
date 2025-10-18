@@ -25,7 +25,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: black; /* To ensure black bars appear outside 16:9 area */
+            background-color: black;
             image-rendering: pixelated;
         }
 
@@ -35,8 +35,9 @@
             z-index: 100;
             padding: 30px;
             text-align: center;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85); /* Slightly darker overlay */
             border-radius: 12px;
+            backdrop-filter: blur(5px);
             box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
             transition: opacity 0.5s;
         }
@@ -55,7 +56,7 @@
         }
 
         #autoRecord {
-            transform: scale(1.5); /* Make checkbox easier to see/click */
+            transform: scale(1.5);
             margin-right: 10px;
         }
 
@@ -83,13 +84,14 @@
             margin: 4px 2px;
             cursor: pointer;
             border-radius: 8px;
-            transition: background-color 0.3s, transform 0.1s;
+            transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
             width: 90%;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         }
 
         .button-style:hover {
             background-color: #45a049;
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
         }
 
         .button-style:active {
@@ -105,24 +107,21 @@
         }
         #loadFromFileButton:hover {
             background-color: #007bb5;
+            box-shadow: 0 6px 20px rgba(0, 140, 186, 0.5);
         }
-
-        #visualEffectSelector {
-            padding: 10px;
-            font-size: 1.1rem;
-            border-radius: 6px;
-            background-color: #2c2c2c;
-            color: white;
-            border: 1px solid #4CAF50;
-            width: 90%;
-            margin-top: 10px;
-        }
-
 
         .error {
             color: #ff4d4d;
             font-weight: bold;
             margin-top: 10px;
+        }
+
+        /* Message box styling for clarity */
+        #message {
+            text-align: left;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
         }
 
         /* Fullscreen Button Style */
@@ -202,6 +201,18 @@
             opacity: 0;
             transition: opacity 0.3s;
         }
+        /* Stop Visualizer Button Specific Style */
+        #stopVisualizerButton {
+            background-color: #6c757d;
+            margin-top: 10px;
+            width: 100%;
+            padding: 10px 20px;
+            font-size: 1rem;
+        }
+        #stopVisualizerButton:hover {
+            background-color: #5a6268;
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -209,16 +220,16 @@
 <canvas id="plasmaCanvas"></canvas>
 
 
-<!-- Fullscreen Button --><button id="fullscreenButton" title="Toggle Fullscreen">
+<button id="fullscreenButton" title="Toggle Fullscreen">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
         <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
     </svg>
 </button>
 
-<!-- Recording and Stop Controls --><div id="recordContainer">
+<div id="recordContainer">
     <button id="recordButton">START RECORDING (WebM)</button>
     <div id="recordingStatus">Recording...</div>
-    <!-- NEW STOP VISUALIZER BUTTON --><button id="stopVisualizerButton" class="button-style" style="background-color: #6c757d; margin-top: 10px; width: 100%; padding: 10px 20px; font-size: 1rem;">STOP VISUALIZER</button>
+    <button id="stopVisualizerButton" class="button-style">STOP VISUALIZER</button>
 </div>
 
 
@@ -227,21 +238,56 @@
         Choose your audio source and visual effect to start.
     </div>
 
-    <!-- Effect Selector --><div class="control-group">
-    <h3>Visual Effect Mode</h3>
-    <select id="visualEffectSelector">
-        <option value="waves">Grid Waves (Plasma + Sinusoidal)</option>
-        <option value="circles">Concentric Circles (Plasma + Radial Waves)</option>
-        <option value="analyzer">Radial Analyzer (Plasma + Spectrograph)</option>
-        <option value="fusion" selected>Fusion Core (Circles + Analyzer)</option>
-        <option value="vortex">Vortex Plasma (Plasma Only)</option>
-    </select>
-</div>
+    <div class="control-group">
+        <h3>Overlay Effects (Select one or more)</h3>
+        <div id="effectCheckboxes" style="text-align: left; display: flex; flex-direction: column; gap: 10px; padding: 5px;">
 
-    <!-- Auto Record Checkbox --><div id="autoRecordControl">
-    <input type="checkbox" id="autoRecord">
-    <label for="autoRecord" style="font-size: 1.1rem;">Start recording automatically</label>
-</div>
+            <label title="Concentric circles that deform and ripple like an oscilloscope based on mid-high frequencies." style="cursor: pointer;">
+                <input type="checkbox" id="toggleCircles" data-effect="circles" checked style="transform: scale(1.1); margin-right: 8px;">
+                Concentric Circles (Radial Waves)
+            </label>
+
+            <label title="A central, spinning ring of bars representing the full audio spectrum." style="cursor: pointer;">
+                <input type="checkbox" id="toggleAnalyzer" data-effect="analyzer" checked style="transform: scale(1.1); margin-right: 8px;">
+                Radial Analyzer (Spectrograph)
+            </label>
+
+            <label title="Bass-driven grid of vertical bars on the top and bottom edges that pulse with the rhythm." style="cursor: pointer;">
+                <input type="checkbox" id="toggleHgrid" data-effect="hgrid" style="transform: scale(1.1); margin-right: 8px;">
+                Horizontal Pulse Grid
+            </label>
+
+            <label title="Subtle, pulsing glow emanating from the four corners, reacting to overall loudness." style="cursor: pointer;">
+                <input type="checkbox" id="toggleFlash" data-effect="flash" style="transform: scale(1.1); margin-right: 8px;">
+                Corner Flash (Pulsing Glow)
+            </label>
+
+            <label title="Time-domain audio waveform displayed vertically along the left and right edges (Oscilloscope effect)." style="cursor:pointer;">
+                <input type="checkbox" id="toggleScope" data-effect="scope" style="transform: scale(1.1); margin-right: 8px;">
+                Edge Oscilloscope (Waveform)
+            </label>
+
+            <label title="Rotates the entire video frame (plasma and all overlays) at 3 rotations per minute." style="cursor:pointer;">
+                <input type="checkbox" id="toggleRotation" data-effect="rotation" style="transform: scale(1.1); margin-right: 8px;">
+                Full Frame Rotation (3 RPM)
+            </label>
+
+            <label title="Modulates the depth (zoom) of the plasma vortex based on audio amplitude for a smooth, pulsing tunnel effect." style="cursor:pointer;">
+                <input type="checkbox" id="toggleTunnel" data-effect="tunnel" style="transform: scale(1.1); margin-right: 8px;">
+                Tunnel Depth Pulse
+            </label>
+
+            <label title="Floating text hints (e.g., 'HIGH ENERGY') that pulse and drift across the screen, reacting to the music." style="cursor:pointer;">
+                <input type="checkbox" id="toggleMoodCloud" data-effect="moodcloud" style="transform: scale(1.1); margin-right: 8px;">
+                Lyrical Mood Cloud
+            </label>
+        </div>
+    </div>
+
+    <div id="autoRecordControl">
+        <input type="checkbox" id="autoRecord">
+        <label for="autoRecord" style="font-size: 1.1rem;">Start recording automatically</label>
+    </div>
 
     <div class="control-group">
         <h3>Audio Source</h3>
@@ -252,7 +298,7 @@
 
     <div class="control-group">
         <h3>OR</h3>
-        <!-- File Input is hidden, triggered by the styled button --><input type="file" id="fileInput" accept="audio/*">
+        <input type="file" id="fileInput" accept="audio/*">
         <button id="loadFromFileButton" class="button-style">
             Load MP3 / Audio File
         </button>
@@ -275,8 +321,9 @@
     const recordContainer = document.getElementById('recordContainer');
     const recordButton = document.getElementById('recordButton');
     const recordingStatus = document.getElementById('recordingStatus');
-    const visualEffectSelector = document.getElementById('visualEffectSelector');
     const stopVisualizerButton = document.getElementById('stopVisualizerButton');
+    const effectCheckboxes = document.getElementById('effectCheckboxes');
+
 
     // OPTIMIZATION: Low-Resolution Off-Screen Canvas Setup
     const LOW_RES_WIDTH = 240;
@@ -289,11 +336,13 @@
     let audioContext;
     let analyser;
     let frequencyData;
+    let timeData; // Array for time domain data
     let frameCount = 0;
     let isRunning = false;
     let mediaRecorder;
     let recordedChunks = [];
     let audioSourceNode;
+    let mediaStream = null; // New: Reference to the live mic stream for cleanup
 
     // Global Aspect Ratio and View Variables
     const aspectRatio = 16 / 9;
@@ -309,8 +358,82 @@
         rotation: 0.0000007,
         audioInfluence: 0.8,
         maxAmplitude: 0.0,
-        currentVisualMode: visualEffectSelector.value, // 'waves', 'analyzer', or 'vortex'
     };
+
+    // State for visual effects toggles
+    const activeEffects = {
+        circles: true,
+        analyzer: true,
+        hgrid: false,
+        flash: false,
+        scope: false,
+        rotation: false,
+        tunnel: false,
+        moodcloud: false,
+    };
+
+    // --- Local Storage Utilities ---
+    const STORAGE_KEY = 'psychedelicVisualizerEffects';
+
+    function saveEffects() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(activeEffects));
+        } catch (e) {
+            console.error("Error saving state to local storage", e);
+        }
+    }
+
+    function loadEffects() {
+        try {
+            const savedState = localStorage.getItem(STORAGE_KEY);
+            if (savedState) {
+                return JSON.parse(savedState);
+            }
+        } catch (e) {
+            console.error("Error loading state from local storage", e);
+        }
+        return null; // Return null if nothing is found or loading fails
+    }
+
+    // Load state immediately after defining defaults
+    const loadedState = loadEffects();
+    if (loadedState) {
+        // Merge loaded state over defaults
+        Object.assign(activeEffects, loadedState);
+    }
+    // --- End Local Storage Utilities ---
+
+
+    // Rotation variables (3 rotations per minute = 1 rotation every 20 seconds)
+    let globalRotation = 0;
+    // 1 rotation / (60 FPS * 20 seconds) = 1/1200th of a revolution per frame
+    var ROTATION_STEP = (2 * Math.PI) / 1200;
+
+    // --- Mood Cloud State ---
+    const moodWords = [
+        "HIGH ENERGY", "DEEP BASS", "RHYTHM PUSH", "PEAK LOUDNESS",
+        "MOMENTUM", "CHILL VIBE", "TRANSCEND", "ECHO LOOP", "COLOR SHIFT"
+    ];
+    const NUM_MOOD_ELEMENTS = 5;
+    const moodElements = []; // Initialize here
+
+    // Initialize Mood Elements (UPDATED with rotation properties)
+    for (let i = 0; i < NUM_MOOD_ELEMENTS; i++) {
+        moodElements.push({
+            text: moodWords[i % moodWords.length],
+            x: Math.random() * 0.8 + 0.1, // Normalized position (0.1 to 0.9)
+            y: Math.random() * 0.8 + 0.1,
+            vx: (Math.random() - 0.5) * 0.0005, // Normalized velocity
+            vy: (Math.random() - 0.5) * 0.0005,
+            opacity: 0.0,
+            targetOpacity: 0.0,
+            size: 20 + Math.random() * 10,
+            rotation: Math.random() * 2 * Math.PI, // Initial random rotation
+            rotationSpeed: (Math.random() - 0.5) * 0.005, // Slow rotation speed
+        });
+    }
+    // --- End Mood Cloud State ---
+
 
     // --- Control Visibility Logic ---
     let controlsTimeout = null;
@@ -398,6 +521,17 @@
         if (autoRecordCheckbox.checked) {
             startRecording();
         }
+
+        // Clear message once visualizer starts
+        messageDiv.innerText = "";
+    }
+
+    /**
+     * Resets the hidden file input element to allow a new file to be selected.
+     */
+    function resetFileInput() {
+        // CRITICAL: Clear the file input value to allow the same file to be selected again
+        fileInput.value = '';
     }
 
     /**
@@ -411,14 +545,29 @@
             stopRecording();
         }
 
-        // Stop audio source if it's a BufferSourceNode (file playback)
-        if (audioSourceNode && audioSourceNode.stop) {
+        // --- CRITICAL CLEANUP: Stop and Disconnect Audio Source ---
+        if (audioSourceNode) {
             try {
-                audioSourceNode.stop();
+                // If it was a microphone stream, stop the tracks to release the device
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    mediaStream = null;
+                }
+
+                // Only call stop if it's a BufferSourceNode (file) or similar stream that needs it
+                if (audioSourceNode.stop) audioSourceNode.stop();
+                audioSourceNode.disconnect();
             } catch (e) {
-                // Ignore errors if source is already stopped
+                console.warn("Error stopping/disconnecting audio node during cleanup:", e);
             }
+            audioSourceNode = null;
         }
+        // --------------------------------------------------------
+
+        resetFileInput(); // IMPORTANT: Reset file input on stop
+
+        // Reset rotation angle
+        globalRotation = 0;
 
         // Hide controls
         updateControlsVisibility(false);
@@ -439,6 +588,20 @@
      */
     async function setupAudioFromMic() {
         try {
+            // --- CLEANUP CHECK ---
+            if (audioSourceNode) {
+                try {
+                    if (audioSourceNode.stop) audioSourceNode.stop();
+                    audioSourceNode.disconnect();
+                } catch (e) {
+                    console.warn("Error cleaning up previous audio source:", e);
+                }
+                audioSourceNode = null;
+            }
+            // ---------------------
+
+            resetFileInput(); // Reset file input when switching to mic
+
             // Ensure audio context is ready
             if (audioContext && audioContext.state === 'suspended') {
                 await audioContext.resume();
@@ -447,10 +610,12 @@
             }
 
             analyser = audioContext.createAnalyser();
-            analyser.fftSize = 256;
+            analyser.fftSize = 512; /* Increased buffer size to 512 to help prevent pops/underruns */
             frequencyData = new Uint8Array(analyser.frequencyBinCount);
+            timeData = new Uint8Array(analyser.fftSize); // Now uses the larger buffer
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaStream = stream; // Store the stream reference for explicit track cleanup
             audioSourceNode = audioContext.createMediaStreamSource(stream);
 
             // Connect: Source -> Analyser -> Destination (silently)
@@ -467,6 +632,20 @@
      * Initializes the Web Audio API for local file access.
      */
     function setupAudioFromFile(file) {
+        // --- CRITICAL CLEANUP: Stop and Disconnect Previous Source ---
+        if (audioSourceNode) {
+            try {
+                if (audioSourceNode.stop) audioSourceNode.stop();
+                audioSourceNode.disconnect();
+            } catch (e) {
+                console.warn("Error cleaning up previous audio source during file load:", e);
+            }
+            audioSourceNode = null;
+        }
+
+        mediaStream = null; // Ensure mic stream reference is cleared
+        // ------------------------------------------------------------
+
         // Ensure audio context is ready
         if (audioContext && audioContext.state === 'suspended') {
             audioContext.resume();
@@ -475,9 +654,11 @@
         }
 
         analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 512; /* Increased buffer size to 512 to help prevent pops/underruns */
         frequencyData = new Uint8Array(analyser.frequencyBinCount);
+        timeData = new Uint8Array(analyser.fftSize); // Now uses the larger buffer
 
+        // INDICATION: Set loading message immediately upon file selection
         messageDiv.innerText = "Loading and decoding audio...";
 
         const reader = new FileReader();
@@ -487,6 +668,7 @@
                 audioSourceNode.buffer = buffer;
 
                 // Connect: Source -> Analyser -> Destination (so we can hear it)
+                // NOTE: Analyser is reused, so we only connect the new source node to it.
                 audioSourceNode.connect(analyser);
                 audioSourceNode.connect(audioContext.destination);
 
@@ -498,19 +680,21 @@
                     } else if (isRunning) {
                         stopVisualizer(); // Return to start screen after file playback ends
                     }
+                    resetFileInput(); // IMPORTANT: Reset file input when file ends
                 };
 
                 audioSourceNode.start(0);
 
-                messageDiv.innerText = "Audio loaded and playing. Recording will stop when track ends.";
-
+                // Clear loading message and start visualizer
                 startVisualizer();
             }, function(e) {
                 messageDiv.innerText = `Error decoding audio data: ${e.err}`;
+                resetFileInput(); // IMPORTANT: Reset file input on decode error
             });
         };
         reader.onerror = function(e) {
             messageDiv.innerText = `Error reading file: ${e.target.error}`;
+            resetFileInput(); // IMPORTANT: Reset file input on read error
         };
         reader.readAsArrayBuffer(file);
     }
@@ -527,12 +711,20 @@
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Do NOT call resetFileInput here, as it would immediately clear the file we need.
             setupAudioFromFile(file);
         }
     });
 
-    visualEffectSelector.addEventListener('change', (e) => {
-        config.currentVisualMode = e.target.value;
+    // NEW: Checkbox listener to update active effects state
+    effectCheckboxes.addEventListener('change', (e) => {
+        if (e.target.type === 'checkbox') {
+            const effectName = e.target.getAttribute('data-effect');
+            if (effectName) {
+                activeEffects[effectName] = e.target.checked;
+                saveEffects(); // <-- PERSISTENT SAVE ON CHANGE
+            }
+        }
     });
 
     // --- Recording Logic ---
@@ -578,7 +770,12 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = `plasma-${config.currentVisualMode}-${Date.now()}.webm`;
+
+                // Dynamically generate filename based on active effects
+                const activeNames = Object.keys(activeEffects).filter(key => activeEffects[key]).join('-');
+                const filename = activeNames.length > 0 ? activeNames : 'vortex';
+
+                a.download = `plasma-${filename}-${Date.now()}.webm`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
@@ -626,16 +823,17 @@
     // --- Visualization Logic ---
 
     /**
-     * Calculates the overall amplitude (loudness) from the current frequency data.
-     * @returns {number} Normalized amplitude (0.0 to 1.0)
+     * Updates audio analysis data (frequency and time domain) and overall amplitude.
      */
-    function getAmplitude() {
-        // Only update amplitude if analyser is ready
+    function updateAudioAnalysis() {
+        // Only update analysis if analyser is ready
         if (!analyser) return 0;
 
-        // Get frequency data (used by spectrograph)
+        // Get data
         analyser.getByteFrequencyData(frequencyData);
+        analyser.getByteTimeDomainData(timeData); // Fetch time domain data
 
+        // Calculate Amplitude (loudness)
         let sum = 0;
         for (const byte of frequencyData) {
             sum += byte;
@@ -728,51 +926,6 @@
         tempCtx.putImageData(imageData, 0, 0);
     }
 
-    /**
-     * Draws full-screen, audio-reactive sinusoidal waves.
-     */
-    function drawSinusoidalOverlay() {
-        if (!analyser) return;
-
-        const width = viewWidth;
-        const height = viewHeight;
-        const t = frameCount * 0.05; // Time base for movement
-
-        const numWaves = 8;
-        const verticalSpacing = height / (numWaves + 1);
-
-        ctx.save();
-        ctx.translate(offsetX, offsetY);
-        ctx.globalAlpha = 0.6;
-        ctx.lineWidth = 3;
-        ctx.shadowBlur = 10;
-        ctx.lineJoin = 'round';
-
-        for (let i = 0; i < numWaves; i++) {
-            const freqIndex = Math.floor(i * (frequencyData.length / 8));
-            const frequencyValue = frequencyData[freqIndex] / 255.0;
-
-            const amplitude = frequencyValue * 70 + 20;
-            const waveFrequency = 0.01 + (frequencyValue * 0.03);
-
-            const hue = (i * 30 + frameCount * 0.8) % 360;
-            ctx.strokeStyle = `hsl(${hue}, 100%, 75%)`;
-            ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
-
-            ctx.beginPath();
-            const startY = (i + 1) * verticalSpacing;
-
-            ctx.moveTo(0, startY + (Math.sin(t * 0.5) * 10));
-
-            for (let x = 0; x <= width; x += 5) {
-                const y = startY + amplitude * Math.sin((x * waveFrequency) + t * (0.8 + frequencyValue * 0.5));
-                ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-        }
-
-        ctx.restore();
-    }
 
     /**
      * Draws full-screen, audio-reactive circular waves with oscilloscope ripples.
@@ -854,10 +1007,10 @@
 
         const centerX = viewWidth / 2 + offsetX;
         const centerY = viewHeight / 2 + offsetY;
-        const radius = Math.min(viewWidth / 2, viewHeight / 2) * 0.3; // MODIFIED: Increased to 0.3
-        const barWidth = 6; // MODIFIED: Increased to 6
+        const radius = Math.min(viewWidth / 2, viewHeight / 2) * 0.3;
+        const barWidth = 6;
         const barSpacing = 1;
-        const maxBarHeight = Math.min(viewWidth / 2, viewHeight / 2) * 0.5; // MODIFIED: Increased to 0.5
+        const maxBarHeight = Math.min(viewWidth / 2, viewHeight / 2) * 0.5;
 
         const numBars = 64;
         const freqStep = Math.floor(frequencyData.length / numBars);
@@ -900,44 +1053,281 @@
     }
 
 
-    // --- Main Animation Loop ---
+    /**
+     * Draws the audio waveform along the left and right edges (Oscilloscope effect).
+     */
+    function drawOscilloscope() {
+        if (!analyser) return;
 
-    // Flag to prevent resizing every frame
-    let isResizeNeeded = false;
-    let prevWindowWidth = 0;
-    let prevWindowHeight = 0;
+        const width = viewWidth;
+        const height = viewHeight;
+        const bufferLength = timeData.length;
+        const sliceHeight = height * 1.0 / bufferLength; // Vertical step size
+
+        // Dynamic Scaling based on overall sound amplitude
+        const amp = config.maxAmplitude;
+        const dynamicScale = 1.0 + amp * 2.5; // Scale from 1x to 3.5x for more energy
+
+        const sideX = 30; // Base X position from the edge for offset
+        const amplitudeScale = 67.5 * dynamicScale; // Base amplitude for width
+
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+
+        ctx.globalAlpha = 1.0;
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 12;
+        ctx.lineJoin = 'round';
+
+        const hue = (frameCount * 2) % 360;
+        ctx.strokeStyle = `hsl(${hue}, 100%, 75%)`;
+        ctx.shadowColor = ctx.strokeStyle;
+
+        // --- Draw Left Waveform ---
+        ctx.beginPath();
+        let y = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+            const v = (timeData[i] - 128) / 128; // Normalize to [-1, 1]
+
+            // X position is offset from the left edge (sideX) based on amplitude
+            const x = sideX + v * amplitudeScale;
+
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+            y += sliceHeight;
+        }
+        ctx.stroke();
+
+        // --- Draw Right Waveform ---
+        ctx.beginPath();
+        y = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+            const v = (timeData[i] - 128) / 128;
+
+            // X position is offset INWARD from the right edge (width - sideX) based on amplitude
+            const x = width - sideX + v * amplitudeScale;
+
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+            y += sliceHeight;
+        }
+        ctx.stroke();
+
+        ctx.restore();
+        ctx.shadowBlur = 0;
+    }
+
+    /**
+     * Draws a pulsing corner flash/vignette based on overall amplitude. (Option 1)
+     */
+    function drawCornerFlash() {
+        if (!analyser) return;
+
+        const width = viewWidth;
+        const height = viewHeight;
+        const amp = config.maxAmplitude;
+
+        // Fade the opacity slightly behind the audio cue
+        const pulseOpacity = amp * 0.6;
+        const radius = Math.min(width, height) * 0.6; // Large radius
+
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+        ctx.globalAlpha = pulseOpacity;
+        ctx.shadowBlur = 20;
+
+        const corners = [
+            { x: 0, y: 0, color: '20, 255, 255' }, // Top-Left (Cyan)
+            { x: width, y: 0, color: '255, 255, 20' }, // Top-Right (Yellow)
+            { x: width, y: height, color: '255, 20, 255' }, // Bottom-Right (Magenta)
+            { x: 0, y: height, color: '20, 255, 20' } // Bottom-Left (Green)
+        ];
+
+        for (const corner of corners) {
+            const gradient = ctx.createRadialGradient(corner.x, corner.y, 0, corner.x, corner.y, radius);
+
+            // Pulsing color based on base color and current amplitude
+            const innerAlpha = Math.min(1, amp * 1.5);
+
+            gradient.addColorStop(0, `rgba(${corner.color}, ${innerAlpha})`);
+            gradient.addColorStop(0.3, `rgba(${corner.color}, ${pulseOpacity * 0.5})`);
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = gradient;
+            ctx.shadowColor = `rgba(${corner.color}, 0.8)`;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        ctx.restore();
+        ctx.shadowBlur = 0;
+    }
+
+    /**
+     * Draws horizontal vertical bars that pulse with the bass (Grid effect).
+     */
+    function drawHorizontalPulseGrid() {
+        if (!analyser) return;
+
+        const width = viewWidth;
+        const height = viewHeight;
+        const t = frameCount * 0.05;
+
+        // Target the low frequencies (first 10 bins) for a bass-driven pulse
+        let bassSum = 0;
+        const BASS_BINS = 10;
+        for(let i = 0; i < BASS_BINS; i++) {
+            bassSum += frequencyData[i];
+        }
+        // Further reduced amplification for bass sensitivity
+        const normalizedBass = (bassSum / (BASS_BINS * 255.0)) * 0.2;
+
+        const numBars = 100; // Density
+        const barSpacing = width / numBars;
+        // Further reduced max height
+        const maxBarHeight = 5 * (0.5 + normalizedBass * 0.5); // Reduced max height to 5, scaled by bass
+        const hue = (frameCount * 1.0) % 360;
+
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+
+        ctx.globalAlpha = 0.4; // Slightly more translucent
+        ctx.lineWidth = 1; // Thinner lines
+        ctx.shadowBlur = 3; // Softer shadow
+        ctx.strokeStyle = `hsl(${hue}, 100%, 70%)`;
+        ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+
+        // --- Draw Top Edge Grid ---
+        for (let i = 0; i < numBars; i++) {
+            const x = i * barSpacing;
+            // Introduce small random variation and sine movement
+            const wave = Math.sin(x * 0.05 + t) * 0.5;
+            const barHeight = maxBarHeight * (0.5 + wave * 0.5); // Adjusted calculation
+
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, barHeight);
+            ctx.stroke();
+        }
+
+        // --- Draw Bottom Edge Grid ---
+        for (let i = 0; i < numBars; i++) {
+            const x = i * barSpacing;
+            const wave = Math.sin(x * 0.05 + t + Math.PI) * 0.5; // Phase shifted
+            const barHeight = maxBarHeight * (0.5 + wave * 0.5); // Adjusted calculation
+
+            ctx.beginPath();
+            ctx.moveTo(x, height);
+            ctx.lineTo(x, height - barHeight);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+        ctx.shadowBlur = 0;
+    }
+
+    /**
+     * Draws text elements that float across the screen, pulsing with the music.
+     */
+    function drawMoodCloud() {
+        if (!analyser) return;
+
+        const width = viewWidth;
+        const height = viewHeight;
+        const amp = config.maxAmplitude;
+
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 24px Inter';
+        ctx.shadowBlur = 8;
+
+        for (let el of moodElements) {
+            // Update position (normalized)
+            el.x += el.vx;
+            el.y += el.vy;
+
+            // Apply spin (Rotation speed is amplified by audio amplitude)
+            el.rotation += el.rotationSpeed * (1 + amp * 5);
+
+            // Simple boundary bounce
+            if (el.x > 0.95 || el.x < 0.05) el.vx *= -1;
+            if (el.y > 0.95 || el.y < 0.05) el.vy *= -1;
+
+            // Opacity smoothing and pulsing
+            const targetAmpOpacity = amp * 0.8;
+            el.targetOpacity = Math.max(0.2, targetAmpOpacity); // Minimum visibility
+            el.opacity += (el.targetOpacity - el.opacity) * 0.1; // Smooth transition
+
+            // Draw
+            const hue = (frameCount * 0.3 + el.x * 100) % 360;
+            const lightness = 70 + amp * 20; // Brighter with music
+
+            ctx.globalAlpha = el.opacity;
+            ctx.fillStyle = `hsl(${hue}, 100%, ${lightness}%)`;
+            ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+
+            const drawX = el.x * width;
+            const drawY = el.y * height;
+
+            // --- Apply Rotation Transformation ---
+            ctx.save();
+            ctx.translate(drawX, drawY);
+            ctx.rotate(el.rotation);
+            // Draw text at the new local origin (0, 0)
+            ctx.fillText(el.text, 0, 0);
+            ctx.restore();
+            // ------------------------------------
+        }
+
+        ctx.restore();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1.0;
+    }
+
+
+    // --- Main Animation Loop ---
 
     /**
      * Checks if a resize is needed and recalculates 16:9 view area.
      */
     function resizeCanvas() {
         if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
-            isResizeNeeded = true;
-        } else if (prevWindowWidth === window.innerWidth && prevWindowHeight === window.innerHeight) {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        } else {
             return; // No change, skip expensive resizing
         }
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        prevWindowWidth = window.innerWidth;
-        prevWindowHeight = window.innerHeight;
-
         const screenRatio = canvas.width / canvas.height;
+
+        let calculatedWidth, calculatedHeight; // Temp variables for initial fit
 
         if (screenRatio > aspectRatio) {
             // Screen is wider than 16:9 (constrained by height)
-            viewHeight = canvas.height;
-            viewWidth = viewHeight * aspectRatio;
-            offsetX = (canvas.width - viewWidth) / 2;
-            offsetY = 0;
+            calculatedHeight = canvas.height;
+            calculatedWidth = calculatedHeight * aspectRatio;
         } else {
             // Screen is taller than 16:9 (constrained by width)
-            viewWidth = canvas.width;
-            viewHeight = viewWidth / aspectRatio;
-            offsetX = 0;
-            offsetY = (canvas.height - viewHeight) / 2;
+            calculatedWidth = canvas.width;
+            calculatedHeight = calculatedWidth / aspectRatio;
         }
+
+        // --- Apply 5% Overscan (1.05 multiplier) ---
+        const overscanFactor = 1.05;
+        viewWidth = calculatedWidth * overscanFactor;
+        viewHeight = calculatedHeight * overscanFactor;
+
+        // Recalculate offsets to center the *overscanned* area
+        offsetX = (canvas.width - viewWidth) / 2;
+        offsetY = (canvas.height - viewHeight) / 2;
     }
 
     // Use a dedicated resize listener instead of checking every frame
@@ -950,43 +1340,91 @@
     function animate() {
         if (isRunning) {
             // Audio analysis must happen first and fast
-            getAmplitude();
+            updateAudioAnalysis();
 
-            // Only run drawPlasma if the frame is actually needed
+            // 1. Draw low-res plasma to temp canvas
             drawPlasma();
 
-            // Clear canvas once
+            // Clear canvas once (clears the whole screen area)
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // --- 2. Draw Plasma with Fisheye Distortion (GPU-Accelerated) ---
+            const drawCenterX = offsetX + viewWidth / 2;
+            const drawCenterY = offsetY + viewHeight / 2;
+
+            const baseFisheyeScale = 1.5; // Base Fisheye distortion
+            let finalPlasmaScale = baseFisheyeScale;
+
+            // --- 2. Calculate Dynamic Tunnel Depth Scale (NEW LOGIC) ---
+            if (activeEffects.tunnel) {
+                const amp = config.maxAmplitude;
+                const t = frameCount * 0.01;
+                // Modulate the scale based on audio and time for a pulsating depth effect.
+                // This creates the stable, non-glitchy 3D tunnel look.
+                finalPlasmaScale = baseFisheyeScale * (1.0 + amp * 0.2 + Math.sin(t * 0.5) * 0.05);
+            }
+
+            // --- START FULL ROTATION BLOCK ---
+            if (activeEffects.rotation) {
+
+                globalRotation += ROTATION_STEP;
+
+                ctx.save();
+                ctx.translate(drawCenterX, drawCenterY);
+                ctx.rotate(globalRotation);
+
+                // --- Dynamic Ambient Color Fill ---
+                const rotationHue = (frameCount * 0.5) % 360;
+                const rotationLightness = 5 + (config.maxAmplitude * 10);
+                const rotationColor = `hsl(${rotationHue}, 100%, ${rotationLightness}%)`;
+                // ----------------------------------
+
+                // --- FIX: Fill area larger than diagonal BEFORE restoring translate ---
+                // This ensures the exposed corners are covered by a dynamic, rotating fill.
+                const diagonal = Math.sqrt(viewWidth * viewWidth + viewHeight * viewHeight);
+                ctx.fillStyle = rotationColor;
+                ctx.fillRect(-diagonal / 2, -diagonal / 2, diagonal, diagonal);
+                // --------------------------------------------------------------------------
+
+                ctx.translate(-drawCenterX, -drawCenterY);
+            }
+            // ---------------------------------
+
+            // --- 3. Draw Plasma with Combined Fisheye/Tunnel Scale (GPU-Accelerated) ---
             ctx.save();
 
-            const scaleFactor = 1.2;
-            ctx.translate(offsetX + viewWidth / 2, offsetY + viewHeight / 2);
-            ctx.scale(scaleFactor, scaleFactor);
-            ctx.translate(-(offsetX + viewWidth / 2), -(offsetY + viewHeight / 2));
+            // Apply Combined Scale (Fisheye + Tunnel Depth)
+            ctx.translate(drawCenterX, drawCenterY);
+            ctx.scale(finalPlasmaScale, finalPlasmaScale);
+            ctx.translate(-drawCenterX, -drawCenterY);
 
+            // Draw the low-res plasma image into the scaled/overscanned view area
             ctx.drawImage(tempCanvas, offsetX, offsetY, viewWidth, viewHeight);
 
-            ctx.restore();
+            ctx.restore(); // Restore Scale
 
-            // --- 3. Draw Overlays (CPU-Intensive, but optimized) ---
-            switch(config.currentVisualMode) {
-                case 'waves':
-                    drawSinusoidalOverlay();
-                    break;
-                case 'analyzer':
-                    drawSpectrograph();
-                    break;
-                case 'circles':
-                    drawCircularWaves();
-                    break;
-                case 'fusion': // NEW FUSION MODE
-                    drawCircularWaves();
-                    drawSpectrograph();
-                    break;
-                case 'vortex':
-                    break;
+            // --- 4. Draw Overlays (Drawn on top of the rotated/scaled plasma) ---
+            if (activeEffects.circles) {
+                drawCircularWaves();
+            }
+            if (activeEffects.analyzer) {
+                drawSpectrograph();
+            }
+            if (activeEffects.hgrid) { // NEW
+                drawHorizontalPulseGrid();
+            }
+            if (activeEffects.flash) {
+                drawCornerFlash();
+            }
+            if (activeEffects.scope) {
+                drawOscilloscope();
+            }
+            if (activeEffects.moodcloud) {
+                drawMoodCloud();
+            }
+
+            // --- END FULL ROTATION BLOCK ---
+            if (activeEffects.rotation) {
+                ctx.restore(); // Restore the rotation state
             }
 
             frameCount++;
@@ -998,9 +1436,16 @@
     // Initial setup on load
     window.addEventListener('load', () => {
         resizeCanvas();
-    });
 
-    // We removed the redundant resize check from the animate loop and use the event listener instead.
+        // Apply loaded state to UI checkboxes
+        for (const key in activeEffects) {
+            const elementId = `toggle${key.charAt(0).toUpperCase() + key.slice(1)}`;
+            const checkbox = document.getElementById(elementId);
+            if (checkbox) {
+                checkbox.checked = activeEffects[key];
+            }
+        }
+    });
 
 </script>
 </body>
