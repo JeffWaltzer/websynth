@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio-Reactive 3D Tunnel</title>
+    <!-- Load Three.js Library --><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* General Setup */
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #000;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+        }
+
+        /* Canvas MUST be positioned absolutely and fill the viewport for Three.js */
+        #plasmaCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000;
+            z-index: 1; /* Keep it below the overlay */
+        }
+
+        /* Overlay & Controls */
+        #overlay {
+            position: fixed;
+            z-index: 100;
+            padding: 30px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.95); /* Slightly darker overlay for contrast */
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
+            transition: opacity 0.5s;
+            max-width: 450px;
+            width: 90%;
+        }
+
+        #loadingText {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #00ffff; /* Cyan for futuristic feel */
+        }
+
+        #autoRecordControl {
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #autoRecord {
+            transform: scale(1.5);
+            margin-right: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid rgba(0, 255, 255, 0.1); /* Cyan border */
+            border-radius: 8px;
+        }
+
+        .control-group h3 {
+            margin-top: 0;
+            color: #00ffff;
+        }
+
+        .button-style {
+            background-color: #00ccff; /* Bright blue/cyan */
+            border: none;
+            color: black;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
+            width: 90%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .button-style:hover {
+            background-color: #0099ff;
+            box-shadow: 0 6px 20px rgba(0, 204, 255, 0.5);
+        }
+
+        .button-style:active {
+            transform: scale(0.98);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #loadFromFileButton {
+            background-color: #ff33cc; /* Pink for file load */
+        }
+        #loadFromFileButton:hover {
+            background-color: #e600b8;
+            box-shadow: 0 6px 20px rgba(255, 51, 204, 0.5);
+        }
+
+        .error {
+            color: #ff4d4d;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        #message {
+            text-align: left;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            min-height: 20px;
+        }
+
+        /* Control visibility styles remain the same for responsiveness */
+        #fullscreenButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 60;
+            background-color: rgba(30, 30, 30, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out, background-color 0.2s, box-shadow 0.2s;
+        }
+
+        #fullscreenButton:hover {
+            background-color: rgba(50, 50, 50, 0.9);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        #fullscreenButton svg {
+            fill: white;
+            width: 24px;
+            height: 24px;
+        }
+
+        #recordContainer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        #recordButton {
+            background-color: #f44336;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s, opacity 0.3s;
+        }
+
+        #recordButton.recording {
+            background-color: #ff0000;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+
+        #recordingStatus {
+            margin-top: 5px;
+            color: #f44336;
+            font-size: 0.9rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #stopVisualizerButton {
+            background-color: #6c757d;
+            margin-top: 10px;
+            width: 100%;
+            padding: 10px 20px;
+            font-size: 1rem;
+        }
+        #stopVisualizerButton:hover {
+            background-color: #5a6268;
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="plasmaCanvas"></canvas>
+
+
+<button id="fullscreenButton" title="Toggle Fullscreen">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+    </svg>
+</button>
+
+<div id="recordContainer">
+    <button id="recordButton">START RECORDING (WebM)</button>
+    <div id="recordingStatus">Recording...</div>
+    <button id="stopVisualizerButton" class="button-style">STOP VISUALIZER</button>
+</div>
+
+
+<div id="overlay">
+    <div id="loadingText">
+        Dive into the hyperspace tunnel. Choose your audio source to begin.
+    </div>
+
+    <div class="control-group">
+        <h3>Audio Source</h3>
+        <button id="startButton" class="button-style">
+            Grant Microphone Access
+        </button>
+        <input type="file" id="fileInput" accept="audio/*" style="display:none;">
+        <button id="loadFromFileButton" class="button-style">
+            Load MP3 / Audio File
+        </button>
+    </div>
+
+    <div id="autoRecordControl">
+        <input type="checkbox" id="autoRecord">
+        <label for="autoRecord" style="font-size: 1.1rem;">Start recording automatically</label>
+    </div>
+
+    <div id="message" class="error"></div>
+</div>
+
+<script>
+    // --- Global Variables ---
+    const canvas = document.getElementById('plasmaCanvas');
+    const overlay = document.getElementById('overlay');
+    const startButton = document.getElementById('startButton');
+    const loadFromFileButton = document.getElementById('loadFromFileButton');
+    const fileInput = document.getElementById('fileInput');
+    const autoRecordCheckbox = document.getElementById('autoRecord');
+    const messageDiv = document.getElementById('message');
+    const fullscreenButton = document.getElementById('fullscreenButton');
+    const recordContainer = document.getElementById('recordContainer');
+    const recordButton = document.getElementById('recordButton');
+    const recordingStatus = document.getElementById('recordingStatus');
+    const stopVisualizerButton = document.getElementById('stopVisualizerButton');
+
+    let audioContext;
+    let analyser;
+    let frequencyData;
+    let isRunning = false;
+    let mediaRecorder;
+    let recordedChunks = [];
+    let audioSourceNode;
+    let mediaStream = null;
+
+    // --- THREE.JS Global Objects ---
+    let scene, camera, renderer, tunnel, dustParticles, pointLight;
+    const clock = new THREE.Clock();
+
+    // --- VISUALS CONSTANTS ---
+    const NUM_TUNNEL_SEGMENTS = 60;
+    const SEGMENT_SPACING = 10;
+    const CUBES_PER_RING = 24;
+    const TUNNEL_RADIUS = 20;
+    const TUNNEL_LENGTH = NUM_TUNNEL_SEGMENTS * SEGMENT_SPACING;
+
+    // --- Utility Functions (UI and Audio Handling) ---
+    let controlsTimeout = null;
+    function updateControlsVisibility(visible) {
+        const opacityValue = visible ? '1' : '0';
+        const eventsValue = visible ? 'auto' : 'none';
+        [recordContainer, fullscreenButton].forEach(el => {
+            el.style.opacity = opacityValue;
+            el.style.pointerEvents = eventsValue;
+        });
+    }
+
+    function showControls() {
+        if (!isRunning) return;
+        if (recordContainer.style.display !== 'flex') recordContainer.style.display = 'flex';
+        updateControlsVisibility(true);
+        clearTimeout(controlsTimeout);
+        controlsTimeout = setTimeout(() => updateControlsVisibility(false), 5000);
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => console.warn(err.message));
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    function startVisualizer() {
+        overlay.style.opacity = 0;
+        setTimeout(() => { overlay.style.display = 'none'; }, 500);
+        isRunning = true;
+        clock.start();
+        animate();
+        showControls();
+        if (autoRecordCheckbox.checked) startRecording();
+        messageDiv.innerText = "";
+    }
+
+    function stopVisualizer() {
+        isRunning = false;
+        clock.stop();
+        if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording();
+        if (audioSourceNode) {
+            try {
+                if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+                if (audioSourceNode.stop) audioSourceNode.stop();
+                audioSourceNode.disconnect();
+            } catch (e) { console.warn("Audio cleanup error:", e); }
+        }
+        mediaStream = null;
+        audioSourceNode = null;
+        fileInput.value = '';
+        updateControlsVisibility(false);
+        overlay.style.display = 'flex';
+        setTimeout(() => { overlay.style.opacity = 1; }, 10);
+    }
+
+    function updateAudioAnalysis() {
+        if (!analyser) return { bass: 0, treble: 0, overall: 0 };
+        analyser.getByteFrequencyData(frequencyData);
+
+        const bassBins = Math.floor(frequencyData.length * 0.1);
+        const trebleBins = Math.floor(frequencyData.length * 0.3);
+
+        let bassSum = 0, trebleSum = 0, overallSum = 0;
+        for(let i = 0; i < frequencyData.length; i++) {
+            if (i < bassBins) bassSum += frequencyData[i];
+            if (i > frequencyData.length - trebleBins) trebleSum += frequencyData[i];
+            overallSum += frequencyData[i];
+        }
+
+        return {
+            bass: (bassSum / bassBins / 255) || 0,
+            treble: (trebleSum / trebleBins / 255) || 0,
+            overall: (overallSum / frequencyData.length / 255) || 0,
+        };
+    }
+
+    async function setupAudioFromMic() {
+        try {
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') await audioContext.resume();
+
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            frequencyData = new Uint8Array(analyser.frequencyBinCount);
+
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaStream = stream;
+            audioSourceNode = audioContext.createMediaStreamSource(stream);
+            audioSourceNode.connect(analyser);
+
+            setupThreeScene();
+            startVisualizer();
+        } catch (err) {
+            console.error("Microphone access failed:", err);
+            messageDiv.innerText = "Error: Could not access microphone. Check permissions.";
+        }
+    }
+
+    function setupAudioFromFile(file) {
+        if (audioSourceNode) audioSourceNode.disconnect();
+        if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        frequencyData = new Uint8Array(analyser.frequencyBinCount);
+        messageDiv.innerText = "Loading audio...";
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            audioContext.decodeAudioData(e.target.result, (buffer) => {
+                audioSourceNode = audioContext.createBufferSource();
+                audioSourceNode.buffer = buffer;
+                audioSourceNode.connect(analyser);
+                audioSourceNode.connect(audioContext.destination);
+                audioSourceNode.onended = stopVisualizer;
+                audioSourceNode.start(0);
+                setupThreeScene();
+                startVisualizer();
+            }, (e) => { messageDiv.innerText = `Error decoding audio.`; });
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function startRecording() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') return;
+        try {
+            const videoStream = canvas.captureStream(60);
+            const audioDest = audioContext.createMediaStreamDestination();
+            analyser.connect(audioDest);
+
+            const combinedStream = new MediaStream([
+                ...videoStream.getVideoTracks(),
+                ...audioDest.stream.getAudioTracks()
+            ]);
+
+            mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm; codecs=vp8,opus' });
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `tunnel-visuals-${Date.now()}.webm`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                recordedChunks = [];
+                recordButton.classList.remove('recording');
+                recordingStatus.style.opacity = 0;
+                recordButton.innerText = "START RECORDING";
+                try { analyser.disconnect(audioDest); } catch(e){}
+            };
+            recordedChunks = [];
+            mediaRecorder.start();
+            recordButton.classList.add('recording');
+            recordingStatus.style.opacity = 1;
+            recordButton.innerText = "STOP RECORDING";
+        } catch (error) {
+            console.error("Recording setup failed:", error);
+            messageDiv.innerText = "Recording failed. Browser may not be supported.";
+        }
+    }
+
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    }
+
+    function resizeCanvas() {
+        if (!renderer || !camera) return;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+    }
+
+    // --- NEW VISUAL ENGINE ---
+
+    function setupThreeScene() {
+        if (renderer) {
+            renderer.dispose();
+            renderer.domElement.remove();
+        }
+
+        scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x000510, 50, TUNNEL_LENGTH * 1.0);
+
+        camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+
+        renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // --- Lighting ---
+        scene.add(new THREE.AmbientLight(0x404040, 0.5));
+        pointLight = new THREE.PointLight(0x00ffff, 1, 300);
+        pointLight.position.set(0, 0, -10);
+        camera.add(pointLight); // Attach light to camera
+        scene.add(camera);
+
+        // --- Tunnel Geometry (Cubes) ---
+        tunnel = new THREE.Group();
+        scene.add(tunnel);
+
+        const cubeGeom = new THREE.BoxGeometry(1.5, 8, 1.5);
+
+        for (let i = 0; i < NUM_TUNNEL_SEGMENTS; i++) {
+            const segment = new THREE.Group();
+            segment.position.z = -i * SEGMENT_SPACING;
+
+            // Create a unique material for this entire segment to allow for individual coloring
+            const segmentMaterial = new THREE.MeshStandardMaterial({
+                color: 0x888888,
+                metalness: 0.95,
+                roughness: 0.3
+            });
+
+            const angleStep = (Math.PI * 2) / CUBES_PER_RING;
+            for (let j = 0; j < CUBES_PER_RING; j++) {
+                const angle = j * angleStep;
+                const cube = new THREE.Mesh(cubeGeom, segmentMaterial); // Use segment-specific material
+                cube.position.x = Math.cos(angle) * TUNNEL_RADIUS;
+                cube.position.y = Math.sin(angle) * TUNNEL_RADIUS;
+                cube.lookAt(segment.position);
+                segment.add(cube);
+            }
+            tunnel.add(segment);
+        }
+
+        // --- Dust Particle System ---
+        const dustCount = 5000;
+        const positions = new Float32Array(dustCount * 3);
+        for (let i = 0; i < dustCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * TUNNEL_RADIUS * 0.9;
+            positions[i * 3] = Math.cos(angle) * radius;
+            positions[i * 3 + 1] = Math.sin(angle) * radius;
+            positions[i * 3 + 2] = -Math.random() * TUNNEL_LENGTH;
+        }
+
+        const dustGeom = new THREE.BufferGeometry();
+        dustGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const dustMat = new THREE.PointsMaterial({
+            color: 0xcccccc,
+            size: 0.1,
+            transparent: true,
+            opacity: 0.7,
+            blending: THREE.AdditiveBlending
+        });
+        dustParticles = new THREE.Points(dustGeom, dustMat);
+        scene.add(dustParticles);
+
+        resizeCanvas();
+    }
+
+    function animate() {
+        if (!isRunning) return;
+        requestAnimationFrame(animate);
+
+        const delta = clock.getDelta();
+        const elapsedTime = clock.getElapsedTime();
+        const audio = updateAudioAnalysis();
+
+        // --- Camera Movement & Effects ---
+        const baseSpeed = 15.0;
+        const pulseSpeed = audio.bass * 80.0;
+        camera.position.z -= (baseSpeed + pulseSpeed) * delta;
+
+        const targetFov = 80 + audio.bass * 20;
+        camera.fov += (targetFov - camera.fov) * 0.1;
+        camera.updateProjectionMatrix();
+
+        const shakeIntensity = audio.bass * 0.15;
+        camera.position.x = (Math.random() - 0.5) * shakeIntensity;
+        camera.position.y = (Math.random() - 0.5) * shakeIntensity;
+
+        // --- Tunnel Animation ---
+        tunnel.children.forEach(segment => {
+            if (segment.position.z > camera.position.z) {
+                segment.position.z -= TUNNEL_LENGTH;
+            }
+            const scale = 1 + audio.bass * 0.3;
+            segment.scale.set(scale, scale, 1);
+            segment.rotation.z += delta * 0.1 * (1 + audio.treble * 2);
+
+            // --- NEW COLOR SHIFTING LOGIC for tunnel segments ---
+            if (segment.children.length > 0) {
+                const hue = (elapsedTime * 0.05 + segment.position.z * 0.005 + audio.treble * 0.3) % 1.0;
+                const saturation = 0.6 + audio.overall * 0.4;
+                const lightness = 0.3 + audio.bass * 0.3;
+                const material = segment.children[0].material;
+                material.color.setHSL(hue, saturation, lightness);
+            }
+        });
+
+        // --- Particle Animation ---
+        const positions = dustParticles.geometry.attributes.position.array;
+        const particleSpeed = 30 * delta;
+        for(let i=0; i < positions.length; i+=3) {
+            positions[i+2] += particleSpeed;
+            if(positions[i+2] > camera.position.z) {
+                positions[i+2] -= TUNNEL_LENGTH;
+            }
+        }
+        dustParticles.geometry.attributes.position.needsUpdate = true;
+
+        // --- Lighting Animation ---
+        pointLight.intensity = 2 + audio.overall * 8;
+        const lightHue = (0.55 + audio.bass * 0.4) % 1.0; // Cycle from cyan, to purple, to pink with bass
+        pointLight.color.setHSL(lightHue, 1, 0.6);
+
+        // Match fog to the light color for a cohesive atmosphere
+        if (scene.fog) {
+            scene.fog.color.setHSL(lightHue, 0.5, 0.05);
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    // --- Event Listeners ---
+    startButton.addEventListener('click', setupAudioFromMic);
+    loadFromFileButton.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => { if (e.target.files[0]) setupAudioFromFile(e.target.files[0]); });
+    fullscreenButton.addEventListener('click', toggleFullscreen);
+    stopVisualizerButton.addEventListener('click', stopVisualizer);
+    recordButton.addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording(); else startRecording();
+    });
+    document.addEventListener('mousemove', showControls);
+    window.addEventListener('resize', resizeCanvas);
+
+</script>
+</body>
+</html>
