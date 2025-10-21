@@ -286,8 +286,8 @@
     let scene, camera, renderer, tunnel, dustParticles, pointLight;
     const clock = new THREE.Clock();
 
-    // --- VISUALS CONSTANTS ---
-    const NUM_TUNNEL_SEGMENTS = 40;
+    // --- VISUALS CONSTANTS (OPTIMIZED) ---
+    const NUM_TUNNEL_SEGMENTS = 30; // Reduced from 40
     const SEGMENT_SPACING = 10;
     const CUBES_PER_RING = 24;
     const TUNNEL_RADIUS = 20;
@@ -325,8 +325,6 @@
         setTimeout(() => { overlay.style.display = 'none'; }, 500);
         isRunning = true;
         clock.start();
-        // --- FIX ---
-        // Force an initial render to ensure the canvas is not blank when recording starts.
         renderer.render(scene, camera);
         animate();
         showControls();
@@ -380,7 +378,7 @@
             if (audioContext.state === 'suspended') await audioContext.resume();
 
             analyser = audioContext.createAnalyser();
-            analyser.fftSize = 256;
+            analyser.fftSize = 128; // Reduced from 256 for performance
             frequencyData = new Uint8Array(analyser.frequencyBinCount);
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -401,7 +399,7 @@
         if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
         analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 128; // Reduced from 256 for performance
         frequencyData = new Uint8Array(analyser.frequencyBinCount);
         messageDiv.innerText = "Loading audio...";
 
@@ -424,7 +422,7 @@
     function startRecording() {
         if (mediaRecorder && mediaRecorder.state === 'recording') return;
         try {
-            const videoStream = canvas.captureStream(24); // Set to 24fps
+            const videoStream = canvas.captureStream(60);
             const audioDest = audioContext.createMediaStreamDestination();
             analyser.connect(audioDest);
 
@@ -435,7 +433,7 @@
 
             const options = {
                 mimeType: 'video/webm; codecs=vp8,opus',
-                videoBitsPerSecond: 4000000 // 4 Mbps bitrate for better quality
+                videoBitsPerSecond: 4000000
             };
             mediaRecorder = new MediaRecorder(combinedStream, options);
             mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
@@ -482,23 +480,16 @@
         let newWidth, newHeight;
 
         if (windowAspect > targetAspect) {
-            // Window is wider than 16:9, so height is the constraint
             newHeight = windowHeight;
             newWidth = newHeight * targetAspect;
         } else {
-            // Window is taller than 16:9, so width is the constraint
             newWidth = windowWidth;
             newHeight = newWidth / targetAspect;
         }
 
-        // Update renderer size, which also updates the canvas element's width/height attributes
         renderer.setSize(newWidth, newHeight);
-
-        // Update the canvas style to match the renderer size for correct display
         renderer.domElement.style.width = `${newWidth}px`;
         renderer.domElement.style.height = `${newHeight}px`;
-
-        // Update camera aspect ratio to the target aspect
         camera.aspect = targetAspect;
         camera.updateProjectionMatrix();
     }
@@ -508,7 +499,6 @@
     function setupThreeScene() {
         if (renderer) {
             renderer.dispose();
-            // renderer.domElement.remove(); // This line was incorrectly removing the canvas
         }
 
         scene = new THREE.Scene();
@@ -521,14 +511,12 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
 
-        // --- Lighting ---
         scene.add(new THREE.AmbientLight(0x404040, 0.5));
         pointLight = new THREE.PointLight(0x00ffff, 1, 300);
         pointLight.position.set(0, 0, -10);
-        camera.add(pointLight); // Attach light to camera
+        camera.add(pointLight);
         scene.add(camera);
 
-        // --- Tunnel Geometry (Cubes) ---
         tunnel = new THREE.Group();
         scene.add(tunnel);
 
@@ -538,7 +526,6 @@
             const segment = new THREE.Group();
             segment.position.z = -i * SEGMENT_SPACING;
 
-            // Create a unique material for this entire segment to allow for individual coloring
             const segmentMaterial = new THREE.MeshStandardMaterial({
                 color: 0x888888,
                 metalness: 0.95,
@@ -548,7 +535,7 @@
             const angleStep = (Math.PI * 2) / CUBES_PER_RING;
             for (let j = 0; j < CUBES_PER_RING; j++) {
                 const angle = j * angleStep;
-                const cube = new THREE.Mesh(cubeGeom, segmentMaterial); // Use segment-specific material
+                const cube = new THREE.Mesh(cubeGeom, segmentMaterial);
                 cube.position.x = Math.cos(angle) * TUNNEL_RADIUS;
                 cube.position.y = Math.sin(angle) * TUNNEL_RADIUS;
                 cube.lookAt(segment.position);
@@ -557,8 +544,7 @@
             tunnel.add(segment);
         }
 
-        // --- Dust Particle System ---
-        const dustCount = 5000;
+        const dustCount = 2000; // Reduced from 5000 for performance
         const positions = new Float32Array(dustCount * 3);
         for (let i = 0; i < dustCount; i++) {
             const angle = Math.random() * Math.PI * 2;
@@ -591,7 +577,6 @@
         const elapsedTime = clock.getElapsedTime();
         const audio = updateAudioAnalysis();
 
-        // --- Camera Movement & Effects ---
         const baseSpeed = 15.0;
         const pulseSpeed = audio.bass * 80.0;
         camera.position.z -= (baseSpeed + pulseSpeed) * delta;
@@ -604,16 +589,22 @@
         camera.position.x = (Math.random() - 0.5) * shakeIntensity;
         camera.position.y = (Math.random() - 0.5) * shakeIntensity;
 
-        // --- Tunnel Animation ---
         tunnel.children.forEach(segment => {
             if (segment.position.z > camera.position.z) {
                 segment.position.z -= TUNNEL_LENGTH;
             }
             const scale = 1 + audio.bass * 0.3;
             segment.scale.set(scale, scale, 1);
-            segment.rotation.z += delta * 0.1 * (1 + audio.treble * 2);
 
-            // --- NEW COLOR SHIFTING LOGIC for tunnel segments ---
+            // --- OLD ROTATION ---
+            // segment.rotation.z += delta * 0.1 * (1 + audio.treble * 2);
+
+            // --- NEW ROTATION LOGIC to prevent reverse-motion illusion ---
+            // This creates a more dynamic "twisting" motion instead of a constant spin.
+            // The direction of rotation now depends on the balance between bass and treble.
+            const audioDrivenTwist = delta * 0.2 * (audio.treble - audio.bass);
+            segment.rotation.z += audioDrivenTwist;
+
             if (segment.children.length > 0) {
                 const hue = (elapsedTime * 0.05 + segment.position.z * 0.005 + audio.treble * 0.3) % 1.0;
                 const saturation = 0.6 + audio.overall * 0.4;
@@ -623,7 +614,6 @@
             }
         });
 
-        // --- Particle Animation ---
         const positions = dustParticles.geometry.attributes.position.array;
         const particleSpeed = 30 * delta;
         for(let i=0; i < positions.length; i+=3) {
@@ -634,12 +624,10 @@
         }
         dustParticles.geometry.attributes.position.needsUpdate = true;
 
-        // --- Lighting Animation ---
         pointLight.intensity = 2 + audio.overall * 8;
-        const lightHue = (0.55 + audio.bass * 0.4) % 1.0; // Cycle from cyan, to purple, to pink with bass
+        const lightHue = (0.55 + audio.bass * 0.4) % 1.0;
         pointLight.color.setHSL(lightHue, 1, 0.6);
 
-        // Match fog to the light color for a cohesive atmosphere
         if (scene.fog) {
             scene.fog.color.setHSL(lightHue, 0.5, 0.05);
         }
@@ -662,7 +650,5 @@
 </script>
 </body>
 </html>
-
-
 
 
