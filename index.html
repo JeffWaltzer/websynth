@@ -51,6 +51,12 @@
             text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.4);
         }
 
+        nav {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
         .menu-item {
             display: grid;
             grid-template-columns: 200px 1fr;
@@ -122,6 +128,10 @@
         }
 
         @media (max-width: 768px) {
+            nav {
+                grid-template-columns: 1fr;
+            }
+
             .menu-item {
                 grid-template-columns: 1fr;
                 gap: 10px;
@@ -148,6 +158,23 @@
     </style>
 </head>
 <body>
+<!-- Navigation Toolbar -->
+<nav style="background-color: #2b2321; padding: 10px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+        <a href="index.html" style="color: #e6d5c1; text-decoration: none; padding: 5px 10px; background: #e65100; border-radius: 4px; font-size: 0.9rem;">Home</a>
+        <a href="berlin.html" style="color: #e6d5c1; text-decoration: none; padding: 5px 10px; background: #e65100; border-radius: 4px; font-size: 0.9rem;">Berlin</a>
+        <a href="chords.html" style="color: #e6d5c1; text-decoration: none; padding: 5px 10px; background: #e65100; border-radius: 4px; font-size: 0.9rem;">Chords</a>
+        <a href="ClassicsOnMIDI.html" style="color: #e6d5c1; text-decoration: none; padding: 5px 10px; background: #e65100; border-radius: 4px; font-size: 0.9rem;">Classics</a>
+        <a href="delay.html" style="color: #e6d5c1; text-decoration: none; padding: 5px 10px; background: #e65100; border-radius: 4px; font-size: 0.9rem;">Delay</a>
+        <a href="polychain.html" style="color: #e6d5c1; text-decoration: none; padding: 5px 10px; background: #e65100; border-radius: 4px; font-size: 0.9rem;">Polychain</a>
+        <a href="rhythm.html" style="color: #e6d5c1; text-decoration: none; padding: 5px 10px; background: #e65100; border-radius: 4px; font-size: 0.9rem;">Rhythm</a>
+        <a href="starfield.html" style="color: #e6d5c1; text-decoration: none; padding: 5px 10px; background: #e65100; border-radius: 4px; font-size: 0.9rem;">Starfield</a>
+        <a href="visualizer1.html" style="color: #e6d5c1; text-decoration: none; padding: 5px 10px; background: #e65100; border-radius: 4px; font-size: 0.9rem;">Viz 1</a>
+        <a href="visualizer2.html" style="color: #e6d5c1; text-decoration: none; padding: 5px 10px; background: #e65100; border-radius: 4px; font-size: 0.9rem;">Viz 2</a>
+    </div>
+</nav>
+<!-- Add padding to body content to account for fixed nav -->
+<div style="padding-top: 60px;"></div>
 <main class="container">
     <h1>MIDI Master Control</h1>
     <nav>
@@ -156,12 +183,6 @@
             <div class="menu-description">Create evolving, Berlin School-inspired sequences. Features algorithmic
                 pattern generation, modulation matrices, and probability-based variations for endless musical
                 exploration.
-            </div>
-        </div>
-        <div class="menu-item">
-            <a href="chords.html">Chords</a>
-            <div class="menu-description">MIDI Chord Monitor: Real-time chord recognition with extended harmony
-                analysis. Shows inversions, suggested scales, alternative voicings, and common chord substitutions.
             </div>
         </div>
         <div class="menu-item">
@@ -202,15 +223,15 @@
             </div>
         </div>
         <div class="menu-item">
-            <a href="synth.html">Synth</a>
-            <div class="menu-description">Analog Dreams: Comprehensive MIDI controller interface with multiple LFOs,
-                envelope generators, and modulation options. Control your hardware synths with precision.
-            </div>
-        </div>
-        <div class="menu-item">
             <a href="visualizer1.html">Visualizer 1</a>
             <div class="menu-description">Audio visualizer with real-time frequency and waveform analysis. Visualize
                 audio input with customizable display modes and color schemes.
+            </div>
+        </div>
+        <div class="menu-item">
+            <a href="visualizer2.html">Visualizer 2</a>
+            <div class="menu-description">Audio-Reactive 3D Tunnel: Immersive hyperspace tunnel with real-time audio
+                visualization. Features dynamic lighting, particle effects, and recording capabilities.
             </div>
         </div>
     </nav>
