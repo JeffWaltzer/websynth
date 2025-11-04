@@ -41,6 +41,54 @@
             background-color: #555555;
             transform: scale(0.98);
         }
+        #controlsContainer {
+            margin-top: 20px;
+            padding: 15px 20px;
+            border: 1px solid #333;
+            background-color: #252525;
+            min-width: 320px;
+            max-width: 90%;
+            border-radius: 8px;
+        }
+        .slider-group {
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr;
+            justify-items: center;
+            gap: 8px;
+        }
+        .slider-group label {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        .slider-group input[type="range"] {
+            width: 90%;
+            margin-top: 4px;
+        }
+        .midi-learn-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.8em;
+        }
+        .learn-button {
+            padding: 4px 8px;
+            font-size: 0.8em;
+            margin: 0;
+            border-radius: 5px;
+        }
+        .learn-button:disabled {
+            background-color: #007bff;
+            cursor: default;
+        }
+        .cc-display {
+            background-color: #3d3d3d;
+            padding: 4px 6px;
+            border-radius: 4px;
+            min-width: 50px;
+            text-align: center;
+        }
         #statusContainer {
             margin-top: 15px;
             padding: 15px 20px;
@@ -67,22 +115,89 @@
 <!-- Button to test sound generation and activate AudioContext -->
 <button id="testSoundButton">Test Sound (C5)</button>
 
+<!-- Sliders for parameter control -->
+<div id="controlsContainer">
+    <div class="slider-group">
+        <label for="decaySlider">Decay: <span id="decayValue">0.997</span></label>
+        <input type="range" id="decaySlider" min="0.95" max="1.0" step="0.001" value="0.997">
+        <div class="midi-learn-control">
+            <button class="learn-button" data-target="decay">Learn CC</button>
+            <span class="cc-display" id="decayCcDisplay">None</span>
+        </div>
+    </div>
+    <div class="slider-group">
+        <label for="filterSlider">Excitation Filter (Softness): <span id="filterValue">0.5</span></label>
+        <input type="range" id="filterSlider" min="0" max="1" step="0.01" value="0.5">
+        <div class="midi-learn-control">
+            <button class="learn-button" data-target="filter">Learn CC</button>
+            <span class="cc-display" id="filterCcDisplay">None</span>
+        </div>
+    </div>
+</div>
+
 <!-- Status area for MIDI and Audio feedback -->
 <div id="statusContainer">Initializing...</div>
 
 <!-- All JavaScript logic is included here -->
 <script>
-    // --- MIDI Karplus-Strong Flute Synthesis (Version 3 - Robust and Self-Contained) ---
+    // --- MIDI Karplus-Strong Flute Synthesis (Version 6 - MIDI CC Learn) ---
 
     const testSoundButton = document.getElementById('testSoundButton');
     const statusContainer = document.getElementById('statusContainer');
+    const decaySlider = document.getElementById('decaySlider');
+    const decayValueSpan = document.getElementById('decayValue');
+    const filterSlider = document.getElementById('filterSlider');
+    const filterValueSpan = document.getElementById('filterValue');
+
+    const decayLearnButton = document.querySelector('[data-target="decay"]');
+    const filterLearnButton = document.querySelector('[data-target="filter"]');
+    const decayCcDisplay = document.getElementById('decayCcDisplay');
+    const filterCcDisplay = document.getElementById('filterCcDisplay');
 
     let audioCtx = null;
     let midiAccess = null; // Store midiAccess globally
     const activeNotes = {}; // Object to store active GainNodes, keyed by MIDI note number
 
+    // --- Synthesis & MIDI CC Parameters ---
+    let currentDecay = 0.997;
+    let currentFilterAmount = 0.5;
+    let learningTarget = null;
+    let decayCc = null;
+    let filterCc = null;
+
+    // --- Event Listeners ---
+    decaySlider.addEventListener('input', (e) => {
+        currentDecay = parseFloat(e.target.value);
+        decayValueSpan.textContent = currentDecay.toFixed(3);
+    });
+
+    filterSlider.addEventListener('input', (e) => {
+        currentFilterAmount = parseFloat(e.target.value);
+        filterValueSpan.textContent = currentFilterAmount.toFixed(2);
+    });
+
+    decayLearnButton.addEventListener('click', () => startLearning('decay'));
+    filterLearnButton.addEventListener('click', () => startLearning('filter'));
+
+    function startLearning(target) {
+        learningTarget = target;
+        // Update UI to show we're listening
+        decayLearnButton.textContent = 'Learn CC';
+        filterLearnButton.textContent = 'Learn CC';
+        decayLearnButton.disabled = false;
+        filterLearnButton.disabled = false;
+
+        if (target === 'decay') {
+            decayLearnButton.textContent = 'Listening...';
+            decayLearnButton.disabled = true;
+        } else if (target === 'filter') {
+            filterLearnButton.textContent = 'Listening...';
+            filterLearnButton.disabled = true;
+        }
+        console.log(`Waiting for MIDI CC for: ${target}`);
+    }
+
     // --- AudioContext Management ---
-    // Async function to handle creating and resuming the AudioContext reliably
     async function ensureAudioContext() {
         if (!audioCtx) {
             try {
@@ -90,7 +205,7 @@
                 console.log("AudioContext created.");
                 audioCtx.onstatechange = () => {
                     console.log(`AudioContext state changed to: ${audioCtx.state}`);
-                    updateStatusDisplay(); // Update UI on state change
+                    updateStatusDisplay();
                 };
             } catch (e) {
                 console.error("Web Audio API is not supported in this browser", e);
@@ -100,7 +215,6 @@
             }
         }
 
-        // If context is suspended, user interaction is needed to resume it.
         if (audioCtx.state === 'suspended') {
             try {
                 console.log("Attempting to resume AudioContext...");
@@ -114,61 +228,50 @@
         }
 
         updateStatusDisplay();
-        // Return the context only if it's running
         return audioCtx.state === 'running' ? audioCtx : null;
     }
 
     // --- Karplus-Strong Sound Generation ---
-    function playKarplusStrongFlute(freq, duration, decay, velocity, currentAudioCtx) {
-        if (!currentAudioCtx) {
-            console.error("Cannot play sound, AudioContext not running.");
-            return null;
-        }
+    function playKarplusStrongFlute(freq, duration, velocity, currentAudioCtx) {
+        if (!currentAudioCtx) return null;
 
         const sampleRate = currentAudioCtx.sampleRate;
         const N = Math.round(sampleRate / freq);
         const totalSamples = Math.floor(sampleRate * duration);
 
         let ringBuffer = new Float32Array(N);
-
-        // Filtered Noise Excitation for a softer, more flute-like attack
         let tempNoise = new Float32Array(N);
         for (let i = 0; i < N; i++) tempNoise[i] = Math.random() * 2 - 1;
-        ringBuffer[0] = (tempNoise[0] + tempNoise[N - 1]) * 0.5; // Wrap around for filter
+
+        ringBuffer[0] = tempNoise[0];
         for (let i = 1; i < N; i++) {
-            ringBuffer[i] = (tempNoise[i] + tempNoise[i - 1]) * 0.5;
+            const rawSample = tempNoise[i];
+            const filteredSample = (tempNoise[i] + tempNoise[i - 1]) * 0.5;
+            ringBuffer[i] = (rawSample * (1 - currentFilterAmount)) + (filteredSample * currentFilterAmount);
         }
 
         let outputBuffer = new Float32Array(totalSamples);
         let writeIndex = 0;
-        // The Karplus-Strong algorithm loop
         for (let i = 0; i < totalSamples; i++) {
             const currentSample = ringBuffer[writeIndex];
             outputBuffer[i] = currentSample;
             const nextIndex = (writeIndex + 1) % N;
-            // Averaging filter and decay
-            const newValue = (currentSample + ringBuffer[nextIndex]) * 0.5 * decay;
+            const newValue = (currentSample + ringBuffer[nextIndex]) * 0.5 * currentDecay;
             ringBuffer[writeIndex] = newValue;
             writeIndex = nextIndex;
         }
 
-        // Web Audio API setup for playback
         const audioBuffer = currentAudioCtx.createBuffer(1, totalSamples, sampleRate);
         audioBuffer.getChannelData(0).set(outputBuffer);
         const source = currentAudioCtx.createBufferSource();
         source.buffer = audioBuffer;
-
-        // GainNode for volume control (velocity) and stopping the note
         const gainNode = currentAudioCtx.createGain();
         const initialGain = Math.min(1.0, Math.max(0.0, velocity / 127));
         gainNode.gain.setValueAtTime(initialGain, currentAudioCtx.currentTime);
-
         source.connect(gainNode);
         gainNode.connect(currentAudioCtx.destination);
         source.start();
-
-        console.log(`Playing KS: Freq=${freq.toFixed(2)}Hz, Vel=${velocity}, Gain=${initialGain.toFixed(2)}`);
-        return gainNode; // Return gain node for external control (note off)
+        return gainNode;
     }
 
     // --- MIDI Handling ---
@@ -178,39 +281,61 @@
 
     async function handleMIDIMessage(event) {
         const currentAudioCtx = await ensureAudioContext();
-        if (!currentAudioCtx) {
-            console.warn("AudioContext not available, skipping MIDI message.");
-            return;
-        }
-
         const command = event.data[0] >> 4;
         const note = event.data[1];
         const velocity = event.data[2];
 
-        // Note On
+        // Command 11 is Control Change
+        if (command === 11) {
+            const ccNumber = note;
+            const ccValue = velocity;
+
+            if (learningTarget) {
+                if (learningTarget === 'decay') {
+                    decayCc = ccNumber;
+                    decayCcDisplay.textContent = `CC ${ccNumber}`;
+                } else if (learningTarget === 'filter') {
+                    filterCc = ccNumber;
+                    filterCcDisplay.textContent = `CC ${ccNumber}`;
+                }
+                console.log(`Mapped ${learningTarget} to CC ${ccNumber}`);
+                learningTarget = null;
+                decayLearnButton.textContent = 'Learn CC';
+                filterLearnButton.textContent = 'Learn CC';
+                decayLearnButton.disabled = false;
+                filterLearnButton.disabled = false;
+            } else {
+                if (ccNumber === decayCc) {
+                    const newDecay = 0.95 + (ccValue / 127) * 0.05;
+                    decaySlider.value = newDecay;
+                    decaySlider.dispatchEvent(new Event('input'));
+                } else if (ccNumber === filterCc) {
+                    const newFilter = ccValue / 127;
+                    filterSlider.value = newFilter;
+                    filterSlider.dispatchEvent(new Event('input'));
+                }
+            }
+            return;
+        }
+
+        if (!currentAudioCtx) return;
+
         if (command === 9 && velocity > 0) {
             const frequency = midiNoteToFrequency(note);
-            if (activeNotes[note]) { // Re-triggering the same note
+            if (activeNotes[note]) {
                 stopNote(note, currentAudioCtx);
             }
-            const gainNode = playKarplusStrongFlute(frequency, 2.0, 0.997, velocity, currentAudioCtx);
-            if (gainNode) {
-                activeNotes[note] = gainNode;
-            }
-        }
-        // Note Off
-        else if (command === 8 || (command === 9 && velocity === 0)) {
+            const gainNode = playKarplusStrongFlute(frequency, 2.0, velocity, currentAudioCtx);
+            if (gainNode) activeNotes[note] = gainNode;
+        } else if (command === 8 || (command === 9 && velocity === 0)) {
             stopNote(note, currentAudioCtx);
         }
     }
 
     function stopNote(note, currentAudioCtx) {
         if (!currentAudioCtx || !activeNotes[note]) return;
-
         const gainNode = activeNotes[note];
         const now = currentAudioCtx.currentTime;
-
-        // Fade out gracefully to prevent clicks
         if (gainNode.gain.value > 0.001) {
             gainNode.gain.setValueAtTime(gainNode.gain.value, now);
             gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
@@ -221,11 +346,9 @@
     // --- MIDI Initialization and State Change Handling ---
     function updateMIDIInputs() {
         if (!midiAccess) return;
-
         for (let input of midiAccess.inputs.values()) {
             input.onmidimessage = null;
         }
-
         if (midiAccess.inputs.size === 0) {
             console.log("No MIDI input devices found.");
         } else {
@@ -234,7 +357,7 @@
                 console.log(`Listening to MIDI device: ${input.name}`);
             }
         }
-        updateStatusDisplay(); // Update UI after scanning
+        updateStatusDisplay();
     }
 
     function updateStatusDisplay() {
@@ -265,18 +388,20 @@
     function onMIDISuccess(ma) {
         console.log("MIDI Access Granted");
         midiAccess = ma;
-        updateMIDIInputs(); // Initial setup
-
-        // Listen for device connections/disconnections
+        updateMIDIInputs();
         midiAccess.onstatechange = (event) => {
             console.log(`MIDI state change: ${event.port.name}, state: ${event.port.state}`);
-            updateMIDIInputs(); // Re-scan devices
+            updateMIDIInputs();
         };
     }
 
-    function onMIDIFailure(msg) {
-        console.error(`Failed to get MIDI access - ${msg}`);
-        statusContainer.innerHTML = "<strong>Error:</strong><br/>Failed to get MIDI access.";
+    function onMIDIFailure(error) {
+        console.error(`Failed to get MIDI access - ${error}`);
+        let errorMessage = "<strong>Error:</strong><br/>Failed to get MIDI access.";
+        if (error && (error.name === 'SecurityError' || (error.message && error.message.includes('permissions policy')))) {
+            errorMessage = "<strong>Error:</strong><br/>MIDI is blocked by the browser's security policy. This often happens when the page is in a sandboxed environment (like an iframe) that needs explicit permission to access MIDI devices.";
+        }
+        statusContainer.innerHTML = errorMessage;
     }
 
     function initializeMIDI() {
@@ -289,15 +414,12 @@
         }
     }
 
-    // --- Initialization on User Interaction ---
     testSoundButton.addEventListener('click', async () => {
         const currentAudioCtx = await ensureAudioContext();
         if (currentAudioCtx) {
             console.log("Playing test sound C5");
-            // Play C5 (MIDI note 72) with medium velocity
-            const testGain = playKarplusStrongFlute(midiNoteToFrequency(72), 1.5, 0.997, 100, currentAudioCtx);
+            const testGain = playKarplusStrongFlute(midiNoteToFrequency(72), 1.5, 100, currentAudioCtx);
             if (testGain) {
-                // Fade out the test sound
                 setTimeout(() => {
                     const now = currentAudioCtx.currentTime;
                     if (testGain.gain.value > 0.001) {
@@ -311,9 +433,9 @@
         }
     });
 
-    // Start the MIDI initialization process when the page loads
     initializeMIDI();
 </script>
 
 </body>
 </html>
+
