@@ -7,12 +7,5 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="jdk" jdkName="ruby-3.4.4-p34" jdkType="RUBY_SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="PROVIDED" name="alsa-rawmidi (v0.4.0, ruby-3.4.4-p34) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="bundler (v2.6.7, ruby-3.4.4-p34) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="ffi (v1.17.2, ruby-3.4.4-p34) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="ffi-coremidi (v0.5.1, ruby-3.4.4-p34) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="midi-jruby (v0.2.0, ruby-3.4.4-p34) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="midi-winmm (v0.1.10, ruby-3.4.4-p34) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="unimidi (v0.5.1, ruby-3.4.4-p34) [gem]" level="application" />
   </component>
 </module>

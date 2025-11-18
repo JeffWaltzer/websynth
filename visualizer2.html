@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio-Reactive 3D Tunnel</title>
-    <!-- Load Three.js Library --><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <title>Neon Hyperspace Tunnel</title>
     <style>
-        /* General Setup */
         body {
             margin: 0;
             overflow: hidden;
@@ -15,39 +13,43 @@
             align-items: center;
             min-height: 100vh;
             background-color: #000;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             color: #fff;
         }
 
-        /* Canvas MUST be positioned absolutely and fill the viewport for Three.js */
         #plasmaCanvas {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: #000;
-            z-index: 1; /* Keep it below the overlay */
+            /* Brighter background gradient for a cleaner look */
+            background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%);
+            z-index: 1;
         }
 
-        /* Overlay & Controls */
         #overlay {
             position: fixed;
             z-index: 100;
             padding: 30px;
             text-align: center;
-            background: rgba(0, 0, 0, 0.95); /* Slightly darker overlay for contrast */
-            border-radius: 12px;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
+            background: rgba(5, 5, 20, 0.85);
+            border-radius: 16px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 60px rgba(255, 0, 255, 0.2), inset 0 0 40px rgba(0, 255, 255, 0.1);
             transition: opacity 0.5s;
             max-width: 450px;
             width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         #loadingText {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             margin-bottom: 20px;
-            color: #00ffff; /* Cyan for futuristic feel */
+            background: linear-gradient(135deg, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
         }
 
         #autoRecordControl {
@@ -60,45 +62,65 @@
         #autoRecord {
             transform: scale(1.5);
             margin-right: 10px;
+            cursor: pointer;
         }
 
         .control-group {
             margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid rgba(0, 255, 255, 0.1); /* Cyan border */
-            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .control-group h3 {
             margin-top: 0;
-            color: #00ffff;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
         }
 
         .button-style {
-            background-color: #00ccff; /* Bright blue/cyan */
+            background: linear-gradient(135deg, #00ffff, #0088ff);
             border: none;
-            color: black;
-            padding: 15px 32px;
+            color: #000;
+            padding: 16px 32px;
             text-align: center;
             text-decoration: none;
             display: inline-block;
-            font-size: 16px;
-            font-weight: bold;
-            margin: 4px 2px;
+            font-size: 15px;
+            font-weight: 800;
+            margin: 6px 2px;
             cursor: pointer;
-            border-radius: 8px;
-            transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             width: 90%;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 25px rgba(0, 200, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        .button-style:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            transition: left 0.5s;
+        }
+
+        .button-style:hover:before {
+            left: 100%;
         }
 
         .button-style:hover {
-            background-color: #0099ff;
-            box-shadow: 0 6px 20px rgba(0, 204, 255, 0.5);
-        }
-
-        .button-style:active {
-            transform: scale(0.98);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 35px rgba(0, 200, 255, 0.6);
+            filter: brightness(1.1);
         }
 
         #fileInput {
@@ -106,11 +128,13 @@
         }
 
         #loadFromFileButton {
-            background-color: #ff33cc; /* Pink for file load */
+            background: linear-gradient(135deg, #ff00ff, #aa00ff);
+            box-shadow: 0 4px 25px rgba(255, 0, 255, 0.4);
+            color: white;
         }
+
         #loadFromFileButton:hover {
-            background-color: #e600b8;
-            box-shadow: 0 6px 20px rgba(255, 51, 204, 0.5);
+            box-shadow: 0 6px 35px rgba(255, 0, 255, 0.6);
         }
 
         .error {
@@ -122,22 +146,22 @@
         #message {
             text-align: left;
             padding: 15px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
             min-height: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Control visibility styles remain the same for responsiveness */
         #fullscreenButton {
             position: fixed;
             bottom: 20px;
             right: 20px;
             z-index: 60;
-            background-color: rgba(30, 30, 30, 0.7);
+            background-color: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            width: 44px;
-            height: 44px;
+            border-radius: 10px;
+            width: 50px;
+            height: 50px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -145,16 +169,17 @@
             padding: 0;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s ease-in-out, background-color 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
 
         #fullscreenButton:hover {
-            background-color: rgba(50, 50, 50, 0.9);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
         }
 
         #fullscreenButton svg {
-            fill: white;
+            fill: #ffffff;
             width: 24px;
             height: 24px;
         }
@@ -174,52 +199,54 @@
         }
 
         #recordButton {
-            background-color: #f44336;
+            background: linear-gradient(135deg, #ff3333, #ff0000);
             color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 12px 24px;
+            border-radius: 25px;
             font-weight: bold;
             cursor: pointer;
             border: none;
-            transition: background-color 0.3s, opacity 0.3s;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
+        }
+
+        #recordButton:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
         }
 
         #recordButton.recording {
-            background-color: #ff0000;
-            animation: pulse 1s infinite;
+            background: #ff0000;
+            animation: pulse 1.5s ease-in-out infinite;
         }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); transform: scale(1); }
+            50% { box-shadow: 0 0 0 15px rgba(255, 0, 0, 0); transform: scale(1.05); }
         }
 
         #recordingStatus {
-            margin-top: 5px;
-            color: #f44336;
+            margin-top: 8px;
+            color: #ff4444;
             font-size: 0.9rem;
             font-weight: bold;
             opacity: 0;
             transition: opacity 0.3s;
         }
+
         #stopVisualizerButton {
-            background-color: #6c757d;
+            background: linear-gradient(135deg, #444, #222);
             margin-top: 10px;
             width: 100%;
             padding: 10px 20px;
             font-size: 1rem;
-        }
-        #stopVisualizerButton:hover {
-            background-color: #5a6268;
-            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.5);
+            color: white;
         }
     </style>
 </head>
 <body>
 
 <canvas id="plasmaCanvas"></canvas>
-
 
 <button id="fullscreenButton" title="Toggle Fullscreen">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -233,10 +260,9 @@
     <button id="stopVisualizerButton" class="button-style">STOP VISUALIZER</button>
 </div>
 
-
 <div id="overlay">
     <div id="loadingText">
-        Dive into the hyperspace tunnel. Choose your audio source to begin.
+        NEON HYPERSPACE
     </div>
 
     <div class="control-group">
@@ -244,7 +270,7 @@
         <button id="startButton" class="button-style">
             Grant Microphone Access
         </button>
-        <input type="file" id="fileInput" accept="audio/*" style="display:none;">
+        <input type="file" id="fileInput" accept="audio/*">
         <button id="loadFromFileButton" class="button-style">
             Load MP3 / Audio File
         </button>
@@ -258,397 +284,491 @@
     <div id="message" class="error"></div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-    // --- Global Variables ---
-    const canvas = document.getElementById('plasmaCanvas');
-    const overlay = document.getElementById('overlay');
-    const startButton = document.getElementById('startButton');
-    const loadFromFileButton = document.getElementById('loadFromFileButton');
-    const fileInput = document.getElementById('fileInput');
-    const autoRecordCheckbox = document.getElementById('autoRecord');
-    const messageDiv = document.getElementById('message');
-    const fullscreenButton = document.getElementById('fullscreenButton');
-    const recordContainer = document.getElementById('recordContainer');
-    const recordButton = document.getElementById('recordButton');
-    const recordingStatus = document.getElementById('recordingStatus');
-    const stopVisualizerButton = document.getElementById('stopVisualizerButton');
+    (function () {
+        // --- DOM Elements ---
+        const canvas = document.getElementById('plasmaCanvas');
+        const overlay = document.getElementById('overlay');
+        const startButton = document.getElementById('startButton');
+        const loadFromFileButton = document.getElementById('loadFromFileButton');
+        const fileInput = document.getElementById('fileInput');
+        const autoRecordCheckbox = document.getElementById('autoRecord');
+        const messageDiv = document.getElementById('message');
+        const fullscreenButton = document.getElementById('fullscreenButton');
+        const recordContainer = document.getElementById('recordContainer');
+        const recordButton = document.getElementById('recordButton');
+        const recordingStatus = document.getElementById('recordingStatus');
+        const stopVisualizerButton = document.getElementById('stopVisualizerButton');
 
-    let audioContext;
-    let analyser;
-    let frequencyData;
-    let isRunning = false;
-    let mediaRecorder;
-    let recordedChunks = [];
-    let audioSourceNode;
-    let mediaStream = null;
+        // --- State Variables ---
+        let audioContext;
+        let analyser;
+        let frequencyData;
+        let isRunning = false;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let audioSourceNode;
+        let mediaStream = null;
+        let controlsTimeout = null;
 
-    // --- THREE.JS Global Objects ---
-    let scene, camera, renderer, tunnel, dustParticles, pointLight;
-    const clock = new THREE.Clock();
+        // --- Three.js Variables ---
+        let scene, camera, renderer, instancedTunnel, dustParticles, pointLight, rimLight;
+        const clock = new THREE.Clock();
 
-    // --- VISUALS CONSTANTS (OPTIMIZED) ---
-    const NUM_TUNNEL_SEGMENTS = 30; // Reduced from 40
-    const SEGMENT_SPACING = 10;
-    const CUBES_PER_RING = 24;
-    const TUNNEL_RADIUS = 20;
-    const TUNNEL_LENGTH = NUM_TUNNEL_SEGMENTS * SEGMENT_SPACING;
+        // InstancedMesh Helpers
+        const dummy = new THREE.Object3D();
+        const dummyColor = new THREE.Color();
+        let instanceData = [];
 
-    // --- Utility Functions (UI and Audio Handling) ---
-    let controlsTimeout = null;
-    function updateControlsVisibility(visible) {
-        const opacityValue = visible ? '1' : '0';
-        const eventsValue = visible ? 'auto' : 'none';
-        [recordContainer, fullscreenButton].forEach(el => {
-            el.style.opacity = opacityValue;
-            el.style.pointerEvents = eventsValue;
-        });
-    }
+        // --- Constants ---
+        const NUM_TUNNEL_SEGMENTS = 32;
+        const SEGMENT_SPACING = 10;
+        const CUBES_PER_RING = 24;
+        const INSTANCE_COUNT = NUM_TUNNEL_SEGMENTS * CUBES_PER_RING;
+        const TUNNEL_RADIUS = 20;
+        const TUNNEL_LENGTH = NUM_TUNNEL_SEGMENTS * SEGMENT_SPACING;
 
-    function showControls() {
-        if (!isRunning) return;
-        if (recordContainer.style.display !== 'flex') recordContainer.style.display = 'flex';
-        updateControlsVisibility(true);
-        clearTimeout(controlsTimeout);
-        controlsTimeout = setTimeout(() => updateControlsVisibility(false), 5000);
-    }
+        // --- UI & Controls ---
 
-    function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => console.warn(err.message));
-        } else {
-            document.exitFullscreen();
-        }
-    }
-
-    function startVisualizer() {
-        overlay.style.opacity = 0;
-        setTimeout(() => { overlay.style.display = 'none'; }, 500);
-        isRunning = true;
-        clock.start();
-        renderer.render(scene, camera);
-        animate();
-        showControls();
-        if (autoRecordCheckbox.checked) startRecording();
-        messageDiv.innerText = "";
-    }
-
-    function stopVisualizer() {
-        isRunning = false;
-        clock.stop();
-        if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording();
-        if (audioSourceNode) {
-            try {
-                if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
-                if (audioSourceNode.stop) audioSourceNode.stop();
-                audioSourceNode.disconnect();
-            } catch (e) { console.warn("Audio cleanup error:", e); }
-        }
-        mediaStream = null;
-        audioSourceNode = null;
-        fileInput.value = '';
-        updateControlsVisibility(false);
-        overlay.style.display = 'flex';
-        setTimeout(() => { overlay.style.opacity = 1; }, 10);
-    }
-
-    function updateAudioAnalysis() {
-        if (!analyser) return { bass: 0, treble: 0, overall: 0 };
-        analyser.getByteFrequencyData(frequencyData);
-
-        const bassBins = Math.floor(frequencyData.length * 0.1);
-        const trebleBins = Math.floor(frequencyData.length * 0.3);
-
-        let bassSum = 0, trebleSum = 0, overallSum = 0;
-        for(let i = 0; i < frequencyData.length; i++) {
-            if (i < bassBins) bassSum += frequencyData[i];
-            if (i > frequencyData.length - trebleBins) trebleSum += frequencyData[i];
-            overallSum += frequencyData[i];
+        function updateControlsVisibility(visible) {
+            const opacityValue = visible ? '1' : '0';
+            const eventsValue = visible ? 'auto' : 'none';
+            [recordContainer, fullscreenButton].forEach(el => {
+                el.style.opacity = opacityValue;
+                el.style.pointerEvents = eventsValue;
+            });
         }
 
-        return {
-            bass: (bassSum / bassBins / 255) || 0,
-            treble: (trebleSum / trebleBins / 255) || 0,
-            overall: (overallSum / frequencyData.length / 255) || 0,
-        };
-    }
+        function showControls() {
+            if (!isRunning) return;
+            if (recordContainer.style.display !== 'flex') recordContainer.style.display = 'flex';
+            updateControlsVisibility(true);
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(() => updateControlsVisibility(false), 5000);
+        }
 
-    async function setupAudioFromMic() {
-        try {
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.warn(err.message));
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function startVisualizer() {
+            overlay.style.opacity = 0;
+            setTimeout(() => { overlay.style.display = 'none'; }, 500);
+            isRunning = true;
+            clock.start();
+            renderer.render(scene, camera);
+            animate();
+            showControls();
+            if (autoRecordCheckbox.checked) startRecording();
+            messageDiv.innerText = "";
+        }
+
+        function stopVisualizer() {
+            isRunning = false;
+            clock.stop();
+            if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording();
+
+            stopAudioSource();
+
+            updateControlsVisibility(false);
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.opacity = 1; }, 10);
+        }
+
+        function stopAudioSource() {
+            // Stop Mic Stream if exists
+            if (mediaStream) {
+                try {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                } catch(e) { console.warn(e); }
+                mediaStream = null;
+            }
+
+            // Stop/Disconnect Node
+            if (audioSourceNode) {
+                try {
+                    if (audioSourceNode.stop) audioSourceNode.stop();
+                    audioSourceNode.disconnect();
+                } catch (e) { console.warn("Audio cleanup warn:", e); }
+                audioSourceNode = null;
+            }
+
+            fileInput.value = ''; // Reset file input
+        }
+
+        // --- Audio Processing ---
+
+        function updateAudioAnalysis() {
+            if (!analyser) return { bass: 0, mid: 0, treble: 0, overall: 0 };
+            analyser.getByteFrequencyData(frequencyData);
+
+            const dataLength = frequencyData.length;
+            const bassBins = Math.floor(dataLength * 0.15);
+            const midBins = Math.floor(dataLength * 0.35);
+            const trebleBins = Math.floor(dataLength * 0.25);
+
+            let bassSum = 0, midSum = 0, trebleSum = 0, overallSum = 0;
+
+            for(let i = 0; i < dataLength; i++) {
+                const val = frequencyData[i];
+                overallSum += val;
+                if (i < bassBins) bassSum += val;
+                else if (i < bassBins + midBins) midSum += val;
+                else if (i > dataLength - trebleBins) trebleSum += val;
+            }
+
+            return {
+                bass: (bassSum / bassBins / 255) || 0,
+                mid: (midSum / midBins / 255) || 0,
+                treble: (trebleSum / trebleBins / 255) || 0,
+                overall: (overallSum / dataLength / 255) || 0,
+            };
+        }
+
+        function initAudioContext() {
             if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioContext.state === 'suspended') await audioContext.resume();
-
+            // Always create new analyser to ensure clean state
+            if (analyser) analyser.disconnect();
             analyser = audioContext.createAnalyser();
-            analyser.fftSize = 128; // Reduced from 256 for performance
-            frequencyData = new Uint8Array(analyser.frequencyBinCount);
-
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaStream = stream;
-            audioSourceNode = audioContext.createMediaStreamSource(stream);
-            audioSourceNode.connect(analyser);
-
-            setupThreeScene();
-            startVisualizer();
-        } catch (err) {
-            console.error("Microphone access failed:", err);
-            messageDiv.innerText = "Error: Could not access microphone. Check permissions.";
+            analyser.fftSize = 256;
+            frequencyData = new Uint8Array(analyser.frequencyBinBinCount);
+            analyser.connect(audioContext.destination);
         }
-    }
 
-    function setupAudioFromFile(file) {
-        if (audioSourceNode) audioSourceNode.disconnect();
-        if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        async function setupAudioFromMic() {
+            stopAudioSource();
+            try {
+                initAudioContext();
+                if (audioContext.state === 'suspended') await audioContext.resume();
 
-        analyser = audioContext.createAnalyser();
-        analyser.fftSize = 128; // Reduced from 256 for performance
-        frequencyData = new Uint8Array(analyser.frequencyBinCount);
-        messageDiv.innerText = "Loading audio...";
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            audioContext.decodeAudioData(e.target.result, (buffer) => {
-                audioSourceNode = audioContext.createBufferSource();
-                audioSourceNode.buffer = buffer;
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaStream = stream;
+                audioSourceNode = audioContext.createMediaStreamSource(stream);
                 audioSourceNode.connect(analyser);
-                audioSourceNode.connect(audioContext.destination);
-                audioSourceNode.onended = stopVisualizer;
-                audioSourceNode.start(0);
+                analyser.disconnect(audioContext.destination); // Prevent feedback loop
+
                 setupThreeScene();
                 startVisualizer();
-            }, (e) => { messageDiv.innerText = `Error decoding audio.`; });
-        };
-        reader.readAsArrayBuffer(file);
-    }
+            } catch (err) {
+                console.error(err);
+                messageDiv.innerText = "Error: Could not access microphone. Check permissions.";
+            }
+        }
 
-    function startRecording() {
-        if (mediaRecorder && mediaRecorder.state === 'recording') return;
-        try {
-            const videoStream = canvas.captureStream(60);
-            const audioDest = audioContext.createMediaStreamDestination();
-            analyser.connect(audioDest);
+        // Fixed File Loading Logic
+        function setupAudioFromFile(file) {
+            stopAudioSource();
+            messageDiv.innerText = "Loading audio...";
 
-            const combinedStream = new MediaStream([
-                ...videoStream.getVideoTracks(),
-                ...audioDest.stream.getAudioTracks()
-            ]);
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    initAudioContext();
+                    if (audioContext.state === 'suspended') await audioContext.resume();
 
-            const options = {
-                mimeType: 'video/webm; codecs=vp8,opus',
-                videoBitsPerSecond: 4000000
+                    const audioBuffer = await audioContext.decodeAudioData(e.target.result);
+
+                    audioSourceNode = audioContext.createBufferSource();
+                    audioSourceNode.buffer = audioBuffer;
+                    audioSourceNode.connect(analyser);
+                    // Connect to destination so we can hear the file
+                    audioSourceNode.connect(audioContext.destination);
+
+                    audioSourceNode.onended = stopVisualizer;
+                    audioSourceNode.start(0);
+
+                    setupThreeScene();
+                    startVisualizer();
+                } catch(err) {
+                    console.error("Decode Error:", err);
+                    messageDiv.innerText = "Error: Could not decode audio file.";
+                }
             };
-            mediaRecorder = new MediaRecorder(combinedStream, options);
-            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = `tunnel-visuals-${Date.now()}.webm`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
+            reader.onerror = function() {
+                messageDiv.innerText = "Error reading file.";
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- Media Recording ---
+
+        function startRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') return;
+            try {
+                const videoStream = canvas.captureStream(60);
+                const audioDest = audioContext.createMediaStreamDestination();
+                analyser.connect(audioDest);
+                const combinedStream = new MediaStream([
+                    ...videoStream.getVideoTracks(),
+                    ...audioDest.stream.getAudioTracks()
+                ]);
+                mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm; codecs=vp8,opus', videoBitsPerSecond: 8000000 });
+                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none'; a.href = url; a.download = `neon-visuals-${Date.now()}.webm`;
+                    document.body.appendChild(a); a.click();
+                    window.URL.revokeObjectURL(url); a.remove();
+                    recordedChunks = [];
+                    recordButton.classList.remove('recording');
+                    recordingStatus.style.opacity = 0;
+                    recordButton.innerText = "START RECORDING (WebM)";
+                };
                 recordedChunks = [];
-                recordButton.classList.remove('recording');
-                recordingStatus.style.opacity = 0;
-                recordButton.innerText = "START RECORDING";
-                try { analyser.disconnect(audioDest); } catch(e){}
-            };
-            recordedChunks = [];
-            mediaRecorder.start();
-            recordButton.classList.add('recording');
-            recordingStatus.style.opacity = 1;
-            recordButton.innerText = "STOP RECORDING";
-        } catch (error) {
-            console.error("Recording setup failed:", error);
-            messageDiv.innerText = "Recording failed. Browser may not be supported.";
-        }
-    }
-
-    function stopRecording() {
-        if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-    }
-
-    function resizeCanvas() {
-        if (!renderer || !camera) return;
-
-        const targetAspect = 16 / 9;
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-        const windowAspect = windowWidth / windowHeight;
-
-        let newWidth, newHeight;
-
-        if (windowAspect > targetAspect) {
-            newHeight = windowHeight;
-            newWidth = newHeight * targetAspect;
-        } else {
-            newWidth = windowWidth;
-            newHeight = newWidth / targetAspect;
+                mediaRecorder.start();
+                recordButton.classList.add('recording');
+                recordingStatus.style.opacity = 1;
+                recordButton.innerText = "STOP RECORDING";
+            } catch (error) {
+                messageDiv.innerText = "Recording setup failed.";
+            }
         }
 
-        renderer.setSize(newWidth, newHeight);
-        renderer.domElement.style.width = `${newWidth}px`;
-        renderer.domElement.style.height = `${newHeight}px`;
-        camera.aspect = targetAspect;
-        camera.updateProjectionMatrix();
-    }
-
-    // --- NEW VISUAL ENGINE ---
-
-    function setupThreeScene() {
-        if (renderer) {
-            renderer.dispose();
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
         }
 
-        scene = new THREE.Scene();
-        scene.fog = new THREE.Fog(0x000510, 50, TUNNEL_LENGTH * 0.8);
+        // --- Three.js Scene ---
 
-        camera = new THREE.PerspectiveCamera(80, 16 / 9, 0.1, 1000);
-        camera.position.z = 5;
+        function resizeCanvas() {
+            if (!renderer || !camera) return;
+            const targetAspect = 16 / 9;
+            const windowAspect = window.innerWidth / window.innerHeight;
+            let newWidth, newHeight;
+            if (windowAspect > targetAspect) { newHeight = window.innerHeight; newWidth = newHeight * targetAspect; }
+            else { newWidth = window.innerWidth; newHeight = newWidth / targetAspect; }
+            renderer.setSize(newWidth, newHeight);
+            renderer.domElement.style.width = `${newWidth}px`;
+            renderer.domElement.style.height = `${newHeight}px`;
+            camera.aspect = targetAspect;
+            camera.updateProjectionMatrix();
+        }
 
-        renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        function setupThreeScene() {
+            if (renderer) renderer.dispose();
+            if (instancedTunnel) {
+                scene.remove(instancedTunnel);
+                instancedTunnel.geometry.dispose();
+                instancedTunnel.material.dispose();
+            }
 
-        scene.add(new THREE.AmbientLight(0x404040, 0.5));
-        pointLight = new THREE.PointLight(0x00ffff, 1, 300);
-        pointLight.position.set(0, 0, -10);
-        camera.add(pointLight);
-        scene.add(camera);
+            scene = new THREE.Scene();
+            // Fog is now colorful, not black/muddy. It will update dynamically in animate()
+            scene.fog = new THREE.FogExp2(0x110022, 0.012);
 
-        tunnel = new THREE.Group();
-        scene.add(tunnel);
+            camera = new THREE.PerspectiveCamera(85, 16 / 9, 0.1, 1000);
+            camera.position.z = 5;
 
-        const cubeGeom = new THREE.BoxGeometry(1.5, 8, 1.5);
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2; // Boost overall exposure
 
-        for (let i = 0; i < NUM_TUNNEL_SEGMENTS; i++) {
-            const segment = new THREE.Group();
-            segment.position.z = -i * SEGMENT_SPACING;
+            // --- Lighting (Brighter) ---
+            scene.add(new THREE.AmbientLight(0xffffff, 1.5)); // Strong ambient light
 
-            const segmentMaterial = new THREE.MeshStandardMaterial({
-                color: 0x888888,
-                metalness: 0.95,
-                roughness: 0.3
+            pointLight = new THREE.PointLight(0x00ffff, 10, 200);
+            pointLight.position.set(0, 0, -10);
+            camera.add(pointLight);
+
+            rimLight = new THREE.PointLight(0xff00ff, 8, 150);
+            rimLight.position.set(0, 0, -50);
+            scene.add(rimLight);
+
+            scene.add(camera);
+
+            // --- Instanced Tunnel (Cleaner Material) ---
+            const cubeGeom = new THREE.BoxGeometry(1.5, 8, 1.5);
+
+            // Use White color to allow tinting to be true. Lower metalness to avoid "black reflections"
+            const baseMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                metalness: 0.3, // Less metallic = less muddy darks
+                roughness: 0.1, // Smooth/Shiny
+                emissive: 0x222222, // Slight base glow
+                emissiveIntensity: 1.0
             });
 
-            const angleStep = (Math.PI * 2) / CUBES_PER_RING;
-            for (let j = 0; j < CUBES_PER_RING; j++) {
-                const angle = j * angleStep;
-                const cube = new THREE.Mesh(cubeGeom, segmentMaterial);
-                cube.position.x = Math.cos(angle) * TUNNEL_RADIUS;
-                cube.position.y = Math.sin(angle) * TUNNEL_RADIUS;
-                cube.lookAt(segment.position);
-                segment.add(cube);
+            instancedTunnel = new THREE.InstancedMesh(cubeGeom, baseMaterial, INSTANCE_COUNT);
+            instancedTunnel.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+            instancedTunnel.instanceColor = new THREE.BufferAttribute(new Float32Array(INSTANCE_COUNT * 3), 3);
+
+            scene.add(instancedTunnel);
+            instanceData = [];
+            let instanceIndex = 0;
+
+            for (let i = 0; i < NUM_TUNNEL_SEGMENTS; i++) {
+                const zPos = -i * SEGMENT_SPACING;
+                const angleStep = (Math.PI * 2) / CUBES_PER_RING;
+                for (let j = 0; j < CUBES_PER_RING; j++) {
+                    const angle = j * angleStep;
+                    const xPos = Math.cos(angle) * TUNNEL_RADIUS;
+                    const yPos = Math.sin(angle) * TUNNEL_RADIUS;
+                    instanceData.push({
+                        position: new THREE.Vector3(xPos, yPos, zPos),
+                        phaseOffset: j * 0.5,
+                        segmentIndex: i,
+                        initialRotationZ: angle + Math.PI / 2
+                    });
+                    dummy.position.set(xPos, yPos, zPos);
+                    dummy.rotation.z = angle + Math.PI / 2;
+                    dummy.updateMatrix();
+                    instancedTunnel.setMatrixAt(instanceIndex, dummy.matrix);
+                    dummyColor.setHSL(i / NUM_TUNNEL_SEGMENTS, 1.0, 0.5); // Initial bright color
+                    instancedTunnel.setColorAt(instanceIndex, dummyColor);
+                    instanceIndex++;
+                }
             }
-            tunnel.add(segment);
+            instancedTunnel.instanceMatrix.needsUpdate = true;
+            instancedTunnel.instanceColor.needsUpdate = true;
+
+            // --- Dust Particles (Brighter) ---
+            const dustCount = 3000;
+            const positions = new Float32Array(dustCount * 3);
+            const velocities = new Float32Array(dustCount);
+            for (let i = 0; i < dustCount; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * TUNNEL_RADIUS * 0.85;
+                positions[i * 3] = Math.cos(angle) * radius;
+                positions[i * 3 + 1] = Math.sin(angle) * radius;
+                positions[i * 3 + 2] = -Math.random() * TUNNEL_LENGTH;
+                velocities[i] = 0.5 + Math.random() * 0.5;
+            }
+            const dustGeom = new THREE.BufferGeometry();
+            dustGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            dustGeom.userData.velocities = velocities;
+            const dustMat = new THREE.PointsMaterial({
+                color: 0xffffff, // Pure white dust
+                size: 0.2,
+                transparent: true,
+                opacity: 0.9,
+                blending: THREE.AdditiveBlending
+            });
+            dustParticles = new THREE.Points(dustGeom, dustMat);
+            scene.add(dustParticles);
+
+            resizeCanvas();
         }
 
-        const dustCount = 2000; // Reduced from 5000 for performance
-        const positions = new Float32Array(dustCount * 3);
-        for (let i = 0; i < dustCount; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const radius = Math.random() * TUNNEL_RADIUS * 0.9;
-            positions[i * 3] = Math.cos(angle) * radius;
-            positions[i * 3 + 1] = Math.sin(angle) * radius;
-            positions[i * 3 + 2] = -Math.random() * TUNNEL_LENGTH;
+        // --- Animation Loop ---
+
+        function animate() {
+            if (!isRunning) return;
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            const elapsedTime = clock.getElapsedTime();
+            const audio = updateAudioAnalysis();
+
+            // --- Camera (Movement & Rotation) ---
+
+            // Speed up the tunnel (approx 2.5x faster than before)
+            const baseSpeed = 45.0;
+            const bassBoost = audio.bass * 100.0;
+            camera.position.z -= (baseSpeed + bassBoost) * delta;
+
+            const targetFov = 85 + audio.bass * 15;
+            camera.fov += (targetFov - camera.fov) * 0.15;
+            camera.updateProjectionMatrix();
+
+            const shake = (audio.bass * 0.2 + audio.treble * 0.1);
+            camera.position.x = Math.sin(elapsedTime * 3) * shake;
+            camera.position.y = Math.cos(elapsedTime * 2.5) * shake;
+
+            // Add slow continuous spin (elapsedTime * 0.15) + audio wobble
+            camera.rotation.z = (elapsedTime * 0.15) + Math.sin(elapsedTime * 0.5) * (audio.mid * 0.05);
+
+            // --- Tunnel Logic ---
+            const cameraZ = camera.position.z;
+            const rotationSpeed = 0.15 + audio.mid * 0.3;
+
+            for (let i = 0; i < INSTANCE_COUNT; i++) {
+                const data = instanceData[i];
+                let instanceZ = data.position.z;
+
+                if (instanceZ > cameraZ + SEGMENT_SPACING) {
+                    instanceZ -= TUNNEL_LENGTH;
+                    data.position.z = instanceZ;
+                }
+
+                const segIndex = data.segmentIndex;
+                let actualZ = data.position.z + (Math.floor((cameraZ - data.position.z) / TUNNEL_LENGTH) * TUNNEL_LENGTH);
+                const proximityFactor = Math.max(0, 1 - Math.abs(actualZ - cameraZ) / 100);
+
+                const individualPulse = Math.sin(elapsedTime * 2 + data.phaseOffset) * 0.1;
+                const scaleMultiplier = 1 + individualPulse + (audio.treble * 0.4 * proximityFactor);
+                dummy.scale.set(scaleMultiplier, scaleMultiplier, scaleMultiplier);
+
+                const ringRotation = Math.sin(elapsedTime * 0.05 + segIndex * 0.5) * 0.1;
+                const segmentRotation = elapsedTime * rotationSpeed * ((segIndex % 2 === 0) ? 1 : -1);
+                dummy.rotation.set(0, 0, data.initialRotationZ + segmentRotation + ringRotation);
+                dummy.position.set(data.position.x, data.position.y, instanceZ);
+
+                // --- BRIGHTER COLOR LOGIC ---
+                // Cycle hue rapidly
+                const hue = (elapsedTime * 0.1 + actualZ * 0.002 + data.phaseOffset * 0.05 + audio.bass * 0.2) % 1.0;
+                // Saturation always high (0.8 to 1.0) - no mud
+                const saturation = 0.9 + audio.overall * 0.1;
+                // Lightness centered around 0.6, never dipping below 0.4
+                const lightness = 0.6 + audio.bass * 0.3 + proximityFactor * 0.1;
+
+                dummyColor.setHSL(hue, saturation, lightness);
+                dummy.updateMatrix();
+                instancedTunnel.setMatrixAt(i, dummy.matrix);
+                instancedTunnel.setColorAt(i, dummyColor);
+            }
+            instancedTunnel.instanceMatrix.needsUpdate = true;
+            instancedTunnel.instanceColor.needsUpdate = true;
+
+            // --- Dust (Sped up) ---
+            const positions = dustParticles.geometry.attributes.position.array;
+            const vels = dustParticles.geometry.userData.velocities;
+            // Speed up dust to match tunnel velocity
+            const partSpeed = (50 + (audio.bass * 80)) * delta;
+            for(let i=0; i<positions.length; i+=3) {
+                positions[i+2] += partSpeed * vels[i/3];
+                if(positions[i+2] > cameraZ + 20) positions[i+2] -= TUNNEL_LENGTH;
+            }
+            dustParticles.geometry.attributes.position.needsUpdate = true;
+
+            // Lights & Fog (Brighter, Neon)
+            const lightHue = (0.5 + audio.bass * 0.3 + Math.sin(elapsedTime * 0.5) * 0.2) % 1.0;
+
+            pointLight.intensity = 8 + audio.overall * 15;
+            pointLight.color.setHSL(lightHue, 1.0, 0.7); // Bright
+
+            rimLight.intensity = 6 + audio.treble * 10;
+            rimLight.color.setHSL((lightHue + 0.5) % 1.0, 1.0, 0.7); // Complementary bright color
+
+            // Fog color matches light hue to avoid "dirty grey" distancegit stta
+            if (scene.fog) {
+                const fogColor = new THREE.Color().setHSL(lightHue, 0.8, 0.15 + audio.overall * 0.2);
+                scene.fog.color.copy(fogColor);
+                scene.fog.density = 0.012 + audio.bass * 0.01;
+            }
+
+            renderer.render(scene, camera);
         }
 
-        const dustGeom = new THREE.BufferGeometry();
-        dustGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        const dustMat = new THREE.PointsMaterial({
-            color: 0xcccccc,
-            size: 0.1,
-            transparent: true,
-            opacity: 0.7,
-            blending: THREE.AdditiveBlending
-        });
-        dustParticles = new THREE.Points(dustGeom, dustMat);
-        scene.add(dustParticles);
+        // --- Events ---
+        startButton.addEventListener('click', setupAudioFromMic);
+        loadFromFileButton.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => { if (e.target.files[0]) setupAudioFromFile(e.target.files[0]); });
+        fullscreenButton.addEventListener('click', toggleFullscreen);
+        stopVisualizerButton.addEventListener('click', stopVisualizer);
+        recordButton.addEventListener('click', () => { if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording(); else startRecording(); });
+        document.addEventListener('mousemove', showControls);
+        document.addEventListener('touchstart', showControls);
+        window.addEventListener('resize', resizeCanvas);
 
-        resizeCanvas();
-    }
-
-    function animate() {
-        if (!isRunning) return;
-        requestAnimationFrame(animate);
-
-        const delta = clock.getDelta();
-        const elapsedTime = clock.getElapsedTime();
-        const audio = updateAudioAnalysis();
-
-        const baseSpeed = 15.0;
-        const pulseSpeed = audio.bass * 80.0;
-        camera.position.z -= (baseSpeed + pulseSpeed) * delta;
-
-        const targetFov = 80 + audio.bass * 20;
-        camera.fov += (targetFov - camera.fov) * 0.1;
-        camera.updateProjectionMatrix();
-
-        const shakeIntensity = audio.bass * 0.15;
-        camera.position.x = (Math.random() - 0.5) * shakeIntensity;
-        camera.position.y = (Math.random() - 0.5) * shakeIntensity;
-
-        tunnel.children.forEach(segment => {
-            if (segment.position.z > camera.position.z) {
-                segment.position.z -= TUNNEL_LENGTH;
-            }
-            const scale = 1 + audio.bass * 0.3;
-            segment.scale.set(scale, scale, 1);
-
-            // --- OLD ROTATION ---
-            // segment.rotation.z += delta * 0.1 * (1 + audio.treble * 2);
-
-            // --- NEW ROTATION LOGIC to prevent reverse-motion illusion ---
-            // This creates a more dynamic "twisting" motion instead of a constant spin.
-            // The direction of rotation now depends on the balance between bass and treble.
-            const audioDrivenTwist = delta * 0.2 * (audio.treble - audio.bass);
-            segment.rotation.z += audioDrivenTwist;
-
-            if (segment.children.length > 0) {
-                const hue = (elapsedTime * 0.05 + segment.position.z * 0.005 + audio.treble * 0.3) % 1.0;
-                const saturation = 0.6 + audio.overall * 0.4;
-                const lightness = 0.3 + audio.bass * 0.3;
-                const material = segment.children[0].material;
-                material.color.setHSL(hue, saturation, lightness);
-            }
-        });
-
-        const positions = dustParticles.geometry.attributes.position.array;
-        const particleSpeed = 30 * delta;
-        for(let i=0; i < positions.length; i+=3) {
-            positions[i+2] += particleSpeed;
-            if(positions[i+2] > camera.position.z) {
-                positions[i+2] -= TUNNEL_LENGTH;
-            }
-        }
-        dustParticles.geometry.attributes.position.needsUpdate = true;
-
-        pointLight.intensity = 2 + audio.overall * 8;
-        const lightHue = (0.55 + audio.bass * 0.4) % 1.0;
-        pointLight.color.setHSL(lightHue, 1, 0.6);
-
-        if (scene.fog) {
-            scene.fog.color.setHSL(lightHue, 0.5, 0.05);
-        }
-
-        renderer.render(scene, camera);
-    }
-
-    // --- Event Listeners ---
-    startButton.addEventListener('click', setupAudioFromMic);
-    loadFromFileButton.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => { if (e.target.files[0]) setupAudioFromFile(e.target.files[0]); });
-    fullscreenButton.addEventListener('click', toggleFullscreen);
-    stopVisualizerButton.addEventListener('click', stopVisualizer);
-    recordButton.addEventListener('click', () => {
-        if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording(); else startRecording();
-    });
-    document.addEventListener('mousemove', showControls);
-    window.addEventListener('resize', resizeCanvas);
-
+    })();
 </script>
 </body>
-</html>
-
-
+</html>b
