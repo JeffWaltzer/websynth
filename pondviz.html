@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystic Pond - Vibrant Life</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #020a0f, #0a202a, #153545);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #e0e0e0;
+        }
+
+        #plasmaCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        #overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            padding: 30px;
+            text-align: center;
+            background: rgba(2, 15, 25, 0.85);
+            border-radius: 16px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 50px rgba(0, 255, 200, 0.2);
+            transition: opacity 0.5s;
+            max-width: 450px;
+            width: 90%;
+            border: 1px solid rgba(80, 255, 220, 0.3);
+        }
+
+        #loadingText {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            color: #50ffb0;
+            text-shadow: 0 0 20px rgba(80, 255, 150, 0.8);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid rgba(80, 255, 180, 0.1);
+            border-radius: 12px;
+            background: rgba(0, 40, 30, 0.5);
+        }
+
+        .control-group h3 {
+            margin-top: 0;
+            color: #ccffee;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .button-style {
+            background: linear-gradient(135deg, #00b894, #55efc4);
+            border: none;
+            color: #003322;
+            padding: 16px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 15px;
+            font-weight: 800;
+            margin: 6px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 255, 150, 0.4);
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .button-style:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 255, 150, 0.7);
+            filter: brightness(1.1);
+        }
+
+        #fileInput { display: none; }
+        .error { color: #ff6b6b; font-weight: bold; margin-top: 10px; }
+
+        #message {
+            text-align: left;
+            padding: 15px;
+            background-color: rgba(0, 20, 10, 0.3);
+            border-radius: 8px;
+            min-height: 20px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(100, 255, 200, 0.1);
+        }
+
+        #recordContainer {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out;
+            background: rgba(10, 30, 20, 0.85);
+            padding: 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 255, 200, 0.2);
+        }
+
+        #recordButton {
+            background: linear-gradient(135deg, #ff3333, #aa0000);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
+        }
+
+        #recordButton.recording {
+            background: #cc0000;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 50, 50, 0.8); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255, 50, 50, 0); }
+        }
+
+        #stopVisualizerButton {
+            background: #1a332a;
+            margin-top: 10px;
+            width: 100%;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            color: #aaddcc;
+            border: 1px solid rgba(100, 255, 200, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #stopVisualizerButton:hover { background: #2a443a; color: white; }
+
+        #fullscreenButton {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 60;
+            background: rgba(10, 40, 30, 0.8);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,255,180,0.3);
+            border: 1px solid rgba(100, 255, 200, 0.3);
+            transition: transform 0.2s, background 0.2s;
+            backdrop-filter: blur(5px);
+        }
+        #fullscreenButton:hover { transform: scale(1.1); background: rgba(20, 60, 50, 0.9); }
+        #fullscreenButton svg { width: 24px; height: 24px; fill: #50ffb0; }
+        input[type="checkbox"] { accent-color: #50ffb0; }
+
+    </style>
+</head>
+<body>
+
+<canvas id="plasmaCanvas"></canvas>
+
+<button id="fullscreenButton" title="Toggle Fullscreen">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+    </svg>
+</button>
+
+<div id="recordContainer">
+    <button id="recordButton">START RECORDING</button>
+    <button id="stopVisualizerButton">LEAVE POND</button>
+</div>
+
+<div id="overlay">
+    <div id="loadingText">MYSTIC VIBRANT POND</div>
+
+    <div class="control-group">
+        <h3>Select Audio Source</h3>
+        <button id="startButton" class="button-style">Use Microphone</button>
+        <input type="file" id="fileInput" accept="audio/*">
+        <button id="loadFromFileButton" class="button-style">Load MP3 File</button>
+    </div>
+
+    <div style="margin: 15px 0;">
+        <input type="checkbox" id="autoRecord">
+        <label for="autoRecord" style="color:#ccffee">Auto-record on start</label>
+    </div>
+
+    <div id="message"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script type="x-shader/x-vertex" id="vertexShader">
+    // Need to pass rotation data to fragment shader
+    attribute float rotationOffset;
+    attribute float rotationSpeed;
+    attribute vec3 customColor;
+
+    uniform float uTime;
+    uniform float uSize;
+
+    varying vec3 vColor;
+    varying float vCurrentRotation;
+
+    void main() {
+        vColor = customColor;
+        // Calculate current rotation based on time and speed
+        vCurrentRotation = rotationOffset + (uTime * rotationSpeed);
+
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        // Scale size based on distance to camera
+        gl_PointSize = uSize * (30.0 / -mvPosition.z);
+        gl_Position = projectionMatrix * mvPosition;
+    }
+</script>
+
+<script type="x-shader/x-fragment" id="fragmentShader">
+    uniform sampler2D pointTexture;
+    varying vec3 vColor;
+    varying float vCurrentRotation;
+
+    // Function to rotate UV coordinates
+    vec2 rotateUV(vec2 uv, float rotation) {
+        float mid = 0.5;
+        float cosAngle = cos(rotation);
+        float sinAngle = sin(rotation);
+        vec2 rotated = vec2(
+            cosAngle * (uv.x - mid) + sinAngle * (uv.y - mid) + mid,
+            cosAngle * (uv.y - mid) - sinAngle * (uv.x - mid) + mid
+        );
+        return rotated;
+    }
+
+    void main() {
+        // Rotate the texture coordinate before sampling
+        vec2 rotatedUv = rotateUV(gl_PointCoord, vCurrentRotation);
+        vec4 textureColor = texture2D(pointTexture, rotatedUv);
+
+        // Combine texture color with custom vibrant color
+        gl_FragColor = vec4(vColor * textureColor.rgb, textureColor.a);
+
+        // Simple alpha test to discard transparent parts of texture
+        if (gl_FragColor.a < 0.1) discard;
+    }
+</script>
+
+<script>
+    (function () {
+        // --- DOM Elements ---
+        const canvas = document.getElementById('plasmaCanvas');
+        const overlay = document.getElementById('overlay');
+        const startButton = document.getElementById('startButton');
+        const loadFromFileButton = document.getElementById('loadFromFileButton');
+        const fileInput = document.getElementById('fileInput');
+        const autoRecordCheckbox = document.getElementById('autoRecord');
+        const messageDiv = document.getElementById('message');
+        const fullscreenButton = document.getElementById('fullscreenButton');
+        const recordContainer = document.getElementById('recordContainer');
+        const recordButton = document.getElementById('recordButton');
+        const stopVisualizerButton = document.getElementById('stopVisualizerButton');
+
+        // --- Audio Variables ---
+        let audioContext, analyser, frequencyData, audioSourceNode, mediaStream;
+
+        // --- 3D Variables ---
+        let scene, camera, renderer, clock;
+        let waterMesh, fairyDustSystem, mistSystem;
+        let fishes = []; // Array to hold fish objects
+        let isRunning = false;
+        let mediaRecorder, recordedChunks = [];
+
+        // Helper: Roughen Geometry
+        function roughenGeometry(geometry, intensity) {
+            const pos = geometry.attributes.position.array;
+            for(let i=0; i<pos.length; i++) {
+                pos[i] += (Math.random() - 0.5) * intensity;
+            }
+            geometry.attributes.position.needsUpdate = true;
+            geometry.computeVertexNormals();
+        }
+
+        // Helper: Create Star Texture (Brighter center)
+        function createStarTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const cx = 32, cy = 32, outerRadius = 28, innerRadius = 10;
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                ctx.lineTo(cx + outerRadius * Math.cos((18 + i * 72) * 0.0174533),
+                    cy - outerRadius * Math.sin((18 + i * 72) * 0.0174533));
+                ctx.lineTo(cx + innerRadius * Math.cos((54 + i * 72) * 0.0174533),
+                    cy - innerRadius * Math.sin((54 + i * 72) * 0.0174533));
+            }
+            ctx.closePath();
+            const gradient = ctx.createRadialGradient(cx, cy, 5, cx, cy, outerRadius);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)'); // Solid white center
+            gradient.addColorStop(0.5, 'rgba(255,255,255,0.9)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        // Helper: Create Smoke Texture
+        function createSmokeTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+            gradient.addColorStop(0, 'rgba(220,255,240,0.25)');
+            gradient.addColorStop(0.6, 'rgba(180,220,200,0.1)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0,0,128,128);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        // --- 3D Scene Setup ---
+        function initScene() {
+            if (renderer) renderer.dispose();
+
+            clock = new THREE.Clock();
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x020a0f, 0.04);
+            scene.background = new THREE.Color(0x020a0f);
+
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 32, 22);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.1;
+
+            // --- Lighting ---
+            scene.add(new THREE.AmbientLight(0x0a2233, 0.5));
+            const moonLight = new THREE.DirectionalLight(0x99ccff, 1.2);
+            moonLight.position.set(30, 50, -40);
+            moonLight.castShadow = true;
+            scene.add(moonLight);
+
+            const createMagicLight = (x, z, color, intensity) => {
+                const light = new THREE.PointLight(color, intensity, 30);
+                light.position.set(x, 3, z);
+                scene.add(light);
+            }
+            createMagicLight(25, 25, 0x00ffcc, 2.0);
+            createMagicLight(-25, -20, 0x55ff55, 1.5);
+            createMagicLight(0, -32, 0x0088ff, 2.0);
+
+            // --- Environment ---
+            const basinGeo = new THREE.BoxGeometry(65, 20, 65, 10, 1, 10);
+            roughenGeometry(basinGeo, 1.8);
+            const basinMat = new THREE.MeshStandardMaterial({ color: 0x081208, roughness: 1.0, side: THREE.BackSide, flatShading: true });
+            const basin = new THREE.Mesh(basinGeo, basinMat);
+            basin.position.y = -9.5; basin.receiveShadow = true; scene.add(basin);
+
+            const rockMat = new THREE.MeshStandardMaterial({ color: 0x1a2a1a, roughness: 1.0, flatShading: true });
+            for(let i=0; i<50; i++) {
+                const angle = (i/50)*Math.PI*2; const r = 32+Math.random()*4; const s = 2+Math.random()*3;
+                const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(s,0), rockMat);
+                roughenGeometry(rock.geometry, 0.7);
+                rock.position.set(Math.cos(angle)*r, -0.5, Math.sin(angle)*r);
+                rock.rotation.set(Math.random(),Math.random(),Math.random());
+                rock.castShadow=true; rock.receiveShadow=true; scene.add(rock);
+            }
+
+            // --- Water ---
+            const waterGeo = new THREE.PlaneGeometry(62, 62, 160, 160).rotateX(-Math.PI/2);
+            waterGeo.userData.basePos = waterGeo.attributes.position.array.slice();
+            waterMesh = new THREE.Mesh(waterGeo, new THREE.MeshPhysicalMaterial({
+                color: 0x000a11, emissive: 0x000000, emissiveIntensity: 2.0, transmission: 0.4,
+                opacity: 0.9, transparent: true, roughness: 0.08, metalness: 0.3, reflectivity: 0.9,
+                clearcoat: 1.0, side: THREE.DoubleSide
+            }));
+            waterMesh.position.y = 0.1; scene.add(waterMesh);
+
+            // --- VIBRANT SPINNING STARS (Using Custom Shader) ---
+            const dustCount = 800;
+            const dustGeo = new THREE.BufferGeometry();
+            const positions = new Float32Array(dustCount * 3);
+            const colors = new Float32Array(dustCount * 3);
+            const rotationOffsets = new Float32Array(dustCount);
+            const rotationSpeeds = new Float32Array(dustCount);
+            const color = new THREE.Color();
+
+            for(let i=0; i<dustCount; i++) {
+                positions[i*3] = (Math.random()-0.5)*70;
+                positions[i*3+1] = Math.random()*35;
+                positions[i*3+2] = (Math.random()-0.5)*70;
+
+                // VIBRANT COLORS: High Saturation (1.0) and Lightness (0.8)
+                const choice = Math.random();
+                if(choice < 0.25) color.setHSL(Math.random()*0.1+0.3, 1.0, 0.8); // Green
+                else if(choice < 0.5) color.setHSL(Math.random()*0.1+0.55, 1.0, 0.8); // Blue
+                else if(choice < 0.75) color.setHSL(Math.random()*0.1+0.75, 1.0, 0.8); // Purple
+                else color.setHSL(Math.random()*0.1+0.05, 1.0, 0.8); // Gold
+
+                colors[i*3] = color.r; colors[i*3+1] = color.g; colors[i*3+2] = color.b;
+
+                // Random Rotation data
+                rotationOffsets[i] = Math.random() * Math.PI * 2;
+                rotationSpeeds[i] = (Math.random() - 0.5) * 2.0; // Range -1.0 to 1.0 radians per sec
+            }
+            dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            dustGeo.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
+            dustGeo.setAttribute('rotationOffset', new THREE.BufferAttribute(rotationOffsets, 1));
+            dustGeo.setAttribute('rotationSpeed', new THREE.BufferAttribute(rotationSpeeds, 1));
+
+            // Use ShaderMaterial instead of PointsMaterial
+            const dustMat = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTime: { value: 0.0 },
+                    uSize: { value: 30.0 }, // Base size of stars
+                    pointTexture: { value: createStarTexture() }
+                },
+                vertexShader: document.getElementById('vertexShader').textContent,
+                fragmentShader: document.getElementById('fragmentShader').textContent,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                transparent: true
+            });
+            fairyDustSystem = new THREE.Points(dustGeo, dustMat);
+            scene.add(fairyDustSystem);
+
+            // --- Mist ---
+            const mistGeo = new THREE.BufferGeometry();
+            const mistPos = new Float32Array(300 * 3);
+            for(let i=0; i<300; i++) {
+                mistPos[i*3]=(Math.random()-0.5)*85; mistPos[i*3+1]=Math.random()*4; mistPos[i*3+2]=(Math.random()-0.5)*85;
+            }
+            mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
+            mistSystem = new THREE.Points(mistGeo, new THREE.PointsMaterial({
+                size: 18, map: createSmokeTexture(), transparent: true, opacity: 0.3,
+                blending: THREE.AdditiveBlending, depthWrite: false, color: 0x88ffdd
+            }));
+            scene.add(mistSystem);
+
+            // --- Initialize Fishes ---
+            initFishes();
+        }
+
+        // --- FISH LOGIC ---
+        function initFishes() {
+            fishes = [];
+            const fishGeo = new THREE.ConeGeometry(0.3, 1.2, 8);
+            fishGeo.rotateX(Math.PI / 2); // Point forward
+            // Flatten them slightly for a fishy shape
+            fishGeo.scale(0.6, 1.0, 1.5);
+
+            const fishMat = new THREE.MeshStandardMaterial({
+                color: 0xffaa00, // Gold/Orange fish
+                emissive: 0xdd5500,
+                emissiveIntensity: 0.5,
+                roughness: 0.3,
+                metalness: 0.8
+            });
+
+            for (let i = 0; i < 25; i++) {
+                const mesh = new THREE.Mesh(fishGeo, fishMat);
+                // Random start position within pond radius (~28)
+                const r = Math.random() * 25;
+                const angle = Math.random() * Math.PI * 2;
+                mesh.position.set(Math.cos(angle) * r, -0.5 + Math.random()*0.5, Math.sin(angle) * r);
+                mesh.castShadow = true;
+                scene.add(mesh);
+
+                // Give random velocity
+                const speed = 0.05 + Math.random() * 0.05;
+                const vAngle = Math.random() * Math.PI * 2;
+                const velocity = new THREE.Vector3(Math.cos(vAngle)*speed, 0, Math.sin(vAngle)*speed);
+
+                fishes.push({ mesh, velocity, speed });
+            }
+        }
+
+        function updateFishes() {
+            fishes.forEach(fish => {
+                // Move fish
+                fish.mesh.position.add(fish.velocity);
+
+                // Boundary Check: Steer back to center if too far
+                const distFromCenter = fish.mesh.position.length();
+                if (distFromCenter > 28) {
+                    const steerToCenter = fish.mesh.position.clone().negate().normalize().multiplyScalar(0.005);
+                    fish.velocity.add(steerToCenter);
+                }
+
+                // Normalize velocity back to its set speed (keeps them from speeding up infinitely)
+                fish.velocity.normalize().multiplyScalar(fish.speed);
+
+                // Orient fish to face travel direction
+                const lookTarget = fish.mesh.position.clone().add(fish.velocity);
+                fish.mesh.lookAt(lookTarget);
+            });
+        }
+
+
+        function animate() {
+            if (!isRunning) return;
+            requestAnimationFrame(animate);
+
+            const time = clock.getElapsedTime();
+            const audioData = getAudioData();
+
+            // --- Update Star Shader Uniforms ---
+            // This is crucial for the spinning effect
+            fairyDustSystem.material.uniforms.uTime.value = time;
+
+            // --- Update Fishes ---
+            updateFishes();
+
+            // --- Water Animation ---
+            const pos = waterMesh.geometry.attributes.position.array;
+            const base = waterMesh.geometry.userData.basePos;
+            const amp = 0.3 + (audioData.bass * 3.5); const spd = 1.2 + (audioData.mid * 1.5);
+            for(let i=0; i < pos.length; i+=3) {
+                const x = base[i]; const z = base[i+2];
+                const w1 = Math.sin(x*0.2 + time*spd*0.7)*amp;
+                const w2 = Math.cos(z*0.25 + time*spd*0.8)*amp;
+                const rip = Math.sin(Math.sqrt(x*x+z*z)*0.5 - time*2.5)*(audioData.bass*2.5);
+                const chop = Math.sin(x*0.5+time*3.0)*0.2 + Math.cos(z*0.5+time*2.5)*0.2;
+                pos[i+1] = w1 + w2 + rip + chop;
+            }
+            waterMesh.geometry.attributes.position.needsUpdate = true;
+            waterMesh.geometry.computeVertexNormals();
+
+            const glow = new THREE.Color(0x00ffaa).multiplyScalar(audioData.bass * audioData.bass * 5.0);
+            waterMesh.material.emissive.copy(glow);
+
+            // --- Animate Mist ---
+            const mPos = mistSystem.geometry.attributes.position.array;
+            for(let i=0; i<mPos.length; i+=3) {
+                mPos[i] += Math.sin(time*0.5+i)*0.02; mPos[i+2] += 0.03;
+                if(mPos[i+2]>42) mPos[i+2] = -42;
+            }
+            mistSystem.geometry.attributes.position.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+
+        // --- Audio, Interactions, Recording, Utils (KEPT) ---
+        function initAudio() { if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)(); if (analyser) return; analyser = audioContext.createAnalyser(); analyser.fftSize = 512; frequencyData = new Uint8Array(analyser.frequencyBinCount); }
+        function getAudioData() { if (!analyser) return { bass: 0, mid: 0, high: 0 }; analyser.getByteFrequencyData(frequencyData); const bass = avg(frequencyData.slice(0, 10)) / 255; const mid = avg(frequencyData.slice(10, 100)) / 255; const high = avg(frequencyData.slice(100, 200)) / 255; return { bass, mid, high }; }
+        const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+        function startViz() { initScene(); overlay.style.opacity = 0; setTimeout(() => overlay.style.display='none', 500); isRunning = true; animate(); recordContainer.style.display = 'flex'; setTimeout(()=> recordContainer.style.opacity=1, 100); if(autoRecordCheckbox.checked) toggleRecording(); }
+        startButton.onclick = async () => { initAudio(); if(audioContext.state === 'suspended') await audioContext.resume(); try { mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true }); cleanupAudio(); audioSourceNode = audioContext.createMediaStreamSource(mediaStream); audioSourceNode.connect(analyser); startViz(); } catch(e) { messageDiv.innerText = "Mic Error: " + e.message; } };
+        fileInput.onchange = (e) => { const file = e.target.files[0]; if(!file) return; initAudio(); const reader = new FileReader(); reader.onload = async (ev) => { if(audioContext.state === 'suspended') await audioContext.resume(); const buffer = await audioContext.decodeAudioData(ev.target.result); cleanupAudio(); audioSourceNode = audioContext.createBufferSource(); audioSourceNode.buffer = buffer; audioSourceNode.connect(analyser); audioSourceNode.connect(audioContext.destination); audioSourceNode.onended = stopViz; audioSourceNode.start(0); startViz(); }; reader.readAsArrayBuffer(file); };
+        loadFromFileButton.onclick = () => fileInput.click();
+        function cleanupAudio() { if(audioSourceNode) { audioSourceNode.disconnect(); try{audioSourceNode.stop();}catch(e){} } }
+        function stopViz() { isRunning = false; overlay.style.display = 'flex'; setTimeout(()=>overlay.style.opacity=1, 10); recordContainer.style.opacity = 0; setTimeout(()=>recordContainer.style.display='none', 500); cleanupAudio(); }
+        stopVisualizerButton.onclick = stopViz;
+        recordButton.onclick = toggleRecording;
+        function toggleRecording() { if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); recordButton.classList.remove('recording'); recordButton.innerText = "START RECORDING"; } else { const stream = canvas.captureStream(60); const dest = audioContext.createMediaStreamDestination(); analyser.connect(dest); const tracks = [...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]; mediaRecorder = new MediaRecorder(new MediaStream(tracks), { mimeType: 'video/webm;codecs=vp8,opus' }); mediaRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); }; mediaRecorder.onstop = saveRecording; recordedChunks = []; mediaRecorder.start(); recordButton.classList.add('recording'); recordButton.innerText = "STOP RECORDING"; } }
+        function saveRecording() { const blob = new Blob(recordedChunks, { type: 'video/webm' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style.display='none'; a.href=url; a.download='mystic-pond-vibrant.webm'; document.body.appendChild(a); a.click(); setTimeout(()=> { URL.revokeObjectURL(url); a.remove(); }, 100); }
+        window.addEventListener('resize', () => { if(camera && renderer) { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); } });
+        fullscreenButton.onclick = () => { if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); };
+    })();
+</script>
+</body>
+</html>
