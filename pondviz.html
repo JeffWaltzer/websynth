@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mystic Pond - Vibrant Life</title>
+    <title>Meditative Pond - Visuals Fixed</title>
     <style>
         body {
             margin: 0;
@@ -12,7 +12,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(to bottom, #020a0f, #0a202a, #153545);
+            background: linear-gradient(to bottom, #1a2a40, #2b4b6b, #3a6a8a);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             color: #e0e0e0;
         }
@@ -34,21 +34,21 @@
             z-index: 100;
             padding: 30px;
             text-align: center;
-            background: rgba(2, 15, 25, 0.85);
+            background: rgba(10, 30, 50, 0.8);
             border-radius: 16px;
             backdrop-filter: blur(15px);
-            box-shadow: 0 10px 50px rgba(0, 255, 200, 0.2);
+            box-shadow: 0 10px 50px rgba(100, 255, 255, 0.3);
             transition: opacity 0.5s;
             max-width: 450px;
             width: 90%;
-            border: 1px solid rgba(80, 255, 220, 0.3);
+            border: 1px solid rgba(150, 255, 255, 0.4);
         }
 
         #loadingText {
             font-size: 1.6rem;
             margin-bottom: 20px;
-            color: #50ffb0;
-            text-shadow: 0 0 20px rgba(80, 255, 150, 0.8);
+            color: #80ffff;
+            text-shadow: 0 0 20px rgba(100, 255, 255, 0.8);
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -57,22 +57,22 @@
         .control-group {
             margin-bottom: 20px;
             padding: 20px;
-            border: 1px solid rgba(80, 255, 180, 0.1);
+            border: 1px solid rgba(150, 255, 255, 0.2);
             border-radius: 12px;
-            background: rgba(0, 40, 30, 0.5);
+            background: rgba(20, 60, 80, 0.5);
         }
 
         .control-group h3 {
             margin-top: 0;
-            color: #ccffee;
+            color: #ccffff;
             font-weight: 600;
             font-size: 1.1rem;
         }
 
         .button-style {
-            background: linear-gradient(135deg, #00b894, #55efc4);
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
             border: none;
-            color: #003322;
+            color: #002233;
             padding: 16px 32px;
             text-align: center;
             text-decoration: none;
@@ -84,7 +84,7 @@
             border-radius: 8px;
             transition: all 0.3s;
             width: 90%;
-            box-shadow: 0 4px 20px rgba(0, 255, 150, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 200, 255, 0.4);
             text-transform: uppercase;
             position: relative;
             overflow: hidden;
@@ -92,22 +92,22 @@
 
         .button-style:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(0, 255, 150, 0.7);
+            box-shadow: 0 8px 30px rgba(0, 200, 255, 0.7);
             filter: brightness(1.1);
         }
 
         #fileInput { display: none; }
-        .error { color: #ff6b6b; font-weight: bold; margin-top: 10px; }
+        .error { color: #ff8888; font-weight: bold; margin-top: 10px; }
 
         #message {
             text-align: left;
             padding: 15px;
-            background-color: rgba(0, 20, 10, 0.3);
+            background-color: rgba(20, 60, 80, 0.3);
             border-radius: 8px;
             min-height: 20px;
             margin-top: 10px;
             font-size: 0.9rem;
-            border: 1px solid rgba(100, 255, 200, 0.1);
+            border: 1px solid rgba(150, 255, 255, 0.2);
         }
 
         #recordContainer {
@@ -122,15 +122,15 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.5s ease-in-out;
-            background: rgba(10, 30, 20, 0.85);
+            background: rgba(20, 60, 80, 0.85);
             padding: 15px;
             border-radius: 20px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(100, 255, 200, 0.2);
+            border: 1px solid rgba(150, 255, 255, 0.3);
         }
 
         #recordButton {
-            background: linear-gradient(135deg, #ff3333, #aa0000);
+            background: linear-gradient(135deg, #ff5555, #dd2222);
             color: white;
             padding: 12px 24px;
             border-radius: 25px;
@@ -138,38 +138,45 @@
             cursor: pointer;
             border: none;
             transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 50, 50, 0.4);
+            min-width: 200px;
         }
 
         #recordButton.recording {
-            background: #cc0000;
+            background: #dd2222;
             animation: pulse 1.5s ease-in-out infinite;
         }
 
+        #recordButton.fading {
+            background: #ffaa00;
+            animation: none;
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.5);
+        }
+
         @keyframes pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 50, 50, 0.8); }
-            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255, 50, 50, 0); }
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 80, 80, 0.8); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255, 80, 80, 0); }
         }
 
         #stopVisualizerButton {
-            background: #1a332a;
+            background: #2a556a;
             margin-top: 10px;
             width: 100%;
             padding: 8px 16px;
             font-size: 0.9rem;
-            color: #aaddcc;
-            border: 1px solid rgba(100, 255, 200, 0.2);
+            color: #ccffff;
+            border: 1px solid rgba(150, 255, 255, 0.3);
             border-radius: 8px;
             cursor: pointer;
         }
-        #stopVisualizerButton:hover { background: #2a443a; color: white; }
+        #stopVisualizerButton:hover { background: #3a6a7a; color: white; }
 
         #fullscreenButton {
             position: fixed;
             bottom: 30px;
             right: 30px;
             z-index: 60;
-            background: rgba(10, 40, 30, 0.8);
+            background: rgba(20, 60, 80, 0.8);
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -177,14 +184,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 5px 15px rgba(0,255,180,0.3);
-            border: 1px solid rgba(100, 255, 200, 0.3);
+            box-shadow: 0 5px 15px rgba(100,255,255,0.3);
+            border: 1px solid rgba(150, 255, 255, 0.3);
             transition: transform 0.2s, background 0.2s;
             backdrop-filter: blur(5px);
         }
-        #fullscreenButton:hover { transform: scale(1.1); background: rgba(20, 60, 50, 0.9); }
-        #fullscreenButton svg { width: 24px; height: 24px; fill: #50ffb0; }
-        input[type="checkbox"] { accent-color: #50ffb0; }
+        #fullscreenButton:hover { transform: scale(1.1); background: rgba(30, 80, 100, 0.9); }
+        #fullscreenButton svg { width: 24px; height: 24px; fill: #80ffff; }
+        input[type="checkbox"] { accent-color: #80ffff; }
 
     </style>
 </head>
@@ -204,18 +211,17 @@
 </div>
 
 <div id="overlay">
-    <div id="loadingText">MYSTIC VIBRANT POND</div>
+    <div id="loadingText">MEDITATIVE POND</div>
 
     <div class="control-group">
-        <h3>Select Audio Source</h3>
-        <button id="startButton" class="button-style">Use Microphone</button>
+        <h3>Audio Source</h3>
         <input type="file" id="fileInput" accept="audio/*">
-        <button id="loadFromFileButton" class="button-style">Load MP3 File</button>
+        <button id="loadFromFileButton" class="button-style">Load MP3 / Audio File</button>
     </div>
 
     <div style="margin: 15px 0;">
         <input type="checkbox" id="autoRecord">
-        <label for="autoRecord" style="color:#ccffee">Auto-record on start</label>
+        <label for="autoRecord" style="color:#ccffff">Auto-record on start</label>
     </div>
 
     <div id="message"></div>
@@ -224,24 +230,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script type="x-shader/x-vertex" id="vertexShader">
-    // Need to pass rotation data to fragment shader
     attribute float rotationOffset;
     attribute float rotationSpeed;
     attribute vec3 customColor;
-
     uniform float uTime;
     uniform float uSize;
-
     varying vec3 vColor;
     varying float vCurrentRotation;
-
     void main() {
         vColor = customColor;
-        // Calculate current rotation based on time and speed
         vCurrentRotation = rotationOffset + (uTime * rotationSpeed);
-
         vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-        // Scale size based on distance to camera
         gl_PointSize = uSize * (30.0 / -mvPosition.z);
         gl_Position = projectionMatrix * mvPosition;
     }
@@ -251,28 +250,16 @@
     uniform sampler2D pointTexture;
     varying vec3 vColor;
     varying float vCurrentRotation;
-
-    // Function to rotate UV coordinates
     vec2 rotateUV(vec2 uv, float rotation) {
         float mid = 0.5;
         float cosAngle = cos(rotation);
         float sinAngle = sin(rotation);
-        vec2 rotated = vec2(
-            cosAngle * (uv.x - mid) + sinAngle * (uv.y - mid) + mid,
-            cosAngle * (uv.y - mid) - sinAngle * (uv.x - mid) + mid
-        );
-        return rotated;
+        return vec2(cosAngle * (uv.x - mid) + sinAngle * (uv.y - mid) + mid, cosAngle * (uv.y - mid) - sinAngle * (uv.x - mid) + mid);
     }
-
     void main() {
-        // Rotate the texture coordinate before sampling
         vec2 rotatedUv = rotateUV(gl_PointCoord, vCurrentRotation);
         vec4 textureColor = texture2D(pointTexture, rotatedUv);
-
-        // Combine texture color with custom vibrant color
         gl_FragColor = vec4(vColor * textureColor.rgb, textureColor.a);
-
-        // Simple alpha test to discard transparent parts of texture
         if (gl_FragColor.a < 0.1) discard;
     }
 </script>
@@ -282,7 +269,6 @@
         // --- DOM Elements ---
         const canvas = document.getElementById('plasmaCanvas');
         const overlay = document.getElementById('overlay');
-        const startButton = document.getElementById('startButton');
         const loadFromFileButton = document.getElementById('loadFromFileButton');
         const fileInput = document.getElementById('fileInput');
         const autoRecordCheckbox = document.getElementById('autoRecord');
@@ -293,14 +279,26 @@
         const stopVisualizerButton = document.getElementById('stopVisualizerButton');
 
         // --- Audio Variables ---
-        let audioContext, analyser, frequencyData, audioSourceNode, mediaStream;
+        let audioContext, analyser, frequencyData, audioSourceNode;
+        let masterGainNode;
 
         // --- 3D Variables ---
         let scene, camera, renderer, clock;
         let waterMesh, fairyDustSystem, mistSystem;
-        let fishes = []; // Array to hold fish objects
+        let fishes = [];
+        let emojiSprites = [];
+        let starData = [];
+
+        // --- PRINCESS VARIABLES ---
+        let princessMesh;
+        let isPrincessSwimming = false;
+        let princessSwimTimer = 10;
+        const PRINCESS_SPAWN_INTERVAL = 15.0;
+
         let isRunning = false;
         let mediaRecorder, recordedChunks = [];
+        let recordedMimeType = '';
+        let isFadingOut = false;
 
         // Helper: Roughen Geometry
         function roughenGeometry(geometry, intensity) {
@@ -312,22 +310,24 @@
             geometry.computeVertexNormals();
         }
 
-        // Helper: Create Star Texture (Brighter center)
+        // Helper: Create Irregular Star Texture
         function createStarTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 64; canvas.height = 64;
             const ctx = canvas.getContext('2d');
-            const cx = 32, cy = 32, outerRadius = 28, innerRadius = 10;
+            const cx = 32, cy = 32;
+            const baseOuterRadius = 28;
+            const baseInnerRadius = 10;
             ctx.beginPath();
             for (let i = 0; i < 5; i++) {
-                ctx.lineTo(cx + outerRadius * Math.cos((18 + i * 72) * 0.0174533),
-                    cy - outerRadius * Math.sin((18 + i * 72) * 0.0174533));
-                ctx.lineTo(cx + innerRadius * Math.cos((54 + i * 72) * 0.0174533),
-                    cy - innerRadius * Math.sin((54 + i * 72) * 0.0174533));
+                const outerRadius = baseOuterRadius + (Math.random() - 0.5) * 8;
+                const innerRadius = baseInnerRadius + (Math.random() - 0.5) * 4;
+                ctx.lineTo(cx + outerRadius * Math.cos((18 + i * 72) * 0.0174533), cy - outerRadius * Math.sin((18 + i * 72) * 0.0174533));
+                ctx.lineTo(cx + innerRadius * Math.cos((54 + i * 72) * 0.0174533), cy - innerRadius * Math.sin((54 + i * 72) * 0.0174533));
             }
             ctx.closePath();
-            const gradient = ctx.createRadialGradient(cx, cy, 5, cx, cy, outerRadius);
-            gradient.addColorStop(0, 'rgba(255,255,255,1)'); // Solid white center
+            const gradient = ctx.createRadialGradient(cx+2, cy-2, 5, cx, cy, baseOuterRadius);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
             gradient.addColorStop(0.5, 'rgba(255,255,255,0.9)');
             gradient.addColorStop(1, 'rgba(255,255,255,0)');
             ctx.fillStyle = gradient;
@@ -343,11 +343,27 @@
             canvas.width = 128; canvas.height = 128;
             const ctx = canvas.getContext('2d');
             const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-            gradient.addColorStop(0, 'rgba(220,255,240,0.25)');
-            gradient.addColorStop(0.6, 'rgba(180,220,200,0.1)');
+            gradient.addColorStop(0, 'rgba(220,255,255,0.3)');
+            gradient.addColorStop(0.6, 'rgba(180,230,255,0.15)');
             gradient.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = gradient;
             ctx.fillRect(0,0,128,128);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        // Helper to create Emoji Texture (FIXED)
+        function createEmojiTexture(emoji) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            // Clear rect to ensure transparency
+            ctx.clearRect(0, 0, 128, 128);
+            ctx.font = '80px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(emoji, 64, 64);
             const texture = new THREE.CanvasTexture(canvas);
             texture.needsUpdate = true;
             return texture;
@@ -359,8 +375,8 @@
 
             clock = new THREE.Clock();
             scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x020a0f, 0.04);
-            scene.background = new THREE.Color(0x020a0f);
+            scene.fog = new THREE.FogExp2(0x1a2a40, 0.025);
+            scene.background = new THREE.Color(0x1a2a40);
 
             camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 32, 22);
@@ -370,32 +386,30 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.1;
+            renderer.toneMappingExposure = 1.3;
 
-            // --- Lighting ---
-            scene.add(new THREE.AmbientLight(0x0a2233, 0.5));
-            const moonLight = new THREE.DirectionalLight(0x99ccff, 1.2);
+            scene.add(new THREE.AmbientLight(0x406080, 1.5));
+            const moonLight = new THREE.DirectionalLight(0xbbeeff, 2.5);
             moonLight.position.set(30, 50, -40);
             moonLight.castShadow = true;
             scene.add(moonLight);
 
             const createMagicLight = (x, z, color, intensity) => {
-                const light = new THREE.PointLight(color, intensity, 30);
-                light.position.set(x, 3, z);
+                const light = new THREE.PointLight(color, intensity, 40);
+                light.position.set(x, 4, z);
                 scene.add(light);
             }
-            createMagicLight(25, 25, 0x00ffcc, 2.0);
-            createMagicLight(-25, -20, 0x55ff55, 1.5);
-            createMagicLight(0, -32, 0x0088ff, 2.0);
+            createMagicLight(25, 25, 0xff00ff, 3.0);
+            createMagicLight(-25, -20, 0x00ff00, 2.5);
+            createMagicLight(0, -32, 0x0088ff, 3.0);
 
-            // --- Environment ---
             const basinGeo = new THREE.BoxGeometry(65, 20, 65, 10, 1, 10);
             roughenGeometry(basinGeo, 1.8);
-            const basinMat = new THREE.MeshStandardMaterial({ color: 0x081208, roughness: 1.0, side: THREE.BackSide, flatShading: true });
+            const basinMat = new THREE.MeshStandardMaterial({ color: 0x2a3a4a, roughness: 0.9, side: THREE.BackSide, flatShading: true });
             const basin = new THREE.Mesh(basinGeo, basinMat);
             basin.position.y = -9.5; basin.receiveShadow = true; scene.add(basin);
 
-            const rockMat = new THREE.MeshStandardMaterial({ color: 0x1a2a1a, roughness: 1.0, flatShading: true });
+            const rockMat = new THREE.MeshStandardMaterial({ color: 0x4a5a6a, roughness: 0.8, flatShading: true });
             for(let i=0; i<50; i++) {
                 const angle = (i/50)*Math.PI*2; const r = 32+Math.random()*4; const s = 2+Math.random()*3;
                 const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(s,0), rockMat);
@@ -409,56 +423,52 @@
             const waterGeo = new THREE.PlaneGeometry(62, 62, 160, 160).rotateX(-Math.PI/2);
             waterGeo.userData.basePos = waterGeo.attributes.position.array.slice();
             waterMesh = new THREE.Mesh(waterGeo, new THREE.MeshPhysicalMaterial({
-                color: 0x000a11, emissive: 0x000000, emissiveIntensity: 2.0, transmission: 0.4,
-                opacity: 0.9, transparent: true, roughness: 0.08, metalness: 0.3, reflectivity: 0.9,
+                color: 0x001a2a, emissive: 0x000000, emissiveIntensity: 2.0, transmission: 0.4,
+                opacity: 0.8, transparent: true, roughness: 0.1, metalness: 0.2, reflectivity: 1.0,
                 clearcoat: 1.0, side: THREE.DoubleSide
             }));
             waterMesh.position.y = 0.1; scene.add(waterMesh);
 
-            // --- VIBRANT SPINNING STARS (Using Custom Shader) ---
-            const dustCount = 800;
+            // --- STARS ---
+            const dustCount = 600;
             const dustGeo = new THREE.BufferGeometry();
             const positions = new Float32Array(dustCount * 3);
             const colors = new Float32Array(dustCount * 3);
             const rotationOffsets = new Float32Array(dustCount);
             const rotationSpeeds = new Float32Array(dustCount);
             const color = new THREE.Color();
+            starData = [];
 
             for(let i=0; i<dustCount; i++) {
-                positions[i*3] = (Math.random()-0.5)*70;
-                positions[i*3+1] = Math.random()*35;
-                positions[i*3+2] = (Math.random()-0.5)*70;
+                positions[i*3] = (Math.random()-0.5)*55;
+                positions[i*3+1] = Math.random()*20 + 2;
+                positions[i*3+2] = (Math.random()-0.5)*55;
 
-                // VIBRANT COLORS: High Saturation (1.0) and Lightness (0.8)
-                const choice = Math.random();
-                if(choice < 0.25) color.setHSL(Math.random()*0.1+0.3, 1.0, 0.8); // Green
-                else if(choice < 0.5) color.setHSL(Math.random()*0.1+0.55, 1.0, 0.8); // Blue
-                else if(choice < 0.75) color.setHSL(Math.random()*0.1+0.75, 1.0, 0.8); // Purple
-                else color.setHSL(Math.random()*0.1+0.05, 1.0, 0.8); // Gold
+                starData.push({
+                    velocity: new THREE.Vector3((Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.02),
+                    radius: Math.random() * 0.5 + 0.5
+                });
+
+                const choice = Math.random(); const sat = 0.7+Math.random()*0.3; const light = 0.6+Math.random()*0.4;
+                if(choice < 0.4) color.setHSL(Math.random(), sat, light);
+                else if(choice < 0.6) color.setHSL(Math.random()*0.15+0.55, sat, light);
+                else if(choice < 0.8) color.setHSL(Math.random()*0.2+0.75, sat, light);
+                else color.setHSL(Math.random()*0.15+0.05, sat, light);
 
                 colors[i*3] = color.r; colors[i*3+1] = color.g; colors[i*3+2] = color.b;
-
-                // Random Rotation data
                 rotationOffsets[i] = Math.random() * Math.PI * 2;
-                rotationSpeeds[i] = (Math.random() - 0.5) * 2.0; // Range -1.0 to 1.0 radians per sec
+                rotationSpeeds[i] = (Math.random() - 0.5) * 0.8;
             }
             dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
             dustGeo.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
             dustGeo.setAttribute('rotationOffset', new THREE.BufferAttribute(rotationOffsets, 1));
             dustGeo.setAttribute('rotationSpeed', new THREE.BufferAttribute(rotationSpeeds, 1));
 
-            // Use ShaderMaterial instead of PointsMaterial
             const dustMat = new THREE.ShaderMaterial({
-                uniforms: {
-                    uTime: { value: 0.0 },
-                    uSize: { value: 30.0 }, // Base size of stars
-                    pointTexture: { value: createStarTexture() }
-                },
+                uniforms: { uTime: { value: 0.0 }, uSize: { value: 12.0 }, pointTexture: { value: createStarTexture() } },
                 vertexShader: document.getElementById('vertexShader').textContent,
                 fragmentShader: document.getElementById('fragmentShader').textContent,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-                transparent: true
+                blending: THREE.AdditiveBlending, depthWrite: false, transparent: true
             });
             fairyDustSystem = new THREE.Points(dustGeo, dustMat);
             scene.add(fairyDustSystem);
@@ -471,86 +481,197 @@
             }
             mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
             mistSystem = new THREE.Points(mistGeo, new THREE.PointsMaterial({
-                size: 18, map: createSmokeTexture(), transparent: true, opacity: 0.3,
-                blending: THREE.AdditiveBlending, depthWrite: false, color: 0x88ffdd
+                size: 20, map: createSmokeTexture(), transparent: true, opacity: 0.4,
+                blending: THREE.AdditiveBlending, depthWrite: false, color: 0xaaffff
             }));
             scene.add(mistSystem);
 
-            // --- Initialize Fishes ---
             initFishes();
+            initPrincess();
+            initFloatingEmojis();
         }
 
-        // --- FISH LOGIC ---
+        // --- EMOJI SYSTEM (FIXED BLACK BOXES) ---
+        function initFloatingEmojis() {
+            emojiSprites = [];
+            const emojis = ['✨', '🪷', '🦋', '🍄', '🍃', '🫧'];
+            const textures = {};
+            emojis.forEach(e => { textures[e] = createEmojiTexture(e); });
+
+            for(let i = 0; i < 30; i++) {
+                const type = emojis[Math.floor(Math.random() * emojis.length)];
+                // depthWrite: false is the key fix for transparency artifacts
+                const mat = new THREE.SpriteMaterial({
+                    map: textures[type],
+                    transparent: true,
+                    opacity: 0.85,
+                    depthWrite: false,
+                    depthTest: true
+                });
+                const sprite = new THREE.Sprite(mat);
+
+                const r = 35 * Math.sqrt(Math.random());
+                const theta = Math.random() * 2 * Math.PI;
+                const x = r * Math.cos(theta);
+                const z = r * Math.sin(theta);
+
+                let y = 1; let scale = 1.5;
+                if(type === '🪷') { y = 0.5; scale = 2.0; }
+                else if(type === '🦋') { y = 2 + Math.random() * 3; scale = 1.2; }
+                else if(type === '✨') { y = 1 + Math.random() * 5; scale = 1.0; }
+                else if(type === '🫧') { y = 0.5 + Math.random(); scale = 0.8; }
+
+                sprite.position.set(x, y, z);
+                sprite.scale.set(scale, scale, scale);
+
+                sprite.userData = { type: type, baseY: y, driftSpeed: (Math.random() - 0.5) * 0.5, bobSpeed: 0.5 + Math.random(), phase: Math.random() * Math.PI * 2 };
+                scene.add(sprite);
+                emojiSprites.push(sprite);
+            }
+        }
+
+        function updateFloatingEmojis(time) {
+            emojiSprites.forEach(sprite => {
+                const u = sprite.userData;
+                sprite.position.y = u.baseY + Math.sin(time * u.bobSpeed + u.phase) * 0.3;
+                if (u.type === '🦋') {
+                    sprite.position.x += Math.sin(time * 2 + u.phase) * 0.02;
+                    sprite.position.z += Math.cos(time * 1.5 + u.phase) * 0.02;
+                } else if (u.type === '🫧' || u.type === '✨') {
+                    sprite.position.y += 0.01;
+                    if(sprite.position.y > 10) sprite.position.y = 0.5;
+                } else {
+                    sprite.position.x += Math.sin(time * 0.2 + u.phase) * 0.005;
+                }
+            });
+        }
+
+        // --- FISH INITIALIZATION ---
         function initFishes() {
             fishes = [];
             const fishGeo = new THREE.ConeGeometry(0.3, 1.2, 8);
-            fishGeo.rotateX(Math.PI / 2); // Point forward
-            // Flatten them slightly for a fishy shape
-            fishGeo.scale(0.6, 1.0, 1.5);
-
-            const fishMat = new THREE.MeshStandardMaterial({
-                color: 0xffaa00, // Gold/Orange fish
-                emissive: 0xdd5500,
-                emissiveIntensity: 0.5,
-                roughness: 0.3,
-                metalness: 0.8
-            });
+            fishGeo.rotateX(Math.PI / 2); fishGeo.scale(1.2, 2.0, 3.0);
 
             for (let i = 0; i < 25; i++) {
+                const hue = Math.random();
+                const saturation = 0.8 + Math.random() * 0.2;
+                const lightness = 0.5 + Math.random() * 0.3;
+                const fishColor = new THREE.Color().setHSL(hue, saturation, lightness);
+                const emissiveColor = new THREE.Color().setHSL(hue, 1.0, 0.5);
+
+                const fishMat = new THREE.MeshPhysicalMaterial({
+                    color: fishColor, emissive: emissiveColor, emissiveIntensity: 2.0,
+                    roughness: 0.2, metalness: 0.8, clearcoat: 1.0
+                });
+
                 const mesh = new THREE.Mesh(fishGeo, fishMat);
-                // Random start position within pond radius (~28)
-                const r = Math.random() * 25;
-                const angle = Math.random() * Math.PI * 2;
+                const r = Math.random() * 25; const angle = Math.random() * Math.PI * 2;
                 mesh.position.set(Math.cos(angle) * r, -0.5 + Math.random()*0.5, Math.sin(angle) * r);
-                mesh.castShadow = true;
-                scene.add(mesh);
-
-                // Give random velocity
-                const speed = 0.05 + Math.random() * 0.05;
-                const vAngle = Math.random() * Math.PI * 2;
-                const velocity = new THREE.Vector3(Math.cos(vAngle)*speed, 0, Math.sin(vAngle)*speed);
-
-                fishes.push({ mesh, velocity, speed });
+                mesh.castShadow = true; scene.add(mesh);
+                const speed = 0.05 + Math.random() * 0.05; const vAngle = Math.random() * Math.PI * 2;
+                fishes.push({ mesh, velocity: new THREE.Vector3(Math.cos(vAngle)*speed, 0, Math.sin(vAngle)*speed), speed });
             }
         }
 
         function updateFishes() {
             fishes.forEach(fish => {
-                // Move fish
                 fish.mesh.position.add(fish.velocity);
-
-                // Boundary Check: Steer back to center if too far
-                const distFromCenter = fish.mesh.position.length();
-                if (distFromCenter > 28) {
-                    const steerToCenter = fish.mesh.position.clone().negate().normalize().multiplyScalar(0.005);
-                    fish.velocity.add(steerToCenter);
-                }
-
-                // Normalize velocity back to its set speed (keeps them from speeding up infinitely)
+                if (fish.mesh.position.length() > 28) fish.velocity.add(fish.mesh.position.clone().negate().normalize().multiplyScalar(0.005));
                 fish.velocity.normalize().multiplyScalar(fish.speed);
-
-                // Orient fish to face travel direction
-                const lookTarget = fish.mesh.position.clone().add(fish.velocity);
-                fish.mesh.lookAt(lookTarget);
+                fish.mesh.lookAt(fish.mesh.position.clone().add(fish.velocity));
             });
         }
 
+        // --- PRINCESS LOGIC ---
+        function initPrincess() {
+            const bodyGeo = new THREE.SphereGeometry(0.8, 16, 16);
+            const princessMat = new THREE.MeshPhysicalMaterial({
+                color: 0xffaadd, emissive: 0xff55aa, emissiveIntensity: 3.0,
+                roughness: 0.1, metalness: 0.5, transparent: true, opacity: 0.9
+            });
+            princessMesh = new THREE.Mesh(bodyGeo, princessMat);
+            princessMesh.scale.set(0.6, 0.6, 2.0);
+
+            const princessLight = new THREE.PointLight(0xff55aa, 2.0, 15);
+            princessMesh.add(princessLight);
+            princessMesh.position.set(100, 100, 100);
+            scene.add(princessMesh);
+        }
+
+        function spawnPrincess() {
+            if (isPrincessSwimming) return;
+            const startSide = Math.random() > 0.5 ? -1 : 1;
+            const startX = startSide * 45;
+            const startZ = (Math.random() - 0.5) * 50;
+            const startY = -0.5;
+            princessMesh.position.set(startX, startY, startZ);
+            const targetX = -startX;
+            const targetZ = (Math.random() - 0.5) * 50;
+            const direction = new THREE.Vector3(targetX - startX, 0, targetZ - startZ).normalize();
+            const speed = 8.0;
+            princessMesh.userData.velocity = direction.multiplyScalar(speed);
+            princessMesh.lookAt(targetX, startY, targetZ);
+            isPrincessSwimming = true;
+        }
+
+        function updatePrincess(delta) {
+            if (!isPrincessSwimming) return;
+            princessMesh.position.add(princessMesh.userData.velocity.clone().multiplyScalar(delta));
+            if (princessMesh.position.length() > 60) {
+                isPrincessSwimming = false;
+                princessMesh.position.set(100, 100, 100);
+            }
+        }
+
+        function updateStarPhysics() {
+            const positions = fairyDustSystem.geometry.attributes.position.array;
+            const bounds = 30; const topBound = 25; const bottomBound = 1;
+            const count = starData.length;
+            for (let i = 0; i < count; i++) {
+                const data = starData[i]; const idx = i * 3;
+                let px = positions[idx]; let py = positions[idx+1]; let pz = positions[idx+2];
+                px += data.velocity.x; py += data.velocity.y; pz += data.velocity.z;
+                if (px > bounds || px < -bounds) { data.velocity.x *= -1; px = px > bounds ? bounds : -bounds; }
+                if (pz > bounds || pz < -bounds) { data.velocity.z *= -1; pz = pz > bounds ? bounds : -bounds; }
+                if (py > topBound || py < bottomBound) { data.velocity.y *= -1; py = py > topBound ? topBound : bottomBound; }
+                for (let j = i + 1; j < count; j++) {
+                    const otherData = starData[j]; const jdx = j * 3;
+                    const dx = positions[jdx] - px; const dy = positions[jdx+1] - py; const dz = positions[jdx+2] - pz;
+                    const distSq = dx*dx + dy*dy + dz*dz;
+                    const minDistance = data.radius + otherData.radius + 2.0;
+                    if (distSq < minDistance * minDistance && distSq > 0.01) {
+                        const dist = Math.sqrt(distSq); const overlap = minDistance - dist;
+                        const ax = dx / dist; const ay = dy / dist; const az = dz / dist;
+                        const force = overlap * 0.005;
+                        data.velocity.x -= ax * force; data.velocity.y -= ay * force; data.velocity.z -= az * force;
+                        otherData.velocity.x += ax * force; otherData.velocity.y += ay * force; otherData.velocity.z += az * force;
+                    }
+                }
+                positions[idx] = px; positions[idx+1] = py; positions[idx+2] = pz;
+            }
+            fairyDustSystem.geometry.attributes.position.needsUpdate = true;
+        }
 
         function animate() {
             if (!isRunning) return;
             requestAnimationFrame(animate);
-
+            const delta = clock.getDelta();
             const time = clock.getElapsedTime();
             const audioData = getAudioData();
 
-            // --- Update Star Shader Uniforms ---
-            // This is crucial for the spinning effect
             fairyDustSystem.material.uniforms.uTime.value = time;
 
-            // --- Update Fishes ---
             updateFishes();
+            updateStarPhysics();
+            updateFloatingEmojis(time);
 
-            // --- Water Animation ---
+            princessSwimTimer += delta;
+            if (princessSwimTimer > PRINCESS_SPAWN_INTERVAL) {
+                spawnPrincess();
+                princessSwimTimer = 0;
+            }
+            updatePrincess(delta);
+
             const pos = waterMesh.geometry.attributes.position.array;
             const base = waterMesh.geometry.userData.basePos;
             const amp = 0.3 + (audioData.bass * 3.5); const spd = 1.2 + (audioData.mid * 1.5);
@@ -565,10 +686,11 @@
             waterMesh.geometry.attributes.position.needsUpdate = true;
             waterMesh.geometry.computeVertexNormals();
 
-            const glow = new THREE.Color(0x00ffaa).multiplyScalar(audioData.bass * audioData.bass * 5.0);
+            const hue = (time * 0.05) % 1.0;
+            const baseGlow = new THREE.Color().setHSL(hue, 1.0, 0.5);
+            const glow = baseGlow.multiplyScalar(audioData.bass * audioData.bass * 5.0);
             waterMesh.material.emissive.copy(glow);
 
-            // --- Animate Mist ---
             const mPos = mistSystem.geometry.attributes.position.array;
             for(let i=0; i<mPos.length; i+=3) {
                 mPos[i] += Math.sin(time*0.5+i)*0.02; mPos[i+2] += 0.03;
@@ -579,20 +701,102 @@
             renderer.render(scene, camera);
         }
 
-        // --- Audio, Interactions, Recording, Utils (KEPT) ---
+        // --- Fixed Recording & Audio Utils ---
+        function getSupportedMimeType() { const types = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4']; for (const type of types) { if (MediaRecorder.isTypeSupported(type)) return type; } return ''; }
         function initAudio() { if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)(); if (analyser) return; analyser = audioContext.createAnalyser(); analyser.fftSize = 512; frequencyData = new Uint8Array(analyser.frequencyBinCount); }
         function getAudioData() { if (!analyser) return { bass: 0, mid: 0, high: 0 }; analyser.getByteFrequencyData(frequencyData); const bass = avg(frequencyData.slice(0, 10)) / 255; const mid = avg(frequencyData.slice(10, 100)) / 255; const high = avg(frequencyData.slice(100, 200)) / 255; return { bass, mid, high }; }
         const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
-        function startViz() { initScene(); overlay.style.opacity = 0; setTimeout(() => overlay.style.display='none', 500); isRunning = true; animate(); recordContainer.style.display = 'flex'; setTimeout(()=> recordContainer.style.opacity=1, 100); if(autoRecordCheckbox.checked) toggleRecording(); }
-        startButton.onclick = async () => { initAudio(); if(audioContext.state === 'suspended') await audioContext.resume(); try { mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true }); cleanupAudio(); audioSourceNode = audioContext.createMediaStreamSource(mediaStream); audioSourceNode.connect(analyser); startViz(); } catch(e) { messageDiv.innerText = "Mic Error: " + e.message; } };
-        fileInput.onchange = (e) => { const file = e.target.files[0]; if(!file) return; initAudio(); const reader = new FileReader(); reader.onload = async (ev) => { if(audioContext.state === 'suspended') await audioContext.resume(); const buffer = await audioContext.decodeAudioData(ev.target.result); cleanupAudio(); audioSourceNode = audioContext.createBufferSource(); audioSourceNode.buffer = buffer; audioSourceNode.connect(analyser); audioSourceNode.connect(audioContext.destination); audioSourceNode.onended = stopViz; audioSourceNode.start(0); startViz(); }; reader.readAsArrayBuffer(file); };
+
+        function startViz() {
+            initScene();
+            overlay.style.opacity = 0;
+            setTimeout(() => overlay.style.display='none', 500);
+            isRunning = true;
+            animate();
+            recordContainer.style.display = 'flex';
+            setTimeout(()=> recordContainer.style.opacity=1, 100);
+            if(autoRecordCheckbox.checked) toggleRecording();
+        }
+
+        // --- AUDIO SETUP WITH GAIN NODE FOR FADING ---
+        async function setupAudioChain(buffer) {
+            cleanupAudio();
+            audioSourceNode = audioContext.createBufferSource();
+            audioSourceNode.buffer = buffer;
+            audioSourceNode.onended = stopViz;
+
+            // Create Gain Node for fading
+            masterGainNode = audioContext.createGain();
+            masterGainNode.gain.setValueAtTime(0, audioContext.currentTime); // Start at 0 volume
+
+            // Connect chain: Source -> Gain -> Analyser -> Destination
+            audioSourceNode.connect(masterGainNode);
+            masterGainNode.connect(analyser);
+            masterGainNode.connect(audioContext.destination);
+
+            audioSourceNode.start(0);
+
+            // Fade In over 3 seconds
+            masterGainNode.gain.linearRampToValueAtTime(1.0, audioContext.currentTime + 3.0);
+
+            startViz();
+        }
+
+        fileInput.onchange = (e) => { const file = e.target.files[0]; if(!file) return; initAudio(); const reader = new FileReader(); reader.onload = async (ev) => { if(audioContext.state === 'suspended') await audioContext.resume(); const buffer = await audioContext.decodeAudioData(ev.target.result); setupAudioChain(buffer); }; reader.readAsArrayBuffer(file); };
         loadFromFileButton.onclick = () => fileInput.click();
-        function cleanupAudio() { if(audioSourceNode) { audioSourceNode.disconnect(); try{audioSourceNode.stop();}catch(e){} } }
-        function stopViz() { isRunning = false; overlay.style.display = 'flex'; setTimeout(()=>overlay.style.opacity=1, 10); recordContainer.style.opacity = 0; setTimeout(()=>recordContainer.style.display='none', 500); cleanupAudio(); }
+        function cleanupAudio() { if(audioSourceNode) { audioSourceNode.disconnect(); try{audioSourceNode.stop();}catch(e){} } if(masterGainNode) {masterGainNode.disconnect();} }
+
+        function stopViz() {
+            isRunning = false;
+            if (mediaRecorder && mediaRecorder.state === 'recording' && !isFadingOut) toggleRecording();
+            overlay.style.display = 'flex'; setTimeout(()=>overlay.style.opacity=1, 10);
+            recordContainer.style.opacity = 0; setTimeout(()=>recordContainer.style.display='none', 500);
+            cleanupAudio();
+        }
         stopVisualizerButton.onclick = stopViz;
+
+        // --- RECORDING WITH FADE OUT ---
         recordButton.onclick = toggleRecording;
-        function toggleRecording() { if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); recordButton.classList.remove('recording'); recordButton.innerText = "START RECORDING"; } else { const stream = canvas.captureStream(60); const dest = audioContext.createMediaStreamDestination(); analyser.connect(dest); const tracks = [...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]; mediaRecorder = new MediaRecorder(new MediaStream(tracks), { mimeType: 'video/webm;codecs=vp8,opus' }); mediaRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); }; mediaRecorder.onstop = saveRecording; recordedChunks = []; mediaRecorder.start(); recordButton.classList.add('recording'); recordButton.innerText = "STOP RECORDING"; } }
-        function saveRecording() { const blob = new Blob(recordedChunks, { type: 'video/webm' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style.display='none'; a.href=url; a.download='mystic-pond-vibrant.webm'; document.body.appendChild(a); a.click(); setTimeout(()=> { URL.revokeObjectURL(url); a.remove(); }, 100); }
+        function toggleRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                if(isFadingOut) return;
+                isFadingOut = true;
+                recordButton.innerText = "FADING OUT...";
+                recordButton.classList.remove('recording');
+                recordButton.classList.add('fading');
+
+                const fadeTime = 3.0;
+                if(masterGainNode) {
+                    masterGainNode.gain.linearRampToValueAtTime(0.0, audioContext.currentTime + fadeTime);
+                }
+
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                    isFadingOut = false;
+                    recordButton.classList.remove('fading');
+                    recordButton.innerText = "START RECORDING";
+                }, fadeTime * 1000);
+
+            } else {
+                try {
+                    const stream = canvas.captureStream(60);
+                    const dest = audioContext.createMediaStreamDestination();
+                    masterGainNode.connect(dest);
+
+                    const tracks = [...stream.getVideoTracks(), ...dest.stream.getAudioTracks()];
+                    const mimeType = getSupportedMimeType(); recordedMimeType = mimeType;
+                    const options = mimeType ? { mimeType } : undefined;
+                    mediaRecorder = new MediaRecorder(new MediaStream(tracks), options);
+                    mediaRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); };
+                    mediaRecorder.onstop = saveRecording;
+                    recordedChunks = [];
+                    mediaRecorder.start();
+                    recordButton.classList.add('recording');
+                    recordButton.innerText = "STOP RECORDING";
+                } catch (e) { alert("Recording failed: " + e.message); }
+            }
+        }
+        function saveRecording() { const blob = new Blob(recordedChunks, { type: recordedMimeType || 'video/webm' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style.display='none'; a.href=url; const ext = (recordedMimeType && recordedMimeType.includes('mp4')) ? 'mp4' : 'webm'; a.download = `meditative-pond.${ext}`; document.body.appendChild(a); a.click(); setTimeout(()=> { URL.revokeObjectURL(url); a.remove(); }, 100); }
         window.addEventListener('resize', () => { if(camera && renderer) { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); } });
         fullscreenButton.onclick = () => { if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); };
     })();

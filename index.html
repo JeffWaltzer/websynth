@@ -155,6 +155,32 @@
                 font-size: 3em;
             }
         }
+        .toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #333;
+    padding: 2px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 1000;
+}
+.toolbar button {
+    background: #555;
+    color: white;
+    border: 1px solid #888;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin: 1px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.toolbar button:disabled {
+    background: #777;
+    color: #ccc;
+    cursor: default;
+}
     </style>
 </head>
 <body>
@@ -196,6 +222,12 @@
                 distribution.
             </div>
         </div>
+        <div class="menu-item">
+            <a href="pondviz.html">Meditative Pond</a>
+            <div class="menu-description">Immersive 3D particle visualization with meditative water effects. Features dynamic 
+            lighting, interactive particles, and real-time audio reactivity with recording capabilities.
+        </div>
+    </div>
         <div class="menu-item">
             <a href="rhythm.html">Rhythm Lab</a>
             <div class="menu-description">Advanced rhythm generation tool with polyrhythms, euclidean patterns, and
