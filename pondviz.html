@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meditative Pond - Visuals Fixed</title>
+    <title>Mystic Pond - Big Rotating Emojis</title>
     <style>
         body {
             margin: 0;
@@ -457,7 +457,8 @@
 
                 colors[i*3] = color.r; colors[i*3+1] = color.g; colors[i*3+2] = color.b;
                 rotationOffsets[i] = Math.random() * Math.PI * 2;
-                rotationSpeeds[i] = (Math.random() - 0.5) * 0.8;
+                // --- FASTER STAR ROTATION ---
+                rotationSpeeds[i] = (Math.random() - 0.5) * 3.0;
             }
             dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
             dustGeo.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
@@ -491,7 +492,7 @@
             initFloatingEmojis();
         }
 
-        // --- EMOJI SYSTEM (FIXED BLACK BOXES) ---
+        // --- EMOJI SYSTEM (FIXED & UPDATED) ---
         function initFloatingEmojis() {
             emojiSprites = [];
             const emojis = ['✨', '🪷', '🦋', '🍄', '🍃', '🫧'];
@@ -500,7 +501,6 @@
 
             for(let i = 0; i < 30; i++) {
                 const type = emojis[Math.floor(Math.random() * emojis.length)];
-                // depthWrite: false is the key fix for transparency artifacts
                 const mat = new THREE.SpriteMaterial({
                     map: textures[type],
                     transparent: true,
@@ -516,15 +516,24 @@
                 const z = r * Math.sin(theta);
 
                 let y = 1; let scale = 1.5;
-                if(type === '🪷') { y = 0.5; scale = 2.0; }
-                else if(type === '🦋') { y = 2 + Math.random() * 3; scale = 1.2; }
-                else if(type === '✨') { y = 1 + Math.random() * 5; scale = 1.0; }
-                else if(type === '🫧') { y = 0.5 + Math.random(); scale = 0.8; }
+                // --- SCALED UP EMOJIS (TWICE AS BIG) ---
+                if(type === '🪷') { y = 0.5; scale = 4.0; }
+                else if(type === '🦋') { y = 2 + Math.random() * 3; scale = 2.4; }
+                else if(type === '✨') { y = 1 + Math.random() * 5; scale = 2.0; }
+                else if(type === '🫧') { y = 0.5 + Math.random(); scale = 1.6; }
+                else { scale = 3.0; }
 
                 sprite.position.set(x, y, z);
                 sprite.scale.set(scale, scale, scale);
 
-                sprite.userData = { type: type, baseY: y, driftSpeed: (Math.random() - 0.5) * 0.5, bobSpeed: 0.5 + Math.random(), phase: Math.random() * Math.PI * 2 };
+                sprite.userData = {
+                    type: type,
+                    baseY: y,
+                    driftSpeed: (Math.random() - 0.5) * 0.5,
+                    bobSpeed: 0.5 + Math.random(),
+                    phase: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.05 // Rotation speed
+                };
                 scene.add(sprite);
                 emojiSprites.push(sprite);
             }
@@ -533,6 +542,9 @@
         function updateFloatingEmojis(time) {
             emojiSprites.forEach(sprite => {
                 const u = sprite.userData;
+                // ROTATION
+                sprite.material.rotation += u.rotSpeed;
+
                 sprite.position.y = u.baseY + Math.sin(time * u.bobSpeed + u.phase) * 0.3;
                 if (u.type === '🦋') {
                     sprite.position.x += Math.sin(time * 2 + u.phase) * 0.02;

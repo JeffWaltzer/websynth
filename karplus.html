@@ -6,6 +6,32 @@
     <title>MIDI Karplus-Strong Flute</title>
     <!-- Basic styling for the page -->
     <style>
+        .toolbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #333;
+            padding: 2px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 1000;
+        }
+        .toolbar button {
+            background: #555;
+            color: white;
+            border: 1px solid #888;
+            border-radius: 3px;
+            padding: 1px 4px;
+            margin: 1px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .toolbar button:disabled {
+            background: #777;
+            color: #ccc;
+            cursor: default;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
@@ -108,7 +134,18 @@
     </style>
 </head>
 <body>
-
+<div class="toolbar">
+    <button onclick="window.location.href='index.html'">Home</button>
+    <button onclick="window.location.href='berlin.html'">Berlin</button>
+    <button onclick="window.location.href='chords.html'">Chords</button>
+    <button onclick="window.location.href='delay.html'">Delay</button>
+    <button disabled>Karplus</button>
+    <button onclick="window.location.href='polychain.html'">Polychain</button>
+    <button onclick="window.location.href='pondviz.html'">Pond</button>
+    <button onclick="window.location.href='rhythm.html'">Rhythm</button>
+    <button onclick="window.location.href='starfield.html'">Starfield</button>
+    <button onclick="window.location.href='visualizer1.html'">Viz 1</button>
+</div>
 <h1>MIDI Controlled Karplus-Strong Flute</h1>
 <p>Connect a MIDI controller, click the "Test Sound" button once to activate audio, then play!</p>
 
@@ -438,4 +475,3 @@
 
 </body>
 </html>
-
