@@ -172,15 +172,42 @@
 </head>
 <body class="transition-colors duration-500">
 <div class="toolbar">
-    <button disabled>berlin</button>
-    <button onclick="window.location.href='chords.html'">chords</button>
-    <button onclick="window.location.href='Circles.html'">Circles</button>
-    <button onclick="window.location.href='ClassicsOnMIDI.html'">ClassicsOnMIDI</button>
-    <button onclick="window.location.href='delay.html'">delay</button>
-    <button onclick="window.location.href='index.html'">index</button>
-    <button onclick="window.location.href='polychain.html'">polychain</button>
-    <button onclick="window.location.href='rhythm.html'">rhythm</button>
-    <button onclick="window.location.href='starfield.html'">starfield</button>
+    <!-- Main Navigation -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">Main:</span>
+        <button onclick="window.location.href='index.html'">Home</button>
+    </div>
+
+    <!-- MIDI Tools -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">MIDI Tools:</span>
+        <button onclick="window.location.href='chords.html'">Chords</button>
+        <button onclick="window.location.href='delay.html'">Delay</button>
+        <button onclick="window.location.href='polychain.html'">Polychain</button>
+    </div>
+
+    <!-- Instruments -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">Instruments:</span>
+        <button onclick="window.location.href='karplus.html'">Karplus</button>
+    </div>
+
+    <!-- Sequencers -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">Sequencers:</span>
+        <button onclick="window.location.href='berlin.html'" disabled>Berlin</button>
+        <button onclick="window.location.href='rhythm.html'">Rhythm</button>
+    </div>
+
+    <!-- Visualizers -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">Visualizers:</span>
+        <button onclick="window.location.href='starfield.html'">Starfield</button>
+        <button onclick="window.location.href='pondviz.html'">Pond</button>
+        <button onclick="window.location.href='visualizer1.html'">Viz 1</button>
+        <button onclick="window.location.href='visualizer2.html'">Viz 2</button>
+        <button onclick="window.location.href='Psychedelia.html'">Psychedelia</button>
+    </div>
 </div>
 <div class="main-panel w-full max-w-7xl mx-auto p-2 my-2 rounded-2xl shadow-2xl border">
     <!-- Header -->
