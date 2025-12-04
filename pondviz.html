@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mystic Pond - Big Rotating Emojis</title>
+    <title>Mystic Pond - Select Audio</title>
     <style>
         body {
             margin: 0;
@@ -12,7 +12,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(to bottom, #1a2a40, #2b4b6b, #3a6a8a);
+            background: linear-gradient(to bottom, #050a08, #0f1a15, #1a2b22); /* Very Dark background */
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             color: #e0e0e0;
         }
@@ -34,45 +34,46 @@
             z-index: 100;
             padding: 30px;
             text-align: center;
-            background: rgba(10, 30, 50, 0.8);
+            background: rgba(5, 15, 10, 0.85);
             border-radius: 16px;
             backdrop-filter: blur(15px);
-            box-shadow: 0 10px 50px rgba(100, 255, 255, 0.3);
+            box-shadow: 0 10px 50px rgba(50, 200, 150, 0.2);
             transition: opacity 0.5s;
             max-width: 450px;
             width: 90%;
-            border: 1px solid rgba(150, 255, 255, 0.4);
+            border: 1px solid rgba(50, 200, 150, 0.3);
         }
 
         #loadingText {
             font-size: 1.6rem;
             margin-bottom: 20px;
-            color: #80ffff;
-            text-shadow: 0 0 20px rgba(100, 255, 255, 0.8);
+            color: #80ffaa;
+            text-shadow: 0 0 20px rgba(50, 200, 150, 0.8);
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 2px;
+            word-wrap: break-word; /* Ensure long filenames don't break layout */
         }
 
         .control-group {
             margin-bottom: 20px;
             padding: 20px;
-            border: 1px solid rgba(150, 255, 255, 0.2);
+            border: 1px solid rgba(50, 200, 150, 0.2);
             border-radius: 12px;
-            background: rgba(20, 60, 80, 0.5);
+            background: rgba(10, 40, 30, 0.6);
         }
 
         .control-group h3 {
             margin-top: 0;
-            color: #ccffff;
+            color: #ccffdd;
             font-weight: 600;
             font-size: 1.1rem;
         }
 
         .button-style {
-            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            background: linear-gradient(135deg, #00d27f, #3ad570);
             border: none;
-            color: #002233;
+            color: #003311;
             padding: 16px 32px;
             text-align: center;
             text-decoration: none;
@@ -84,7 +85,7 @@
             border-radius: 8px;
             transition: all 0.3s;
             width: 90%;
-            box-shadow: 0 4px 20px rgba(0, 200, 255, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 200, 100, 0.4);
             text-transform: uppercase;
             position: relative;
             overflow: hidden;
@@ -92,7 +93,7 @@
 
         .button-style:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(0, 200, 255, 0.7);
+            box-shadow: 0 8px 30px rgba(0, 200, 100, 0.7);
             filter: brightness(1.1);
         }
 
@@ -102,12 +103,12 @@
         #message {
             text-align: left;
             padding: 15px;
-            background-color: rgba(20, 60, 80, 0.3);
+            background-color: rgba(10, 40, 30, 0.4);
             border-radius: 8px;
             min-height: 20px;
             margin-top: 10px;
             font-size: 0.9rem;
-            border: 1px solid rgba(150, 255, 255, 0.2);
+            border: 1px solid rgba(50, 200, 150, 0.2);
         }
 
         #recordContainer {
@@ -122,11 +123,11 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.5s ease-in-out;
-            background: rgba(20, 60, 80, 0.85);
+            background: rgba(10, 40, 30, 0.9);
             padding: 15px;
             border-radius: 20px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(150, 255, 255, 0.3);
+            border: 1px solid rgba(50, 200, 150, 0.3);
         }
 
         #recordButton {
@@ -159,24 +160,24 @@
         }
 
         #stopVisualizerButton {
-            background: #2a556a;
+            background: #2a553a;
             margin-top: 10px;
             width: 100%;
             padding: 8px 16px;
             font-size: 0.9rem;
-            color: #ccffff;
-            border: 1px solid rgba(150, 255, 255, 0.3);
+            color: #ccffdd;
+            border: 1px solid rgba(50, 200, 150, 0.3);
             border-radius: 8px;
             cursor: pointer;
         }
-        #stopVisualizerButton:hover { background: #3a6a7a; color: white; }
+        #stopVisualizerButton:hover { background: #3a6a4a; color: white; }
 
         #fullscreenButton {
             position: fixed;
             bottom: 30px;
             right: 30px;
             z-index: 60;
-            background: rgba(20, 60, 80, 0.8);
+            background: rgba(20, 60, 40, 0.8);
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -184,14 +185,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 5px 15px rgba(100,255,255,0.3);
-            border: 1px solid rgba(150, 255, 255, 0.3);
+            box-shadow: 0 5px 15px rgba(50,255,150,0.3);
+            border: 1px solid rgba(50, 200, 150, 0.3);
             transition: transform 0.2s, background 0.2s;
             backdrop-filter: blur(5px);
         }
-        #fullscreenButton:hover { transform: scale(1.1); background: rgba(30, 80, 100, 0.9); }
-        #fullscreenButton svg { width: 24px; height: 24px; fill: #80ffff; }
-        input[type="checkbox"] { accent-color: #80ffff; }
+        #fullscreenButton:hover { transform: scale(1.1); background: rgba(30, 80, 60, 0.9); }
+        #fullscreenButton svg { width: 24px; height: 24px; fill: #80ffaa; }
+        input[type="checkbox"] { accent-color: #80ffaa; }
 
     </style>
 </head>
@@ -216,12 +217,12 @@
     <div class="control-group">
         <h3>Audio Source</h3>
         <input type="file" id="fileInput" accept="audio/*">
-        <button id="loadFromFileButton" class="button-style">Load MP3 / Audio File</button>
+        <button id="loadFromFileButton" class="button-style">Select Audio File</button>
     </div>
 
     <div style="margin: 15px 0;">
         <input type="checkbox" id="autoRecord">
-        <label for="autoRecord" style="color:#ccffff">Auto-record on start</label>
+        <label for="autoRecord" style="color:#ccffdd">Auto-record on start</label>
     </div>
 
     <div id="message"></div>
@@ -229,6 +230,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
+<!-- CUSTOM SHADERS FOR STARS -->
 <script type="x-shader/x-vertex" id="vertexShader">
     attribute float rotationOffset;
     attribute float rotationSpeed;
@@ -273,6 +275,7 @@
         const fileInput = document.getElementById('fileInput');
         const autoRecordCheckbox = document.getElementById('autoRecord');
         const messageDiv = document.getElementById('message');
+        const loadingTextDiv = document.getElementById('loadingText');
         const fullscreenButton = document.getElementById('fullscreenButton');
         const recordContainer = document.getElementById('recordContainer');
         const recordButton = document.getElementById('recordButton');
@@ -353,12 +356,11 @@
             return texture;
         }
 
-        // Helper to create Emoji Texture (FIXED)
+        // Helper to create Emoji Texture
         function createEmojiTexture(emoji) {
             const canvas = document.createElement('canvas');
             canvas.width = 128; canvas.height = 128;
             const ctx = canvas.getContext('2d');
-            // Clear rect to ensure transparency
             ctx.clearRect(0, 0, 128, 128);
             ctx.font = '80px serif';
             ctx.textAlign = 'center';
@@ -375,8 +377,8 @@
 
             clock = new THREE.Clock();
             scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x1a2a40, 0.025);
-            scene.background = new THREE.Color(0x1a2a40);
+            scene.fog = new THREE.FogExp2(0x050a08, 0.02);
+            scene.background = new THREE.Color(0x050a08);
 
             camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 32, 22);
@@ -386,10 +388,11 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.3;
+            renderer.toneMappingExposure = 1.5;
 
-            scene.add(new THREE.AmbientLight(0x406080, 1.5));
-            const moonLight = new THREE.DirectionalLight(0xbbeeff, 2.5);
+            scene.add(new THREE.AmbientLight(0x305040, 2.0));
+
+            const moonLight = new THREE.DirectionalLight(0xddeebb, 3.5);
             moonLight.position.set(30, 50, -40);
             moonLight.castShadow = true;
             scene.add(moonLight);
@@ -399,17 +402,17 @@
                 light.position.set(x, 4, z);
                 scene.add(light);
             }
-            createMagicLight(25, 25, 0xff00ff, 3.0);
-            createMagicLight(-25, -20, 0x00ff00, 2.5);
-            createMagicLight(0, -32, 0x0088ff, 3.0);
+            createMagicLight(25, 25, 0xaa55ff, 3.0);
+            createMagicLight(-25, -20, 0x55ff55, 2.5);
+            createMagicLight(0, -32, 0x55aaff, 3.0);
 
             const basinGeo = new THREE.BoxGeometry(65, 20, 65, 10, 1, 10);
             roughenGeometry(basinGeo, 1.8);
-            const basinMat = new THREE.MeshStandardMaterial({ color: 0x2a3a4a, roughness: 0.9, side: THREE.BackSide, flatShading: true });
+            const basinMat = new THREE.MeshStandardMaterial({ color: 0x1a2b1a, roughness: 0.9, side: THREE.BackSide, flatShading: true });
             const basin = new THREE.Mesh(basinGeo, basinMat);
             basin.position.y = -9.5; basin.receiveShadow = true; scene.add(basin);
 
-            const rockMat = new THREE.MeshStandardMaterial({ color: 0x4a5a6a, roughness: 0.8, flatShading: true });
+            const rockMat = new THREE.MeshStandardMaterial({ color: 0x2a3a2a, roughness: 0.9, flatShading: true });
             for(let i=0; i<50; i++) {
                 const angle = (i/50)*Math.PI*2; const r = 32+Math.random()*4; const s = 2+Math.random()*3;
                 const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(s,0), rockMat);
@@ -423,9 +426,17 @@
             const waterGeo = new THREE.PlaneGeometry(62, 62, 160, 160).rotateX(-Math.PI/2);
             waterGeo.userData.basePos = waterGeo.attributes.position.array.slice();
             waterMesh = new THREE.Mesh(waterGeo, new THREE.MeshPhysicalMaterial({
-                color: 0x001a2a, emissive: 0x000000, emissiveIntensity: 2.0, transmission: 0.4,
-                opacity: 0.8, transparent: true, roughness: 0.1, metalness: 0.2, reflectivity: 1.0,
-                clearcoat: 1.0, side: THREE.DoubleSide
+                color: 0x000505,
+                emissive: 0x000000,
+                emissiveIntensity: 2.0,
+                transmission: 0.3,
+                opacity: 0.95,
+                transparent: true,
+                roughness: 0.1,
+                metalness: 0.1,
+                reflectivity: 0.8,
+                clearcoat: 0.8,
+                side: THREE.DoubleSide
             }));
             waterMesh.position.y = 0.1; scene.add(waterMesh);
 
@@ -449,15 +460,13 @@
                     radius: Math.random() * 0.5 + 0.5
                 });
 
-                const choice = Math.random(); const sat = 0.7+Math.random()*0.3; const light = 0.6+Math.random()*0.4;
-                if(choice < 0.4) color.setHSL(Math.random(), sat, light);
-                else if(choice < 0.6) color.setHSL(Math.random()*0.15+0.55, sat, light);
-                else if(choice < 0.8) color.setHSL(Math.random()*0.2+0.75, sat, light);
-                else color.setHSL(Math.random()*0.15+0.05, sat, light);
+                const choice = Math.random(); const sat = 0.6+Math.random()*0.4; const light = 0.5+Math.random()*0.5;
+                if(choice < 0.4) color.setHSL(0.2 + Math.random()*0.2, sat, light);
+                else if(choice < 0.7) color.setHSL(0.1 + Math.random()*0.1, sat, light);
+                else color.setHSL(0.3 + Math.random()*0.1, sat, light);
 
                 colors[i*3] = color.r; colors[i*3+1] = color.g; colors[i*3+2] = color.b;
                 rotationOffsets[i] = Math.random() * Math.PI * 2;
-                // --- FASTER STAR ROTATION ---
                 rotationSpeeds[i] = (Math.random() - 0.5) * 3.0;
             }
             dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -482,8 +491,8 @@
             }
             mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
             mistSystem = new THREE.Points(mistGeo, new THREE.PointsMaterial({
-                size: 20, map: createSmokeTexture(), transparent: true, opacity: 0.4,
-                blending: THREE.AdditiveBlending, depthWrite: false, color: 0xaaffff
+                size: 20, map: createSmokeTexture(), transparent: true, opacity: 0.3,
+                blending: THREE.AdditiveBlending, depthWrite: false, color: 0x88ffaa
             }));
             scene.add(mistSystem);
 
@@ -492,7 +501,7 @@
             initFloatingEmojis();
         }
 
-        // --- EMOJI SYSTEM (FIXED & UPDATED) ---
+        // --- EMOJI SYSTEM (BOUNCING) ---
         function initFloatingEmojis() {
             emojiSprites = [];
             const emojis = ['✨', '🪷', '🦋', '🍄', '🍃', '🫧'];
@@ -504,7 +513,7 @@
                 const mat = new THREE.SpriteMaterial({
                     map: textures[type],
                     transparent: true,
-                    opacity: 0.85,
+                    opacity: 0.9,
                     depthWrite: false,
                     depthTest: true
                 });
@@ -515,13 +524,15 @@
                 const x = r * Math.cos(theta);
                 const z = r * Math.sin(theta);
 
-                let y = 1; let scale = 1.5;
-                // --- SCALED UP EMOJIS (TWICE AS BIG) ---
-                if(type === '🪷') { y = 0.5; scale = 4.0; }
-                else if(type === '🦋') { y = 2 + Math.random() * 3; scale = 2.4; }
-                else if(type === '✨') { y = 1 + Math.random() * 5; scale = 2.0; }
-                else if(type === '🫧') { y = 0.5 + Math.random(); scale = 1.6; }
-                else { scale = 3.0; }
+                let y = 4.0 + Math.random() * 2.0;
+                const scaleVariation = 0.5 + Math.random() * 2.0;
+                let scale = 1.5 * scaleVariation;
+
+                if(type === '🪷') { y = 0.8; scale = 4.0 * scaleVariation; }
+                else if(type === '🦋') { y = 8 + Math.random() * 6; scale = 2.4 * scaleVariation; }
+                else if(type === '✨') { y = 12 + Math.random() * 8; scale = 2.0 * scaleVariation; }
+                else if(type === '🫧') { y = 3 + Math.random() * 5; scale = 1.6 * scaleVariation; }
+                else { scale = 3.0 * scaleVariation; }
 
                 sprite.position.set(x, y, z);
                 sprite.scale.set(scale, scale, scale);
@@ -532,7 +543,13 @@
                     driftSpeed: (Math.random() - 0.5) * 0.5,
                     bobSpeed: 0.5 + Math.random(),
                     phase: Math.random() * Math.PI * 2,
-                    rotSpeed: (Math.random() - 0.5) * 0.05 // Rotation speed
+                    rotSpeed: (Math.random() - 0.5) * 0.2,
+                    // --- ADDING VELOCITY FOR BOUNCING ---
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.05, // Random X speed
+                        0,
+                        (Math.random() - 0.5) * 0.05  // Random Z speed
+                    )
                 };
                 scene.add(sprite);
                 emojiSprites.push(sprite);
@@ -540,57 +557,136 @@
         }
 
         function updateFloatingEmojis(time) {
+            const pondBounds = 28; // Keep within reasonable radius/square
+
             emojiSprites.forEach(sprite => {
                 const u = sprite.userData;
-                // ROTATION
                 sprite.material.rotation += u.rotSpeed;
 
+                // 1. Update Vertical Position (Bobbing)
                 sprite.position.y = u.baseY + Math.sin(time * u.bobSpeed + u.phase) * 0.3;
                 if (u.type === '🦋') {
+                    // Butterflies wobble a bit more
                     sprite.position.x += Math.sin(time * 2 + u.phase) * 0.02;
-                    sprite.position.z += Math.cos(time * 1.5 + u.phase) * 0.02;
                 } else if (u.type === '🫧' || u.type === '✨') {
-                    sprite.position.y += 0.01;
-                    if(sprite.position.y > 10) sprite.position.y = 0.5;
-                } else {
-                    sprite.position.x += Math.sin(time * 0.2 + u.phase) * 0.005;
+                    sprite.position.y += 0.01; // Rise up
+                    if(sprite.position.y > 25) sprite.position.y = 2.0; // Reset if too high
+                }
+
+                // 2. Update Horizontal Position (Velocity)
+                sprite.position.x += u.velocity.x;
+                sprite.position.z += u.velocity.z;
+
+                // 3. Bouncing Logic
+                if (sprite.position.x > pondBounds || sprite.position.x < -pondBounds) {
+                    u.velocity.x *= -1; // Reverse X direction
+                    // Keep inside bounds
+                    sprite.position.x = Math.sign(sprite.position.x) * pondBounds;
+                }
+                if (sprite.position.z > pondBounds || sprite.position.z < -pondBounds) {
+                    u.velocity.z *= -1; // Reverse Z direction
+                    sprite.position.z = Math.sign(sprite.position.z) * pondBounds;
                 }
             });
         }
 
-        // --- FISH INITIALIZATION ---
+        // --- NEW SYMMETRICAL FISH MODEL (CORRECTED ORIENTATION) ---
+        function createFishMesh(fishMaterial) {
+            const fishGroup = new THREE.Group();
+
+            // 1. Create Body Profile (Nose at top, Tail at bottom)
+            const points = [];
+            // Nose (Top)
+            points.push(new THREE.Vector2(0, 1.0));
+            // Head/Body taper
+            points.push(new THREE.Vector2(0.3, 0.6));
+            points.push(new THREE.Vector2(0.35, 0.0));
+            // Tail taper
+            points.push(new THREE.Vector2(0.15, -0.8));
+            points.push(new THREE.Vector2(0.05, -1.0));
+
+            const bodyGeo = new THREE.LatheGeometry(points, 16);
+
+            // Rotate X 90 degrees so Y becomes Z (Forward/Back)
+            // Nose (+Y) -> Forward (+Z)
+            bodyGeo.rotateX(Math.PI / 2);
+
+            // Flatten
+            bodyGeo.scale(0.8, 0.5, 1.0);
+
+            const body = new THREE.Mesh(bodyGeo, fishMaterial);
+            fishGroup.add(body);
+
+            // 2. Create Tail Fin
+            const tailGeo = new THREE.BoxGeometry(0.05, 0.8, 0.6);
+            // Position at -Z (Back of fish)
+            tailGeo.translate(0, 0, -1.2);
+            const tail = new THREE.Mesh(tailGeo, fishMaterial);
+            fishGroup.add(tail);
+
+            fishGroup.userData.tail = tail;
+            fishGroup.castShadow = true;
+
+            return fishGroup;
+        }
+
         function initFishes() {
             fishes = [];
-            const fishGeo = new THREE.ConeGeometry(0.3, 1.2, 8);
-            fishGeo.rotateX(Math.PI / 2); fishGeo.scale(1.2, 2.0, 3.0);
-
-            for (let i = 0; i < 25; i++) {
+            for (let i = 0; i < 15; i++) { // Cut fish count to 15
+                // FULL SPECTRUM COLORS
                 const hue = Math.random();
                 const saturation = 0.8 + Math.random() * 0.2;
                 const lightness = 0.5 + Math.random() * 0.3;
+
                 const fishColor = new THREE.Color().setHSL(hue, saturation, lightness);
+                // Glow matches color but brighter
                 const emissiveColor = new THREE.Color().setHSL(hue, 1.0, 0.5);
 
                 const fishMat = new THREE.MeshPhysicalMaterial({
-                    color: fishColor, emissive: emissiveColor, emissiveIntensity: 2.0,
-                    roughness: 0.2, metalness: 0.8, clearcoat: 1.0
+                    color: fishColor,
+                    emissive: emissiveColor,
+                    emissiveIntensity: 2.5,
+                    roughness: 0.1,
+                    metalness: 0.6,
+                    clearcoat: 1.0,
+                    transparent: true,
+                    opacity: 0.95
                 });
 
-                const mesh = new THREE.Mesh(fishGeo, fishMat);
-                const r = Math.random() * 25; const angle = Math.random() * Math.PI * 2;
+                const mesh = createFishMesh(fishMat);
+
+                // VARIETY IN SIZE
+                const baseScale = 0.8 + Math.random() * 1.2; // Range 0.8 to 2.0
+                mesh.scale.set(baseScale, baseScale, baseScale);
+
+                // Random Position
+                const r = Math.random() * 28;
+                const angle = Math.random() * Math.PI * 2;
                 mesh.position.set(Math.cos(angle) * r, -0.5 + Math.random()*0.5, Math.sin(angle) * r);
-                mesh.castShadow = true; scene.add(mesh);
-                const speed = 0.05 + Math.random() * 0.05; const vAngle = Math.random() * Math.PI * 2;
-                fishes.push({ mesh, velocity: new THREE.Vector3(Math.cos(vAngle)*speed, 0, Math.sin(vAngle)*speed), speed });
+                scene.add(mesh);
+
+                // Speed depends slightly on size (smaller = faster)
+                const speed = (0.03 + Math.random() * 0.04) * (1.5 / baseScale);
+                const vAngle = Math.random() * Math.PI * 2;
+                fishes.push({
+                    mesh,
+                    velocity: new THREE.Vector3(Math.cos(vAngle)*speed, 0, Math.sin(vAngle)*speed),
+                    speed
+                });
             }
         }
 
-        function updateFishes() {
+        function updateFishes(time) {
             fishes.forEach(fish => {
                 fish.mesh.position.add(fish.velocity);
                 if (fish.mesh.position.length() > 28) fish.velocity.add(fish.mesh.position.clone().negate().normalize().multiplyScalar(0.005));
                 fish.velocity.normalize().multiplyScalar(fish.speed);
                 fish.mesh.lookAt(fish.mesh.position.clone().add(fish.velocity));
+
+                if (fish.mesh.userData.tail) {
+                    const wiggleSpeed = 15 + fish.speed * 50;
+                    fish.mesh.userData.tail.rotation.y = Math.sin(time * wiggleSpeed) * 0.3;
+                }
             });
         }
 
@@ -673,7 +769,7 @@
 
             fairyDustSystem.material.uniforms.uTime.value = time;
 
-            updateFishes();
+            updateFishes(time);
             updateStarPhysics();
             updateFloatingEmojis(time);
 
@@ -698,9 +794,10 @@
             waterMesh.geometry.attributes.position.needsUpdate = true;
             waterMesh.geometry.computeVertexNormals();
 
-            const hue = (time * 0.05) % 1.0;
-            const baseGlow = new THREE.Color().setHSL(hue, 1.0, 0.5);
-            const glow = baseGlow.multiplyScalar(audioData.bass * audioData.bass * 5.0);
+            const hue = 0.25 + ((time * 0.05) % 0.25);
+            // DARKER BASE GLOW based on audio
+            const baseGlow = new THREE.Color().setHSL(hue, 0.8, 0.2);
+            const glow = baseGlow.multiplyScalar(audioData.bass * audioData.bass * 3.0);
             waterMesh.material.emissive.copy(glow);
 
             const mPos = mistSystem.geometry.attributes.position.array;
@@ -715,7 +812,13 @@
 
         // --- Fixed Recording & Audio Utils ---
         function getSupportedMimeType() { const types = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4']; for (const type of types) { if (MediaRecorder.isTypeSupported(type)) return type; } return ''; }
-        function initAudio() { if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)(); if (analyser) return; analyser = audioContext.createAnalyser(); analyser.fftSize = 512; frequencyData = new Uint8Array(analyser.frequencyBinCount); }
+        function initAudio() {
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (analyser) return;
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 512;
+            frequencyData = new Uint8Array(analyser.frequencyBinCount);
+        }
         function getAudioData() { if (!analyser) return { bass: 0, mid: 0, high: 0 }; analyser.getByteFrequencyData(frequencyData); const bass = avg(frequencyData.slice(0, 10)) / 255; const mid = avg(frequencyData.slice(10, 100)) / 255; const high = avg(frequencyData.slice(100, 200)) / 255; return { bass, mid, high }; }
         const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
 
@@ -754,8 +857,36 @@
             startViz();
         }
 
-        fileInput.onchange = (e) => { const file = e.target.files[0]; if(!file) return; initAudio(); const reader = new FileReader(); reader.onload = async (ev) => { if(audioContext.state === 'suspended') await audioContext.resume(); const buffer = await audioContext.decodeAudioData(ev.target.result); setupAudioChain(buffer); }; reader.readAsArrayBuffer(file); };
-        loadFromFileButton.onclick = () => fileInput.click();
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            const fileName = file.name.replace(/\.[^/.]+$/, "");
+            document.title = fileName;
+            loadingTextDiv.innerText = fileName.toUpperCase();
+
+            messageDiv.innerText = "Decoding audio data...";
+
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    if(audioContext.state === 'suspended') await audioContext.resume();
+                    const buffer = await audioContext.decodeAudioData(ev.target.result);
+                    setupAudioChain(buffer);
+                } catch (err) {
+                    messageDiv.innerText = "Error decoding audio: " + err.message;
+                    console.error(err);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            fileInput.value = '';
+        };
+
+        loadFromFileButton.onclick = () => {
+            initAudio();
+            fileInput.click();
+        };
+
         function cleanupAudio() { if(audioSourceNode) { audioSourceNode.disconnect(); try{audioSourceNode.stop();}catch(e){} } if(masterGainNode) {masterGainNode.disconnect();} }
 
         function stopViz() {

@@ -160,30 +160,99 @@
     top: 0;
     left: 0;
     width: 100%;
-    background: #333;
-    padding: 2px;
+    background: #222;
+    padding: 4px;
     box-sizing: border-box;
     text-align: center;
     z-index: 1000;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
+
+.toolbar-panel {
+    background: #333;
+    border-radius: 4px;
+    padding: 4px 8px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.toolbar-caption {
+    color: #999;
+    font-size: 11px;
+    margin-right: 4px;
+    white-space: nowrap;
+}
+
 .toolbar button {
     background: #555;
     color: white;
     border: 1px solid #888;
     border-radius: 3px;
-    padding: 1px 4px;
-    margin: 1px;
+    padding: 2px 6px;
+    margin: 0;
     cursor: pointer;
     font-size: 12px;
+    white-space: nowrap;
 }
+
+.toolbar button:hover {
+    background: #666;
+}
+
 .toolbar button:disabled {
-    background: #777;
-    color: #ccc;
+    background: #444;
+    color: #999;
     cursor: default;
+    border-color: #666;
 }
     </style>
 </head>
 <body>
+<div class="toolbar">
+    <!-- Navigation Group -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">Navigation:</span>
+        <button title="Return to Home page" onclick="window.location.href='index.html'">Home</button>
+    </div>
+
+    <!-- Generative Tools -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">Generative:</span>
+        <button title="Go to the Berlin-style sequencer" onclick="window.location.href='berlin.html'">Berlin</button>
+        <button title="Go to the Rhythm Lab" onclick="window.location.href='rhythm.html'">Rhythm</button>
+        <button title="Explore Karplus-Strong synthesis" onclick="window.location.href='karplus.html'">Karplus</button>
+        <button title="Play the Theremin" onclick="window.location.href='theremin.html'">Theremin</button>
+    </div>
+    
+    <!-- MIDI Tools -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">MIDI Tools:</span>
+        <button title="Explore and analyze chords" onclick="window.location.href='chords.html'">Chords</button>
+        <button title="MIDI Monitor" onclick="window.location.href='midi-monitor.html'">Monitor</button>
+        <button title="Experiment with MIDI delay effects" onclick="window.location.href='delay.html'">Delay</button>
+        <button title="Chain multiple MIDI devices" onclick="window.location.href='polychain.html'">Polychain</button>
+    </div>
+    
+    <!-- Visualizers -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">Visualizers:</span>
+        <button title="Go to the Starfield visualizer" onclick="window.location.href='starfield.html'">Starfield</button>
+        <button title="Go to the Pond visualizer" onclick="window.location.href='pondviz.html'">Pond</button>
+        <button title="Go to Visualizer 1" onclick="window.location.href='visualizer1.html'">Viz 1</button>
+        <button title="Go to Visualizer 2" onclick="window.location.href='visualizer2.html'">Viz 2</button>
+    </div>
+    
+    <!-- Additional Tools -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">More:</span>
+        <button title="Go to Classics on MIDI" onclick="window.location.href='ClassicsOnMIDI.html'">Classics</button>
+        <button title="Go to Circles" onclick="window.location.href='Circles.html'">Circles</button>
+    </div>
+</div>
 
 <!-- Add padding to body content to account for fixed nav -->
 <div style="padding-top: 60px;"></div>
@@ -201,12 +270,6 @@
             <a href="chords.html">Chords</a>
             <div class="menu-description">MIDI Chord Monitor: Real-time chord recognition with extended harmony
                 analysis. Shows inversions, suggested scales, alternative voicings, and common chord substitutions.
-            </div>
-        </div>
-        <div class="menu-item">
-            <a href="ClassicsOnMIDI.html">Classics On MIDI</a>
-            <div class="menu-description">Play and explore classical music pieces through MIDI. Interactive piano
-                interface with classic compositions.
             </div>
         </div>
         <div class="menu-item">
@@ -251,6 +314,10 @@
             <div class="menu-description">Audio-Reactive 3D Tunnel: Immersive hyperspace tunnel with real-time audio
                 visualization. Features dynamic lighting, particle effects, and recording capabilities.
             </div>
+        </div>
+        <div class="menu-item">
+            <a href="Psychedelia.html">Psychedelia</a>
+            <div class="menu-description">A mind-bending audio visualizer with psychedelic effects.</div>
         </div>
     </nav>
 </main>
