@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stargate Corridor - Audio Reactive</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #000;
+            font-family: 'Courier New', Courier, monospace; /* Retro terminal vibe */
+            color: #ffffff;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI OVERLAY STYLES */
+        #overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            padding: 40px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid transparent; /* Remove the hard border */
+            box-shadow: 0 0 30px #ff00ff, inset 0 0 20px #ff00ff, 0 0 60px rgba(255, 0, 255, 0.7); /* Enhance glow */
+            border-radius: 4px;
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            width: 90%;
+            transition: opacity 0.5s;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin: 0 0 20px 0;
+            color: #fff;
+            text-shadow: 2px 2px 0px #ff00ff, -2px -2px 0px #00ffff;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Cyberpunk Button */
+        .btn {
+            background: transparent;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 15px 30px;
+            border: 2px solid #00ffff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #00ffff;
+            color: #000;
+            box-shadow: 0 0 30px #00ffff;
+        }
+
+        #fileInput { display: none; }
+
+        /* Recording UI */
+        #recordContainer {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 150;
+            display: none;
+            flex-direction: row;
+            gap: 15px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .rec-btn {
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: sans-serif;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        #recordButton {
+            background: #ff0055;
+            color: white;
+            box-shadow: 0 0 15px #ff0055;
+            min-width: 160px;
+        }
+
+        #recordButton.recording { animation: pulseRed 1s infinite; }
+
+        #leaveButton {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid white;
+            backdrop-filter: blur(5px);
+        }
+        #leaveButton:hover { background: white; color: black; }
+
+        @keyframes pulseRed {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 0, 85, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
+        }
+
+        #fullscreenBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #fff;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 150;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #message { margin-top: 15px; color: #00ffff; font-size: 0.9rem; min-height: 1.2em; }
+
+        /* Custom Checkbox */
+        .checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; color: #ccc; margin-top: 10px; }
+        input[type="checkbox"] { accent-color: #00ffff; width: 18px; height: 18px; }
+
+    </style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<button id="fullscreenBtn">⛶</button>
+
+<div id="recordContainer">
+    <button id="recordButton" class="rec-btn">Start Recording</button>
+    <button id="leaveButton" class="rec-btn">Stop & Reset</button>
+</div>
+
+<div id="overlay">
+    <h1>Stargate Corridor</h1>
+    <div class="control-group">
+        <p style="margin-top:0; color:#aaa; font-size: 0.8rem;">SELECT AUDIO SOURCE</p>
+        <button id="selectFileBtn" class="btn">Upload Audio</button>
+        <input type="file" id="fileInput" accept="audio/*">
+    </div>
+
+    <div class="checkbox-wrapper">
+        <input type="checkbox" id="autoRecord">
+        <label for="autoRecord">Auto-record on play</label>
+    </div>
+
+    <div id="message"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- FRAGMENT SHADER: THE VISUAL ENGINE -->
+<script type="x-shader/x-fragment" id="fragShader">
+    uniform float uTime;
+    uniform vec2 uResolution;
+    uniform float uBass;
+    uniform float uMid;
+    uniform float uHigh;
+    uniform float uWarp; // New uniform for warp effect
+    uniform float uDistance; // NEW: For smooth forward motion
+
+    // Re-introducing the palette function for psychedelic colors
+    vec3 palette( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d ) {
+        return a + b*cos( 6.28318*(c*t+d) );
+    }
+
+    void main() {
+        vec2 uv = (gl_FragCoord.xy * 2.0 - uResolution.xy) / uResolution.y;
+
+        // --- STARGATE CORRIDOR EFFECT ---
+
+        // Heavily stretch coordinates based on warp uniform
+        uv.x *= 1.0 + uWarp * 20.0;
+
+        // Convert to polar coordinates
+        float angle = atan(uv.y, uv.x);
+        float radius = length(uv);
+
+        // Create the streaking, slit-scan effect by manipulating coordinates
+        // Time drives the forward motion, Mid frequencies add smearing/complexity
+        float detail = uMid * 2.0;
+        
+        // The core distortion logic
+        vec2 distorted_uv = vec2(
+            log(radius) * (1.0 + uWarp * 0.5) - uDistance, // Use distance for forward motion
+            angle / 3.14159 + detail
+        );
+
+        // Use the palette function to create intense, cycling colors
+        // Bass controls the speed of the color cycle
+        vec3 color = palette(
+            distorted_uv.x + uBass,
+            vec3(0.5, 0.5, 0.5),
+            vec3(0.5, 0.5, 0.5),
+            vec3(1.0, 1.0, 1.0),
+            vec3(0.0, 0.10, 0.20)
+        );
+
+        // Add a central glow that pulses with highs
+        color += pow(1.0 - radius, 2.0) * uHigh * 2.0;
+
+        // Final color is a blend based on the distortion
+        vec3 finalColor = color * (0.5 + sin(distorted_uv.y * 10.0 + distorted_uv.x * 0.5) * 0.5);
+
+        gl_FragColor = vec4(finalColor, 1.0);
+    }
+</script>
+
+<script>
+    (function(){
+        // --- CONFIG & STATE ---
+        let audioContext, analyser, dataArray, sourceNode;
+        let renderer, scene, camera, material, mesh;
+        let isRunning = false;
+
+        // Visual effect state
+        let warpAmount = 0.0;
+        let distance = 0.0;
+
+        // Recording
+        let mediaRecorder;
+        let recordedChunks = [];
+        let isRecording = false;
+
+        // Elements
+        const container = document.getElementById('canvas-container');
+        const overlay = document.getElementById('overlay');
+        const fileInput = document.getElementById('fileInput');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const messageDiv = document.getElementById('message');
+        const recordBtn = document.getElementById('recordButton');
+        const leaveBtn = document.getElementById('leaveButton');
+        const recordContainer = document.getElementById('recordContainer');
+        const autoRecordCheck = document.getElementById('autoRecord');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+        // --- THREE.JS SETUP ---
+        function initThree() {
+            // Basic Scene
+            scene = new THREE.Scene();
+
+            // Orthographic Camera for 2D Shader
+            camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Full Screen Plane
+            const geometry = new THREE.PlaneGeometry(2, 2);
+
+            // Shader Material
+            material = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTime: { value: 0 },
+                    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                    uBass: { value: 0.0 },
+                    uMid: { value: 0.0 },
+                    uHigh: { value: 0.0 },
+                    uWarp: { value: 0.0 },
+                    uDistance: { value: 0.0 },
+                },
+                fragmentShader: document.getElementById('fragShader').textContent
+            });
+
+            mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            window.addEventListener('resize', onResize);
+        }
+
+        function onResize() {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            material.uniforms.uResolution.value.x = window.innerWidth;
+            material.uniforms.uResolution.value.y = window.innerHeight;
+        }
+
+        // --- AUDIO ENGINE & BPM LOGIC ---
+        function initAudio() {
+            if(!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+            }
+        }
+
+        function getAudioData() {
+            if(!analyser) return { bass:0, mid:0, high:0 };
+            analyser.getByteFrequencyData(dataArray);
+
+            const bassRange = dataArray.slice(0, 10);
+            const midRange = dataArray.slice(10, 80);
+            const highRange = dataArray.slice(80, 200);
+            const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
+
+            return {
+                bass: avg(bassRange) / 255,
+                mid: avg(midRange) / 255,
+                high: avg(highRange) / 255
+            };
+        }
+
+        // --- ANIMATION LOOP ---
+        let lastFrameTime = 0;
+
+        function animate(time) {
+            const now = performance.now();
+            const deltaTime = (now - lastFrameTime) / 1000;
+            lastFrameTime = now;
+
+            if(!isRunning) return;
+            requestAnimationFrame(animate);
+
+            // 1. Get Audio
+            const audioData = getAudioData();
+            const smoothBass = material.uniforms.uBass.value;
+
+            // 2. Update Shader Uniforms
+            material.uniforms.uTime.value = time / 1000;
+
+            // --- Warp Speed Effect ---
+            // If bass is strong, trigger a warp, otherwise decay
+            if (audioData.bass > 0.7) { // Lowered threshold for more frequent effect
+                warpAmount = (audioData.bass - 0.7) * 2.0; // Increased intensity
+            } else {
+                warpAmount *= 0.9; // Fast decay
+            }
+
+            // Calculate forward motion
+            const speed = 0.5 + smoothBass * 2.0; // Base speed + boost from bass
+            distance += speed * deltaTime;
+
+            // Lerp values for smooth transitions
+            material.uniforms.uBass.value += (audioData.bass - material.uniforms.uBass.value) * 0.2;
+            material.uniforms.uMid.value += (audioData.mid - material.uniforms.uMid.value) * 0.2;
+            material.uniforms.uHigh.value += (audioData.high - material.uniforms.uHigh.value) * 0.2;
+            material.uniforms.uWarp.value += (warpAmount - material.uniforms.uWarp.value) * 0.1;
+            material.uniforms.uDistance.value = distance;
+
+            // 3. Render
+            renderer.render(scene, camera);
+        }
+
+        // --- FILE HANDLING ---
+        selectFileBtn.onclick = () => {
+            initAudio();
+            fileInput.click();
+        };
+
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            messageDiv.innerText = "Loading Audio...";
+
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    const audioBuffer = await audioContext.decodeAudioData(ev.target.result);
+                    startVisualizer(audioBuffer);
+                } catch(err) {
+                    messageDiv.innerText = "Error: " + err.message;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        };
+
+        function startVisualizer(buffer) {
+            if(sourceNode) { sourceNode.disconnect(); sourceNode.stop(); }
+
+            sourceNode = audioContext.createBufferSource();
+            sourceNode.buffer = buffer;
+            sourceNode.connect(analyser);
+            analyser.connect(audioContext.destination);
+
+            sourceNode.onended = resetUI;
+            sourceNode.start(0);
+
+            overlay.style.opacity = 0;
+            setTimeout(() => overlay.style.display = 'none', 500);
+
+            recordContainer.style.display = 'flex';
+            setTimeout(() => recordContainer.style.opacity = 1, 10);
+
+            isRunning = true;
+            lastFrameTime = performance.now();
+
+            animate(performance.now());
+
+            if(autoRecordCheck.checked) {
+                setTimeout(toggleRecord, 500);
+            }
+        }
+
+        function resetUI() {
+            isRunning = false;
+            if(isRecording) toggleRecord();
+            overlay.style.display = 'block';
+            setTimeout(() => overlay.style.opacity = 1, 10);
+            recordContainer.style.opacity = 0;
+            setTimeout(() => recordContainer.style.display = 'none', 500);
+            if(sourceNode) { sourceNode.disconnect(); }
+        }
+
+        leaveBtn.onclick = resetUI;
+
+        // --- RECORDING ---
+        recordBtn.onclick = toggleRecord;
+
+        function toggleRecord() {
+            if(isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.innerText = "Start Recording";
+                recordBtn.classList.remove('recording');
+            } else {
+                const stream = renderer.domElement.captureStream(60);
+                const dest = audioContext.createMediaStreamDestination();
+                sourceNode.connect(dest);
+                const tracks = [...stream.getVideoTracks(), ...dest.stream.getAudioTracks()];
+
+                try {
+                    mediaRecorder = new MediaRecorder(new MediaStream(tracks), { mimeType: 'video/webm;codecs=vp9' });
+                } catch (e) {
+                    mediaRecorder = new MediaRecorder(new MediaStream(tracks));
+                }
+
+                mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = saveVideo;
+
+                recordedChunks = [];
+                mediaRecorder.start();
+
+                isRecording = true;
+                recordBtn.innerText = "Stop Recording";
+                recordBtn.classList.add('recording');
+            }
+        }
+
+        function saveVideo() {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'stargate-corridor.webm';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+        }
+
+        fullscreenBtn.onclick = () => {
+            if (!document.fullscreenElement) {
+                document.body.requestFullscreen();
+                fullscreenBtn.innerHTML = "🡼";
+            } else {
+                document.exitFullscreen();
+                fullscreenBtn.innerHTML = "⛶";
+            }
+        };
+
+        initThree();
+    })();
+</script>
+</body>
+</html>
