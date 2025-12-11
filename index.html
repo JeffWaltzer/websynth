@@ -9,87 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Inter:wght@400;600;700&display=swap"
           rel="stylesheet">
     <style>
-        /* Custom CSS for a more refined look */
-        :root {
-            --primary-bg: #2a2a2a;
-            --secondary-bg: #3a3a3a;
-            --panel-bg: #4a4a4a;
-            --panel-border: #6a6a6a;
-            --text-color: #e0e0e0;
-            --accent-color: #f0ad4e;
-            --accent-glow: rgba(240, 173, 78, 0.7);
-            --control-bg: #333333;
-            --control-border: #555555;
-            --thumb-color: #c0b090;
-            --active-toggle: #5cb85c;
-            --random-btn: #337ab7;
-            --learn-btn: #d9534f;
-            --save-load-btn: #5bc0de;
-            --midi-util-btn: #f0ad4e;
-            --refine-btn: #9b59b6;
-            --quantize-btn: #2ecc71;
-            --status-bg: rgba(0,0,0,0.8);
-            --status-text: #fff;
-        }
-  .toolbar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: #222;
-    padding: 4px;
-    box-sizing: border-box;
-    text-align: center;
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.toolbar-panel {
-    background: #333;
-    border-radius: 4px;
-    padding: 4px 8px;
-    display: flex;
-    gap: 4px;
-    align-items: center;
-}
-
-.toolbar-caption {
-    color: #999;
-    font-size: 11px;
-    margin-right: 4px;
-    white-space: nowrap;
-}
-
-.toolbar button {
-    background: #555;
-    color: white;
-    border: 1px solid #888;
-    border-radius: 3px;
-    padding: 2px 6px;
-    margin: 0;
-    cursor: pointer;
-    font-size: 12px;
-    white-space: nowrap;
-}
-
-.toolbar button:hover {
-    background: #666;
-}
-
-.toolbar button:disabled {
-    background: #444;
-    color: #999;
-    cursor: default;
-    border-color: #666;
-}
-
-        html {
-            transition: box-shadow 0.15s ease-out;
-        }
-
         :root {
             --burnt-orange: #e65100;
             --dark-orange: #bf360c;
@@ -237,100 +156,77 @@
             }
         }
         .toolbar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: #222;
-    padding: 4px;
-    box-sizing: border-box;
-    text-align: center;
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.toolbar-panel {
-    background: #333;
-    border-radius: 4px;
-    padding: 4px 8px;
-    display: flex;
-    gap: 4px;
-    align-items: center;
-}
-
-.toolbar-caption {
-    color: #999;
-    font-size: 11px;
-    margin-right: 4px;
-    white-space: nowrap;
-}
-
-.toolbar button {
-    background: #555;
-    color: white;
-    border: 1px solid #888;
-    border-radius: 3px;
-    padding: 2px 6px;
-    margin: 0;
-    cursor: pointer;
-    font-size: 12px;
-    white-space: nowrap;
-}
-
-.toolbar button:hover {
-    background: #666;
-}
-
-.toolbar button:disabled {
-    background: #444;
-    color: #999;
-    cursor: default;
-    border-color: #666;
-}
- body {
-    padding-top: 50px;
- }
-</style>
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #222;
+            padding: 4px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .toolbar-panel {
+            background: #333;
+            border-radius: 5px;
+            padding: 5px;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .toolbar-caption {
+            color: #ccc;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        .toolbar button {
+            background: #555;
+            color: white;
+            border: 1px solid #888;
+            border-radius: 3px;
+            padding: 2px 6px;
+            margin: 0;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .toolbar button:hover {
+            background: #666;
+        }
+        .toolbar button:disabled {
+            background: #777;
+            color: #ccc;
+            cursor: default;
+        }
+    </style>
+</head>
 <body>
 <div class="toolbar">
-    <!-- Main Navigation -->
     <div class="toolbar-panel">
-        <span class="toolbar-caption">Main:</span>
-        <button onclick="window.location.href='index.html'" disabled>Home</button>
+        <span class="toolbar-caption">Generative:</span>
+        <button title="Go to the Berlin-style sequencer" onclick="window.location.href='berlin.html'">Berlin</button>
+        <button title="Go to the Rhythm Lab" onclick="window.location.href='rhythm.html'">Rhythm</button>
+        <button title="Explore Karplus-Strong synthesis" onclick="window.location.href='karplus.html'">Karplus</button>
     </div>
-
-    <!-- MIDI Tools -->
     <div class="toolbar-panel">
-        <span class="toolbar-caption">MIDI Tools:</span>
-        <button onclick="window.location.href='chords.html'">Chords</button>
-        <button onclick="window.location.href='delay.html'">Delay</button>
-        <button onclick="window.location.href='polychain.html'">Polychain</button>
+        <span class="toolbar-caption">MIDI Utilities:</span>
+        <button title="Explore and analyze chords" onclick="window.location.href='chords.html'">Chords</button>
+        <button title="Experiment with MIDI delay effects" onclick="window.location.href='delay.html'">Delay</button>
+        <button title="Chain multiple MIDI devices" onclick="window.location.href='polychain.html'">Polychain</button>
     </div>
-
-    <!-- Instruments -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">Instruments:</span>
-        <button onclick="window.location.href='karplus.html'">Karplus</button>
-    </div>
-
-    <!-- Sequencers -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">Sequencers:</span>
-        <button onclick="window.location.href='berlin.html'">Berlin</button>
-        <button onclick="window.location.href='rhythm.html'">Rhythm</button>
-    </div>
-
-    <!-- Visualizers -->
     <div class="toolbar-panel">
         <span class="toolbar-caption">Visualizers:</span>
-        <button onclick="window.location.href='starfield.html'">Starfield</button>
-        <button onclick="window.location.href='pondviz.html'">Pond</button>
-        <button onclick="window.location.href='visualizer1.html'">Viz 1</button>
-        <button onclick="window.location.href='visualizer2.html'">Viz 2</button>
-        <button onclick="window.location.href='Psychedelia.html'">Psychedelia</button>
+        <button title="Go to the Starfield visualizer" onclick="window.location.href='starfield.html'">Starfield</button>
+        <button title="Go to the Pond visualizer" onclick="window.location.href='pondviz.html'">Pond</button>
+        <button title="Go to the Psychedelia visualizer" onclick="window.location.href='Psychedelia.html'">Psychedelia</button>
+        <button title="Go to the Cosmic Drift visualizer" onclick="window.location.href='CosmicDrift.html'">Cosmic Drift</button>
+        <button title="Go to Visualizer 1" onclick="window.location.href='visualizer1.html'">Viz 1</button>
+        <button title="Go to Visualizer 2" onclick="window.location.href='visualizer2.html'">Viz 2</button>
+    </div>
+    <div class="toolbar-panel">
+        <button disabled title="You are on the Home page">Home</button>
     </div>
 </div>
 
@@ -398,6 +294,10 @@
         <div class="menu-item">
             <a href="Psychedelia.html">Psychedelia</a>
             <div class="menu-description">A mind-bending audio visualizer with psychedelic effects.</div>
+        </div>
+        <div class="menu-item">
+            <a href="CosmicDrift.html">Cosmic Drift</a>
+            <div class="menu-description">A mesmerizing journey through a colorful, ever-changing cosmic landscape.</div>
         </div>
     </nav>
 </main>
