@@ -102,6 +102,48 @@
             /* Dimensions are controlled by JS for letterboxing */
         }
     </style>
+<style>
+  .toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #333;
+    padding: 2px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 1000;
+  }
+  .toolbar button {
+    background: #555;
+    color: white;
+    border: 1px solid #888;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin: 1px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .toolbar button:disabled {
+    background: #777;
+    color: #ccc;
+    cursor: default;
+  }
+</style>
+<div class="toolbar">
+    <button onclick="window.location.href='index.html'">Home</button>
+    <button onclick="window.location.href='berlin.html'">Berlin</button>
+    <button onclick="window.location.href='chords.html'">Chords</button>
+    <button onclick="window.location.href='CosmicDrift.html'">Cosmic</button>
+    <button onclick="window.location.href='delay.html'">Delay</button>
+    <button onclick="window.location.href='karplus.html'">Karplus</button>
+    <button onclick="window.location.href='polychain.html'">Polychain</button>
+    <button onclick="window.location.href='pondviz.html'">Pond</button>
+    <button onclick="window.location.href='Psychedelia.html'">Psyche</button>
+    <button onclick="window.location.href='rhythm.html'">Rhythm</button>
+    <button disabled>Shepard</button>
+    <button onclick="window.location.href='starfield.html'">Starfield</button>
+</div>
 </head>
 <body>
 
