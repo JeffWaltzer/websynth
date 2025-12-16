@@ -24,12 +24,13 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--wood-brown);
             margin: 0;
-            min-height: 100vh;
+            min-height: calc(100vh - 36px); /* Subtract toolbar height from viewport */
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
             line-height: 1.5;
+            overflow-x: hidden;
         }
 
         main.container {
@@ -135,57 +136,63 @@
             }
         }
         .toolbar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: #222;
-            padding: 4px;
-            box-sizing: border-box;
-            text-align: center;
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .toolbar-panel {
-            background: #333;
-            border-radius: 4px;
-            padding: 4px 8px;
-            display: flex;
-            gap: 4px;
-            align-items: center;
-        }
-        .toolbar-caption {
-            color: #999;
-            font-size: 11px;
-            margin-right: 4px;
-            white-space: nowrap;
-        }
-        .toolbar button {
-            background: #555;
-            color: white;
-            border: 1px solid #888;
-            border-radius: 3px;
-            padding: 2px 6px;
-            margin: 0;
-            cursor: pointer;
-            font-size: 12px;
-            white-space: nowrap;
-        }
-        .toolbar button:hover {
-            background: #666;
-        }
-        .toolbar button:disabled {
-            background: #444;
-            color: #999;
-            cursor: default;
-            border-color: #666;
-        }
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #222;
+    padding: 4px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    height: 32px; /* Fixed height */
+}
+.toolbar-panel {
+    background: #333;
+    border-radius: 3px;
+    padding: 2px 6px;
+    display: flex;
+    gap: 6px; /* Increased gap between buttons */
+    align-items: center;
+    margin: 0 2px; /* Added margin between panels */
+}
+.toolbar button {
+    background: #555;
+    color: white;
+    border: 1px solid #888;
+    border-radius: 2px;
+    padding: 2px 8px; /* Increased horizontal padding */
+    margin: 0;
+    cursor: pointer;
+    font-size: 11px;
+    white-space: nowrap;
+    height: 20px;
+    line-height: 16px;
+    min-width: 40px; /* Added minimum width */
+}
+.toolbar-caption {
+    color: #999;
+    font-size: 10px;
+    margin-right: 4px;
+    white-space: nowrap;
+}
          body {
-            padding-top: 50px;
-         }
+    padding-top: 36px; /* Adjusted to match toolbar height + 4px gap */
+    margin: 0;
+    min-height: calc(100vh - 36px); /* Subtract toolbar height from viewport */
+    overflow-x: hidden;
+}
+.container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
     </style>
 </head>
 <body>
@@ -222,16 +229,13 @@
         <span class="toolbar-caption">Visualizers:</span>
         <button onclick="window.location.href='starfield.html'">Starfield</button>
         <button onclick="window.location.href='pondviz.html'">Pond</button>
-        <button onclick="window.location.href='visualizer1.html'">Viz 1</button>
-        <button onclick="window.location.href='visualizer2.html'">Viz 2</button>
         <button onclick="window.location.href='Psychedelia.html'">Psychedelia</button>
         <button onclick="window.location.href='CosmicDrift.html'">Cosmic Drift</button>
-        <button onclick="window.location.href='Shepard chord.html'">Shepard</button>
+        <button onclick="window.location.href='Space%20Tunnel.html'">Space Tunnel</button>
+        <button onclick="window.location.href='Shepard%20chord.html'">Shepard</button>
     </div>
 </div>
 
-<!-- Add padding to body content to account for fixed nav -->
-<div style="padding-top: 60px;"></div>
 <main class="container">
     <h1>MIDI Master Control</h1>
     <nav>
@@ -268,12 +272,8 @@
             <div class="menu-description">Mesmerizing starfield animation with dynamic particle effects.</div>
         </div>
         <div class="menu-item">
-            <a href="visualizer1.html">Visualizer 1</a>
-            <div class="menu-description">Audio visualizer with real-time frequency and waveform analysis.</div>
-        </div>
-        <div class="menu-item">
-            <a href="visualizer2.html">Visualizer 2</a>
-            <div class="menu-description">Audio-Reactive 3D Tunnel: Immersive hyperspace tunnel with real-time audio visualization.</div>
+            <a href="Space%20Tunnel.html">Space Tunnel</a>
+            <div class="menu-description">A 3D space tunnel with a twist: a space-time paradox.</div>
         </div>
         <div class="menu-item">
             <a href="Psychedelia.html">Psychedelia</a>
@@ -288,7 +288,7 @@
             <div class="menu-description">An interactive string synthesis simulation.</div>
         </div>
         <div class="menu-item">
-            <a href="Shepard chord.html">Shepard's Lament</a>
+            <a href="Shepard%20chord.html">Shepard's Lament</a>
             <div class="menu-description">A meditative and interesting visualization of the Shepard's Chord.</div>
         </div>
     </nav>
