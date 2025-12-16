@@ -9,4 +9,5 @@ gem 'unimidi'     # MIDI input/output handling
 # Development dependencies
 group :development do
   gem 'bundler'   # Dependency management
+  gem 'rubocop', require: false
 end

@@ -34,7 +34,7 @@
 
         main.container {
             background-color: var(--panel-tan);
-            max-width: 1000px;
+            max-width: 1200px;
             width: 100%;
             padding: 40px;
             border-radius: 12px;
@@ -53,14 +53,14 @@
 
         nav {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
         }
 
         .menu-item {
-            display: grid;
-            grid-template-columns: 200px 1fr;
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             margin-bottom: 15px;
             align-items: center;
         }
@@ -69,24 +69,26 @@
             color: var(--wood-brown);
             font-size: 0.9rem;
             line-height: 1.4;
+            text-align: center;
         }
 
         a {
             background-color: var(--burnt-orange);
             color: var(--ivory);
             text-decoration: none;
-            padding: 20px;
+            padding: 10px;
             border: 3px solid var(--dark-orange);
             border-radius: 8px;
             font-weight: 700;
             text-align: center;
             text-transform: uppercase;
-            font-size: 1.1rem;
+            font-size: 1rem;
             letter-spacing: 0.5px;
             box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease-in-out;
             position: relative;
             display: block;
+            width: 100%;
         }
 
         a:hover {
@@ -131,29 +133,6 @@
             nav {
                 grid-template-columns: 1fr;
             }
-
-            .menu-item {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-
-            .menu-description {
-                font-size: 0.8rem;
-            }
-
-            main.container {
-                padding: 20px;
-            }
-        }
-
-        @media (min-width: 769px) {
-            body {
-                font-size: 18px;
-            }
-
-            h1 {
-                font-size: 3em;
-            }
         }
         .toolbar {
             position: absolute;
@@ -167,20 +146,22 @@
             z-index: 1000;
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         .toolbar-panel {
             background: #333;
-            border-radius: 5px;
-            padding: 5px;
+            border-radius: 4px;
+            padding: 4px 8px;
             display: flex;
-            gap: 5px;
+            gap: 4px;
             align-items: center;
         }
         .toolbar-caption {
-            color: #ccc;
-            font-size: 12px;
-            margin-right: 5px;
+            color: #999;
+            font-size: 11px;
+            margin-right: 4px;
+            white-space: nowrap;
         }
         .toolbar button {
             background: #555;
@@ -191,42 +172,61 @@
             margin: 0;
             cursor: pointer;
             font-size: 12px;
+            white-space: nowrap;
         }
         .toolbar button:hover {
             background: #666;
         }
         .toolbar button:disabled {
-            background: #777;
-            color: #ccc;
+            background: #444;
+            color: #999;
             cursor: default;
+            border-color: #666;
         }
+         body {
+            padding-top: 50px;
+         }
     </style>
 </head>
 <body>
 <div class="toolbar">
+    <!-- Main Navigation -->
     <div class="toolbar-panel">
-        <span class="toolbar-caption">Generative:</span>
-        <button title="Go to the Berlin-style sequencer" onclick="window.location.href='berlin.html'">Berlin</button>
-        <button title="Go to the Rhythm Lab" onclick="window.location.href='rhythm.html'">Rhythm</button>
-        <button title="Explore Karplus-Strong synthesis" onclick="window.location.href='karplus.html'">Karplus</button>
+        <span class="toolbar-caption">Main:</span>
+        <button onclick="window.location.href='index.html'" disabled>Home</button>
     </div>
+
+    <!-- MIDI Tools -->
     <div class="toolbar-panel">
-        <span class="toolbar-caption">MIDI Utilities:</span>
-        <button title="Explore and analyze chords" onclick="window.location.href='chords.html'">Chords</button>
-        <button title="Experiment with MIDI delay effects" onclick="window.location.href='delay.html'">Delay</button>
-        <button title="Chain multiple MIDI devices" onclick="window.location.href='polychain.html'">Polychain</button>
+        <span class="toolbar-caption">MIDI Tools:</span>
+        <button onclick="window.location.href='chords.html'">Chords</button>
+        <button onclick="window.location.href='delay.html'">Delay</button>
+        <button onclick="window.location.href='polychain.html'">Polychain</button>
     </div>
+
+    <!-- Instruments -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">Instruments:</span>
+        <button onclick="window.location.href='karplus.html'">Karplus</button>
+    </div>
+
+    <!-- Sequencers -->
+    <div class="toolbar-panel">
+        <span class="toolbar-caption">Sequencers:</span>
+        <button onclick="window.location.href='berlin.html'">Berlin</button>
+        <button onclick="window.location.href='rhythm.html'">Rhythm</button>
+    </div>
+
+    <!-- Visualizers -->
     <div class="toolbar-panel">
         <span class="toolbar-caption">Visualizers:</span>
-        <button title="Go to the Starfield visualizer" onclick="window.location.href='starfield.html'">Starfield</button>
-        <button title="Go to the Pond visualizer" onclick="window.location.href='pondviz.html'">Pond</button>
-        <button title="Go to the Psychedelia visualizer" onclick="window.location.href='Psychedelia.html'">Psychedelia</button>
-        <button title="Go to the Cosmic Drift visualizer" onclick="window.location.href='CosmicDrift.html'">Cosmic Drift</button>
-        <button title="Go to Visualizer 1" onclick="window.location.href='visualizer1.html'">Viz 1</button>
-        <button title="Go to Visualizer 2" onclick="window.location.href='visualizer2.html'">Viz 2</button>
-    </div>
-    <div class="toolbar-panel">
-        <button disabled title="You are on the Home page">Home</button>
+        <button onclick="window.location.href='starfield.html'">Starfield</button>
+        <button onclick="window.location.href='pondviz.html'">Pond</button>
+        <button onclick="window.location.href='visualizer1.html'">Viz 1</button>
+        <button onclick="window.location.href='visualizer2.html'">Viz 2</button>
+        <button onclick="window.location.href='Psychedelia.html'">Psychedelia</button>
+        <button onclick="window.location.href='CosmicDrift.html'">Cosmic Drift</button>
+        <button onclick="window.location.href='Shepard chord.html'">Shepard</button>
     </div>
 </div>
 
@@ -237,59 +237,43 @@
     <nav>
         <div class="menu-item">
             <a href="berlin.html">Berlin Sequencer</a>
-            <div class="menu-description">Create evolving, Berlin School-inspired sequences. Features algorithmic
-                pattern generation, modulation matrices, and probability-based variations for endless musical
-                exploration.
-            </div>
+            <div class="menu-description">Create evolving, Berlin School-inspired sequences.</div>
         </div>
         <div class="menu-item">
             <a href="chords.html">Chords</a>
-            <div class="menu-description">MIDI Chord Monitor: Real-time chord recognition with extended harmony
-                analysis. Shows inversions, suggested scales, alternative voicings, and common chord substitutions.
-            </div>
+            <div class="menu-description">MIDI Chord Monitor: Real-time chord recognition and analysis.</div>
+        </div>
+        <div class="menu-item">
+            <a href="ClassicsOnMIDI.html">Classics On MIDI</a>
+            <div class="menu-description">Play and explore classical music pieces through MIDI.</div>
         </div>
         <div class="menu-item">
             <a href="delay.html">MIDI Delay</a>
-            <div class="menu-description">Temporal note manipulation device with adjustable delay time, feedback
-                control, and ping-pong mode. Create complex echoes, cascading arpeggios, and rhythmic patterns.
-            </div>
+            <div class="menu-description">Temporal note manipulation device with adjustable delay time and feedback.</div>
         </div>
         <div class="menu-item">
             <a href="polychain.html">MIDI Poly Chain</a>
-            <div class="menu-description">Advanced MIDI routing tool with voice allocation, splits, and layers. Chain up
-                to 16 synthesizers, set velocity curves, and create complex multi-timbral setups with automatic voice
-                distribution.
-            </div>
+            <div class="menu-description">Advanced MIDI routing tool with voice allocation, splits, and layers.</div>
         </div>
         <div class="menu-item">
             <a href="pondviz.html">Meditative Pond</a>
-            <div class="menu-description">Immersive 3D particle visualization with meditative water effects. Features dynamic 
-            lighting, interactive particles, and real-time audio reactivity with recording capabilities.
+            <div class="menu-description">Immersive 3D particle visualization with meditative water effects.</div>
         </div>
-    </div>
         <div class="menu-item">
             <a href="rhythm.html">Rhythm Lab</a>
-            <div class="menu-description">Advanced rhythm generation tool with polyrhythms, euclidean patterns, and
-                probability-based variations. Create complex rhythmic structures with intuitive controls.
-            </div>
+            <div class="menu-description">Advanced rhythm generation tool with polyrhythms and euclidean patterns.</div>
         </div>
         <div class="menu-item">
             <a href="starfield.html">Starfield</a>
-            <div class="menu-description">Mesmerizing starfield animation with dynamic particle effects. Watch stars
-                fly through space in real-time.
-            </div>
+            <div class="menu-description">Mesmerizing starfield animation with dynamic particle effects.</div>
         </div>
         <div class="menu-item">
             <a href="visualizer1.html">Visualizer 1</a>
-            <div class="menu-description">Audio visualizer with real-time frequency and waveform analysis. Visualize
-                audio input with customizable display modes and color schemes.
-            </div>
+            <div class="menu-description">Audio visualizer with real-time frequency and waveform analysis.</div>
         </div>
         <div class="menu-item">
             <a href="visualizer2.html">Visualizer 2</a>
-            <div class="menu-description">Audio-Reactive 3D Tunnel: Immersive hyperspace tunnel with real-time audio
-                visualization. Features dynamic lighting, particle effects, and recording capabilities.
-            </div>
+            <div class="menu-description">Audio-Reactive 3D Tunnel: Immersive hyperspace tunnel with real-time audio visualization.</div>
         </div>
         <div class="menu-item">
             <a href="Psychedelia.html">Psychedelia</a>
@@ -298,6 +282,14 @@
         <div class="menu-item">
             <a href="CosmicDrift.html">Cosmic Drift</a>
             <div class="menu-description">A mesmerizing journey through a colorful, ever-changing cosmic landscape.</div>
+        </div>
+        <div class="menu-item">
+            <a href="karplus.html">Karplus-Strong</a>
+            <div class="menu-description">An interactive string synthesis simulation.</div>
+        </div>
+        <div class="menu-item">
+            <a href="Shepard chord.html">Shepard's Lament</a>
+            <div class="menu-description">A meditative and interesting visualization of the Shepard's Chord.</div>
         </div>
     </nav>
 </main>
