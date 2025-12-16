@@ -142,73 +142,50 @@
         }
     </style>
     <style>
-        .toolbar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: #333;
-            padding: 2px;
-            box-sizing: border-box;
-            text-align: center;
-            z-index: 1000;
-        }
-        .toolbar button {
-            background: #555;
-            color: white;
-            border: 1px solid #888;
-            border-radius: 3px;
-            padding: 1px 4px;
-            margin: 1px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .toolbar button:disabled {
-            background: #777;
-            color: #ccc;
-            cursor: default;
-        }
-    </style>
+    .toolbar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: #333;
+        padding: 2px;
+        box-sizing: border-box;
+        text-align: center;
+        z-index: 1000;
+    }
+    .toolbar button {
+        background: #555;
+        color: white;
+        border: 1px solid #888;
+        border-radius: 3px;
+        padding: 1px 4px;
+        margin: 1px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+    .toolbar button:disabled {
+        background: #777;
+        color: #ccc;
+        cursor: default;
+    }
+</style>
+<div class="toolbar">
+    <button onclick="window.location.href='index.html'">Home</button>
+    <button disabled>Berlin</button>
+    <button onclick="window.location.href='chords.html'">Chords</button>
+    <button onclick="window.location.href='CosmicDrift.html'">Cosmic</button>
+    <button onclick="window.location.href='delay.html'">Delay</button>
+    <button onclick="window.location.href='karplus.html'">Karplus</button>
+    <button onclick="window.location.href='polychain.html'">Polychain</button>
+    <button onclick="window.location.href='pondviz.html'">Pond</button>
+    <button onclick="window.location.href='Psychedelia.html'">Psyche</button>
+    <button onclick="window.location.href='rhythm.html'">Rhythm</button>
+    <button onclick="window.location.href='Shepard chord.html'">Shepard</button>
+    <button onclick="window.location.href='starfield.html'">Starfield</button>
+</div>
 </head>
 <body class="transition-colors duration-500">
-<div class="toolbar">
-    <!-- Main Navigation -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">Main:</span>
-        <button onclick="window.location.href='index.html'">Home</button>
-    </div>
 
-    <!-- MIDI Tools -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">MIDI Tools:</span>
-        <button onclick="window.location.href='chords.html'">Chords</button>
-        <button onclick="window.location.href='delay.html'">Delay</button>
-        <button onclick="window.location.href='polychain.html'">Polychain</button>
-    </div>
-
-    <!-- Instruments -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">Instruments:</span>
-        <button onclick="window.location.href='karplus.html'">Karplus</button>
-    </div>
-
-    <!-- Sequencers -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">Sequencers:</span>
-        <button onclick="window.location.href='berlin.html'" disabled>Berlin</button>
-        <button onclick="window.location.href='rhythm.html'">Rhythm</button>
-    </div>
-
-    <!-- Visualizers -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">Visualizers:</span>
-        <button onclick="window.location.href='starfield.html'">Starfield</button>
-        <button onclick="window.location.href='pondviz.html'">Pond</button>
-        <button onclick="window.location.href='visualizer1.html'">Viz 1</button>
-        <button onclick="window.location.href='visualizer2.html'">Viz 2</button>
-        <button onclick="window.location.href='Psychedelia.html'">Psychedelia</button>
-    </div>
-</div>
 <div class="main-panel w-full max-w-7xl mx-auto p-2 my-2 rounded-2xl shadow-2xl border">
     <!-- Header -->
     <div class="relative text-center mb-2">
@@ -388,403 +365,3 @@
             openhat: new Tone.MetalSynth({ volume: -18, frequency: 250, envelope: { attack: 0.01, decay: 0.4, release: 0.4 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(masterVolume),
             bass: new Tone.MonoSynth({ volume: -4, oscillator: { type: 'fatsquare' }, envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 2 }, filterEnvelope: { attack: 0.01, decay: 0.6, sustain: 0.2, release: 2, baseFrequency: 80, octaves: 4 } }).connect(masterVolume),
             pluck: new Tone.PluckSynth({ volume: -10, attackNoise: 0.8, dampening: 5000, resonance: 0.95 }).connect(masterVolume),
-            pad: new Tone.PolySynth(Tone.FMSynth, { volume: -12, envelope: { attack: 1, decay: 0.5, sustain: 0.5, release: 3 } }).set({ maxPolyphony: 6 }).connect(masterVolume),
-            melody: new Tone.FMSynth({ volume: -12, envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.2 } }).set({ maxPolyphony: 4 }).connect(masterVolume),
-            lfoPad: new Tone.FMSynth({ volume: -24, harmonicity: 1.5, modulationIndex: 3, envelope: { attack: 1, decay: 0.5, sustain: 1, release: 2 } }).connect(lfoPadFilter),
-            rumble: rumble,
-        };
-
-        // --- UI & Control Logic ---
-        function updateDisplay(id, value, suffix = '') {
-            const display = document.getElementById(`${id}-value`);
-            if (display) display.textContent = value + suffix;
-        }
-
-        function setupControls() {
-            document.querySelectorAll('input[type="range"]').forEach(slider => {
-                const id = slider.id;
-                controls[id] = slider;
-                const display = document.querySelector(`span[id="${id}-value"]`);
-                const suffix = display ? display.parentElement.textContent.replace(/[\d.-]/g, '') : '';
-                updateDisplay(id, slider.value, suffix);
-                slider.addEventListener('input', e => {
-                    const value = parseFloat(e.target.value);
-                    const displayValue = e.target.step.includes('.') ? value.toFixed(2) : value;
-                    updateDisplay(id, displayValue, suffix);
-                    const container = slider.closest('[data-instrument]');
-                    if (container) {
-                        const instrumentId = container.dataset.instrument;
-                        if (synths[instrumentId]) synths[instrumentId].volume.value = value;
-                        else if (instrumentId === 'master') masterVolume.volume.value = value;
-                        else if (instrumentId === 'tempo') Tone.Transport.bpm.value = value;
-                        else if (instrumentId === 'swing') Tone.Transport.swing = value;
-                    }
-                });
-            });
-        }
-
-        // --- Sequencer UI ---
-        function createSequencerGrid(steps) {
-            dom.sequencerLabels.innerHTML = '';
-            dom.sequencerSteps.innerHTML = '';
-
-            Object.keys(seq_data).forEach(instrument => {
-                const label = document.createElement('div');
-                label.className = 'h-full flex items-center justify-end font-bold text-label';
-                label.textContent = instrument.charAt(0).toUpperCase() + instrument.slice(1);
-                dom.sequencerLabels.appendChild(label);
-
-                const row = document.createElement('div');
-                row.className = 'flex gap-1 sm:gap-2';
-                row.dataset.instrument = instrument;
-                for (let i = 0; i < steps; i++) {
-                    const step = document.createElement('div');
-                    step.className = 'seq-step rounded-md';
-                    if ((i > 3 && i < 8) || (i > 11 && i < 16)) step.classList.add('bg-black/20');
-                    step.dataset.step = i;
-                    step.addEventListener('click', () => {
-                        const isActive = step.classList.toggle('active');
-                        seq_data[instrument][i] = isActive;
-                    });
-                    if (seq_data[instrument][i]) {
-                        step.classList.add('active');
-                    }
-                    row.appendChild(step);
-                }
-                dom.sequencerSteps.appendChild(row);
-            });
-        }
-
-        // --- Music Generation ---
-        let currentChord = [];
-        let chordProgression = ['I', 'V', 'vi', 'IV'];
-        let progressionIndex = 0;
-
-        function randomizeDrumPattern(steps) {
-            Object.keys(seq_data).forEach(instrument => {
-                seq_data[instrument] = Array(steps).fill(false);
-                for (let i = 0; i < steps; i++) {
-                    let probability = 0.25;
-                    if (instrument === 'kick') {
-                        probability = (i % (steps / (Tone.Transport.timeSignature[0]))) === 0 ? 0.8 : 0.1;
-                    } else if (instrument === 'snare') {
-                        probability = (i === Math.floor(steps/4) || i === Math.floor(steps*3/4)) ? 0.75 : 0.05;
-                    } else if (instrument === 'hat') {
-                        probability = (i % 2 !== 0) ? 0.6 : 0.2;
-                    } else if (instrument === 'openhat') {
-                        probability = (i === steps - 2) ? 0.5 : 0.05;
-                    }
-                    seq_data[instrument][i] = Math.random() < probability;
-                }
-            });
-        }
-
-        function changeMood() {
-            const scaleOptions = dom.scaleTypeSelect.options;
-            const newScaleIndex = Math.floor(Math.random() * scaleOptions.length);
-            dom.scaleTypeSelect.selectedIndex = newScaleIndex;
-
-            const rootOptions = dom.rootNoteSelect.options;
-            const newRootIndex = Math.floor(Math.random() * rootOptions.length);
-            dom.rootNoteSelect.selectedIndex = newRootIndex;
-
-            updateMusicTheory();
-        }
-
-        function updateMusicTheory() {
-            currentScale = generateScale(dom.rootNoteSelect.value, dom.scaleTypeSelect.value, parseInt(dom.octaveSelect.value, 10));
-            progressionIndex = 0;
-            currentChord = getChordFromProgression(chordProgression[progressionIndex]);
-            updateArpeggiatorNotes();
-            updateStatusBar();
-        }
-
-        function getChordFromProgression(degree) {
-            const degreeMap = { 'I': 0, 'V': 4, 'vi': 5, 'IV': 3 };
-            const rootIdx = degreeMap[degree];
-            if (currentScale.length < rootIdx + 5) return [];
-            return [currentScale[rootIdx], currentScale[rootIdx + 2], currentScale[rootIdx + 4]];
-        }
-
-        function generateScale(root, type, startOctave, numOctaves = 3) {
-            const rootIndex = NOTES.indexOf(root);
-            const intervals = SCALE_INTERVALS[type];
-            if (rootIndex === -1 || !intervals) return [];
-            const scale = [];
-            for (let oct = 0; oct < numOctaves; oct++) {
-                for (const interval of intervals) {
-                    const noteIndex = rootIndex + interval;
-                    const currentOctave = startOctave + oct + Math.floor(noteIndex / 12);
-                    scale.push(NOTES[noteIndex % 12] + currentOctave);
-                }
-            }
-            return scale;
-        }
-
-        function displayLiveNote(instrument, note, duration) {
-            const noteEl = document.createElement('div');
-            noteEl.className = 'live-note p-1 bg-black/20 rounded-md text-center';
-            noteEl.textContent = `${instrument}: ${note.replace(/\d/g, '')}`;
-            dom.liveNotesDisplay.appendChild(noteEl);
-            setTimeout(() => {
-                noteEl.classList.add('fade-out');
-                setTimeout(() => noteEl.remove(), 500);
-            }, Tone.Time(duration).toMilliseconds() - 100);
-        }
-
-        const bassSequence = new Tone.Sequence((time, note) => {
-            synths.bass.triggerAttackRelease(note, "8n", time);
-            Tone.Draw.schedule(() => displayLiveNote('Bass', note, '8n'), time);
-        }, [], "4n").start(0);
-
-        const arpSequence = new Tone.Sequence((time, note) => {
-            if (note !== null && Math.random() < 0.7) {
-                synths.pluck.triggerAttackRelease(note, "16n", time);
-                Tone.Draw.schedule(() => displayLiveNote('Pluck', note, '16n'), time);
-            }
-        }, [], "16n").start(0);
-
-        const lfoPadSequence = new Tone.Sequence((time, note) => {
-            if (Math.random() < 0.5) {
-                const droneNote = Tone.Frequency(note).transpose(-12);
-                synths.lfoPad.triggerAttackRelease(droneNote, "1m", time);
-                Tone.Draw.schedule(() => displayLiveNote('LFO Pad', droneNote.toNote(), '1m'), time);
-            }
-        }, [], "1m").start(0);
-
-        function updateArpeggiatorNotes() {
-            if (currentChord.length === 0) return;
-            bassSequence.events = [currentChord[0], currentChord[1], currentChord[2], currentChord[1]];
-            const arpNotes = currentChord.flatMap(note => [note, null, Tone.Frequency(note).transpose(12).toNote(), null]);
-            arpSequence.events = arpNotes;
-            lfoPadSequence.events = [currentChord[0]]; // Drone on the root note
-        }
-
-        // --- Main Loop & Transport ---
-        function createDrumSequence(steps) {
-            if (drumSequence) {
-                drumSequence.stop();
-                drumSequence.dispose();
-            }
-            drumSequence = new Tone.Sequence((time, step) => {
-                const density = parseFloat(controls['density'].value);
-                Object.keys(seq_data).forEach(instrument => {
-                    if (seq_data[instrument][step] && Math.random() < Math.pow(density, 3)) {
-                        if (instrument === 'kick') {
-                            synths.kick.triggerAttackRelease("C1", "8n", time);
-                            synths.rumble.triggerAttackRelease("C0", "2n", time);
-                        }
-                        if (instrument === 'snare') synths.snare.triggerAttack(time);
-                        if (instrument === 'hat') synths.hat.triggerAttackRelease('C6', '16n', time, Math.random() * 0.3 + 0.5);
-                        if (instrument === 'openhat') synths.openhat.triggerAttack(time);
-                    }
-                });
-                Tone.Draw.schedule(() => {
-                    const lastStep = (step - 1 + steps) % steps;
-                    document.querySelectorAll(`[data-step]`).forEach(el => el.classList.remove('playing'));
-                    document.querySelectorAll(`[data-step="${step}"]`).forEach(el => el.classList.add('playing'));
-                }, time);
-            }, Array.from(Array(steps).keys()), "16n").start(0);
-        }
-
-        new Tone.Loop(time => {
-            progressionIndex = (progressionIndex + 1) % chordProgression.length;
-            currentChord = getChordFromProgression(chordProgression[progressionIndex]);
-            updateArpeggiatorNotes();
-            synths.pad.triggerAttackRelease(currentChord, "1m", time);
-            Tone.Draw.schedule(() => {
-                displayLiveNote('Pad', currentChord[0], '1m');
-                displayLiveNote('Pad', currentChord[1], '1m');
-                displayLiveNote('Pad', currentChord[2], '1m');
-            }, time);
-        }, "1m").start(0);
-
-        // --- Evolve Engine ---
-        let evolveSignal = new Tone.Signal(0);
-        const evolveParams = {
-            tempo: { min: 70, max: 170, target: Tone.Transport.bpm },
-            density: { min: 0.0, max: 1.0, target: null },
-            lfoRate: { min: 0.1, max: 8, target: lfo.frequency },
-            lfoDepth: { min: 200, max: 4000, target: lfo },
-        };
-        const TIME_SIGNATURES = [ { sig: [4, 4], steps: 16 }, { sig: [3, 4], steps: 12 }, { sig: [7, 8], steps: 14 } ];
-
-        function startEvolveCycle() {
-            if (!isPlaying) return;
-
-            // Change meter and rhythm
-            const newTimeSig = TIME_SIGNATURES[Math.floor(Math.random() * TIME_SIGNATURES.length)];
-            Tone.Transport.timeSignature = newTimeSig.sig;
-            NUM_STEPS = newTimeSig.steps;
-            randomizeDrumPattern(NUM_STEPS);
-            createSequencerGrid(NUM_STEPS);
-            createDrumSequence(NUM_STEPS);
-
-            // Change mood
-            changeMood();
-
-            // Conditional Swing
-            if (Math.random() < 0.1) {
-                Tone.Transport.swing = 0.5;
-                controls['swing'].value = 0.5;
-            } else {
-                Tone.Transport.swing = 0;
-                controls['swing'].value = 0;
-            }
-            updateDisplay('swing', Tone.Transport.swing.toFixed(1));
-
-            const buildUpTime = parseFloat(controls['evolve-up'].value);
-            const buildDownTime = parseFloat(controls['evolve-breakdown'].value);
-            const peakTime = parseFloat(controls['evolve-peak'].value);
-            const totalCycleTime = buildUpTime + peakTime + buildDownTime;
-
-            evolveState = 'Building Up';
-            evolveSignal.rampTo(1, buildUpTime);
-
-            Tone.Transport.scheduleOnce(() => { evolveState = 'Peak'; }, `+${buildUpTime}`);
-            Tone.Transport.scheduleOnce(() => { evolveState = 'Breaking Down'; evolveSignal.rampTo(0, buildDownTime) }, `+${buildUpTime + peakTime}`);
-            Tone.Transport.scheduleOnce(startEvolveCycle, `+${totalCycleTime}`);
-        }
-
-        // --- Status Bar Update ---
-        function inferMood() {
-            const tempo = Tone.Transport.bpm.value;
-            const scaleType = dom.scaleTypeSelect.value;
-
-            let tempoDescriptor;
-            if (tempo > 150) tempoDescriptor = "Frenetic";
-            else if (tempo > 120) tempoDescriptor = "Energetic";
-            else if (tempo < 90) tempoDescriptor = "Meditative";
-            else tempoDescriptor = "Relaxed";
-
-            let scaleDescriptor;
-            switch(scaleType) {
-                case 'major': case 'majorPentatonic':
-                    scaleDescriptor = tempo > 110 ? 'Euphoric' : 'Hopeful'; break;
-                case 'minor': case 'minorPentatonic':
-                    scaleDescriptor = tempo > 110 ? 'Intense' : 'Somber'; break;
-                case 'dorian':
-                    scaleDescriptor = 'Mystical'; break;
-                default: scaleDescriptor = 'Neutral';
-            }
-            return `${tempoDescriptor} & ${scaleDescriptor}`;
-        }
-
-        function updateStatusBar() {
-            const currentMood = isPlaying ? inferMood() : '...';
-            const moodColor = MOOD_COLORS[currentMood] || 'var(--text-display)';
-
-            dom.statusBar.evolveState.textContent = evolveState;
-            dom.statusBar.mood.textContent = currentMood;
-            dom.statusBar.tempo.textContent = `${Math.round(Tone.Transport.bpm.value)} BPM`;
-
-            if (currentChord && currentChord.length > 0) {
-                dom.statusBar.chord.textContent = currentChord.map(n => n.slice(0,-1)).join(' - ');
-            } else {
-                dom.statusBar.chord.textContent = '-';
-            }
-
-            const root = dom.rootNoteSelect.value;
-            const type = dom.scaleTypeSelect.options[dom.scaleTypeSelect.selectedIndex].text;
-            dom.statusBar.scale.textContent = `${root} ${type}`;
-
-            // Update colors
-            if (!document.body.classList.contains('theme-vintage')) {
-                dom.mainTitle.style.color = moodColor;
-                document.documentElement.style.setProperty('--border-color', moodColor);
-                document.documentElement.style.setProperty('--thumb-color', moodColor);
-                dom.playStopButton.style.backgroundColor = moodColor;
-                dom.newMoodButton.style.backgroundColor = moodColor;
-            } else {
-                dom.mainTitle.style.color = '';
-                document.documentElement.style.setProperty('--border-color', '');
-                document.documentElement.style.setProperty('--thumb-color', '');
-                dom.playStopButton.style.backgroundColor = '';
-                dom.newMoodButton.style.backgroundColor = '';
-            }
-        }
-
-        new Tone.Loop(time => {
-            if (!isPlaying) return;
-            const evolveValue = evolveSignal.value;
-            for (const param in evolveParams) {
-                const { min, max, target } = evolveParams[param];
-                const newValue = min + (max - min) * evolveValue;
-                if(param === 'lfoDepth') {
-                    lfo.max = newValue;
-                } else if (target) {
-                    target.value = newValue;
-                }
-
-                if (controls[param]) {
-                    controls[param].value = newValue;
-                    updateDisplay(param, target ? Math.round(newValue) : newValue.toFixed(2));
-                }
-            }
-            updateStatusBar();
-        }, "0.5s").start(0);
-
-        // --- Event Handlers ---
-        dom.playStopButton.addEventListener('click', async () => {
-            if (Tone.context.state !== 'running') {
-                dom.messageBox.textContent = 'Initializing Audio Engine...';
-                await Tone.start();
-                dom.messageBox.textContent = 'Ready!';
-                setTimeout(() => dom.messageBox.textContent = '', 2000);
-            }
-            isPlaying = !isPlaying;
-            if (isPlaying) {
-                Tone.Transport.start();
-                dom.playStopButton.textContent = 'Stop';
-                startEvolveCycle();
-            } else {
-                Tone.Transport.stop();
-                Tone.Transport.cancel(0);
-                evolveSignal.cancelScheduledValues(Tone.now());
-                evolveSignal.value = 0;
-                evolveState = 'Idle';
-                updateStatusBar();
-                dom.playStopButton.textContent = 'Start';
-            }
-        });
-
-        dom.newMoodButton.addEventListener('click', changeMood);
-
-        dom.themeSwitcher.addEventListener('click', () => {
-            document.body.classList.toggle('theme-vintage');
-            updateStatusBar();
-        });
-
-        [dom.rootNoteSelect, dom.scaleTypeSelect, dom.octaveSelect].forEach(el => {
-            el.addEventListener('change', updateMusicTheory);
-        });
-
-        // --- Initialization ---
-        function initialize() {
-            createSequencerGrid(NUM_STEPS);
-            setupControls();
-            Tone.Transport.swing = 0;
-            Tone.Transport.swingSubdivision = '16n';
-            updateMusicTheory();
-            // Default Berlin-style pattern
-            const defaultPattern = {
-                kick: [0, 4, 8, 12],
-                snare: [],
-                hat: [2, 6, 10, 14],
-                openhat: [14]
-            };
-            Object.keys(defaultPattern).forEach(inst => {
-                defaultPattern[inst].forEach(stepIdx => {
-                    seq_data[inst][stepIdx] = true;
-                    const el = document.querySelector(`[data-instrument=${inst}] [data-step="${stepIdx}"]`);
-                    if (el) el.classList.add('active');
-                });
-            });
-            updateStatusBar();
-        }
-
-        initialize();
-    });
-</script>
-</body>
-</html>

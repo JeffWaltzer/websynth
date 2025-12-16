@@ -49,7 +49,7 @@
             font-size: 2rem;
             margin: 0 0 20px 0;
             color: #fff;
-            text-shadow: 2px 2px 0px #ff00ff, -2px -2px 0px #00ffff;
+            text-shadow: 2px 2px 0 #ff00ff, -2px -2px 0 #00ffff;
             text-transform: uppercase;
             letter-spacing: 4px;
         }
@@ -121,8 +121,6 @@
             min-width: 160px;
         }
 
-        #recordButton.recording { animation: pulseRed 1s infinite; }
-
         #leaveButton {
             background: rgba(255,255,255,0.2);
             color: white;
@@ -161,8 +159,50 @@
         input[type="checkbox"] { accent-color: #00ffff; width: 18px; height: 18px; }
 
     </style>
+<style>
+  .toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #333;
+    padding: 2px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 1000;
+  }
+  .toolbar button {
+    background: #555;
+    color: white;
+    border: 1px solid #888;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin: 1px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .toolbar button:disabled {
+    background: #777;
+    color: #ccc;
+    cursor: default;
+  }
+</style>
 </head>
 <body>
+<div class="toolbar">
+    <button onclick="window.location.href='index.html'">Home</button>
+    <button onclick="window.location.href='berlin.html'">Berlin</button>
+    <button onclick="window.location.href='chords.html'">Chords</button>
+    <button disabled>Cosmic</button>
+    <button onclick="window.location.href='delay.html'">Delay</button>
+    <button onclick="window.location.href='karplus.html'">Karplus</button>
+    <button onclick="window.location.href='polychain.html'">Polychain</button>
+    <button onclick="window.location.href='pondviz.html'">Pond</button>
+    <button onclick="window.location.href='Psychedelia.html'">Psyche</button>
+    <button onclick="window.location.href='rhythm.html'">Rhythm</button>
+    <button onclick="window.location.href='Shepard chord.html'">Shepard</button>
+    <button onclick="window.location.href='starfield.html'">Starfield</button>
+</div>
 
 <div id="canvas-container"></div>
 

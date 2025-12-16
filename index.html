@@ -6,9 +6,9 @@
     <meta name="description" content="MIDI Master Control - Collection of MIDI tools and instruments">
     <title>MIDI Master Control</title>
     <link rel="icon" href="https://placehold.co/32x32/3a2f2f/f0e6d2?text=MIDI" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Inter:wght@400;600;700&display=swap"
-          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        /* --- 1. Variables & Reset --- */
         :root {
             --burnt-orange: #e65100;
             --dark-orange: #bf360c;
@@ -18,28 +18,102 @@
             --ivory: #ffffff;
             --focus-outline: #ffffff;
             --focus-ring: #000000;
+            --toolbar-bg: #222;
+            --toolbar-panel: #333;
+            --toolbar-height: 40px;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
+        /* --- 2. Global Layout --- */
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--wood-brown);
             margin: 0;
-            min-height: calc(100vh - 36px); /* Subtract toolbar height from viewport */
+            /* Padding top must match toolbar height to prevent overlap */
+            padding-top: calc(var(--toolbar-height) + 10px);
+            min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start; /* Align top so it scrolls naturally */
             justify-content: center;
-            padding: 20px;
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 20px;
             line-height: 1.5;
             overflow-x: hidden;
         }
 
+        /* --- 3. Toolbar Styles --- */
+        .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: auto;
+            min-height: var(--toolbar-height);
+            background: var(--toolbar-bg);
+            padding: 4px;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .toolbar-panel {
+            background: var(--toolbar-panel);
+            border-radius: 3px;
+            padding: 4px 8px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .toolbar-caption {
+            color: #999;
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .toolbar button {
+            background: #555;
+            color: white;
+            border: 1px solid #777;
+            border-radius: 2px;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            white-space: nowrap;
+            height: 22px;
+            line-height: 1;
+            min-width: 40px;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover:not(:disabled) {
+            background: #777;
+        }
+
+        .toolbar button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        /* --- 4. Main Container --- */
         main.container {
             background-color: var(--panel-tan);
             max-width: 1200px;
             width: 100%;
             padding: 40px;
+            margin-top: 20px; /* Visual breathing room from toolbar */
             border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) inset, 0 2px 5px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) inset, 0 4px 10px rgba(0, 0, 0, 0.3);
             border: 4px solid var(--burnt-orange);
         }
 
@@ -47,22 +121,24 @@
             font-family: 'Monoton', cursive;
             color: var(--wood-brown);
             text-align: center;
-            font-size: 2.5em;
-            margin: 0 0 30px;
+            font-size: clamp(2rem, 5vw, 3.5rem); /* Responsive font size */
+            margin: 0 0 40px;
             text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.4);
+            line-height: 1.2;
         }
 
+        /* --- 5. Navigation Grid --- */
         nav {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            /* Auto-fit creates columns based on minimum width, wrapping automatically */
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
         }
 
         .menu-item {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-bottom: 15px;
             align-items: center;
         }
 
@@ -71,35 +147,35 @@
             font-size: 0.9rem;
             line-height: 1.4;
             text-align: center;
+            padding: 0 10px;
         }
 
-        a {
+        a.card-link {
             background-color: var(--burnt-orange);
             color: var(--ivory);
             text-decoration: none;
-            padding: 10px;
+            padding: 15px 10px;
             border: 3px solid var(--dark-orange);
             border-radius: 8px;
             font-weight: 700;
             text-align: center;
             text-transform: uppercase;
-            font-size: 1rem;
+            font-size: 1.1rem;
             letter-spacing: 0.5px;
-            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease-in-out;
-            position: relative;
             display: block;
             width: 100%;
         }
 
-        a:hover {
+        a.card-link:hover {
             background-color: var(--dark-orange);
             color: var(--ivory);
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-            transform: translateY(-2px);
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
+            transform: translateY(-3px);
         }
 
-        a:focus {
+        a.card-link:focus {
             outline: 3px solid var(--focus-outline);
             outline-offset: 3px;
             box-shadow: 0 0 0 3px var(--focus-ring);
@@ -107,12 +183,12 @@
             z-index: 1;
         }
 
-        a:active {
-            background-color: var(--dark-orange);
+        a.card-link:active {
             transform: translateY(1px);
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
+        /* --- 6. Utilities & Accessibilty --- */
         @media (prefers-reduced-motion: reduce) {
             * {
                 animation: none !important;
@@ -120,178 +196,97 @@
             }
         }
 
-        @media (forced-colors: active) {
-            a {
-                border: 2px solid currentColor;
+        @media (max-width: 600px) {
+            .toolbar {
+                position: relative; /* Unstick toolbar on very small screens if needed */
+                height: auto;
+                padding: 10px;
             }
-
-            a:focus {
-                outline: 2px solid currentColor;
+            body {
+                padding-top: 0;
+                display: block; /* Stack layout */
             }
-        }
-
-        @media (max-width: 768px) {
+            main.container {
+                margin-top: 0;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+                padding: 20px;
+            }
             nav {
                 grid-template-columns: 1fr;
             }
         }
-        .toolbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: #222;
-    padding: 4px;
-    box-sizing: border-box;
-    text-align: center;
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    gap: 4px;
-    flex-wrap: wrap;
-    height: 32px; /* Fixed height */
-}
-.toolbar-panel {
-    background: #333;
-    border-radius: 3px;
-    padding: 2px 6px;
-    display: flex;
-    gap: 6px; /* Increased gap between buttons */
-    align-items: center;
-    margin: 0 2px; /* Added margin between panels */
-}
-.toolbar button {
-    background: #555;
-    color: white;
-    border: 1px solid #888;
-    border-radius: 2px;
-    padding: 2px 8px; /* Increased horizontal padding */
-    margin: 0;
-    cursor: pointer;
-    font-size: 11px;
-    white-space: nowrap;
-    height: 20px;
-    line-height: 16px;
-    min-width: 40px; /* Added minimum width */
-}
-.toolbar-caption {
-    color: #999;
-    font-size: 10px;
-    margin-right: 4px;
-    white-space: nowrap;
-}
-         body {
-    padding-top: 36px; /* Adjusted to match toolbar height + 4px gap */
-    margin: 0;
-    min-height: calc(100vh - 36px); /* Subtract toolbar height from viewport */
-    overflow-x: hidden;
-}
-.container {
-    max-width: 1200px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 20px;
-    box-sizing: border-box;
-}
     </style>
 </head>
 <body>
+
 <div class="toolbar">
-    <!-- Main Navigation -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">Main:</span>
-        <button onclick="window.location.href='index.html'" disabled>Home</button>
-    </div>
-
-    <!-- MIDI Tools -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">MIDI Tools:</span>
-        <button onclick="window.location.href='chords.html'">Chords</button>
-        <button onclick="window.location.href='delay.html'">Delay</button>
-        <button onclick="window.location.href='polychain.html'">Polychain</button>
-    </div>
-
-    <!-- Instruments -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">Instruments:</span>
-        <button onclick="window.location.href='karplus.html'">Karplus</button>
-    </div>
-
-    <!-- Sequencers -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">Sequencers:</span>
-        <button onclick="window.location.href='berlin.html'">Berlin</button>
-        <button onclick="window.location.href='rhythm.html'">Rhythm</button>
-    </div>
-
-    <!-- Visualizers -->
-    <div class="toolbar-panel">
-        <span class="toolbar-caption">Visualizers:</span>
-        <button onclick="window.location.href='starfield.html'">Starfield</button>
-        <button onclick="window.location.href='pondviz.html'">Pond</button>
-        <button onclick="window.location.href='Psychedelia.html'">Psychedelia</button>
-        <button onclick="window.location.href='CosmicDrift.html'">Cosmic Drift</button>
-        <button onclick="window.location.href='Space%20Tunnel.html'">Space Tunnel</button>
-        <button onclick="window.location.href='Shepard%20chord.html'">Shepard</button>
-    </div>
+    <button onclick="window.location.href='index.html'">Home</button>
+    <button onclick="window.location.href='berlin.html'">Berlin</button>
+    <button onclick="window.location.href='chords.html'">Chords</button>
+    <button onclick="window.location.href='CosmicDrift.html'">Cosmic</button>
+    <button onclick="window.location.href='delay.html'">Delay</button>
+    <button disabled>Karplus</button>
+    <button onclick="window.location.href='midi-monitor.html'">Monitor</button>
+    <button onclick="window.location.href='polychain.html'">Polychain</button>
+    <button onclick="window.location.href='pondviz.html'">Pond</button>
+    <button onclick="window.location.href='Psychedelia.html'">Psyche</button>
+    <button onclick="window.location.href='rhythm.html'">Rhythm</button>
+    <button onclick="window.location.href='Shepard chord.html'">Shepard</button>
+    <button onclick="window.location.href='starfield.html'">Starfield</button>
+    <button onclick="window.location.href='visualizer2.html'">Viz</button>
 </div>
 
 <main class="container">
     <h1>MIDI Master Control</h1>
     <nav>
         <div class="menu-item">
-            <a href="berlin.html">Berlin Sequencer</a>
+            <a class="card-link" href="berlin.html">Berlin Sequencer</a>
             <div class="menu-description">Create evolving, Berlin School-inspired sequences.</div>
         </div>
         <div class="menu-item">
-            <a href="chords.html">Chords</a>
+            <a class="card-link" href="chords.html">Chords</a>
             <div class="menu-description">MIDI Chord Monitor: Real-time chord recognition and analysis.</div>
         </div>
         <div class="menu-item">
-            <a href="ClassicsOnMIDI.html">Classics On MIDI</a>
-            <div class="menu-description">Play and explore classical music pieces through MIDI.</div>
-        </div>
-        <div class="menu-item">
-            <a href="delay.html">MIDI Delay</a>
+            <a class="card-link" href="delay.html">MIDI Delay</a>
             <div class="menu-description">Temporal note manipulation device with adjustable delay time and feedback.</div>
         </div>
         <div class="menu-item">
-            <a href="polychain.html">MIDI Poly Chain</a>
+            <a class="card-link" href="polychain.html">MIDI Poly Chain</a>
             <div class="menu-description">Advanced MIDI routing tool with voice allocation, splits, and layers.</div>
         </div>
         <div class="menu-item">
-            <a href="pondviz.html">Meditative Pond</a>
+            <a class="card-link" href="pondviz.html">Meditative Pond</a>
             <div class="menu-description">Immersive 3D particle visualization with meditative water effects.</div>
         </div>
         <div class="menu-item">
-            <a href="rhythm.html">Rhythm Lab</a>
-            <div class="menu-description">Advanced rhythm generation tool with polyrhythms and euclidean patterns.</div>
+            <a class="card-link" href="rhythm.html">Rhythm Lab</a>
+            <div class="menu-description">Euclidean rhythm generator with real-time MIDI output.</div>
         </div>
         <div class="menu-item">
-            <a href="starfield.html">Starfield</a>
-            <div class="menu-description">Mesmerizing starfield animation with dynamic particle effects.</div>
+            <a class="card-link" href="starfield.html">Starfield</a>
+            <div class="menu-description">Dynamic starfield visualization responding to MIDI input.</div>
         </div>
         <div class="menu-item">
-            <a href="Space%20Tunnel.html">Space Tunnel</a>
-            <div class="menu-description">A 3D space tunnel with a twist: a space-time paradox.</div>
+            <a class="card-link" href="Psychedelia.html">Psychedelia</a>
+            <div class="menu-description">Psychedelic visual effects synchronized to MIDI.</div>
         </div>
         <div class="menu-item">
-            <a href="Psychedelia.html">Psychedelia</a>
-            <div class="menu-description">A mind-bending audio visualizer with psychedelic effects.</div>
+            <a class="card-link" href="CosmicDrift.html">Cosmic Drift</a>
+            <div class="menu-description">Space-inspired audio-reactive visualization.</div>
         </div>
         <div class="menu-item">
-            <a href="CosmicDrift.html">Cosmic Drift</a>
-            <div class="menu-description">A mesmerizing journey through a colorful, ever-changing cosmic landscape.</div>
+            <a class="card-link" href="visualizer2.html">Visualizer 2</a>
+            <div class="menu-description">Alternative visualization mode.</div>
         </div>
         <div class="menu-item">
-            <a href="karplus.html">Karplus-Strong</a>
-            <div class="menu-description">An interactive string synthesis simulation.</div>
-        </div>
-        <div class="menu-item">
-            <a href="Shepard%20chord.html">Shepard's Lament</a>
-            <div class="menu-description">A meditative and interesting visualization of the Shepard's Chord.</div>
+            <a class="card-link" href="Shepard chord.html">Shepard Tones</a>
+            <div class="menu-description">Shepard tone generator with visual feedback.</div>
         </div>
     </nav>
 </main>
+
 </body>
 </html>
