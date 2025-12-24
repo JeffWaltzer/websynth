@@ -2,479 +2,964 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MIDI Karplus-Strong Flute</title>
-    <!-- Basic styling for the page -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Karplus-Strong Physical Modeling Synth</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .toolbar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: #333;
-            padding: 2px;
-            box-sizing: border-box;
-            text-align: center;
-            z-index: 1000;
-        }
-        .toolbar button {
-            background: #555;
-            color: white;
-            border: 1px solid #888;
-            border-radius: 3px;
-            padding: 1px 4px;
-            margin: 1px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .toolbar button:disabled {
-            background: #777;
-            color: #ccc;
-            cursor: default;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap');
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background-color: #1a1a1a;
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
             color: #e0e0e0;
-            padding: 20px;
-            box-sizing: border-box;
-            text-align: center;
+            overflow: hidden; /* Prevent scroll on mobile */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
-        h1 {
-            color: #ffffff;
-            font-weight: 500;
-        }
-        button {
-            padding: 12px 24px;
-            font-size: 1em;
-            cursor: pointer;
-            background-color: #3d3d3d;
-            color: white;
-            border: 1px solid #555;
-            border-radius: 8px;
-            transition: background-color 0.3s, transform 0.1s;
-            margin-bottom: 20px;
-        }
-        button:hover {
-            background-color: #4a4a4a;
-        }
-        button:active {
-            background-color: #555555;
-            transform: scale(0.98);
-        }
-        #controlsContainer {
-            margin-top: 20px;
-            padding: 15px 20px;
-            border: 1px solid #333;
-            background-color: #252525;
-            min-width: 320px;
-            max-width: 90%;
-            border-radius: 8px;
-        }
-        .slider-group {
-            margin-bottom: 15px;
-            display: grid;
-            grid-template-columns: 1fr;
-            justify-items: center;
-            gap: 8px;
-        }
-        .slider-group label {
-            font-size: 0.9em;
-            color: #ccc;
-        }
-        .slider-group input[type="range"] {
-            width: 90%;
-            margin-top: 4px;
-        }
-        .midi-learn-control {
+
+        .knob-container {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: conic-gradient(from 180deg, #3b82f6 var(--value), #333 var(--value));
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            font-size: 0.8em;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
         }
-        .learn-button {
-            padding: 4px 8px;
-            font-size: 0.8em;
-            margin: 0;
-            border-radius: 5px;
+
+        .knob-inner {
+            width: 48px;
+            height: 48px;
+            background-color: #1e1e1e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            user-select: none;
         }
-        .learn-button:disabled {
-            background-color: #007bff;
-            cursor: default;
+
+        .key {
+            transition: background-color 0.05s, transform 0.05s;
         }
-        .cc-display {
-            background-color: #3d3d3d;
-            padding: 4px 6px;
-            border-radius: 4px;
-            min-width: 50px;
-            text-align: center;
+        .key.active {
+            background-color: #3b82f6 !important;
+            transform: translateY(2px);
+            color: white !important;
         }
-        #statusContainer {
-            margin-top: 15px;
-            padding: 15px 20px;
-            border: 1px solid #333;
-            background-color: #252525;
-            min-width: 300px;
-            max-width: 90%;
+        .black-key.active {
+            background-color: #2563eb !important;
+        }
+
+        .screen-overlay {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #333;
+            border-radius: 2px;
+        }
+
+        .octave-btn {
+            width: 40px;
+            height: 40px;
+            background-color: #1f2937;
+            border: 1px solid #374151;
             border-radius: 8px;
-            font-size: 0.9em;
-            color: #cccccc;
-            line-height: 1.6;
+            color: #9ca3af;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
-        p {
-            margin-top: 10px;
-            color: #aaaaaa;
+        .octave-btn:active {
+            background-color: #3b82f6;
+            color: white;
         }
     </style>
 </head>
-<body>
-<div class="toolbar">
-    <button onclick="window.location.href='index.html'">Home</button>
-    <button onclick="window.location.href='berlin.html'">Berlin</button>
-    <button onclick="window.location.href='chords.html'">Chords</button>
-    <button onclick="window.location.href='CosmicDrift.html'">Cosmic</button>
-    <button onclick="window.location.href='delay.html'">Delay</button>
-    <button disabled>Karplus</button>
-    <button onclick="window.location.href='polychain.html'">Polychain</button>
-    <button onclick="window.location.href='pondviz.html'">Pond</button>
-    <button onclick="window.location.href='Psychedelia.html'">Psyche</button>
-    <button onclick="window.location.href='rhythm.html'">Rhythm</button>
-    <button onclick="window.location.href='Shepard chord.html'">Shepard</button>
-    <button onclick="window.location.href='starfield.html'">Starfield</button>
-    <button onclick="window.location.href='visualizer2.html'">Viz</button>
-</div>
-<h1>MIDI Controlled Karplus-Strong Flute</h1>
-<p>Connect a MIDI controller, click the "Test Sound" button once to activate audio, then play!</p>
+<body class="h-screen flex flex-col">
 
-<!-- Button to test sound generation and activate AudioContext -->
-<button id="testSoundButton">Test Sound (C5)</button>
-
-<!-- Sliders for parameter control -->
-<div id="controlsContainer">
-    <div class="slider-group">
-        <label for="decaySlider">Decay: <span id="decayValue">0.997</span></label>
-        <input type="range" id="decaySlider" min="0.95" max="1.0" step="0.001" value="0.997">
-        <div class="midi-learn-control">
-            <button class="learn-button" data-target="decay">Learn CC</button>
-            <span class="cc-display" id="decayCcDisplay">None</span>
-        </div>
+<!-- Header / Status -->
+<div class="flex justify-between items-center p-4 bg-gray-900 border-b border-gray-800 z-10">
+    <div class="flex items-center gap-3">
+        <div id="midi-status-led" class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
+        <h1 class="text-xl font-bold tracking-tight text-white"><span class="text-blue-500">K-Strong</span> Synth</h1>
     </div>
-    <div class="slider-group">
-        <label for="filterSlider">Excitation Filter (Softness): <span id="filterValue">0.5</span></label>
-        <input type="range" id="filterSlider" min="0" max="1" step="0.01" value="0.5">
-        <div class="midi-learn-control">
-            <button class="learn-button" data-target="filter">Learn CC</button>
-            <span class="cc-display" id="filterCcDisplay">None</span>
-        </div>
-    </div>
+    <div class="text-xs text-gray-500 font-mono hidden md:block" id="midi-device-name">No MIDI Device</div>
+    <button id="audio-init-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded text-sm font-medium transition">
+        Start Audio Engine
+    </button>
 </div>
 
-<!-- Status area for MIDI and Audio feedback -->
-<div id="statusContainer">Initializing...</div>
+<!-- Main Controls Area -->
+<div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+    <div class="absolute inset-0 screen-overlay z-0"></div>
 
-<!-- All JavaScript logic is included here -->
+    <!-- Left Panel: Presets & Mode -->
+    <div class="w-full md:w-1/4 bg-gray-900/90 border-r border-gray-800 p-6 flex flex-col gap-6 z-10 overflow-y-auto">
+
+        <div>
+            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-3">Presets</h3>
+            <div class="space-y-2" id="preset-list">
+                <!-- Generated via JS -->
+            </div>
+        </div>
+
+        <div class="mt-auto pt-6 border-t border-gray-800">
+            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-3">Master</h3>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between text-xs mb-1"><span>Volume</span> <span id="vol-val">80%</span></div>
+                    <input type="range" min="0" max="100" value="80" id="master-vol">
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-1"><span>Reverb</span> <span id="rev-val">30%</span></div>
+                    <input type="range" min="0" max="100" value="30" id="reverb-amt">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Panel: Synthesis Parameters -->
+    <div class="flex-1 bg-[#1a1a1a] p-6 flex flex-col items-center justify-center relative z-10">
+
+        <!-- Visualization Canvas -->
+        <canvas id="scope" class="w-full h-32 bg-black/50 rounded-lg border border-gray-800 mb-8"></canvas>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+
+            <!-- Parameter: Decay -->
+            <div class="flex flex-col items-center gap-2">
+                <div class="knob-container" id="knob-decay" data-param="decay">
+                    <div class="knob-inner" id="val-decay">0.99</div>
+                </div>
+                <span class="text-xs text-gray-400 uppercase tracking-wide">Decay</span>
+            </div>
+
+            <!-- Parameter: Damping -->
+            <div class="flex flex-col items-center gap-2">
+                <div class="knob-container" id="knob-damping" data-param="damping">
+                    <div class="knob-inner" id="val-damping">0.50</div>
+                </div>
+                <span class="text-xs text-gray-400 uppercase tracking-wide">Tone (Damp)</span>
+            </div>
+
+            <!-- Parameter: Attack/Noise -->
+            <div class="flex flex-col items-center gap-2">
+                <div class="knob-container" id="knob-attack" data-param="attack">
+                    <div class="knob-inner" id="val-attack">1.0</div>
+                </div>
+                <span class="text-xs text-gray-400 uppercase tracking-wide">Attack Force</span>
+            </div>
+
+            <!-- Parameter: Mode Switch -->
+            <div class="flex flex-col items-center gap-2">
+                <div class="w-[60px] h-[60px] flex items-center justify-center">
+                    <button id="mode-toggle" class="w-full py-2 bg-gray-800 border border-gray-700 rounded text-xs font-mono text-blue-400">
+                        PLUCK
+                    </button>
+                </div>
+                <span class="text-xs text-gray-400 uppercase tracking-wide">Mode</span>
+            </div>
+
+        </div>
+
+        <div class="mt-8 text-center">
+            <p class="text-xs text-gray-500 max-w-md">
+                Controls: Drag keys to slide. Multi-touch supported.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Virtual Keyboard Area -->
+<div class="h-56 bg-gray-950 border-t border-gray-800 relative flex flex-col z-20">
+    <!-- Octave Controls -->
+    <div class="absolute top-2 left-4 flex gap-2 z-30">
+        <button class="octave-btn" id="octave-down">&lt;</button>
+        <div class="h-10 flex items-center justify-center px-2 bg-gray-900 rounded border border-gray-800 text-xs font-mono text-blue-400 w-12" id="octave-display">C3</div>
+        <button class="octave-btn" id="octave-up">&gt;</button>
+    </div>
+
+    <div class="flex-1 flex justify-center overflow-hidden relative select-none" id="keyboard-container" style="touch-action: none;">
+        <div id="keyboard" class="flex h-full relative px-4 mx-auto pt-6">
+            <!-- Keys generated by JS -->
+        </div>
+    </div>
+</div>
+
+<!-- Audio Worklet Code (Inlined for single file) -->
+<script id="worklet-code" type="javascript/worker">
+    class KarplusProcessor extends AudioWorkletProcessor {
+        constructor() {
+            super();
+            this.bufferSize = 48000;
+            this.buffer = new Float32Array(this.bufferSize);
+            this.ptr = 0;
+
+            this.isPlaying = false;
+            this.velocity = 0;
+            this.frequency = 440;
+
+            this.prevSample = 0;
+            this.prevExcitation = 0; // For smoothing pluck attack
+
+            // Breath Noise Filter State
+            this.breathFilterState = 0;
+
+            // Vibrato state
+            this.vibratoPhase = 0;
+
+            this.env = 0;
+            this.pluckRemaining = 0;
+
+            this.mode = 'pluck';
+            this.invertFeedback = false;
+
+            this.port.onmessage = (e) => {
+                if (e.data.type === 'noteOn') {
+                    this.frequency = e.data.frequency;
+                    this.velocity = e.data.velocity;
+                    this.mode = e.data.mode;
+                    this.invertFeedback = e.data.invertFeedback || false;
+
+                    this.isPlaying = true;
+
+                    if (this.mode === 'pluck') {
+                        this.pluckRemaining = Math.floor(sampleRate / this.frequency);
+                        // Reset filter state lightly to prevent click, but allow ring
+                        this.prevExcitation = 0;
+                    }
+                } else if (e.data.type === 'noteOff') {
+                    if (this.mode === 'wind') {
+                       this.isPlaying = false;
+                    }
+                } else if (e.data.type === 'param') {
+                    this[e.data.key] = e.data.value;
+                }
+            };
+        }
+
+        static get parameterDescriptors() {
+            return [
+                { name: 'decay', defaultValue: 0.99, minValue: 0.8, maxValue: 0.9999 },
+                { name: 'damping', defaultValue: 0.5, minValue: 0.01, maxValue: 0.99 },
+                { name: 'attack', defaultValue: 1.0, minValue: 0.1, maxValue: 2.0 }
+            ];
+        }
+
+        process(inputs, outputs, parameters) {
+            const output = outputs[0];
+            const channel = output[0];
+
+            const decayParam = parameters.decay;
+            const dampingParam = parameters.damping;
+            const attackParam = parameters.attack;
+
+            const baseDelaySamples = sampleRate / this.frequency;
+
+            // Vibrato
+            let vibrato = 0;
+            if (this.mode === 'wind') {
+                this.vibratoPhase += 0.003;
+                vibrato = Math.sin(this.vibratoPhase) * 1.0;
+            }
+
+            let effectiveDelay = baseDelaySamples + vibrato;
+            if (this.invertFeedback) effectiveDelay = effectiveDelay * 0.5;
+
+            const delaySamples = Math.floor(effectiveDelay);
+
+            if (delaySamples < 2 || delaySamples >= this.bufferSize) return true;
+
+            for (let i = 0; i < channel.length; i++) {
+                const decay = decayParam.length > 1 ? decayParam[i] : decayParam[0];
+                const damping = dampingParam.length > 1 ? dampingParam[i] : dampingParam[0];
+                const attack = attackParam.length > 1 ? attackParam[i] : attackParam[0];
+
+                let excitation = 0;
+
+                if (this.mode === 'pluck') {
+                    if (this.pluckRemaining > 0) {
+                        let rawNoise = (Math.random() * 2 - 1) * this.velocity * attack;
+
+                        // BASS/WARMTH FILTER
+                        // High damping (Bass) = Strong Lowpass on attack to remove metallic click.
+                        // Low damping (Harp) = Gentle smoothing.
+
+                        // We use damping to determine how "dull" the pick attack should be.
+                        let filterAmt = damping;
+
+                        // Simple low-pass on the noise itself
+                        excitation = rawNoise * (1 - filterAmt) + this.prevExcitation * filterAmt;
+                        this.prevExcitation = excitation;
+
+                        this.pluckRemaining--;
+                    }
+                } else if (this.mode === 'wind') {
+                    if (this.isPlaying) {
+                        if (this.env < 1.0) this.env += 0.008;
+
+                        let white = Math.random() * 2 - 1;
+
+                        // FLUTE/BREATH FILTER
+                        // Lowered cutoff significantly to remove shrillness
+                        let cutoff = 0.02 + (this.velocity * 0.04);
+                        this.breathFilterState = this.breathFilterState + cutoff * (white - this.breathFilterState);
+
+                        excitation = this.breathFilterState * this.velocity * this.env * attack * 0.8;
+
+                    } else {
+                        if (this.env > 0) this.env -= 0.004;
+                        excitation = this.breathFilterState * 0.2 * this.env;
+                    }
+                }
+
+                // --- Feedback Loop ---
+                let readPtr = (this.ptr - delaySamples + this.bufferSize) % this.bufferSize;
+                let delayedSample = this.buffer[readPtr];
+
+                if (this.invertFeedback) delayedSample = -delayedSample;
+
+                // Loop Filter (The "Tone" knob)
+                let filtered = delayedSample * (1 - damping) + this.prevSample * damping;
+                this.prevSample = filtered;
+
+                let outSample = 0;
+
+                if (this.mode === 'wind') {
+                    let raw = excitation + (filtered * decay);
+
+                    let sat = raw;
+                    if (this.invertFeedback) {
+                        // Clarinet: Harder clipping
+                        sat = Math.max(-0.8, Math.min(0.8, raw * 1.2));
+                    } else {
+                        // Flute: Soft saturation
+                        if (sat > 1) sat = 1;
+                        if (sat < -1) sat = -1;
+                        if (sat > -1 && sat < 1) sat = sat - (sat * sat * sat) / 3;
+                    }
+
+                    this.buffer[this.ptr] = sat;
+                    outSample = sat;
+                } else {
+                    // Pluck
+                    let newVal = excitation + (filtered * decay);
+                    this.buffer[this.ptr] = newVal;
+                    outSample = newVal;
+                }
+
+                channel[i] = outSample;
+                this.ptr = (this.ptr + 1) % this.bufferSize;
+            }
+
+            return true;
+        }
+    }
+    registerProcessor('karplus-processor', KarplusProcessor);
+</script>
+
 <script>
-    // --- MIDI Karplus-Strong Flute Synthesis (Version 6 - MIDI CC Learn) ---
+    // --- Application State ---
+    const state = {
+        audioCtx: null,
+        masterGain: null,
+        reverbNode: null,
+        // Voices Map: Key=MIDI_Note, Value={ node: AudioWorkletNode, timerId: number|null }
+        voices: new Map(),
+        activeNotes: new Set(),
+        currentPreset: 'guitar',
+        octaveOffset: 0,
+        params: {
+            decay: 0.99,
+            damping: 0.5,
+            attack: 1.0,
+            mode: 'pluck',
+            invertFeedback: false
+        },
+        activeTouches: new Map(),
+        suspendTimer: null,
+        isVisualizerActive: false,
+        visualizerContext: null,
+        visualizerAnalyzer: null,
+        visualizerData: null
+    };
 
-    const testSoundButton = document.getElementById('testSoundButton');
-    const statusContainer = document.getElementById('statusContainer');
-    const decaySlider = document.getElementById('decaySlider');
-    const decayValueSpan = document.getElementById('decayValue');
-    const filterSlider = document.getElementById('filterSlider');
-    const filterValueSpan = document.getElementById('filterValue');
+    const MAX_POLYPHONY = 24;
 
-    const decayLearnButton = document.querySelector('[data-target="decay"]');
-    const filterLearnButton = document.querySelector('[data-target="filter"]');
-    const decayCcDisplay = document.getElementById('decayCcDisplay');
-    const filterCcDisplay = document.getElementById('filterCcDisplay');
+    const presets = {
+        guitar: { name: 'Acoustic Guitar', mode: 'pluck', decay: 0.992, damping: 0.3, attack: 1.2, invert: false, icon: '🎸' },
+        bass: { name: 'Electric Bass', mode: 'pluck', decay: 0.997, damping: 0.8, attack: 1.0, invert: false, icon: '🎸' },
+        harp: { name: 'Classical Harp', mode: 'pluck', decay: 0.999, damping: 0.05, attack: 0.5, invert: false, icon: '🎼' },
+        flute: { name: 'Bamboo Flute', mode: 'wind', decay: 0.95, damping: 0.6, attack: 1.2, invert: false, icon: '🎋' },
+        clarinet: { name: 'Clarinet', mode: 'wind', decay: 0.94, damping: 0.4, attack: 1.2, invert: true, icon: '🎷' },
+        bottle: { name: 'Blown Bottle', mode: 'wind', decay: 0.99, damping: 0.05, attack: 2.0, invert: true, icon: '🍾' }
+    };
 
-    let audioCtx = null;
-    let midiAccess = null; // Store midiAccess globally
-    const activeNotes = {}; // Object to store active GainNodes, keyed by MIDI note number
+    // --- Audio Engine ---
+    async function initAudio() {
+        if (state.audioCtx) return;
 
-    // --- Synthesis & MIDI CC Parameters ---
-    let currentDecay = 0.997;
-    let currentFilterAmount = 0.5;
-    let learningTarget = null;
-    let decayCc = null;
-    let filterCc = null;
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            state.audioCtx = new AudioContext();
 
-    // --- Event Listeners ---
-    decaySlider.addEventListener('input', (e) => {
-        currentDecay = parseFloat(e.target.value);
-        decayValueSpan.textContent = currentDecay.toFixed(3);
-    });
+            const blob = new Blob([document.getElementById('worklet-code').textContent], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+            await state.audioCtx.audioWorklet.addModule(url);
+            URL.revokeObjectURL(url);
 
-    filterSlider.addEventListener('input', (e) => {
-        currentFilterAmount = parseFloat(e.target.value);
-        filterValueSpan.textContent = currentFilterAmount.toFixed(2);
-    });
+            state.masterGain = state.audioCtx.createGain();
+            state.masterGain.gain.value = 0.5;
 
-    decayLearnButton.addEventListener('click', () => startLearning('decay'));
-    filterLearnButton.addEventListener('click', () => startLearning('filter'));
+            const compressor = state.audioCtx.createDynamicsCompressor();
+            compressor.threshold.value = -20;
+            compressor.ratio.value = 12;
 
-    function startLearning(target) {
-        learningTarget = target;
-        // Update UI to show we're listening
-        decayLearnButton.textContent = 'Learn CC';
-        filterLearnButton.textContent = 'Learn CC';
-        decayLearnButton.disabled = false;
-        filterLearnButton.disabled = false;
+            state.reverbNode = state.audioCtx.createConvolver();
+            state.reverbNode.buffer = createReverbImpulse(state.audioCtx, 2.5, 2.0);
+            state.reverbGain = state.audioCtx.createGain();
+            state.reverbGain.gain.value = 0.3;
 
-        if (target === 'decay') {
-            decayLearnButton.textContent = 'Listening...';
-            decayLearnButton.disabled = true;
-        } else if (target === 'filter') {
-            filterLearnButton.textContent = 'Listening...';
-            filterLearnButton.disabled = true;
+            state.masterGain.connect(compressor);
+            compressor.connect(state.audioCtx.destination);
+
+            state.reverbNode.connect(state.reverbGain);
+            state.reverbGain.connect(state.masterGain);
+
+            setupVisualizer(state.masterGain);
+
+            document.getElementById('audio-init-btn').textContent = "Engine Active";
+            document.getElementById('audio-init-btn').classList.replace('bg-blue-600', 'bg-green-600');
+
+            initMIDI();
+
+        } catch (e) {
+            console.error("Audio Init Failed", e);
+            alert("Could not initialize audio engine.");
         }
-        console.log(`Waiting for MIDI CC for: ${target}`);
     }
 
-    // --- AudioContext Management ---
-    async function ensureAudioContext() {
-        if (!audioCtx) {
-            try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                console.log("AudioContext created.");
-                audioCtx.onstatechange = () => {
-                    console.log(`AudioContext state changed to: ${audioCtx.state}`);
-                    updateStatusDisplay();
-                };
-            } catch (e) {
-                console.error("Web Audio API is not supported in this browser", e);
-                statusContainer.innerHTML = "<strong>Error:</strong><br/>Web Audio API not supported.";
-                alert("Web Audio API is not supported in this browser.");
-                return null;
+    function createReverbImpulse(ctx, duration, decay) {
+        const length = ctx.sampleRate * duration;
+        const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+        const left = impulse.getChannelData(0);
+        const right = impulse.getChannelData(1);
+
+        for (let i = 0; i < length; i++) {
+            const n = i / length;
+            left[i] = (Math.random() * 2 - 1) * Math.pow(1 - n, decay);
+            right[i] = (Math.random() * 2 - 1) * Math.pow(1 - n, decay);
+        }
+        return impulse;
+    }
+
+    // --- Voice Management ---
+    function noteOn(note, velocity) {
+        if (!state.audioCtx) return;
+
+        // Wake up logic
+        if (state.suspendTimer) {
+            clearTimeout(state.suspendTimer);
+            state.suspendTimer = null;
+        }
+        if (state.audioCtx.state === 'suspended') {
+            state.audioCtx.resume();
+        }
+        if (!state.isVisualizerActive) {
+            startVisualizerLoop();
+        }
+
+        const finalNote = note + (state.octaveOffset * 12);
+        const freq = 440 * Math.pow(2, (finalNote - 69) / 12);
+
+        killVoice(finalNote);
+
+        if (state.voices.size >= MAX_POLYPHONY) {
+            let noteToKill = null;
+            for (const [existingNote, _] of state.voices) {
+                if (!state.activeNotes.has(existingNote)) {
+                    noteToKill = existingNote;
+                    break;
+                }
+            }
+            if (noteToKill === null) {
+                noteToKill = state.voices.keys().next().value;
+            }
+            if (noteToKill !== null && noteToKill !== undefined) {
+                killVoice(noteToKill);
             }
         }
 
-        if (audioCtx.state === 'suspended') {
-            try {
-                console.log("Attempting to resume AudioContext...");
-                await audioCtx.resume();
-                console.log(`AudioContext resumed. State: ${audioCtx.state}`);
-            } catch (e) {
-                console.error("Failed to resume AudioContext:", e);
-                statusContainer.innerHTML = "<strong>Error:</strong><br/>Failed to resume audio. Click the page.";
-                return null;
+        const node = new AudioWorkletNode(state.audioCtx, 'karplus-processor');
+        const p = node.parameters;
+
+        p.get('decay').value = state.params.decay;
+        p.get('damping').value = state.params.damping;
+        p.get('attack').value = state.params.attack;
+
+        node.connect(state.masterGain);
+        node.connect(state.reverbNode);
+
+        node.port.postMessage({
+            type: 'noteOn',
+            frequency: freq,
+            velocity: velocity / 127,
+            mode: state.params.mode,
+            invertFeedback: state.params.invertFeedback
+        });
+
+        state.voices.set(finalNote, { node: node, timerId: null });
+        state.activeNotes.add(finalNote);
+        highlightKey(note, true);
+    }
+
+    function noteOff(note) {
+        const finalNote = note + (state.octaveOffset * 12);
+        highlightKey(note, false);
+
+        if (!state.voices.has(finalNote)) return;
+
+        const voiceData = state.voices.get(finalNote);
+        state.activeNotes.delete(finalNote);
+
+        if (state.params.mode === 'wind') {
+            voiceData.node.port.postMessage({ type: 'noteOff' });
+        }
+
+        if (voiceData.timerId) clearTimeout(voiceData.timerId);
+
+        const killDelay = state.params.mode === 'wind' ? 250 : 3000;
+        voiceData.timerId = setTimeout(() => {
+            killVoice(finalNote);
+        }, killDelay);
+    }
+
+    function killVoice(finalNote) {
+        if (state.voices.has(finalNote)) {
+            const voiceData = state.voices.get(finalNote);
+            if (voiceData.timerId) clearTimeout(voiceData.timerId);
+            voiceData.node.disconnect();
+            state.voices.delete(finalNote);
+        }
+
+        // Auto-suspend check: If no voices left, schedule cleanup
+        if (state.voices.size === 0) {
+            if (state.suspendTimer) clearTimeout(state.suspendTimer);
+            state.suspendTimer = setTimeout(() => {
+                if (state.voices.size === 0 && state.audioCtx && state.audioCtx.state === 'running') {
+                    console.log("Suspending Audio Context to save resources");
+                    state.audioCtx.suspend();
+                    state.isVisualizerActive = false; // Stop visualizer
+                }
+            }, 5000); // 5 seconds of silence
+        }
+    }
+
+    function clearAllNotes() {
+        state.activeNotes.forEach(note => {
+            killVoice(note);
+        });
+        state.activeNotes.clear();
+        document.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
+        state.activeTouches.clear();
+    }
+
+    // --- Keyboard Generation ---
+    function generateKeyboard() {
+        const keysContainer = document.getElementById('keyboard');
+        keysContainer.innerHTML = '';
+        const startNote = 48; // C3
+        const endNote = 84;   // C6
+
+        let whiteCount = 0;
+        for (let i = startNote; i <= endNote; i++) {
+            const noteInOctave = i % 12;
+            const isBlack = [1, 3, 6, 8, 10].includes(noteInOctave);
+
+            if (!isBlack) {
+                const key = document.createElement('div');
+                key.className = "key white-key flex-shrink-0 w-12 h-full bg-white border border-gray-300 rounded-b-lg relative z-0";
+                key.dataset.note = i;
+                keysContainer.appendChild(key);
+                whiteCount++;
+            } else {
+                const key = document.createElement('div');
+                key.className = "key black-key absolute w-8 h-32 bg-black rounded-b-md z-10 pointer-events-none";
+                key.style.left = `${(whiteCount * 48) - 16 - 12}px`;
+                key.dataset.note = i;
+                keysContainer.appendChild(key);
             }
         }
 
-        updateStatusDisplay();
-        return audioCtx.state === 'running' ? audioCtx : null;
+        setupInputHandlers();
     }
 
-    // --- Karplus-Strong Sound Generation ---
-    function playKarplusStrongFlute(freq, duration, velocity, currentAudioCtx) {
-        if (!currentAudioCtx) return null;
+    // --- Advanced Input Handling (Multi-touch + Mouse) ---
+    function setupInputHandlers() {
+        const container = document.getElementById('keyboard-container');
 
-        const sampleRate = currentAudioCtx.sampleRate;
-        const N = Math.round(sampleRate / freq);
-        const totalSamples = Math.floor(sampleRate * duration);
+        // Mouse State
+        let isMouseDown = false;
+        let lastMouseNote = -1;
 
-        let ringBuffer = new Float32Array(N);
-        let tempNoise = new Float32Array(N);
-        for (let i = 0; i < N; i++) tempNoise[i] = Math.random() * 2 - 1;
+        container.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            handleMouse(e.target);
+        });
+        window.addEventListener('mouseup', () => {
+            if (isMouseDown && lastMouseNote !== -1) {
+                noteOff(lastMouseNote);
+                lastMouseNote = -1;
+            }
+            isMouseDown = false;
+        });
+        container.addEventListener('mousemove', (e) => {
+            if (isMouseDown) handleMouse(e.target);
+        });
+        window.addEventListener('blur', clearAllNotes);
 
-        ringBuffer[0] = tempNoise[0];
-        for (let i = 1; i < N; i++) {
-            const rawSample = tempNoise[i];
-            const filteredSample = (tempNoise[i] + tempNoise[i - 1]) * 0.5;
-            ringBuffer[i] = (rawSample * (1 - currentFilterAmount)) + (filteredSample * currentFilterAmount);
+        function handleMouse(target) {
+            const key = target.closest('.key');
+            if (!key) return;
+            const note = parseInt(key.dataset.note);
+            if (isNaN(note)) return;
+
+            if (lastMouseNote !== note) {
+                if (lastMouseNote !== -1) noteOff(lastMouseNote);
+                noteOn(note, 100);
+                lastMouseNote = note;
+            }
         }
 
-        let outputBuffer = new Float32Array(totalSamples);
-        let writeIndex = 0;
-        for (let i = 0; i < totalSamples; i++) {
-            const currentSample = ringBuffer[writeIndex];
-            outputBuffer[i] = currentSample;
-            const nextIndex = (writeIndex + 1) % N;
-            const newValue = (currentSample + ringBuffer[nextIndex]) * 0.5 * currentDecay;
-            ringBuffer[writeIndex] = newValue;
-            writeIndex = nextIndex;
-        }
+        // Touch Events
+        container.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                handleTouchStart(e.changedTouches[i]);
+            }
+        }, {passive: false});
 
-        const audioBuffer = currentAudioCtx.createBuffer(1, totalSamples, sampleRate);
-        audioBuffer.getChannelData(0).set(outputBuffer);
-        const source = currentAudioCtx.createBufferSource();
-        source.buffer = audioBuffer;
-        const gainNode = currentAudioCtx.createGain();
-        const initialGain = Math.min(1.0, Math.max(0.0, velocity / 127));
-        gainNode.gain.setValueAtTime(initialGain, currentAudioCtx.currentTime);
-        source.connect(gainNode);
-        gainNode.connect(currentAudioCtx.destination);
-        source.start();
-        return gainNode;
+        container.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                handleTouchMove(e.changedTouches[i]);
+            }
+        }, {passive: false});
+
+        container.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                handleTouchEnd(e.changedTouches[i]);
+            }
+        }, {passive: false});
+
+        container.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                handleTouchEnd(e.changedTouches[i]);
+            }
+        });
+    }
+
+    function handleTouchStart(touch) {
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const key = el ? el.closest('.key') : null;
+        if (key) {
+            const note = parseInt(key.dataset.note);
+            if (!isNaN(note)) {
+                state.activeTouches.set(touch.identifier, { note: note, el: key });
+                noteOn(note, 100);
+            }
+        }
+    }
+
+    function handleTouchMove(touch) {
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const key = el ? el.closest('.key') : null;
+        const active = state.activeTouches.get(touch.identifier);
+
+        if (key) {
+            const newNote = parseInt(key.dataset.note);
+            if (active && active.note !== newNote) {
+                noteOff(active.note);
+                noteOn(newNote, 100);
+                state.activeTouches.set(touch.identifier, { note: newNote, el: key });
+            } else if (!active) {
+                noteOn(newNote, 100);
+                state.activeTouches.set(touch.identifier, { note: newNote, el: key });
+            }
+        } else if (active) {
+            noteOff(active.note);
+            state.activeTouches.delete(touch.identifier);
+        }
+    }
+
+    function handleTouchEnd(touch) {
+        const active = state.activeTouches.get(touch.identifier);
+        if (active) {
+            noteOff(active.note);
+            state.activeTouches.delete(touch.identifier);
+        }
+    }
+
+    function highlightKey(note, isActive) {
+        const key = document.querySelector(`.key[data-note="${note}"]`);
+        if (key) {
+            if (isActive) key.classList.add('active');
+            else key.classList.remove('active');
+        }
+    }
+
+    // --- Octave Logic ---
+    document.getElementById('octave-down').onclick = () => {
+        state.octaveOffset = Math.max(-2, state.octaveOffset - 1);
+        updateOctaveDisplay();
+    };
+    document.getElementById('octave-up').onclick = () => {
+        state.octaveOffset = Math.min(2, state.octaveOffset + 1);
+        updateOctaveDisplay();
+    };
+
+    function updateOctaveDisplay() {
+        const baseC = 3 + state.octaveOffset;
+        document.getElementById('octave-display').textContent = `C${baseC}`;
     }
 
     // --- MIDI Handling ---
-    function midiNoteToFrequency(note) {
-        return 440 * Math.pow(2, (note - 69) / 12);
-    }
-
-    async function handleMIDIMessage(event) {
-        const currentAudioCtx = await ensureAudioContext();
-        const command = event.data[0] >> 4;
-        const note = event.data[1];
-        const velocity = event.data[2];
-
-        // Command 11 is Control Change
-        if (command === 11) {
-            const ccNumber = note;
-            const ccValue = velocity;
-
-            if (learningTarget) {
-                if (learningTarget === 'decay') {
-                    decayCc = ccNumber;
-                    decayCcDisplay.textContent = `CC ${ccNumber}`;
-                } else if (learningTarget === 'filter') {
-                    filterCc = ccNumber;
-                    filterCcDisplay.textContent = `CC ${ccNumber}`;
-                }
-                console.log(`Mapped ${learningTarget} to CC ${ccNumber}`);
-                learningTarget = null;
-                decayLearnButton.textContent = 'Learn CC';
-                filterLearnButton.textContent = 'Learn CC';
-                decayLearnButton.disabled = false;
-                filterLearnButton.disabled = false;
-            } else {
-                if (ccNumber === decayCc) {
-                    const newDecay = 0.95 + (ccValue / 127) * 0.05;
-                    decaySlider.value = newDecay;
-                    decaySlider.dispatchEvent(new Event('input'));
-                } else if (ccNumber === filterCc) {
-                    const newFilter = ccValue / 127;
-                    filterSlider.value = newFilter;
-                    filterSlider.dispatchEvent(new Event('input'));
-                }
-            }
+    function initMIDI() {
+        if (!navigator.requestMIDIAccess) {
+            document.getElementById('midi-device-name').textContent = "WebMIDI Not Supported";
             return;
         }
-
-        if (!currentAudioCtx) return;
-
-        if (command === 9 && velocity > 0) {
-            const frequency = midiNoteToFrequency(note);
-            if (activeNotes[note]) {
-                stopNote(note, currentAudioCtx);
-            }
-            const gainNode = playKarplusStrongFlute(frequency, 2.0, velocity, currentAudioCtx);
-            if (gainNode) activeNotes[note] = gainNode;
-        } else if (command === 8 || (command === 9 && velocity === 0)) {
-            stopNote(note, currentAudioCtx);
-        }
+        navigator.requestMIDIAccess().then(access => {
+            if (access.inputs.size > 0) setupMidiInput(access.inputs.values().next().value);
+            access.onstatechange = (e) => {
+                if (e.port.type === 'input' && e.port.state === 'connected') setupMidiInput(e.port);
+            };
+        }).catch(e => {
+            document.getElementById('midi-device-name').textContent = "MIDI Permission Denied";
+            document.getElementById('midi-status-led').classList.replace('bg-red-500', 'bg-orange-500');
+        });
     }
 
-    function stopNote(note, currentAudioCtx) {
-        if (!currentAudioCtx || !activeNotes[note]) return;
-        const gainNode = activeNotes[note];
-        const now = currentAudioCtx.currentTime;
-        if (gainNode.gain.value > 0.001) {
-            gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
-        }
-        delete activeNotes[note];
-    }
-
-    // --- MIDI Initialization and State Change Handling ---
-    function updateMIDIInputs() {
-        if (!midiAccess) return;
-        for (let input of midiAccess.inputs.values()) {
-            input.onmidimessage = null;
-        }
-        if (midiAccess.inputs.size === 0) {
-            console.log("No MIDI input devices found.");
-        } else {
-            for (let input of midiAccess.inputs.values()) {
-                input.onmidimessage = handleMIDIMessage;
-                console.log(`Listening to MIDI device: ${input.name}`);
-            }
-        }
-        updateStatusDisplay();
-    }
-
-    function updateStatusDisplay() {
-        const audioState = audioCtx ? audioCtx.state : "Inactive";
-        let midiState = "No Access";
-        let devicesFound = [];
-
-        if(midiAccess) {
-            midiState = "Ready";
-            if (midiAccess.inputs.size > 0) {
-                for(let input of midiAccess.inputs.values()){
-                    devicesFound.push(input.name);
-                }
-            } else {
-                midiState = "No devices found";
-            }
-        }
-
-        let html = `<strong>Audio Status:</strong> ${audioState}<br/>`;
-        html += `<strong>MIDI Status:</strong> ${midiState}`;
-        if(devicesFound.length > 0) {
-            html += `<br/><strong>Listening to:</strong><br/>${devicesFound.join('<br/>')}`;
-        }
-
-        statusContainer.innerHTML = html;
-    }
-
-    function onMIDISuccess(ma) {
-        console.log("MIDI Access Granted");
-        midiAccess = ma;
-        updateMIDIInputs();
-        midiAccess.onstatechange = (event) => {
-            console.log(`MIDI state change: ${event.port.name}, state: ${event.port.state}`);
-            updateMIDIInputs();
+    function setupMidiInput(input) {
+        input.onmidimessage = (msg) => {
+            const [cmd, data1, data2] = msg.data;
+            const type = cmd & 0xf0;
+            if (type === 0x90 && data2 > 0) noteOn(data1, data2);
+            else if (type === 0x80 || (type === 0x90 && data2 === 0)) noteOff(data1);
         };
+        document.getElementById('midi-device-name').textContent = input.name;
+        document.getElementById('midi-status-led').classList.replace('bg-red-500', 'bg-green-500');
+        document.getElementById('midi-status-led').classList.replace('shadow-[0_0_8px_rgba(239,68,68,0.6)]', 'shadow-[0_0_8px_rgba(34,197,94,0.6)]');
     }
 
-    function onMIDIFailure(error) {
-        console.error(`Failed to get MIDI access - ${error}`);
-        let errorMessage = "<strong>Error:</strong><br/>Failed to get MIDI access.";
-        if (error && (error.name === 'SecurityError' || (error.message && error.message.includes('permissions policy')))) {
-            errorMessage = "<strong>Error:</strong><br/>MIDI is blocked by the browser's security policy. This often happens when the page is in a sandboxed environment (like an iframe) that needs explicit permission to access MIDI devices.";
+    // --- Presets & Controls ---
+    function setupControls() {
+        const presetList = document.getElementById('preset-list');
+        Object.keys(presets).forEach(key => {
+            const p = presets[key];
+            const btn = document.createElement('button');
+            btn.className = `w-full text-left px-4 py-3 rounded text-sm font-medium transition flex items-center gap-3 ${key === 'guitar' ? 'bg-blue-900/40 text-blue-400 border border-blue-800' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`;
+            btn.innerHTML = `<span>${p.icon}</span> ${p.name}`;
+            btn.onclick = () => loadPreset(key, btn);
+            presetList.appendChild(btn);
+        });
+
+        ['decay', 'damping', 'attack'].forEach(param => {
+            const el = document.getElementById(`knob-${param}`);
+            const valEl = document.getElementById(`val-${param}`);
+            let isDragging = false, startY = 0, startVal = 0;
+
+            el.addEventListener('mousedown', (e) => {
+                isDragging = true; startY = e.clientY; startVal = state.params[param];
+                document.body.style.cursor = 'ns-resize';
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; document.body.style.cursor = 'default'; });
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                let newVal = startVal + (startY - e.clientY) * 0.005;
+                if (param === 'decay') newVal = Math.max(0.8, Math.min(0.999, newVal));
+                else if (param === 'damping') newVal = Math.max(0.01, Math.min(0.99, newVal));
+                else if (param === 'attack') newVal = Math.max(0.1, Math.min(2.0, newVal));
+
+                state.params[param] = newVal;
+                valEl.textContent = newVal.toFixed(2);
+                const pct = (newVal - (param === 'decay' ? 0.8 : 0.01)) / ((param === 'decay' ? 0.999 : 0.99) - (param === 'decay' ? 0.8 : 0.01));
+                el.style.setProperty('--value', `${pct * 100}%`);
+                state.voices.forEach(voiceData => voiceData.node.parameters.get(param).setTargetAtTime(newVal, state.audioCtx.currentTime, 0.05));
+            });
+        });
+
+        document.getElementById('master-vol').addEventListener('input', (e) => {
+            if(state.masterGain) state.masterGain.gain.setTargetAtTime(e.target.value/100, state.audioCtx.currentTime, 0.05);
+            document.getElementById('vol-val').textContent = `${e.target.value}%`;
+        });
+        document.getElementById('reverb-amt').addEventListener('input', (e) => {
+            if(state.reverbGain) state.reverbGain.gain.setTargetAtTime(e.target.value/100, state.audioCtx.currentTime, 0.05);
+            document.getElementById('rev-val').textContent = `${e.target.value}%`;
+        });
+        document.getElementById('mode-toggle').addEventListener('click', () => {
+            state.params.mode = state.params.mode === 'pluck' ? 'wind' : 'pluck';
+            const btn = document.getElementById('mode-toggle');
+            btn.textContent = state.params.mode.toUpperCase();
+            btn.classList.toggle('text-blue-400');
+            btn.classList.toggle('text-green-400');
+        });
+    }
+
+    function loadPreset(key, btnEl) {
+        const p = presets[key];
+        state.params.decay = p.decay;
+        state.params.damping = p.damping;
+        state.params.attack = p.attack;
+        state.params.mode = p.mode;
+        state.params.invertFeedback = p.invert || false;
+
+        document.querySelectorAll('#preset-list button').forEach(b => {
+            b.classList.remove('bg-blue-900/40', 'text-blue-400', 'border', 'border-blue-800');
+            b.classList.add('text-gray-400');
+        });
+        btnEl.classList.add('bg-blue-900/40', 'text-blue-400', 'border', 'border-blue-800');
+        btnEl.classList.remove('text-gray-400');
+
+        document.getElementById('val-decay').textContent = p.decay.toFixed(3);
+        document.getElementById('val-damping').textContent = p.damping.toFixed(2);
+        document.getElementById('val-attack').textContent = p.attack.toFixed(1);
+
+        if (state.audioCtx) {
+            const now = state.audioCtx.currentTime;
+            state.voices.forEach(voiceData => {
+                voiceData.node.parameters.get('decay').setTargetAtTime(p.decay, now, 0.05);
+                voiceData.node.parameters.get('damping').setTargetAtTime(p.damping, now, 0.05);
+                voiceData.node.parameters.get('attack').setTargetAtTime(p.attack, now, 0.05);
+            });
         }
-        statusContainer.innerHTML = errorMessage;
+
+        const mb = document.getElementById('mode-toggle');
+        mb.textContent = p.mode.toUpperCase();
+        if(p.mode==='wind') { mb.classList.add('text-green-400'); mb.classList.remove('text-blue-400'); }
+        else { mb.classList.add('text-blue-400'); mb.classList.remove('text-green-400'); }
     }
 
-    function initializeMIDI() {
-        if (navigator.requestMIDIAccess) {
-            statusContainer.innerHTML = "Requesting MIDI access...";
-            navigator.requestMIDIAccess({ sysex: false })
-                .then(onMIDISuccess, onMIDIFailure);
-        } else {
-            statusContainer.innerHTML = "<strong>Error:</strong><br/>Web MIDI API not supported.";
-        }
+    // --- Visualizer ---
+    function setupVisualizer(sourceNode) {
+        state.visualizerContext = document.getElementById('scope').getContext('2d');
+        state.visualizerAnalyzer = state.audioCtx.createAnalyser();
+        state.visualizerAnalyzer.fftSize = 2048;
+        sourceNode.connect(state.visualizerAnalyzer);
+
+        state.visualizerData = new Uint8Array(state.visualizerAnalyzer.frequencyBinCount);
+
+        startVisualizerLoop();
     }
 
-    testSoundButton.addEventListener('click', async () => {
-        const currentAudioCtx = await ensureAudioContext();
-        if (currentAudioCtx) {
-            console.log("Playing test sound C5");
-            const testGain = playKarplusStrongFlute(midiNoteToFrequency(72), 1.5, 100, currentAudioCtx);
-            if (testGain) {
-                setTimeout(() => {
-                    const now = currentAudioCtx.currentTime;
-                    if (testGain.gain.value > 0.001) {
-                        testGain.gain.setValueAtTime(testGain.gain.value, now);
-                        testGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
-                    }
-                }, 1300);
+    function startVisualizerLoop() {
+        if (state.isVisualizerActive) return;
+        state.isVisualizerActive = true;
+
+        const canvas = document.getElementById('scope');
+        const ctx = state.visualizerContext;
+        const analyzer = state.visualizerAnalyzer;
+        const dataArray = state.visualizerData;
+        const bufferLength = analyzer.frequencyBinCount;
+
+        function draw() {
+            if (!state.isVisualizerActive) {
+                // Clear and stop
+                ctx.fillStyle = 'rgb(26, 26, 26)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                return;
             }
-        } else {
-            console.error("Could not play test sound, AudioContext not running.");
+            requestAnimationFrame(draw);
+
+            // Resize handling
+            if(canvas.width !== canvas.clientWidth) { canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; }
+
+            analyzer.getByteTimeDomainData(dataArray);
+
+            ctx.fillStyle = 'rgb(26, 26, 26)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#3b82f6';
+            ctx.beginPath();
+
+            // TRIGGER LOGIC
+            let triggerPoint = 0;
+            let foundTrigger = false;
+
+            for (let i = 0; i < bufferLength - 1; i++) {
+                if (dataArray[i] < 128 && dataArray[i+1] >= 128) {
+                    if (dataArray[i+1] - dataArray[i] > 2 || dataArray[i+1] > 130) {
+                        triggerPoint = i;
+                        foundTrigger = true;
+                        break;
+                    }
+                }
+            }
+
+            const startIdx = foundTrigger ? triggerPoint : 0;
+            const drawLength = bufferLength - startIdx;
+            const sliceWidth = canvas.width * 1.0 / drawLength;
+
+            let x = 0;
+            for (let i = startIdx; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = v * canvas.height / 2;
+                if (i === startIdx) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                x += sliceWidth;
+            }
+
+            ctx.stroke();
         }
-    });
+        draw();
+    }
 
-    initializeMIDI();
+    document.getElementById('audio-init-btn').addEventListener('click', initAudio);
+
+    // Auto-start audio on first interaction
+    const initEvents = ['click', 'touchstart', 'keydown'];
+    const autoStartAudio = () => {
+        initAudio();
+        // Remove listeners once initialized
+        initEvents.forEach(e => document.body.removeEventListener(e, autoStartAudio));
+    };
+    initEvents.forEach(e => document.body.addEventListener(e, autoStartAudio, { once: true }));
+
+    generateKeyboard();
+    setupControls();
+
+    document.querySelectorAll('.black-key').forEach(el => el.classList.remove('pointer-events-none'));
 </script>
-
 </body>
 </html>
