@@ -476,7 +476,12 @@
 
             sourceNode = audioContext.createBufferSource();
             sourceNode.buffer = buffer;
+            // Connect the source to the analyser
             sourceNode.connect(analyser);
+
+            // --- FIX: Ensure analyser is always connected to speakers ---
+            // This connection is crucial for both hearing the sound and driving the visuals.
+            // If it's missing, the audio engine may not process any audio at all.
             analyser.connect(audioContext.destination);
 
             sourceNode.onended = resetUI;

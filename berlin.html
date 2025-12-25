@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -141,50 +142,48 @@
             transform: translateY(-1px);
         }
     </style>
-    <style>
-    .toolbar {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        background: #333;
-        padding: 2px;
-        box-sizing: border-box;
-        text-align: center;
-        z-index: 1000;
-    }
-    .toolbar button {
-        background: #555;
-        color: white;
-        border: 1px solid #888;
-        border-radius: 3px;
-        padding: 1px 4px;
-        margin: 1px;
-        cursor: pointer;
-        font-size: 12px;
-    }
-    .toolbar button:disabled {
-        background: #777;
-        color: #ccc;
-        cursor: default;
-    }
+<style>
+  .toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #333;
+    padding: 2px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 1000;
+  }
+  .toolbar button {
+    background: #555;
+    color: white;
+    border: 1px solid #888;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin: 1px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .toolbar button:disabled {
+    background: #777;
+    color: #ccc;
+    cursor: default;
+  }
 </style>
+</head>
+<body>
 <div class="toolbar">
     <button onclick="window.location.href='index.html'">Home</button>
     <button disabled>Berlin</button>
     <button onclick="window.location.href='chords.html'">Chords</button>
-    <button onclick="window.location.href='CosmicDrift.html'">Cosmic</button>
     <button onclick="window.location.href='delay.html'">Delay</button>
     <button onclick="window.location.href='karplus.html'">Karplus</button>
     <button onclick="window.location.href='polychain.html'">Polychain</button>
     <button onclick="window.location.href='pondviz.html'">Pond</button>
-    <button onclick="window.location.href='Psychedelia.html'">Psyche</button>
     <button onclick="window.location.href='rhythm.html'">Rhythm</button>
-    <button onclick="window.location.href='Shepard chord.html'">Shepard</button>
     <button onclick="window.location.href='starfield.html'">Starfield</button>
+    <button onclick="window.location.href='visualizer1.html'">Viz 1</button>
 </div>
-</head>
-<body class="transition-colors duration-500">
 
 <div class="main-panel w-full max-w-7xl mx-auto p-2 my-2 rounded-2xl shadow-2xl border">
     <!-- Header -->
@@ -365,3 +364,5 @@
             openhat: new Tone.MetalSynth({ volume: -18, frequency: 250, envelope: { attack: 0.01, decay: 0.4, release: 0.4 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(masterVolume),
             bass: new Tone.MonoSynth({ volume: -4, oscillator: { type: 'fatsquare' }, envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 2 }, filterEnvelope: { attack: 0.01, decay: 0.6, sustain: 0.2, release: 2, baseFrequency: 80, octaves: 4 } }).connect(masterVolume),
             pluck: new Tone.PluckSynth({ volume: -10, attackNoise: 0.8, dampening: 5000, resonance: 0.95 }).connect(masterVolume),
+            pad: new Tone.PolySynth(Tone.FMSynth, { volume: -12, envelope: { attack: 1, decay: 0.5, sustain: 0.5, release: 3 } }).set({ maxPolyphony: 6 }).connect(masterVolume),
+            melody: new Tone.FMSynth({ volume: -12, envelope: { attack: 0.02, decay: 0.3,
