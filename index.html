@@ -3,736 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Holiday Spiral - Audio Reactive</title>
-    <!-- Added Christmas Themed Favicon -->
+    <title>Audio-Reactive Visualizer Hub</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
     <style>
         body {
             margin: 0;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #000;
+            padding-top: 80px; /* Space for the fixed toolbar */
+            background: #0a0a0a;
             font-family: 'Courier New', Courier, monospace;
-            color: #ffffff;
+            color: #ccc;
         }
-
-        #canvas-container {
-            position: fixed;
+        .toolbar {
+            position: fixed; /* Changed to fixed */
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            z-index: 1;
+            background: rgba(10, 0, 0, 0.9);
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 1000;
+            border-bottom: 2px solid #ff0000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
-
-        /* UI OVERLAY STYLES - DARK HOLIDAY THEME */
-        #overlay {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 100;
+        .toolbar button {
+            background: transparent;
+            color: #ff0000;
+            border: 1px solid #ff0000;
+            border-radius: 4px;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .toolbar button:hover:not(:disabled) {
+            background: #ff0000;
+            color: #fff;
+            box-shadow: 0 0 10px #ff0000;
+        }
+        .toolbar button:disabled {
+            color: #555;
+            border-color: #555;
+            cursor: default;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
             padding: 40px;
             text-align: center;
             background: rgba(10, 0, 0, 0.9);
-            border: 2px solid #ff0000; /* Blood Red */
-            box-shadow: 0 0 30px #ff0000, inset 0 0 20px #003300; /* Red outer, Green inner glow */
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 30px #ff0000, inset 0 0 20px #003300;
             border-radius: 8px;
-            backdrop-filter: blur(10px);
-            max-width: 500px;
-            width: 90%;
-            transition: opacity 0.5s;
         }
-
         h1 {
             font-size: 2.5rem;
-            margin: 0 0 20px 0;
+            margin: 0 0 10px 0;
             color: #fff;
             text-shadow: 3px 3px 0px #880000, -2px -2px 0px #004400;
             text-transform: uppercase;
             letter-spacing: 4px;
-            font-family: 'Georgia', serif; /* More gothic/classic feel */
+            font-family: 'Georgia', serif;
         }
-
-        .control-group {
-            margin-bottom: 25px;
-            padding: 20px;
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            background: rgba(0, 50, 0, 0.1);
-        }
-
-        .btn {
-            background: transparent;
-            color: #fff;
-            font-family: inherit;
-            font-size: 1.1rem;
-            font-weight: bold;
-            padding: 15px 30px;
-            border: 2px solid #ff0000;
-            cursor: pointer;
+        p {
+            color: #00ff00;
+            margin-bottom: 40px;
             text-transform: uppercase;
             letter-spacing: 2px;
-            position: relative;
-            overflow: hidden;
-            transition: 0.3s;
-            box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
-            width: 100%;
-            margin-top: 10px;
+            text-shadow: 0 0 10px #00ff00;
         }
-
-        .btn:hover {
-            background: #ff0000;
+        .panel {
+            margin-bottom: 35px;
+            padding: 25px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            background: rgba(0, 50, 0, 0.1);
+            border-radius: 6px;
+        }
+        .panel h2 {
             color: #fff;
-            box-shadow: 0 0 30px #ff0000;
-        }
-
-        #fileInput { display: none; }
-
-        /* Recording UI */
-        #recordContainer {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 150;
-            display: none;
-            flex-direction: row;
-            gap: 15px;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-
-        .rec-btn {
-            padding: 10px 20px;
-            border-radius: 50px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: sans-serif;
+            text-shadow: 2px 2px 0px #880000;
+            margin: -25px -25px 20px -25px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255, 0, 0, 0.3);
+            font-size: 1.2rem;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            font-size: 0.9rem;
         }
-
-        #recordButton {
-            background: #cc0000;
-            color: white;
-            box-shadow: 0 0 15px #cc0000;
-            min-width: 160px;
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
         }
-
-        #recordButton.recording { animation: pulseRed 1s infinite; }
-
-        #leaveButton {
-            background: rgba(0, 50, 0, 0.5);
-            color: white;
-            border: 1px solid #00ff00;
-            backdrop-filter: blur(5px);
-        }
-        #leaveButton:hover { background: #00ff00; color: black; }
-
-        @keyframes pulseRed {
-            0% { box-shadow: 0 0 0 0 rgba(200, 0, 0, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(200, 0, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(200, 0, 0, 0); }
-        }
-
-        #fullscreenBtn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            background: rgba(0,0,0,0.5);
-            border: 1px solid #ff0000;
+        .grid-button {
+            background: transparent;
             color: #fff;
-            font-size: 20px;
+            border: 1px solid #ff0000;
+            border-radius: 4px;
+            padding: 12px 10px;
             cursor: pointer;
-            z-index: 150;
+            font-size: 0.9rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-align: center;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
-        #message { margin-top: 15px; color: #00ff00; font-size: 0.9rem; min-height: 1.2em; }
-
-        /* Custom Checkbox */
-        .checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; color: #ccc; margin-top: 10px; }
-        input[type="checkbox"] { accent-color: #ff0000; width: 18px; height: 18px; }
-
+        .grid-button:hover {
+            background: #ff0000;
+            color: #fff;
+            box-shadow: 0 0 15px #ff0000;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
 
-<div id="canvas-container"></div>
-
-<button id="fullscreenBtn">⛶</button>
-
-<div id="recordContainer">
-    <button id="recordButton" class="rec-btn">Start Recording</button>
-    <button id="leaveButton" class="rec-btn">Stop & Reset</button>
-</div>
-
-<div id="overlay">
-    <h1>DARK HOLIDAYS</h1>
-    <div class="control-group">
-        <p style="margin-top:0; color:#aaa; font-size: 0.8rem;">SELECT AUDIO SOURCE</p>
-        <button id="selectFileBtn" class="btn">Upload Audio</button>
-        <input type="file" id="fileInput" accept="audio/*">
+    <div class="toolbar">
+        <button disabled>Home</button>
+        <button onclick="window.location.href='berlin.html'">Berlin</button>
+        <button onclick="window.location.href='chords.html'">Chords</button>
+        <button onclick="window.location.href='CosmicDrift.html'">Cosmic</button>
+        <button onclick="window.location.href='DarkHolidays.html'">Dark Holiday</button>
+        <button onclick="window.location.href='delay.html'">Delay</button>
+        <button onclick="window.location.href='karplus.html'">Karplus</button>
+        <button onclick="window.location.href='LollipopLand.html'">Lollipop</button>
+        <button onclick="window.location.href='polychain.html'">Polychain</button>
+        <button onclick="window.location.href='pondviz.html'">Pond</button>
+        <button onclick="window.location.href='rhythm.html'">Rhythm</button>
+        <button onclick="window.location.href='Shepard%20chord.html'">Shepard</button>
+        <button onclick="window.location.href='Spirals.html'">Spirals</button>
+        <button onclick="window.location.href='SpectralSquadron.html'">Spectral</button>
+        <button onclick="window.location.href='starfield.html'">Starfield</button>
     </div>
 
-    <div class="checkbox-wrapper">
-        <input type="checkbox" id="record4k">
-        <label for="record4k">Record in 4K (High GPU)</label>
+    <div class="container">
+        <h1>Audio-Reactive Suite</h1>
+        <p>Select a Visualization</p>
+
+        <div class="panel">
+            <h2>Cosmic & Sci-Fi</h2>
+            <div class="button-grid">
+                <button class="grid-button" onclick="window.location.href='CosmicDrift.html'">Stargate Corridor</button>
+                <button class="grid-button" onclick="window.location.href='SpectralSquadron.html'">Spectral Squadron</button>
+                <button class="grid-button" onclick="window.location.href='starfield.html'">Starfield</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Psychedelic & Abstract</h2>
+            <div class="button-grid">
+                <button class="grid-button" onclick="window.location.href='Spirals.html'">Psychedelic Spiral</button>
+                <button class="grid-button" onclick="window.location.href='DarkHolidays.html'">Dark Holiday Spiral</button>
+                <button class="grid-button" onclick="window.location.href='pondviz.html'">Mystic Pond</button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Fun & Whimsical</h2>
+            <div class="button-grid">
+                <button class="grid-button" onclick="window.location.href='LollipopLand.html'">Marching on Lollipop Land</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Musical & Rhythmic</h2>
+            <div class="button-grid">
+                <button class="grid-button" onclick="window.location.href='Shepard%20chord.html'">Shepard Chord Illusion</button>
+                <button class="grid-button" onclick="window.location.href='berlin.html'">Berlin</button>
+                <button class="grid-button" onclick="window.location.href='chords.html'">Chords</button>
+                <button class="grid-button" onclick="window.location.href='delay.html'">Delay</button>
+                <button class="grid-button" onclick="window.location.href='karplus.html'">Karplus</button>
+                <button class="grid-button" onclick="window.location.href='polychain.html'">Polychain</button>
+                <button class="grid-button" onclick="window.location.href='rhythm.html'">Rhythm</button>
+            </div>
+        </div>
     </div>
-
-    <div class="checkbox-wrapper">
-        <input type="checkbox" id="autoRecord">
-        <label for="autoRecord">Auto-record on play</label>
-    </div>
-
-    <div id="message"></div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-<!-- FRAGMENT SHADER: THE DARK HOLIDAY SPIRAL -->
-<script type="x-shader/x-fragment" id="fragShader">
-    uniform float uTime;
-    uniform vec2 uResolution;
-    uniform float uBass;
-    uniform float uMid;
-    uniform float uHigh;
-    uniform float uTotalRotation;
-
-    #define PI 3.14159265359
-
-    void main() {
-        // Normalize UVs centered
-        vec2 uv = (gl_FragCoord.xy * 2.0 - uResolution.xy) / uResolution.y;
-
-        // Bass Zoom Effect
-        float zoom = 1.0 - (uBass * 0.3);
-        uv *= zoom;
-
-        // Polar Coordinates
-        float r = length(uv);
-        float angle = atan(uv.y, uv.x);
-
-        // --- FIXED RADIAL MATH ---
-        // To prevent the "seam" on the left (where PI meets -PI),
-        // the multiplier for 'angle' (the number of spiral arms) MUST be an integer.
-        float armCount = 10.0;
-
-        // To still "twist with music", we apply a continuous warp to the angle
-        // instead of changing the arm count.
-        // DYNAMIC UPDATE: Increased strength and added Highs for more jitter
-        float warpStrength = (uBass * 2.0) + (uMid * 1.0) + (uHigh * 0.5);
-        float continuousWarp = sin(angle * 3.0 - uTime * 3.0) * warpStrength;
-
-        // Speed
-        // DYNAMIC UPDATE: Increased base speed and added direct Bass kick to forward movement
-        float forwardMove = (uTime * 6.0) + (uBass * 5.0);
-
-        // Waves: Using the integer armCount + continuous warp
-        float wave1 = sin((r * (15.0 - uBass*5.0) - forwardMove) + angle * armCount + continuousWarp + uTotalRotation);
-        float wave2 = cos((r * (18.0 + uBass*5.0) - forwardMove) - angle * armCount - continuousWarp + uTotalRotation);
-
-        // Interference pattern
-        float pattern = wave1 * wave2;
-
-        // Depth fog (Tunnel center)
-        // BRIGHTEN EDGES: Added linear term (+ r * 0.4) to keep edges from getting too dark/vignetted
-        float depth = (0.15 / (r + 0.1 * uBass)) + (r * 0.4);
-
-        // --- DARK HOLIDAY COLOR PALETTE ---
-
-        // Bases - Made more vibrant/neon
-        vec3 red = vec3(1.0, 0.0, 0.2);    // Bright Neon Red
-        vec3 green = vec3(0.0, 0.8, 0.2);  // Toxic Green
-        vec3 white = vec3(1.0, 1.0, 0.9);  // Bright Snow
-        vec3 black = vec3(0.0, 0.0, 0.0);  // Void
-        vec3 gold = vec3(1.0, 0.8, 0.0);   // Bright Gold
-
-        // Mixing logic based on pattern and audio
-        vec3 col = black;
-
-        // Map pattern peaks to Red and Green stripes
-        float stripes = sin(pattern * 10.0 + r * 5.0);
-
-        if (stripes > 0.5) {
-            col = mix(red, black, 0.1); // Reduced black mix for more vibrancy
-            col += uBass * vec3(0.6, 0.0, 0.0); // Stronger bass boost
-        } else if (stripes < -0.5) {
-            col = mix(green, black, 0.1); // Reduced black mix
-            col += uMid * vec3(0.0, 0.6, 0.0); // Stronger mid boost
-        } else {
-            // Thin white/gold lines between
-            col = mix(black, white, 0.05); // Sharper contrast
-            // Add gold shimmer based on mids
-            col += uMid * 0.4 * gold;
-        }
-
-        // Snow/Sparkle effect from Highs
-        float sparkle = step(0.98, sin(uv.x * 50.0 + uTime) * cos(uv.y * 50.0 - uTime));
-        col += sparkle * uHigh * vec3(1.0, 1.0, 0.8);
-
-        // Apply depth/darkness towards center
-        col *= depth;
-
-        // Final contrast
-        col = pow(col, vec3(1.3));
-
-        gl_FragColor = vec4(col, 1.0);
-    }
-</script>
-
-<script>
-    (function(){
-        // --- CONFIG & STATE ---
-        let audioContext, analyser, dataArray, sourceNode;
-        let renderer, scene, camera, material, mesh;
-        let isRunning = false;
-        let currentAudioFile = null;
-
-        // BPM / Audio State
-        let lastBeatTime = 0;
-        let beatThreshold = 0.4;
-        let detectedBPM = 0;
-        let beatIntervals = [];
-        let accumulatedRotation = 0;
-        let smoothBPM = 60;
-        let audioData = { bass: 0, mid: 0, high: 0 };
-
-        // Particles
-        let particles = [];
-        // Expanded Cultural Holiday Set + Dark Theme
-        const particleChars = [
-            // Santa's Team (Boosted Frequency)
-            '🎅', '🎅', '🛷', '🛷', '🦌', '🦌', '🦌', '🦌', // More reindeer for the sleigh!
-            '🤶', '🧝', // Mrs Claus, Elf
-
-            // Christmas Core
-            '🎄', '🎁', '🔔', '🕯️',
-            '🌟', '❄️', '☃️', '🍪', '🥛', '🧦', '🎀', '👼',
-            '⛪', '🎶', '💂',
-
-            // Hanukkah
-            '🕎', '🪙', '✡️', '🍩',
-
-            // Kwanzaa
-            '🥁', '🌽', '🤝',
-
-            // New Year / Celebration
-            '🥂', '🎆', '🎉'
-        ];
-        let particleTextureCache = {};
-
-        // Recording
-        let mediaRecorder;
-        let recordedChunks = [];
-        let isRecording = false;
-        let was4k = false;
-
-        // Elements
-        const container = document.getElementById('canvas-container');
-        const overlay = document.getElementById('overlay');
-        const fileInput = document.getElementById('fileInput');
-        const selectFileBtn = document.getElementById('selectFileBtn');
-        const messageDiv = document.getElementById('message');
-        const recordBtn = document.getElementById('recordButton');
-        const leaveBtn = document.getElementById('leaveButton');
-        const recordContainer = document.getElementById('recordContainer');
-        const autoRecordCheck = document.getElementById('autoRecord');
-        const record4kCheck = document.getElementById('record4k');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-
-        // --- PARTICLE SYSTEM UTILS ---
-
-        function createTextTexture(char, color) {
-            if (particleTextureCache[char]) return particleTextureCache[char];
-
-            const canvas = document.createElement('canvas');
-            // Doubled resolution for sharper large text
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = color;
-            // Increased Font Size significantly
-            ctx.font = 'bold 150px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            // Add a glow
-            ctx.shadowColor = color;
-            ctx.shadowBlur = 20;
-
-            ctx.fillText(char, 128, 128);
-
-            const tex = new THREE.CanvasTexture(canvas);
-            particleTextureCache[char] = tex;
-            return tex;
-        }
-
-        class HolidayParticle {
-            constructor() {
-                const char = particleChars[Math.floor(Math.random() * particleChars.length)];
-                // Red, Green, White, Gold, Blue (Hanukkah)
-                const colors = ['#ff0000', '#00ff00', '#ffffff', '#aa0000', '#ffd700', '#0033ff'];
-                const color = colors[Math.floor(Math.random() * colors.length)];
-
-                const map = createTextTexture(char, color);
-                const mat = new THREE.SpriteMaterial({ map: map, transparent: true, opacity: 1.0 });
-                this.sprite = new THREE.Sprite(mat);
-
-                // Spawn at edges (simulate being close to viewer)
-                // Random angle
-                const angle = Math.random() * Math.PI * 2;
-                // Start far out (radius > 1.0 in screen space)
-                const radius = 1.5 + Math.random();
-
-                this.x = Math.cos(angle) * radius * (window.innerWidth / window.innerHeight);
-                this.y = Math.sin(angle) * radius;
-
-                // Virtual Z (0 = close/camera, 10 = far/center of tunnel)
-                this.virtualZ = 0;
-                this.speed = 0.01 + Math.random() * 0.03;
-
-                this.updatePosition();
-                scene.add(this.sprite);
-            }
-
-            update(deltaTime, bass) {
-                // Move "away" into the tunnel (Z increases)
-                this.virtualZ += this.speed * (1 + bass * 2.0); // Bass boosts speed
-
-                // Rotation (spin while flying)
-                this.sprite.material.rotation += 2.0 * deltaTime;
-
-                // Scale logic: Size based on proximity (Inverse of depth)
-                // INCREASED SIZE: changed multiplier to 0.9
-                // Scale factor = 1.0 / (0.2 + z)
-                const scaleFactor = 1.0 / (0.2 + this.virtualZ);
-                this.sprite.scale.set(scaleFactor * 0.9, scaleFactor * 0.9, 1);
-
-                // Fade out at depth
-                // Changed from 8.0 to 20.0 to allow them to travel much further/get smaller
-                this.sprite.material.opacity = Math.max(0, 1.0 - (this.virtualZ / 20.0));
-
-                // Move X/Y towards center (0,0) as Z increases
-                // Changed formula to allow convergence to absolute center (0,0)
-                const posFactor = 1.0 / (1.0 + this.virtualZ);
-                this.sprite.position.x = this.x * posFactor;
-                this.sprite.position.y = this.y * posFactor;
-
-                // Increased cull distance from 8.0 to 20.0
-                return this.virtualZ < 20.0;
-            }
-
-            dispose() {
-                scene.remove(this.sprite);
-                this.sprite.material.dispose();
-            }
-
-            updatePosition() {
-                this.sprite.position.set(this.x, this.y, 0); // Z is always 0 for Ortho camera overlay
-            }
-        }
-
-        // --- THREE.JS SETUP ---
-        function initThree() {
-            scene = new THREE.Scene();
-
-            // FIX: Use an aspect-aware frustum so coordinates are square (not stretched)
-            // This ensures (0,0) is exactly the center and 1 unit Y is the same visual size as 1 unit X
-            const aspect = window.innerWidth / window.innerHeight;
-            camera = new THREE.OrthographicCamera( -aspect, aspect, 1, -1, 0, 10 );
-            camera.position.z = 1;
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            container.appendChild(renderer.domElement);
-
-            // Shader Plane (Background)
-            // Scale plane to cover the widest possible aspect ratio to prevent edges showing
-            const geometry = new THREE.PlaneGeometry(4, 4);
-            // Push it back slightly so sprites sit on top
-            geometry.translate(0, 0, -1);
-
-            material = new THREE.ShaderMaterial({
-                uniforms: {
-                    uTime: { value: 0 },
-                    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-                    uBass: { value: 0.0 },
-                    uMid: { value: 0.0 },
-                    uHigh: { value: 0.0 },
-                    uTotalRotation: { value: 0.0 }
-                },
-                fragmentShader: document.getElementById('fragShader').textContent,
-                depthTest: false // Ensure background is always behind
-            });
-
-            mesh = new THREE.Mesh(geometry, material);
-            scene.add(mesh);
-
-            window.addEventListener('resize', onResize);
-        }
-
-        function onResize() {
-            if(isRecording && was4k) return;
-
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            const aspect = width / height;
-
-            renderer.setSize(width, height);
-
-            // FIX: Update camera frustum to match new aspect ratio
-            // This keeps the center at (0,0) and prevents stretching
-            camera.left = -aspect;
-            camera.right = aspect;
-            camera.top = 1;
-            camera.bottom = -1;
-            camera.updateProjectionMatrix();
-
-            material.uniforms.uResolution.value.set(width, height);
-        }
-
-        // --- AUDIO ENGINE ---
-        function initAudio() {
-            if(!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 256;
-                dataArray = new Uint8Array(analyser.frequencyBinCount);
-            }
-        }
-
-        function getAudioData() {
-            if(!analyser) return { bass:0, mid:0, high:0 };
-            analyser.getByteFrequencyData(dataArray);
-
-            const bassRange = dataArray.slice(0, 10);
-            const midRange = dataArray.slice(10, 80);
-            const highRange = dataArray.slice(80, 200);
-            const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
-
-            return {
-                bass: avg(bassRange) / 255,
-                mid: avg(midRange) / 255,
-                high: avg(highRange) / 255
-            };
-        }
-
-        function detectBeat(highLevel) {
-            const now = performance.now();
-            if (highLevel > beatThreshold && highLevel > 0.3) {
-                if (now - lastBeatTime > 200) {
-                    const interval = now - lastBeatTime;
-                    lastBeatTime = now;
-                    beatIntervals.push(interval);
-                    if(beatIntervals.length > 8) beatIntervals.shift();
-                    const avgInterval = beatIntervals.reduce((a,b)=>a+b,0) / beatIntervals.length;
-                    const bpm = 60000 / avgInterval;
-                    if(bpm > 60 && bpm < 220) detectedBPM = bpm;
-                    beatThreshold = 1.1;
-                }
-            } else {
-                beatThreshold *= 0.95;
-                if(beatThreshold < 0.3) beatThreshold = 0.3;
-            }
-        }
-
-        // --- ANIMATION ---
-        let lastFrameTime = 0;
-
-        function animate(time) {
-            if(!isRunning) return;
-            requestAnimationFrame(animate);
-
-            const deltaTime = (time - lastFrameTime) / 1000;
-            lastFrameTime = time;
-
-            audioData = getAudioData();
-            detectBeat(audioData.high);
-
-            const targetBPM = (detectedBPM > 0) ? detectedBPM : 10;
-            smoothBPM += (targetBPM - smoothBPM) * 0.05;
-
-            const rotationSpeed = (smoothBPM / 60.0) * 3.0;
-            accumulatedRotation += rotationSpeed * deltaTime;
-
-            // Shader Uniforms
-            material.uniforms.uTime.value = time / 1000;
-            material.uniforms.uTotalRotation.value = accumulatedRotation;
-            material.uniforms.uBass.value += (audioData.bass - material.uniforms.uBass.value) * 0.1;
-            material.uniforms.uMid.value += (audioData.mid - material.uniforms.uMid.value) * 0.1;
-            material.uniforms.uHigh.value += (audioData.high - material.uniforms.uHigh.value) * 0.1;
-
-            // --- PARTICLE LOGIC ---
-            // Spawn Rate: Base rate + bursts on beats/highs
-            // REDUCED BY HALF (multiplied by 0.5)
-            const spawnChance = (0.05 + (audioData.high * 0.3) + (audioData.bass * 0.1)) * 0.5;
-            if(Math.random() < spawnChance) {
-                particles.push(new HolidayParticle());
-            }
-
-            // Update Loop
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const alive = particles[i].update(deltaTime, audioData.bass);
-                if (!alive) {
-                    particles[i].dispose();
-                    particles.splice(i, 1);
-                }
-            }
-
-            renderer.render(scene, camera);
-        }
-
-        // --- FILE HANDLING ---
-        selectFileBtn.onclick = () => {
-            initAudio();
-            fileInput.click();
-        };
-
-        fileInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if(!file) return;
-
-            currentAudioFile = file;
-            messageDiv.innerText = "Summoning Spirits...";
-
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                try {
-                    const audioBuffer = await audioContext.decodeAudioData(ev.target.result);
-                    startVisualizer(audioBuffer);
-                } catch(err) {
-                    messageDiv.innerText = "Error: " + err.message;
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        };
-
-        function startVisualizer(buffer) {
-            if(sourceNode) { sourceNode.disconnect(); sourceNode.stop(); }
-
-            sourceNode = audioContext.createBufferSource();
-            sourceNode.buffer = buffer;
-            sourceNode.connect(analyser);
-            analyser.connect(audioContext.destination);
-
-            sourceNode.onended = resetUI;
-            sourceNode.start(0);
-
-            overlay.style.opacity = 0;
-            setTimeout(() => overlay.style.display = 'none', 500);
-
-            recordContainer.style.display = 'flex';
-            setTimeout(() => recordContainer.style.opacity = 1, 10);
-
-            isRunning = true;
-            lastFrameTime = performance.now();
-
-            detectedBPM = 0;
-            beatIntervals = [];
-            smoothBPM = 60;
-            particles = []; // Clear old particles
-
-            animate(lastFrameTime);
-
-            if(autoRecordCheck.checked) {
-                setTimeout(toggleRecord, 500);
-            }
-        }
-
-        function resetUI() {
-            isRunning = false;
-            if(isRecording) toggleRecord();
-            overlay.style.display = 'block';
-            setTimeout(() => overlay.style.opacity = 1, 10);
-            recordContainer.style.opacity = 0;
-            setTimeout(() => recordContainer.style.display = 'none', 500);
-            if(sourceNode) { sourceNode.disconnect(); }
-        }
-
-        leaveBtn.onclick = resetUI;
-
-        // --- RECORDING ---
-        recordBtn.onclick = toggleRecord;
-
-        function toggleRecord() {
-            if(isRecording) {
-                mediaRecorder.stop();
-                isRecording = false;
-                recordBtn.innerText = "Start Recording";
-                recordBtn.classList.remove('recording');
-
-                if (was4k) {
-                    renderer.setSize(window.innerWidth, window.innerHeight, true);
-                    material.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
-                    was4k = false;
-                }
-
-            } else {
-                if (record4kCheck.checked) {
-                    was4k = true;
-                    renderer.setSize(3840, 2160, false);
-                    material.uniforms.uResolution.value.set(3840, 2160);
-                }
-
-                const stream = renderer.domElement.captureStream(60);
-                const dest = audioContext.createMediaStreamDestination();
-                sourceNode.connect(dest);
-                const tracks = [...stream.getVideoTracks(), ...dest.stream.getAudioTracks()];
-
-                try {
-                    mediaRecorder = new MediaRecorder(new MediaStream(tracks), { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 25000000 });
-                } catch (e) {
-                    mediaRecorder = new MediaRecorder(new MediaStream(tracks));
-                }
-
-                mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) recordedChunks.push(e.data); };
-                mediaRecorder.onstop = saveVideo;
-
-                recordedChunks = [];
-                mediaRecorder.start();
-
-                isRecording = true;
-                recordBtn.innerText = "Stop Recording";
-                recordBtn.classList.add('recording');
-            }
-        }
-
-        function saveVideo() {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            const fileName = currentAudioFile ? `dark-holiday-${currentAudioFile.name.split('.')[0]}.webm` : 'dark-holiday-trip.webm';
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
-        }
-
-        fullscreenBtn.onclick = () => {
-            if (!document.fullscreenElement) {
-                document.body.requestFullscreen();
-                fullscreenBtn.innerHTML = "🡼";
-            } else {
-                document.exitFullscreen();
-                fullscreenBtn.innerHTML = "⛶";
-            }
-        };
-
-        initThree();
-    })();
-</script>
 </body>
 </html>
