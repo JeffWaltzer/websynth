@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spectral Squadron // Audio Reactive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Sci-Fi Base */
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #050510;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            color: #00ffff;
+            /* Center the canvas stage */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        /* Neon UI */
+        .neon-box {
+            background: rgba(5, 10, 30, 0.95);
+            border: 1px solid #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(0, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .sci-btn {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00aaaa;
+            color: #00ffff;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .sci-btn:hover:not(:disabled) {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 15px #00ffff;
+            border-color: #ffffff;
+            text-shadow: 0 0 5px #ffffff;
+        }
+
+        .sci-btn:disabled {
+            border-color: #333;
+            color: #555;
+            cursor: default;
+        }
+
+        /* Glitch/Holo Title */
+        .holo-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(0, 255, 255, 0.8);
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            position: relative;
+        }
+
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #00ffff;
+        }
+
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #00ffff;
+        }
+
+        .hidden-visually {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #visualizerCanvas {
+            box-shadow: 0 0 0 1px #111;
+            background: #000;
+        }
+    </style>
+    <style>
+        .toolbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #0a0a1a;
+            padding: 8px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 1000;
+            border-bottom: 1px solid #004444;
+        }
+
+        .toolbar button {
+            background: #111;
+            color: #00aaaa;
+            border: 1px solid #004444;
+            border-radius: 2px;
+            padding: 4px 12px;
+            margin: 2px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'Orbitron', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #002222;
+            color: #00ffff;
+            border-color: #00ffff;
+        }
+
+        .toolbar button:disabled {
+            background: #050505;
+            color: #333;
+            border-color: #222;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <button onclick="window.location.href='index.html'">Home</button>
+    <button onclick="window.location.href='berlin.html'">Berlin</button>
+    <button onclick="window.location.href='chords.html'">Chords</button>
+    <button onclick="window.location.href='CosmicDrift.html'">Cosmic</button>
+    <button onclick="window.location.href='delay.html'">Delay</button>
+    <button onclick="window.location.href='karplus.html'">Karplus</button>
+    <button onclick="window.location.href='polychain.html'">Polychain</button>
+    <button onclick="window.location.href='pondviz.html'">Pond</button>
+    <button onclick="window.location.href='Psychedelia.html'">Psyche</button>
+    <button onclick="window.location.href='rhythm.html'">Rhythm</button>
+    <button disabled>Shepard</button>
+    <button onclick="window.location.href='starfield.html'">Starfield</button>
+</div>
+
+<!-- Main Canvas Container -->
+<canvas id="visualizerCanvas" class="z-10"></canvas>
+
+<!-- Audio Element (Hidden) -->
+<audio id="audioElement" crossorigin="anonymous"></audio>
+<input type="file" id="audioInput" accept="audio/*" class="hidden">
+
+<!-- UI Overlay: Start Modal -->
+<div id="startModal"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md transition-opacity duration-500">
+    <div class="relative w-[90%] max-w-[600px] p-8 neon-box text-center">
+        <h1 class="holo-title mb-6">SPECTRAL SQUADRON</h1>
+
+        <div class="space-y-4 text-sm mb-8 text-cyan-400 font-bold tracking-widest">
+            <div class="flex justify-between border-b border-cyan-900 pb-2">
+                <span>SYSTEM</span><span>STATUS</span>
+            </div>
+            <div class="flex justify-between text-xs text-cyan-600">
+                <span>AUDIO INPUT</span><span id="sourceStatus" class="text-orange-500 animate-pulse">NO SIGNAL</span>
+            </div>
+            <div class="flex justify-between text-xs text-cyan-600" id="analysisRow">
+                <span>NOTE RANGE</span><span id="analysisStatus" class="text-gray-500">PENDING SCAN</span>
+            </div>
+
+            <!-- Analysis Progress UI (Hidden initially) -->
+            <div id="analysisContainer" class="hidden w-full mt-2 border border-cyan-900 bg-black/50 p-2 text-left">
+                <div class="flex justify-between text-[10px] text-cyan-400 mb-1">
+                    <span id="analysisStep">INITIALIZING SCAN</span>
+                    <span id="analysisPercent">0%</span>
+                </div>
+                <div class="w-full h-1 bg-gray-900 overflow-hidden">
+                    <div id="analysisBar" class="h-full bg-cyan-500 w-0 transition-all duration-75 shadow-[0_0_10px_#00ffff]"></div>
+                </div>
+                <!-- Scrolling Log -->
+                <div id="analysisLog" class="h-12 overflow-hidden text-[9px] font-mono text-cyan-700 mt-2 leading-tight opacity-80 border-l-2 border-cyan-900 pl-2">
+                    > SYSTEM READY
+                </div>
+            </div>
+
+            <!-- Toggles Container -->
+            <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-cyan-900/50">
+
+                <!-- Auto Record Toggle -->
+                <div class="flex flex-col items-center p-2 border border-cyan-900 bg-black/40">
+                    <span class="text-[10px] mb-2 text-cyan-500">AUTO-CAPTURE PROTOCOL</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="autoRecToggle" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-900 peer-focus:outline-none rounded-sm border border-gray-700 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-500 after:border-gray-300 after:border after:rounded-sm after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-900 peer-checked:after:bg-cyan-400 peer-checked:after:border-cyan-200"></div>
+                        <span class="ml-2 font-bold text-cyan-400 text-xs" id="autoRecLabel">ON</span>
+                    </label>
+                </div>
+
+                <!-- Debug Toggle -->
+                <div class="flex flex-col items-center p-2 border border-cyan-900 bg-black/40">
+                    <span class="text-[10px] mb-2 text-cyan-500">FFT DIAGNOSTICS</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="debugToggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-900 peer-focus:outline-none rounded-sm border border-gray-700 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-500 after:border-gray-300 after:border after:rounded-sm after:h-5 after:w-5 after:transition-all peer-checked:bg-fuchsia-900 peer-checked:after:bg-fuchsia-400 peer-checked:after:border-fuchsia-200"></div>
+                        <span class="ml-2 font-bold text-fuchsia-400 text-xs" id="debugLabel">OFF</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="fileInfo"
+                 class="text-xs text-cyan-300 mt-2 hidden text-left truncate border border-cyan-800 bg-cyan-900/20 p-2 font-mono">
+                <!-- File name goes here -->
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3">
+            <button id="selectFileBtn" class="w-full py-4 text-lg font-bold sci-btn">
+                <i class="fas fa-satellite-dish mr-2"></i> Load Audio
+            </button>
+
+            <button id="startButton" class="w-full py-5 text-xl font-bold sci-btn opacity-50" disabled>
+                <i class="fas fa-rocket mr-2"></i> Launch Fleet
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Recording Interface -->
+<div id="controlsUI"
+     class="fixed bottom-8 left-0 w-full z-40 flex justify-center items-center gap-4 hidden-visually transition-opacity duration-500">
+    <div class="bg-black/90 backdrop-blur border border-cyan-500 p-2 rounded-none flex gap-4 items-center shadow-[0_0_15px_rgba(0,255,255,0.3)]">
+
+        <!-- Play/Pause Control -->
+        <button id="playPauseBtn"
+                class="w-12 h-12 bg-transparent border border-cyan-500 text-cyan-500 hover:bg-cyan-900/50 flex items-center justify-center transition-all">
+            <i class="fas fa-pause"></i>
+        </button>
+
+        <div class="h-8 w-px bg-cyan-800 mx-2"></div>
+
+        <div id="recStatus"
+             class="text-xs uppercase font-bold tracking-widest text-cyan-600 w-24 text-center font-mono">STANDBY
+        </div>
+
+        <button id="recordBtn"
+                class="w-12 h-12 border border-red-500 flex items-center justify-center text-red-500 hover:bg-red-900/30 hover:shadow-[0_0_10px_#ff0000] transition-all">
+            <div id="recIcon" class="w-4 h-4 bg-red-500 rounded-full"></div>
+        </button>
+    </div>
+</div>
+
+<!-- Error Toast -->
+<div id="errorToast"
+     class="fixed top-4 right-4 z-50 bg-red-900/90 border border-red-500 text-red-100 px-6 py-4 hidden font-mono">
+    <h3 class="font-bold">SYSTEM FAILURE</h3>
+    <p id="errorMsg" class="text-xs">Unknown Error.</p>
+</div>
+
+<script>
+    // --- Configuration ---
+    const CONFIG = {
+        fleetSize: 20, // Number of ships
+        starCount: 200,
+        video: {
+            width: 1920,
+            height: 1080
+        }
+    };
+
+    // --- State Management ---
+    const state = {
+        isRecording: false,
+        isPlaying: false,
+        audioContext: null,
+        analyser: null,
+        dataArray: null,
+        sourceNode: null,
+        recordDest: null,
+        mediaRecorder: null,
+        recordedChunks: [],
+        animationId: null,
+        frameCount: 0,
+        currentFileName: null,
+        fadeOutStart: 0,
+        beatDetected: false,
+        debugMode: false,
+        fireworkCooldown: 0,
+        minFreq: 100, // Default fallback
+        maxFreq: 2000 // Default fallback
+    };
+
+    // --- DOM Elements ---
+    const canvas = document.getElementById('visualizerCanvas');
+    const ctx = canvas.getContext('2d');
+    const startModal = document.getElementById('startModal');
+    const controlsUI = document.getElementById('controlsUI');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const audioInput = document.getElementById('audioInput');
+    const startBtn = document.getElementById('startButton');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const recStatus = document.getElementById('recStatus');
+    const recIcon = document.getElementById('recIcon');
+    const audioElement = document.getElementById('audioElement');
+    const sourceStatus = document.getElementById('sourceStatus');
+    const analysisStatus = document.getElementById('analysisStatus');
+    const fileInfo = document.getElementById('fileInfo');
+    const errorToast = document.getElementById('errorToast');
+    const errorMsg = document.getElementById('errorMsg');
+
+    // Analysis UI
+    const analysisContainer = document.getElementById('analysisContainer');
+    const analysisBar = document.getElementById('analysisBar');
+    const analysisStep = document.getElementById('analysisStep');
+    const analysisPercent = document.getElementById('analysisPercent');
+    const analysisLog = document.getElementById('analysisLog');
+
+    // Toggles
+    const autoRecToggle = document.getElementById('autoRecToggle');
+    const autoRecLabel = document.getElementById('autoRecLabel');
+    const debugToggle = document.getElementById('debugToggle');
+    const debugLabel = document.getElementById('debugLabel');
+
+    // --- Visualizer Classes ---
+
+    const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+    function getNoteFromFreq(freq) {
+        if (!freq || freq === 0 || !isFinite(freq)) return "--";
+        const noteNum = 12 * (Math.log(freq / 440) / Math.log(2));
+        const midi = Math.round(noteNum) + 69;
+        if (midi < 0 || midi > 127) return "--";
+        const note = NOTE_NAMES[midi % 12];
+        const octave = Math.floor(midi / 12) - 1;
+        return `${note}${octave}`;
+    }
+
+    function freqToBin(freq, sampleRate, fftSize) {
+        return Math.round(freq * fftSize / sampleRate);
+    }
+
+    class FireworksSystem {
+        constructor() {
+            this.particles = [];
+        }
+
+        explode(x, y) {
+            const particleCount = 20 + Math.random() * 30; // Random size
+            const baseHue = Math.random() * 360;
+
+            for (let i = 0; i < particleCount; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 6 + 2;
+
+                this.particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.0,
+                    decay: Math.random() * 0.02 + 0.02,
+                    color: `hsl(${baseHue + (Math.random() * 60 - 30)}, 100%, 60%)`,
+                    size: Math.random() * 3 + 1
+                });
+            }
+        }
+
+        update() {
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                const p = this.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.1; // Gravity
+                p.vx *= 0.95; // Drag
+                p.vy *= 0.95;
+                p.life -= p.decay;
+
+                if (p.life <= 0) {
+                    this.particles.splice(i, 1);
+                }
+            }
+        }
+
+        draw(ctx) {
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter'; // Glow effect
+
+            this.particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.restore();
+        }
+    }
+
+    class Starfield {
+        constructor() {
+            this.stars = [];
+            for (let i = 0; i < CONFIG.starCount; i++) {
+                this.stars.push({
+                    x: Math.random() * CONFIG.video.width,
+                    y: Math.random() * CONFIG.video.height,
+                    z: Math.random() * 2 + 0.1, // Depth/Speed
+                    size: Math.random() * 2
+                });
+            }
+        }
+
+        update(speed) {
+            this.stars.forEach(star => {
+                // Move star based on z-depth and audio speed
+                star.y += star.z * speed;
+
+                // Reset if off bottom
+                if (star.y > CONFIG.video.height) {
+                    star.y = 0;
+                    star.x = Math.random() * CONFIG.video.width;
+                }
+            });
+        }
+
+        draw(ctx) {
+            ctx.fillStyle = "#ffffff";
+            this.stars.forEach(star => {
+                const brightness = Math.min(1, star.z / 2);
+                ctx.globalAlpha = brightness;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    class Fleet {
+        constructor() {
+            this.ships = [];
+            // Init empty, wait for real init
+        }
+
+        initShips(sampleRate = 44100, minFreq = 100, maxFreq = 2000) {
+            this.ships = []; // Reset ships on re-init
+            const centerX = CONFIG.video.width / 2;
+            const centerY = CONFIG.video.height * 0.9;
+            const fftSize = 512;
+
+            // Logarithmic distribution constants
+            const minLog = Math.log(minFreq);
+            const maxLog = Math.log(maxFreq);
+            const rangeLog = maxLog - minLog;
+
+            for (let i = 0; i < CONFIG.fleetSize; i++) {
+                // Visual Position (Linear X)
+                const xPos = centerX + ((i - CONFIG.fleetSize / 2) * 80);
+
+                // Calculate Frequency Range for this ship (Logarithmic)
+                const t1 = i / CONFIG.fleetSize;
+                const t2 = (i + 1) / CONFIG.fleetSize;
+
+                const f1 = Math.exp(minLog + (rangeLog * t1));
+                const f2 = Math.exp(minLog + (rangeLog * t2));
+
+                // Convert Hz to FFT Bins
+                const startBin = freqToBin(f1, sampleRate, fftSize);
+                const endBin = Math.max(startBin + 1, freqToBin(f2, sampleRate, fftSize));
+
+                // Center Frequency for Label
+                const centerFreq = (f1 + f2) / 2;
+                const noteLabel = getNoteFromFreq(centerFreq);
+
+                this.ships.push({
+                    x: xPos,
+                    y: centerY,
+                    baseY: centerY,
+                    freqRangeStart: startBin,
+                    freqRangeEnd: endBin,
+                    noteLabel: noteLabel,
+                    baseHue: 200 + (i * 5),
+                    color: `hsl(${200 + (i * 5)}, 100%, 50%)`,
+                    thrust: 0
+                });
+            }
+        }
+
+        update(audioData, beat) {
+            this.ships.forEach(ship => {
+                // 1. Calculate Average Volume for this ship's frequency band
+                let sum = 0;
+                let count = 0;
+                for (let j = ship.freqRangeStart; j < ship.freqRangeEnd; j++) {
+                    if (audioData[j] !== undefined) {
+                        sum += audioData[j];
+                        count++;
+                    }
+                }
+                const avgVol = count > 0 ? sum / count : 0;
+                const normalizedVol = avgVol / 255;
+
+                // 2. Dynamic Color Logic
+                const targetHue = (ship.baseHue + (normalizedVol * 120)) % 360;
+                const lightness = 50 + (normalizedVol * 30);
+                ship.color = `hsl(${targetHue}, 100%, ${lightness}%)`;
+
+                // 3. Bounce Logic (Rhythm)
+                // Ship moves UP when loud (thrust forward)
+                const targetY = ship.baseY - (normalizedVol * 300) - (beat ? 50 : 0);
+
+                const dy = targetY - ship.y;
+                ship.y += dy * 0.3; // Stiffer spring
+
+                // 4. Thrust/Flash Logic
+                ship.thrust = normalizedVol;
+            });
+        }
+
+        draw(ctx) {
+            this.ships.forEach(ship => {
+                this.drawSpaceship(ctx, ship.x, ship.y, ship.color, ship.thrust, ship.noteLabel);
+            });
+        }
+
+        drawSpaceship(ctx, x, y, baseColor, intensity, label) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Dynamic Scale based on intensity
+            const scale = 1 + (intensity * 0.3);
+            ctx.scale(scale, scale);
+
+            // Glow
+            const glowAlpha = intensity;
+            ctx.shadowBlur = 20 * intensity;
+            ctx.shadowColor = baseColor;
+
+            // 1. Engine Trail (Thrust) - RED
+            if (intensity > 0.1) {
+                ctx.beginPath();
+                ctx.moveTo(-5, 20);
+                ctx.lineTo(0, 20 + (intensity * 80));
+                ctx.lineTo(5, 20);
+                ctx.fillStyle = `rgba(255, 60, 0, ${intensity})`;
+                ctx.fill();
+            }
+
+            // 2. Ship Body
+            ctx.beginPath();
+            ctx.moveTo(0, -20); // Nose
+            ctx.lineTo(15, 15); // Right Wing
+            ctx.lineTo(0, 5);   // Center Notch
+            ctx.lineTo(-15, 15);// Left Wing
+            ctx.closePath();
+            ctx.fillStyle = '#000';
+            ctx.fill();
+
+            // Outline
+            ctx.lineWidth = 2 + (intensity * 3);
+            ctx.strokeStyle = intensity > 0.6 ? '#ffffff' : baseColor;
+            ctx.stroke();
+
+            // Cockpit
+            ctx.beginPath();
+            ctx.moveTo(0, -5);
+            ctx.lineTo(3, 5);
+            ctx.lineTo(-3, 5);
+            ctx.closePath();
+            ctx.fillStyle = intensity > 0.8 ? '#ff0000' : '#00ffff';
+            ctx.fill();
+
+            // Note Label - Centered on hull
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = `rgba(255, 255, 255, 0.9)`;
+            ctx.font = "bold 10px monospace";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(label, 0, 2);
+
+            ctx.restore();
+        }
+    }
+
+    // --- Analysis Logic ---
+
+    // Simple Autocorrelation for Pitch Detection on a raw buffer chunk
+    function autoCorrelate(buf, sampleRate) {
+        let size = buf.length;
+        let rms = 0;
+        for (let i = 0; i < size; i++) {
+            let val = buf[i];
+            rms += val * val;
+        }
+        rms = Math.sqrt(rms / size);
+        if (rms < 0.01) return -1; // Too quiet
+
+        let r1 = 0, r2 = size - 1, thres = 0.2;
+        for (let i = 0; i < size / 2; i++) {
+            if (Math.abs(buf[i]) < thres) {
+                r1 = i;
+                break;
+            }
+        }
+        for (let i = 1; i < size / 2; i++) {
+            if (Math.abs(buf[size - 1 - i]) < thres) {
+                r2 = size - 1 - i;
+                break;
+            }
+        }
+
+        buf = buf.slice(r1, r2);
+        size = buf.length;
+
+        let c = new Array(size).fill(0);
+        for (let i = 0; i < size; i++) {
+            for (let j = 0; j < size - i; j++) {
+                c[i] = c[i] + buf[j] * buf[j + i];
+            }
+        }
+
+        let d = 0;
+        while (c[d] > c[d + 1]) d++;
+        let maxval = -1, maxpos = -1;
+        for (let i = d; i < size; i++) {
+            if (c[i] > maxval) {
+                maxval = c[i];
+                maxpos = i;
+            }
+        }
+        let T0 = maxpos;
+
+        return sampleRate / T0;
+    }
+
+    function logAnalysis(msg) {
+        const line = document.createElement('div');
+        line.innerText = `> ${msg}`;
+        analysisLog.insertBefore(line, analysisLog.firstChild);
+        if(analysisLog.children.length > 5) analysisLog.lastChild.remove();
+    }
+
+    function updateProgressBar(percent, stepText) {
+        analysisBar.style.width = `${percent}%`;
+        analysisPercent.innerText = `${Math.round(percent)}%`;
+        if (stepText) analysisStep.innerText = stepText;
+    }
+
+    async function analyzeAudioContent(file) {
+        analysisContainer.classList.remove('hidden');
+        analysisStatus.innerText = "ANALYZING SPECTRUM...";
+        analysisStatus.className = "text-yellow-400 animate-pulse";
+        selectFileBtn.disabled = true;
+        startBtn.disabled = true;
+
+        updateProgressBar(5, "BUFFERING STREAM");
+        logAnalysis("INITIALIZING CORE...");
+
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+
+            updateProgressBar(20, "DECODING AUDIO DATA");
+            logAnalysis("DECODING WAVEFORM...");
+
+            const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+
+            const rawData = audioBuffer.getChannelData(0);
+            const sampleRate = audioBuffer.sampleRate;
+
+            const chunksToScan = 50;
+            const chunkSize = 4096;
+            const step = Math.floor(rawData.length / chunksToScan);
+
+            let detectedPitches = [];
+
+            updateProgressBar(30, "SCANNING FREQUENCIES");
+
+            for (let i = 0; i < chunksToScan; i++) {
+                const start = i * step;
+                if (start + chunkSize < rawData.length) {
+                    const chunk = rawData.slice(start, start + chunkSize);
+                    const pitch = autoCorrelate(chunk, sampleRate);
+                    if (pitch !== -1 && pitch > 20 && pitch < 5000) {
+                        detectedPitches.push(pitch);
+                        // Visual log clutter for effect
+                        if (Math.random() > 0.7) logAnalysis(`DETECTED SIGNAL: ${Math.round(pitch)}Hz`);
+                    }
+                }
+
+                // Update Progress
+                const progress = 30 + ((i / chunksToScan) * 70);
+                updateProgressBar(progress, `SCANNING SECTOR ${i}/${chunksToScan}`);
+
+                // Yield to UI thread to allow render
+                await new Promise(r => setTimeout(r, 10));
+            }
+
+            if (detectedPitches.length > 5) {
+                detectedPitches.sort((a, b) => a - b);
+                const lowIdx = Math.floor(detectedPitches.length * 0.05);
+                const highIdx = Math.floor(detectedPitches.length * 0.95);
+
+                state.minFreq = detectedPitches[lowIdx];
+                state.maxFreq = detectedPitches[highIdx];
+
+                const minNote = getNoteFromFreq(state.minFreq);
+                const maxNote = getNoteFromFreq(state.maxFreq);
+
+                analysisStatus.innerText = `RANGE DETECTED: ${minNote} - ${maxNote}`;
+                analysisStatus.className = "text-green-400";
+                logAnalysis(`RANGE LOCKED: ${Math.round(state.minFreq)}-${Math.round(state.maxFreq)}Hz`);
+            } else {
+                state.minFreq = 60;
+                state.maxFreq = 2000;
+                analysisStatus.innerText = "DEFAULT SPECTRUM (Scan Failed)";
+                analysisStatus.className = "text-yellow-600";
+                logAnalysis("SCAN FAILED. REVERTING TO DEFAULT.");
+            }
+
+            updateProgressBar(100, "ANALYSIS COMPLETE");
+            tempCtx.close();
+
+        } catch (e) {
+            console.error(e);
+            analysisStatus.innerText = "ANALYSIS ERROR";
+            analysisStatus.className = "text-red-500";
+            logAnalysis("CRITICAL ERROR IN ANALYSIS.");
+        }
+
+        selectFileBtn.disabled = false;
+        startBtn.disabled = false;
+        startBtn.classList.remove('opacity-50');
+        startBtn.classList.add('shadow-[0_0_20px_#00ffff]');
+    }
+
+    // --- System Logic ---
+
+    const starfield = new Starfield();
+    const fleet = new Fleet();
+    const fireworks = new FireworksSystem();
+
+    function resizeCanvas() {
+        canvas.width = CONFIG.video.width;
+        canvas.height = CONFIG.video.height;
+
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        const scale = Math.min(winW / CONFIG.video.width, winH / CONFIG.video.height);
+
+        canvas.style.width = `${CONFIG.video.width * scale}px`;
+        canvas.style.height = `${CONFIG.video.height * scale}px`;
+    }
+
+    function initAudioEngine() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            state.audioContext = new AudioContext();
+            state.analyser = state.audioContext.createAnalyser();
+            state.analyser.fftSize = 512;
+
+            const bufferLength = state.analyser.frequencyBinCount;
+            state.dataArray = new Uint8Array(bufferLength);
+
+            // Re-initialize fleet with detected range
+            fleet.initShips(state.audioContext.sampleRate, state.minFreq, state.maxFreq);
+
+            if (!state.sourceNode) {
+                state.sourceNode = state.audioContext.createMediaElementSource(audioElement);
+                state.sourceNode.connect(state.analyser);
+                state.analyser.connect(state.audioContext.destination);
+
+                state.recordDest = state.audioContext.createMediaStreamDestination();
+                state.sourceNode.connect(state.recordDest);
+            }
+
+            return true;
+        } catch (e) {
+            console.error(e);
+            showError("Web Audio API not supported.");
+            return false;
+        }
+    }
+
+    function renderLoop() {
+        state.animationId = requestAnimationFrame(renderLoop);
+        state.frameCount++;
+
+        let subBassVol = 0;
+
+        if (state.analyser && !audioElement.paused) {
+            state.analyser.getByteFrequencyData(state.dataArray);
+
+            const subBass = state.dataArray.slice(0, 5).reduce((a, b) => a + b, 0) / 5;
+            subBassVol = subBass / 255;
+            state.beatDetected = subBassVol > 0.75;
+        } else if (state.dataArray && audioElement.paused) {
+            for (let i = 0; i < state.dataArray.length; i++) {
+                state.dataArray[i] = Math.max(0, state.dataArray[i] - 5);
+            }
+        }
+
+        ctx.fillStyle = 'rgba(5, 5, 16, 0.4)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const speed = 2 + (subBassVol * 15);
+        starfield.update(speed);
+        starfield.draw(ctx);
+
+        if (state.dataArray) {
+            fleet.update(state.dataArray, state.beatDetected);
+            fleet.draw(ctx);
+
+            if (subBassVol > 0.8 && state.fireworkCooldown <= 0) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * (canvas.height * 0.5);
+                fireworks.explode(x, y);
+                state.fireworkCooldown = 12;
+            }
+            if (state.fireworkCooldown > 0) state.fireworkCooldown--;
+
+            fireworks.update();
+            fireworks.draw(ctx);
+
+            if (state.debugMode) {
+                drawDebugOverlay(state.dataArray, subBassVol);
+            }
+        }
+
+        if (state.fadeOutStart > 0) {
+            const elapsed = performance.now() - state.fadeOutStart;
+            const duration = 10000;
+            const alpha = Math.min(1, elapsed / duration);
+
+            if (alpha > 0) {
+                ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+    }
+
+    function drawDebugOverlay(data, bassLevel) {
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 20, 0, 0.8)";
+        ctx.fillRect(0, CONFIG.video.height - 250, CONFIG.video.width, 250);
+
+        ctx.strokeStyle = "#00ff00";
+        ctx.lineWidth = 1;
+        ctx.font = "20px monospace";
+        ctx.fillStyle = "#00ff00";
+        ctx.fillText(`DEBUG FFT | BINS: ${data.length}`, 20, CONFIG.video.height - 220);
+        ctx.fillText(`RANGE: ${Math.round(state.minFreq)}Hz - ${Math.round(state.maxFreq)}Hz`, 20, CONFIG.video.height - 190);
+
+        const barWidth = CONFIG.video.width / data.length;
+
+        for (let i = 0; i < data.length; i++) {
+            const val = data[i];
+            const barHeight = (val / 255) * 200;
+            ctx.fillStyle = val > 200 ? "#ff0000" : (val > 100 ? "#ffff00" : "#00ff00");
+            const x = i * barWidth;
+            const y = CONFIG.video.height - barHeight;
+            ctx.fillRect(x, y, barWidth - 1, barHeight);
+        }
+
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+        fleet.ships.forEach((ship, idx) => {
+            const startX = ship.freqRangeStart * barWidth;
+            const endX = ship.freqRangeEnd * barWidth;
+            const w = endX - startX;
+            ctx.strokeRect(startX, CONFIG.video.height - 200, w, 200);
+            if (ship.thrust > 0.1) {
+                ctx.beginPath();
+                ctx.moveTo(startX + w / 2, CONFIG.video.height - 200);
+                ctx.lineTo(ship.x, ship.y);
+                ctx.strokeStyle = `rgba(0, 255, 255, ${ship.thrust * 0.2})`;
+                ctx.stroke();
+            }
+        });
+        ctx.restore();
+    }
+
+    // --- Recording Logic ---
+
+    function setupRecorder() {
+        const canvasStream = canvas.captureStream(60);
+        let finalStream = canvasStream;
+
+        if (state.recordDest) {
+            const audioTracks = state.recordDest.stream.getAudioTracks();
+            if (audioTracks.length > 0) {
+                finalStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+            }
+        }
+
+        const mimeTypes = [
+            'video/webm;codecs=vp9,opus',
+            'video/webm;codecs=vp8,opus',
+            'video/webm'
+        ];
+
+        let selectedMime = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || '';
+
+        if (!selectedMime) {
+            if (MediaRecorder.isTypeSupported('video/webm')) selectedMime = 'video/webm';
+            else {
+                showError("Screen recording not supported.");
+                return;
+            }
+        }
+
+        try {
+            state.mediaRecorder = new MediaRecorder(finalStream, {mimeType: selectedMime, videoBitsPerSecond: 8000000});
+
+            state.mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) state.recordedChunks.push(e.data);
+            };
+
+            state.mediaRecorder.onstop = saveRecording;
+
+        } catch (e) {
+            console.error(e);
+            showError("Recorder initialization failed.");
+        }
+    }
+
+    function toggleRecording() {
+        if (!state.mediaRecorder) setupRecorder();
+        if (!state.mediaRecorder) return;
+
+        if (state.isRecording) {
+            state.mediaRecorder.stop();
+            state.isRecording = false;
+            updateRecordUI(false);
+        } else {
+            state.recordedChunks = [];
+            state.mediaRecorder.start();
+            state.isRecording = true;
+            updateRecordUI(true);
+        }
+    }
+
+    function saveRecording() {
+        const blob = new Blob(state.recordedChunks, {type: 'video/webm'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+        let filename = `galactic-fleet-${timestamp}.webm`;
+        if (state.currentFileName) {
+            const cleanName = state.currentFileName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9\-_ ]/g, "");
+            filename = `galactic-fleet-${cleanName}-${timestamp}.webm`;
+        }
+
+        a.download = filename;
+
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+
+        recStatus.innerText = "SAVED";
+        setTimeout(() => {
+            if (!state.isRecording) recStatus.innerText = "STANDBY";
+        }, 2000);
+    }
+
+    function updateRecordUI(isRecording) {
+        if (isRecording) {
+            recStatus.innerText = "REC";
+            recStatus.classList.add("text-red-500", "animate-pulse");
+            recStatus.classList.remove("text-cyan-600");
+            recIcon.classList.remove("rounded-full");
+            recIcon.classList.add("rounded-none");
+            recordBtn.classList.add("bg-red-900/50");
+        } else {
+            recStatus.innerText = "PROCESSING";
+            recStatus.classList.remove("text-red-500", "animate-pulse");
+            recStatus.classList.add("text-cyan-600");
+            recIcon.classList.add("rounded-full");
+            recIcon.classList.remove("rounded-none");
+            recordBtn.classList.remove("bg-red-900/50");
+        }
+    }
+
+    function showError(msg) {
+        errorMsg.innerText = msg;
+        errorToast.classList.remove('hidden');
+        setTimeout(() => errorToast.classList.add('hidden'), 5000);
+    }
+
+    // Toggle Listeners
+    autoRecToggle.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            autoRecLabel.innerText = "ON";
+            autoRecLabel.classList.remove('text-gray-600');
+            autoRecLabel.classList.add('text-cyan-400');
+        } else {
+            autoRecLabel.innerText = "OFF";
+            autoRecLabel.classList.add('text-gray-600');
+            autoRecLabel.classList.remove('text-cyan-400');
+        }
+    });
+
+    debugToggle.addEventListener('change', (e) => {
+        state.debugMode = e.target.checked;
+        if (e.target.checked) {
+            debugLabel.innerText = "ON";
+            debugLabel.classList.remove('text-gray-600');
+            debugLabel.classList.add('text-fuchsia-400');
+        } else {
+            debugLabel.innerText = "OFF";
+            debugLabel.classList.add('text-gray-600');
+            debugLabel.classList.remove('text-fuchsia-400');
+        }
+    });
+
+    selectFileBtn.addEventListener('click', () => {
+        audioInput.click();
+    });
+
+    audioInput.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            state.currentFileName = file.name;
+            const url = URL.createObjectURL(file);
+            audioElement.src = url;
+            sourceStatus.innerText = "SIGNAL LOCKED";
+            sourceStatus.classList.remove("text-orange-500", "animate-pulse");
+            sourceStatus.classList.add("text-cyan-400");
+            fileInfo.innerText = ">> " + file.name.toUpperCase();
+            fileInfo.classList.remove('hidden');
+
+            // Trigger Analysis
+            analyzeAudioContent(file);
+        }
+    });
+
+    playPauseBtn.addEventListener('click', () => {
+        if (audioElement.paused) {
+            audioElement.play();
+            state.isPlaying = true;
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            state.fadeOutStart = 0;
+            if (state.audioContext && state.audioContext.state === 'suspended') {
+                state.audioContext.resume();
+            }
+        } else {
+            audioElement.pause();
+            state.isPlaying = false;
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+    });
+
+    audioElement.addEventListener('ended', () => {
+        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        state.isPlaying = false;
+        state.fadeOutStart = performance.now();
+
+        if (state.isRecording) {
+            console.log("Audio ended. Fading out...");
+            setTimeout(() => {
+                if (state.isRecording && state.fadeOutStart > 0) {
+                    toggleRecording();
+                    state.fadeOutStart = 0;
+                }
+            }, 10000);
+        }
+    });
+
+    startBtn.addEventListener('click', async () => {
+        startBtn.innerHTML = '<i class="fas fa-cog fa-spin"></i> INITIALIZING...';
+        state.fadeOutStart = 0;
+
+        const audioReady = initAudioEngine();
+        if (!audioReady) return;
+
+        if (state.audioContext.state === 'suspended') {
+            await state.audioContext.resume();
+        }
+
+        try {
+            await audioElement.play();
+            state.isPlaying = true;
+        } catch (e) {
+            console.log("Autoplay blocked");
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+
+        resizeCanvas();
+        renderLoop();
+
+        startModal.classList.add('hidden-visually');
+        setTimeout(() => {
+            startModal.classList.add('hidden');
+            controlsUI.classList.remove('hidden-visually');
+        }, 500);
+
+        setupRecorder();
+
+        if (state.mediaRecorder && !state.isRecording && autoRecToggle.checked) {
+            toggleRecording();
+        }
+    });
+
+    recordBtn.addEventListener('click', toggleRecording);
+    window.addEventListener('resize', resizeCanvas);
+
+</script>
+</body>
+</html>

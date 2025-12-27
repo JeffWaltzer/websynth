@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marching on Lollipop Land // Audio Reactive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Font & Candy Base */
+        body {
+            font-family: 'Varela Round', sans-serif;
+            background: radial-gradient(circle, #fff0f5 0%, #e6e6fa 100%);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            color: #ff69b4;
+            /* Center the canvas stage */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        /* Candy Utilities */
+        .candy-text {
+            color: #ff69b4;
+            text-shadow: 2px 2px 0px #ffffff;
+        }
+
+        .candy-box {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 25px;
+            border: 4px solid #fff;
+            box-shadow: 0 10px 25px rgba(255, 105, 180, 0.3);
+        }
+
+        .candy-btn {
+            background: #fff;
+            border: 2px solid #ff69b4;
+            color: #ff69b4;
+            border-radius: 50px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 #ff69b4;
+        }
+        .candy-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #ff69b4;
+            background: #fff0f5;
+        }
+        .candy-btn:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #ff69b4;
+        }
+        .candy-btn:disabled {
+            border-color: #ddd;
+            color: #ccc;
+            box-shadow: none;
+            cursor: default;
+        }
+
+        /* Bouncy Title Effect */
+        .bouncy-title {
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            font-weight: 800;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: bounce 2s infinite ease-in-out;
+            display: inline-block;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .hidden-visually {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Canvas Positioning for Fixed Aspect Ratio */
+        #visualizerCanvas {
+            box-shadow: 0 0 50px rgba(255, 182, 193, 0.4);
+            border-radius: 20px;
+            background: #fff;
+        }
+    </style>
+    <style>
+        .toolbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #ffecf2;
+            padding: 8px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 1000;
+            border-bottom: 2px solid #ffb7b2;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .toolbar button {
+            background: #fff;
+            color: #ff69b4;
+            border: 2px solid #ffb7b2;
+            border-radius: 15px;
+            padding: 4px 12px;
+            margin: 2px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: 'Varela Round', sans-serif;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .toolbar button:hover {
+            background: #ffb7b2;
+            color: white;
+            transform: translateY(-1px);
+        }
+        .toolbar button:disabled {
+            background: #f0f0f0;
+            color: #ccc;
+            border-color: #eee;
+            cursor: default;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <button onclick="window.location.href='index.html'">Home</button>
+    <button onclick="window.location.href='berlin.html'">Berlin</button>
+    <button onclick="window.location.href='chords.html'">Chords</button>
+    <button onclick="window.location.href='CosmicDrift.html'">Cosmic</button>
+    <button onclick="window.location.href='delay.html'">Delay</button>
+    <button onclick="window.location.href='karplus.html'">Karplus</button>
+    <button onclick="window.location.href='polychain.html'">Polychain</button>
+    <button onclick="window.location.href='pondviz.html'">Pond</button>
+    <button onclick="window.location.href='Psychedelia.html'">Psyche</button>
+    <button onclick="window.location.href='rhythm.html'">Rhythm</button>
+    <button disabled>Shepard</button>
+    <button onclick="window.location.href='starfield.html'">Starfield</button>
+</div>
+
+<!-- Main Canvas Container -->
+<canvas id="visualizerCanvas" class="z-10"></canvas>
+
+<!-- Audio Element (Hidden) -->
+<audio id="audioElement" crossorigin="anonymous"></audio>
+<input type="file" id="audioInput" accept="audio/*" class="hidden">
+
+<!-- UI Overlay: Start Modal -->
+<div id="startModal" class="fixed inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm transition-opacity duration-500">
+    <div class="relative w-[90%] max-w-[500px] p-8 candy-box text-center">
+        <h1 class="bouncy-title mb-6">Lollipop Land</h1>
+
+        <div class="space-y-4 text-sm mb-8 text-pink-500 font-bold">
+            <p>SWEET AUDIO ENGINE INITIALIZATION</p>
+            <div class="flex justify-between border-b border-pink-200 pb-1">
+                <span>MODULE</span><span>STATUS</span>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500">
+                <span>SUGAR SOURCE</span><span id="sourceStatus" class="text-orange-400">WAITING FOR TREATS</span>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500">
+                <span>OUTPUT RES</span><span class="text-green-400">1920x1080 (HD)</span>
+            </div>
+            <!-- Auto Record Toggle -->
+            <div class="flex justify-between text-xs text-gray-500 items-center">
+                <span>AUTO-RECORD</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="autoRecToggle" class="sr-only peer" checked>
+                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pink-400"></div>
+                    <span class="ml-2 font-bold text-pink-400" id="autoRecLabel">ON</span>
+                </label>
+            </div>
+
+            <div id="fileInfo" class="text-xs text-purple-500 mt-2 hidden text-left truncate border-2 border-dashed border-purple-300 bg-purple-50 rounded-lg p-2">
+                <!-- File name goes here -->
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3">
+            <button id="selectFileBtn" class="w-full py-3 text-lg font-bold uppercase tracking-wider candy-btn">
+                <i class="fas fa-folder-open mr-2"></i> Select Tune
+            </button>
+
+            <button id="startButton" class="w-full py-4 text-xl font-bold uppercase tracking-wider candy-btn opacity-50" disabled>
+                <i class="fas fa-play mr-2"></i> Let's March!
+            </button>
+        </div>
+
+        <p class="mt-4 text-xs text-gray-400 font-bold uppercase">Caution: Excessive Sweetness / Happiness</p>
+    </div>
+</div>
+
+<!-- Recording Interface -->
+<div id="controlsUI" class="fixed bottom-8 left-0 w-full z-40 flex justify-center items-center gap-4 hidden-visually transition-opacity duration-500">
+    <div class="bg-white/90 backdrop-blur border-4 border-white p-3 rounded-full flex gap-4 items-center shadow-lg shadow-pink-200">
+
+        <!-- Play/Pause Control -->
+        <button id="playPauseBtn" class="w-12 h-12 rounded-full bg-cyan-400 text-white hover:bg-cyan-500 shadow-md flex items-center justify-center transition-all transform hover:scale-110">
+            <i class="fas fa-pause"></i>
+        </button>
+
+        <div class="h-8 w-px bg-pink-200 mx-2"></div>
+
+        <div id="recStatus" class="text-xs uppercase font-extrabold tracking-widest text-pink-400 w-24 text-center">STANDBY</div>
+
+        <button id="recordBtn" class="w-12 h-12 rounded-full border-4 border-red-400 flex items-center justify-center text-red-500 hover:bg-red-50 hover:shadow-lg transition-all transform hover:scale-110">
+            <div id="recIcon" class="w-4 h-4 bg-red-400 rounded-full"></div>
+        </button>
+    </div>
+</div>
+
+<!-- Error Toast -->
+<div id="errorToast" class="fixed top-4 right-4 z-50 bg-red-100 border-2 border-red-400 text-red-500 px-6 py-4 rounded-xl shadow-xl hidden">
+    <h3 class="font-bold">OH NO!</h3>
+    <p id="errorMsg" class="text-sm">Something went sour.</p>
+</div>
+
+<script>
+    // --- Configuration ---
+    const CONFIG = {
+        tunnel: {
+            ringCount: 30, // Fewer rings for cleaner look
+            baseSpeed: 2,
+            maxSpeed: 15,
+            depth: 3000,
+            resolution: 40, // Polygons
+            gridStep: 1
+        },
+        video: {
+            width: 1920,
+            height: 1080
+        }
+    };
+
+    // --- State Management ---
+    const state = {
+        isRecording: false,
+        isPlaying: false,
+        audioContext: null,
+        analyser: null,
+        dataArray: null,
+        sourceNode: null,
+        recordDest: null,
+        mediaRecorder: null,
+        recordedChunks: [],
+        animationId: null,
+        globalHue: 0,
+        frameCount: 0,
+        currentFileName: null,
+        fadeOutStart: 0 // Timestamp for fade out
+    };
+
+    // --- DOM Elements ---
+    const canvas = document.getElementById('visualizerCanvas');
+    const ctx = canvas.getContext('2d');
+    const startModal = document.getElementById('startModal');
+    const controlsUI = document.getElementById('controlsUI');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const audioInput = document.getElementById('audioInput');
+    const startBtn = document.getElementById('startButton');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const recStatus = document.getElementById('recStatus');
+    const recIcon = document.getElementById('recIcon');
+    const audioElement = document.getElementById('audioElement');
+    const sourceStatus = document.getElementById('sourceStatus');
+    const fileInfo = document.getElementById('fileInfo');
+    const errorToast = document.getElementById('errorToast');
+    const errorMsg = document.getElementById('errorMsg');
+
+    // Auto Record Toggle Elements
+    const autoRecToggle = document.getElementById('autoRecToggle');
+    const autoRecLabel = document.getElementById('autoRecLabel');
+
+    // --- Visualizer Classes ---
+
+    class Tunnel {
+        constructor() {
+            this.rings = [];
+            this.palette = [
+                '#FF69B4', // Hot Pink
+                '#FFD700', // Gold
+                '#00BFFF', // Deep Sky Blue
+                '#ADFF2F', // Green Yellow
+                '#FF4500', // Orange Red
+                '#BA55D3'  // Medium Orchid
+            ];
+            this.initRings();
+            this.rotation = 0;
+            this.pulse = 0; // Beat intensity
+            this.beatTimer = 0;
+            this.targetPetals = 5; // Shape morphing target
+            this.currentPetals = 5; // Current shape state
+            this.rotationSpeed = 0.005;
+
+            // Floating Lollipops
+            this.lollipops = [];
+            this.lollipopTimer = 0;
+        }
+
+        initRings() {
+            for (let i = 0; i < CONFIG.tunnel.ringCount; i++) {
+                this.rings.push({
+                    z: (CONFIG.tunnel.depth / CONFIG.tunnel.ringCount) * i,
+                    colorIndex: i % this.palette.length,
+                    offset: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        update(audioData) {
+            // Audio frequency bands
+            // 0-5 is Sub-bass/Kick
+            const subBass = audioData.slice(0, 5).reduce((a, b) => a + b, 0) / 5 / 255;
+            const bass = audioData.slice(5, 15).reduce((a, b) => a + b, 0) / 10 / 255;
+            const mid = audioData.slice(20, 50).reduce((a, b) => a + b, 0) / 30 / 255;
+
+            // Speed based on general energy
+            const speed = CONFIG.tunnel.baseSpeed + (bass * CONFIG.tunnel.maxSpeed);
+
+            // --- Beat Detection Logic ---
+            if (this.beatTimer > 0) this.beatTimer--;
+
+            // Threshold for beat detection (adjustable)
+            if (subBass > 0.7 && this.beatTimer === 0) {
+                // BEAT HIT!
+                this.pulse = 1.0; // Trigger visual pulse
+                this.beatTimer = 10; // Frames until next beat allowed (debounce)
+
+                // Occasional Variation on strong beats
+                if (Math.random() > 0.7) {
+                    // Change shape (Triangle, Square, Pentagon, Hexagon, etc)
+                    this.targetPetals = Math.floor(Math.random() * 5) + 3;
+                }
+
+                // Occasional Rotation Flip
+                if (Math.random() > 0.9) {
+                    this.rotationSpeed *= -1;
+                }
+            }
+
+            // Decay the pulse
+            this.pulse *= 0.85;
+
+            // Smoothly morph shape
+            this.currentPetals += (this.targetPetals - this.currentPetals) * 0.05;
+
+            // Rotate camera
+            this.rotation += this.rotationSpeed + (mid * 0.02);
+            state.globalHue += 0.5;
+
+            // --- Lollipop Spawning ---
+            this.lollipopTimer++;
+            if (this.lollipopTimer > 150) { // Every ~2.5 seconds
+                this.spawnLollipop();
+                this.lollipopTimer = 0;
+            }
+
+            // Move Lollipops
+            this.lollipops.forEach(pop => {
+                pop.z -= speed * 1.5; // Move faster than walls for parallax
+                pop.rotation += pop.rotSpeed;
+            });
+            // Remove passed lollipops
+            this.lollipops = this.lollipops.filter(pop => pop.z > -500);
+
+            // Move rings
+            this.rings.forEach(ring => {
+                ring.z -= speed;
+                // Add extra jump on beat
+                ring.z -= (this.pulse * 20);
+
+                if (ring.z <= 0) {
+                    ring.z = CONFIG.tunnel.depth;
+                    // Cycle color when it respawns
+                    ring.colorIndex = (ring.colorIndex + 1) % this.palette.length;
+                }
+            });
+
+            // Sort so we draw furthest first (Painters algorithm)
+            this.rings.sort((a, b) => b.z - a.z);
+        }
+
+        spawnLollipop() {
+            this.lollipops.push({
+                x: (Math.random() - 0.5) * CONFIG.video.width * 0.6, // Random spread
+                y: (Math.random() - 0.5) * CONFIG.video.height * 0.6,
+                z: CONFIG.tunnel.depth,
+                rotation: Math.random() * Math.PI * 2,
+                rotSpeed: (Math.random() - 0.5) * 0.05
+            });
+        }
+
+        draw(ctx, w, h, audioData) {
+            const cx = w / 2;
+            const cy = h / 2;
+
+            const treble = audioData[100] / 255;
+
+            // Bouncy Shake + Beat Impact
+            // The shake is now multiplied by the pulse for extra kick impact
+            const shakeAmt = (this.pulse * 40) + (Math.random() * this.pulse * 10);
+            const shakeX = (Math.random() - 0.5) * shakeAmt;
+            const shakeY = (Math.random() - 0.5) * shakeAmt;
+
+            // Flash Background on Beat
+            if (this.pulse > 0.1) {
+                // Additive white flash
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.pulse * 0.3})`;
+                ctx.fillRect(0, 0, w, h);
+            }
+
+            let prevPoints = [];
+
+            // Standard blending for cartoons
+            ctx.globalCompositeOperation = 'source-over';
+
+            // Draw Rings
+            this.rings.forEach((ring, index) => {
+                const factor = 400 / (ring.z + 50); // Perspective projection
+
+                // Beat Expansion: Rings get larger on the beat
+                const beatScale = 1 + (this.pulse * 0.15);
+                const baseRadius = (w > h ? w : h) * factor * 0.5 * beatScale;
+
+                // Don't draw if too close (clipping) or too far
+                if (ring.z <= 0 || factor > 10) return;
+
+                const vertices = CONFIG.tunnel.resolution;
+                let currentPoints = [];
+
+                // Calculate ring shape
+                for (let i = 0; i < vertices; i++) {
+                    const theta = (i / vertices) * 2 * Math.PI + this.rotation + ring.offset;
+
+                    // Shape modulation based on currentPetals
+                    // We use the smoothed currentPetals value for morphing
+                    const flowerEffect = Math.sin(theta * this.currentPetals) * 0.15;
+
+                    const r = baseRadius * (1 + flowerEffect);
+                    const x = (cx + shakeX) + Math.cos(theta) * r;
+                    const y = (cy + shakeY) + Math.sin(theta) * r;
+                    currentPoints.push({x, y});
+                }
+
+                const color = this.palette[ring.colorIndex];
+                const opacity = Math.min(1, (CONFIG.tunnel.depth - ring.z) / (CONFIG.tunnel.depth * 0.2));
+
+                // 1. Draw Connecting Line (The Ring Wire)
+                ctx.beginPath();
+                // Line gets thicker on beat
+                ctx.lineWidth = (8 + (this.pulse * 10)) * factor;
+                ctx.strokeStyle = color;
+                ctx.globalAlpha = opacity;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                currentPoints.forEach((p, i) => {
+                    if (i === 0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                });
+                ctx.closePath();
+                ctx.stroke();
+
+                // 2. Draw "Gumballs" at vertices
+                // Only draw every Nth point to avoid clutter
+                const step = 4;
+                for (let i = 0; i < currentPoints.length; i += step) {
+                    const p = currentPoints[i];
+                    // Dots get huge on beat + treble
+                    const dotSize = 15 * factor * (1 + treble + (this.pulse * 0.5));
+
+                    ctx.beginPath();
+                    ctx.fillStyle = '#fff';
+                    ctx.arc(p.x, p.y, dotSize, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.fillStyle = color;
+                    ctx.arc(p.x, p.y, dotSize * 0.7, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Rim light on beat
+                    if (this.pulse > 0.2) {
+                        ctx.beginPath();
+                        ctx.fillStyle = `rgba(255, 255, 255, ${this.pulse})`;
+                        ctx.arc(p.x - (dotSize * 0.2), p.y - (dotSize * 0.2), dotSize * 0.3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            });
+
+            // Draw Flying Lollipops
+            this.lollipops.forEach(p => {
+                const factor = 400 / (p.z + 50);
+                if (p.z <= 0 && factor > 20) return; // Clip if too close/large
+
+                const x = (cx + shakeX) + (p.x * factor);
+                const y = (cy + shakeY) + (p.y * factor);
+
+                const size = 150 * factor;
+                // Fade in from distance
+                const alpha = Math.min(1, (CONFIG.tunnel.depth - p.z) / 1000);
+
+                if (size > 0 && alpha > 0) {
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(p.rotation);
+                    ctx.globalAlpha = alpha;
+                    ctx.font = `${size}px sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("🍭", 0, 0);
+                    ctx.restore();
+                }
+            });
+
+            // Draw "Singularity" Sun in center (on top of lollipops to hide their spawn)
+            ctx.save();
+            ctx.translate(cx + shakeX, cy + shakeY);
+
+            // Core expands massively on bass/pulse - reduced base size
+            const coreRadius = 20 + (this.pulse * 60);
+
+            // Rotating Sun Rays
+            const rays = 12;
+            ctx.rotate(state.frameCount * 0.02);
+            for(let i=0; i<rays; i++) {
+                ctx.beginPath();
+                ctx.rotate((Math.PI * 2) / rays);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(CONFIG.video.width, 0); // Ray shoots out
+                ctx.lineTo(CONFIG.video.width, 300); // Fixed width ray
+                ctx.lineTo(0, 0);
+
+                // Alternating colors with pulse alpha
+                const alpha = i % 2 === 0 ? 0.2 : 0.2 + (this.pulse * 0.3);
+                ctx.fillStyle = i % 2 === 0 ? `rgba(255, 255, 255, ${alpha})` : `rgba(255, 215, 0, ${alpha})`;
+                ctx.fill();
+            }
+
+            // Central Sun/Candy
+            ctx.beginPath();
+            ctx.arc(0, 0, coreRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFD700'; // Gold center
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = '#fff';
+            ctx.stroke();
+
+            // Spiral on the sun
+            ctx.beginPath();
+            ctx.strokeStyle = '#ff69b4';
+            ctx.lineWidth = 8;
+            for(let i=0; i<50; i++) {
+                const angle = 0.5 * i;
+                const r = 2 * i * (1 + this.pulse); // Expand spiral with beat
+                if (r > coreRadius) break;
+                const x = Math.cos(angle + state.frameCount*0.1) * r;
+                const y = Math.sin(angle + state.frameCount*0.1) * r;
+                if (i===0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            ctx.restore();
+
+            // Reset standard drawing state
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    // --- System Logic ---
+
+    const tunnel = new Tunnel();
+
+    function resizeCanvas() {
+        // Force High Resolution for Video
+        canvas.width = CONFIG.video.width;
+        canvas.height = CONFIG.video.height;
+
+        // Calculate Scale to Fit Window (Letterboxing/Contain)
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        const scale = Math.min(winW / CONFIG.video.width, winH / CONFIG.video.height);
+
+        canvas.style.width = `${CONFIG.video.width * scale}px`;
+        canvas.style.height = `${CONFIG.video.height * scale}px`;
+    }
+
+    function initAudioEngine() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            state.audioContext = new AudioContext();
+            state.analyser = state.audioContext.createAnalyser();
+            state.analyser.fftSize = 256;
+
+            const bufferLength = state.analyser.frequencyBinCount;
+            state.dataArray = new Uint8Array(bufferLength);
+
+            if (!state.sourceNode) {
+                state.sourceNode = state.audioContext.createMediaElementSource(audioElement);
+                state.sourceNode.connect(state.analyser);
+                state.analyser.connect(state.audioContext.destination);
+
+                // Create destination for recorder
+                state.recordDest = state.audioContext.createMediaStreamDestination();
+                state.sourceNode.connect(state.recordDest);
+            }
+
+            return true;
+        } catch (e) {
+            console.error(e);
+            showError("Web Audio API not supported.");
+            return false;
+        }
+    }
+
+    function renderLoop() {
+        state.animationId = requestAnimationFrame(renderLoop);
+        state.frameCount++;
+
+        if (state.analyser && !audioElement.paused) {
+            state.analyser.getByteFrequencyData(state.dataArray);
+        } else if (state.dataArray && audioElement.paused) {
+            for(let i=0; i<state.dataArray.length; i++) {
+                state.dataArray[i] = Math.max(0, state.dataArray[i] - 5);
+            }
+        }
+
+        // Candy Clear (Soft Trail)
+        // Instead of black fade, we fade to our pastel background color
+        // This creates trails of the darker elements
+        ctx.fillStyle = 'rgba(255, 245, 250, 0.4)'; // Very light pink fade
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (state.dataArray) {
+            tunnel.update(state.dataArray);
+            tunnel.draw(ctx, canvas.width, canvas.height, state.dataArray);
+        }
+
+        // Fade Out Overlay (active when song ends)
+        if (state.fadeOutStart > 0) {
+            const elapsed = performance.now() - state.fadeOutStart;
+            const duration = 10000; // 10 seconds
+            const alpha = Math.min(1, elapsed / duration);
+
+            if (alpha > 0) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+    }
+
+    // --- Recording Logic ---
+
+    function setupRecorder() {
+        // Capture the canvas stream
+        const canvasStream = canvas.captureStream(60);
+        let finalStream = canvasStream;
+
+        // Mix in audio
+        if (state.recordDest) {
+            const audioTracks = state.recordDest.stream.getAudioTracks();
+            if (audioTracks.length > 0) {
+                finalStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+            }
+        }
+
+        const mimeTypes = [
+            'video/webm;codecs=vp9,opus',
+            'video/webm;codecs=vp8,opus',
+            'video/webm'
+        ];
+
+        let selectedMime = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || '';
+
+        if (!selectedMime) {
+            if (MediaRecorder.isTypeSupported('video/webm')) selectedMime = 'video/webm';
+            else {
+                showError("Screen recording not supported.");
+                return;
+            }
+        }
+
+        try {
+            // High bitrate for 1080p content
+            state.mediaRecorder = new MediaRecorder(finalStream, { mimeType: selectedMime, videoBitsPerSecond: 8000000 });
+
+            state.mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) state.recordedChunks.push(e.data);
+            };
+
+            state.mediaRecorder.onstop = saveRecording;
+
+        } catch (e) {
+            console.error(e);
+            showError("Recorder initialization failed.");
+        }
+    }
+
+    function toggleRecording() {
+        if (!state.mediaRecorder) setupRecorder();
+        if (!state.mediaRecorder) return;
+
+        if (state.isRecording) {
+            state.mediaRecorder.stop();
+            state.isRecording = false;
+            updateRecordUI(false);
+        } else {
+            state.recordedChunks = [];
+            state.mediaRecorder.start();
+            state.isRecording = true;
+            updateRecordUI(true);
+        }
+    }
+
+    function saveRecording() {
+        const blob = new Blob(state.recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+        let filename = `lollipop-land-${timestamp}.webm`;
+        if (state.currentFileName) {
+            // Remove extension and special characters for a clean filename
+            const cleanName = state.currentFileName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9\-_ ]/g, "");
+            filename = `lollipop-land-${cleanName}-${timestamp}.webm`;
+        }
+
+        a.download = filename;
+
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+
+        recStatus.innerText = "YAY!";
+        setTimeout(() => {
+            if(!state.isRecording) recStatus.innerText = "STANDBY";
+        }, 2000);
+    }
+
+    function updateRecordUI(isRecording) {
+        if (isRecording) {
+            recStatus.innerText = "REC";
+            recStatus.classList.add("text-red-500", "animate-pulse");
+            recStatus.classList.remove("text-pink-400");
+            recIcon.classList.remove("rounded-full");
+            recIcon.classList.add("rounded-sm"); // Square stops recording
+            recordBtn.classList.add("bg-red-50");
+        } else {
+            recStatus.innerText = "PROCESSING";
+            recStatus.classList.remove("text-red-500", "animate-pulse");
+            recStatus.classList.add("text-pink-400");
+            recIcon.classList.add("rounded-full");
+            recIcon.classList.remove("rounded-sm");
+            recordBtn.classList.remove("bg-red-50");
+        }
+    }
+
+    function showError(msg) {
+        errorMsg.innerText = msg;
+        errorToast.classList.remove('hidden');
+        setTimeout(() => errorToast.classList.add('hidden'), 5000);
+    }
+
+    // Toggle Listener
+    autoRecToggle.addEventListener('change', (e) => {
+        if(e.target.checked) {
+            autoRecLabel.innerText = "ON";
+            autoRecLabel.classList.remove('text-gray-400');
+            autoRecLabel.classList.add('text-pink-400');
+        } else {
+            autoRecLabel.innerText = "OFF";
+            autoRecLabel.classList.add('text-gray-400');
+            autoRecLabel.classList.remove('text-pink-400');
+        }
+    });
+
+    selectFileBtn.addEventListener('click', () => {
+        audioInput.click();
+    });
+
+    audioInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            state.currentFileName = file.name;
+            const url = URL.createObjectURL(file);
+            audioElement.src = url;
+            sourceStatus.innerText = "SWEET!";
+            sourceStatus.classList.remove("text-orange-400");
+            sourceStatus.classList.add("text-pink-500", "font-bold");
+            fileInfo.innerText = "♪ " + file.name;
+            fileInfo.classList.remove('hidden');
+            startBtn.disabled = false;
+            startBtn.classList.remove('opacity-50');
+            startBtn.classList.add('shadow-lg', 'transform', 'hover:scale-105');
+        }
+    });
+
+    playPauseBtn.addEventListener('click', () => {
+        if (audioElement.paused) {
+            audioElement.play();
+            state.isPlaying = true;
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            state.fadeOutStart = 0; // Reset fade if playing again
+            if(state.audioContext && state.audioContext.state === 'suspended') {
+                state.audioContext.resume();
+            }
+        } else {
+            audioElement.pause();
+            state.isPlaying = false;
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+    });
+
+    // Auto Stop Logic
+    audioElement.addEventListener('ended', () => {
+        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        state.isPlaying = false;
+
+        // Start Fade Out
+        state.fadeOutStart = performance.now();
+
+        if (state.isRecording) {
+            console.log("Audio ended. Fading out for 10 seconds...");
+            setTimeout(() => {
+                // Ensure we are still recording and haven't interrupted the fade
+                if (state.isRecording && state.fadeOutStart > 0) {
+                    toggleRecording();
+                    state.fadeOutStart = 0; // Reset after stop
+                }
+            }, 10000);
+        }
+    });
+
+    startBtn.addEventListener('click', async () => {
+        startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MARCHING...';
+        state.fadeOutStart = 0;
+
+        const audioReady = initAudioEngine();
+        if (!audioReady) return;
+
+        if (state.audioContext.state === 'suspended') {
+            await state.audioContext.resume();
+        }
+
+        try {
+            await audioElement.play();
+            state.isPlaying = true;
+        } catch(e) {
+            console.log("Autoplay blocked, user must interact via controls");
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+
+        resizeCanvas();
+        renderLoop();
+
+        startModal.classList.add('hidden-visually');
+        setTimeout(() => {
+            startModal.classList.add('hidden');
+            controlsUI.classList.remove('hidden-visually');
+        }, 500);
+
+        setupRecorder();
+
+        // Check toggle before starting recording
+        if (state.mediaRecorder && !state.isRecording && autoRecToggle.checked) {
+            toggleRecording();
+        }
+    });
+
+    recordBtn.addEventListener('click', toggleRecording);
+    window.addEventListener('resize', resizeCanvas);
+
+</script>
+</body>
+</html>
