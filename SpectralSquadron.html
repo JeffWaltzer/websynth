@@ -259,6 +259,8 @@
     const CONFIG = {
         fleetSize: 20, // Number of ships
         starCount: 200,
+        maxMissiles: 100, // Memory limit
+        maxParticles: 300, // Memory limit
         video: {
             width: 1920,
             height: 1080
@@ -284,7 +286,8 @@
         debugMode: false,
         fireworkCooldown: 0,
         minFreq: 100, // Default fallback
-        maxFreq: 2000 // Default fallback
+        maxFreq: 2000, // Default fallback
+        trackPeakVolume: 0.8 // Calibrated from analysis
     };
 
     // --- DOM Elements ---
@@ -340,9 +343,33 @@
     class FireworksSystem {
         constructor() {
             this.particles = [];
+            this.pool = [];
+        }
+
+        spawn(x, y, vx, vy, color, size, decay) {
+            // Get from pool or create new object
+            let p;
+            if (this.pool.length > 0) {
+                p = this.pool.pop();
+            } else {
+                p = {}; // New object only if pool is empty
+            }
+
+            // Initialize/Reset properties
+            p.x = x; p.y = y;
+            p.vx = vx; p.vy = vy;
+            p.life = 1.0;
+            p.decay = decay;
+            p.color = color;
+            p.size = size;
+
+            this.particles.push(p);
         }
 
         explode(x, y) {
+            // Memory guard
+            if (this.particles.length > CONFIG.maxParticles) return;
+
             const particleCount = 20 + Math.random() * 30; // Random size
             const baseHue = Math.random() * 360;
 
@@ -350,22 +377,44 @@
                 const angle = Math.random() * Math.PI * 2;
                 const speed = Math.random() * 6 + 2;
 
-                this.particles.push({
-                    x: x,
-                    y: y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    life: 1.0,
-                    decay: Math.random() * 0.02 + 0.02,
-                    color: `hsl(${baseHue + (Math.random() * 60 - 30)}, 100%, 60%)`,
-                    size: Math.random() * 3 + 1
-                });
+                this.spawn(
+                    x, y,
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed,
+                    `hsl(${baseHue + (Math.random() * 60 - 30)}, 100%, 60%)`,
+                    Math.random() * 3 + 1,
+                    Math.random() * 0.02 + 0.02
+                );
+            }
+        }
+
+        createSparks(x, y) {
+            // Strict memory guard for sparks to prevent overload
+            if (this.particles.length > CONFIG.maxParticles) return;
+
+            const count = 8 + Math.random() * 8; // Increased count slightly
+            for (let i = 0; i < count; i++) {
+                // Radial burst for a "jam" effect
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 2;
+
+                this.spawn(
+                    x, y,
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed,
+                    Math.random() > 0.5 ? '#ffff00' : '#ff4400', // Yellow/Red-Orange
+                    Math.random() * 3 + 2, // Bigger sparks (2 to 5px)
+                    0.04 + Math.random() * 0.04 // Slightly longer life
+                );
             }
         }
 
         update() {
-            for (let i = this.particles.length - 1; i >= 0; i--) {
-                const p = this.particles[i];
+            let activeCount = 0;
+            for (let i = 0; i < this.particles.length; i++) {
+                let p = this.particles[i];
+
+                // Physics update
                 p.x += p.vx;
                 p.y += p.vy;
                 p.vy += 0.1; // Gravity
@@ -373,10 +422,19 @@
                 p.vy *= 0.95;
                 p.life -= p.decay;
 
-                if (p.life <= 0) {
-                    this.particles.splice(i, 1);
+                if (p.life > 0) {
+                    // Keep active
+                    if (i !== activeCount) {
+                        this.particles[activeCount] = p;
+                    }
+                    activeCount++;
+                } else {
+                    // Return to pool
+                    this.pool.push(p);
                 }
             }
+            // Trim array to active count
+            this.particles.length = activeCount;
         }
 
         draw(ctx) {
@@ -437,13 +495,18 @@
     class Fleet {
         constructor() {
             this.ships = [];
+            this.missiles = [];
+            this.missilePool = []; // Object pool for missiles
             // Init empty, wait for real init
         }
 
         initShips(sampleRate = 44100, minFreq = 100, maxFreq = 2000) {
             this.ships = []; // Reset ships on re-init
+            // Don't reset missile pool, keep it for reuse
+            this.missiles = []; // Clear active missiles
+
             const centerX = CONFIG.video.width / 2;
-            const centerY = CONFIG.video.height * 0.9;
+            const centerY = CONFIG.video.height * 0.95;
             const fftSize = 512;
 
             // Logarithmic distribution constants
@@ -479,13 +542,15 @@
                     noteLabel: noteLabel,
                     baseHue: 200 + (i * 5),
                     color: `hsl(${200 + (i * 5)}, 100%, 50%)`,
-                    thrust: 0
+                    thrust: 0,
+                    prevVol: 0,
+                    fireCooldown: 0
                 });
             }
         }
 
-        update(audioData, beat) {
-            this.ships.forEach(ship => {
+        update(audioData, beat, fireworksSystem) {
+            this.ships.forEach((ship, index) => {
                 // 1. Calculate Average Volume for this ship's frequency band
                 let sum = 0;
                 let count = 0;
@@ -506,16 +571,117 @@
                 // 3. Bounce Logic (Rhythm)
                 // Ship moves UP when loud (thrust forward)
                 const targetY = ship.baseY - (normalizedVol * 300) - (beat ? 50 : 0);
-
                 const dy = targetY - ship.y;
                 ship.y += dy * 0.3; // Stiffer spring
 
-                // 4. Thrust/Flash Logic
+                // 4. Missile Trigger (Note Struck Logic)
+                if (ship.fireCooldown > 0) ship.fireCooldown--;
+
+                // Sensitivity adjustments
+                const isBass = index < 5; // First 5 ships are low freq
+
+                // Threshold based on peak volume
+                const sensitivity = isBass ? 0.45 : 0.5;
+                const triggerThreshold = state.trackPeakVolume * sensitivity;
+
+                const attack = normalizedVol - ship.prevVol;
+
+                // Attack requirement is key for "musicality"
+                const attackThresh = isBass ? 0.10 : 0.06;
+
+                // Trigger conditions:
+                const hitNote = normalizedVol > triggerThreshold && attack > attackThresh;
+                const hitBeat = isBass && beat && normalizedVol > 0.6;
+
+                if (ship.fireCooldown === 0 && (hitNote || hitBeat)) {
+                    // Bass Misfire Logic: 33% chance to fail/jam
+                    const misfire = isBass && Math.random() < 0.33;
+
+                    if (!misfire) {
+                        // Pass normalizedVol (intensity) to fireMissile
+                        this.fireMissile(ship, normalizedVol);
+                    } else {
+                        // Create sparks on misfire at the NOSE of the ship
+                        if (fireworksSystem) {
+                            fireworksSystem.createSparks(ship.x, ship.y - 20);
+                        }
+                    }
+
+                    // Cooldown tuned for rhythm:
+                    ship.fireCooldown = isBass ? 15 : 10;
+                }
+
+                ship.prevVol = normalizedVol;
                 ship.thrust = normalizedVol;
             });
+
+            // Update Missiles with Pooling
+            let activeCount = 0;
+            for (let i = 0; i < this.missiles.length; i++) {
+                let m = this.missiles[i];
+
+                // Update Physics
+                m.y -= m.speed;
+                m.life -= 0.01;
+
+                if (m.y >= -50 && m.life > 0) {
+                    // Keep Active
+                    if (i !== activeCount) {
+                        this.missiles[activeCount] = m;
+                    }
+                    activeCount++;
+                } else {
+                    // Return to Pool
+                    this.missilePool.push(m);
+                }
+            }
+            // Truncate active array
+            this.missiles.length = activeCount;
+        }
+
+        fireMissile(ship, intensity) {
+            // Memory guard
+            if (this.missiles.length > CONFIG.maxMissiles) return;
+
+            // Calculate speed based on volume intensity
+            // Louder notes = Faster missiles
+            const baseSpeed = 15;
+            const velocityBonus = intensity * 25; // Add up to 25 extra speed
+
+            // Get from pool
+            let m;
+            if (this.missilePool.length > 0) {
+                m = this.missilePool.pop();
+            } else {
+                m = {}; // Create new
+            }
+
+            m.x = ship.x;
+            m.y = ship.y - 20;
+            m.speed = baseSpeed + velocityBonus + Math.random() * 5;
+            m.color = ship.color;
+            m.life = 1.0;
+
+            this.missiles.push(m);
         }
 
         draw(ctx) {
+            // Draw Missiles
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            this.missiles.forEach(m => {
+                ctx.beginPath();
+                ctx.moveTo(m.x, m.y);
+                ctx.lineTo(m.x, m.y + 30);
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = m.color;
+                ctx.shadowColor = m.color;
+                ctx.shadowBlur = 10;
+                ctx.stroke();
+            });
+            ctx.restore();
+
+            // Draw Ships
             this.ships.forEach(ship => {
                 this.drawSpaceship(ctx, ship.x, ship.y, ship.color, ship.thrust, ship.noteLabel);
             });
@@ -661,9 +827,11 @@
             logAnalysis("DECODING WAVEFORM...");
 
             const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+            // This is the heavy operation
+            let audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
 
-            const rawData = audioBuffer.getChannelData(0);
+            // Access raw data
+            let rawData = audioBuffer.getChannelData(0);
             const sampleRate = audioBuffer.sampleRate;
 
             const chunksToScan = 50;
@@ -671,6 +839,7 @@
             const step = Math.floor(rawData.length / chunksToScan);
 
             let detectedPitches = [];
+            let maxAmplitude = 0;
 
             updateProgressBar(30, "SCANNING FREQUENCIES");
 
@@ -678,11 +847,16 @@
                 const start = i * step;
                 if (start + chunkSize < rawData.length) {
                     const chunk = rawData.slice(start, start + chunkSize);
+
+                    // Pitch Detect
                     const pitch = autoCorrelate(chunk, sampleRate);
                     if (pitch !== -1 && pitch > 20 && pitch < 5000) {
                         detectedPitches.push(pitch);
-                        // Visual log clutter for effect
-                        if (Math.random() > 0.7) logAnalysis(`DETECTED SIGNAL: ${Math.round(pitch)}Hz`);
+                    }
+
+                    // Volume Peak Detect (for missile sensitivity)
+                    for(let k=0; k<chunk.length; k+=10) { // sparse sampling for speed
+                        if(Math.abs(chunk[k]) > maxAmplitude) maxAmplitude = Math.abs(chunk[k]);
                     }
                 }
 
@@ -693,6 +867,10 @@
                 // Yield to UI thread to allow render
                 await new Promise(r => setTimeout(r, 10));
             }
+
+            // Set global peak volume for sensitivity
+            state.trackPeakVolume = Math.max(0.1, maxAmplitude); // Avoid 0
+            logAnalysis(`PEAK AMPLITUDE: ${state.trackPeakVolume.toFixed(2)}`);
 
             if (detectedPitches.length > 5) {
                 detectedPitches.sort((a, b) => a - b);
@@ -717,6 +895,12 @@
             }
 
             updateProgressBar(100, "ANALYSIS COMPLETE");
+
+            // --- MEMORY CLEANUP ---
+            // Explicitly detach large buffers to prevent Out Of Memory
+            audioBuffer = null;
+            rawData = null;
+
             tempCtx.close();
 
         } catch (e) {
@@ -735,8 +919,8 @@
     // --- System Logic ---
 
     const starfield = new Starfield();
-    const fleet = new Fleet();
     const fireworks = new FireworksSystem();
+    const fleet = new Fleet();
 
     function resizeCanvas() {
         canvas.width = CONFIG.video.width;
@@ -806,7 +990,7 @@
         starfield.draw(ctx);
 
         if (state.dataArray) {
-            fleet.update(state.dataArray, state.beatDetected);
+            fleet.update(state.dataArray, state.beatDetected, fireworks);
             fleet.draw(ctx);
 
             if (subBassVol > 0.8 && state.fireworkCooldown <= 0) {
@@ -907,7 +1091,11 @@
         }
 
         try {
-            state.mediaRecorder = new MediaRecorder(finalStream, {mimeType: selectedMime, videoBitsPerSecond: 8000000});
+            // Increased bitrate to 25Mbps for sharp 1080p recording
+            state.mediaRecorder = new MediaRecorder(finalStream, {
+                mimeType: selectedMime,
+                videoBitsPerSecond: 15000000
+            });
 
             state.mediaRecorder.ondataavailable = (e) => {
                 if (e.data.size > 0) state.recordedChunks.push(e.data);
@@ -1085,7 +1273,7 @@
         try {
             await audioElement.play();
             state.isPlaying = true;
-        } catch (e) {
+        } catch(e) {
             console.log("Autoplay blocked");
             playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
         }
