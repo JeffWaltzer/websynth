@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crystal Ocean - Voyage</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #004d6e; /* Ocean Blue */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #e0f7fa;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI OVERLAY STYLES */
+        #overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            padding: 40px;
+            text-align: center;
+            background: rgba(0, 60, 90, 0.65); /* Lighter blue glass */
+            border: 1px solid #4dd0e1; /* Brighter Cyan glow */
+            box-shadow: 0 0 40px rgba(77, 208, 225, 0.3), inset 0 0 30px rgba(77, 208, 225, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(12px);
+            max-width: 500px;
+            width: 90%;
+            transition: opacity 0.5s;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin: 0 0 10px 0;
+            color: #fff;
+            text-shadow: 0 0 15px #4dd0e1;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            font-weight: 300;
+        }
+
+        h2 {
+            font-size: 0.9rem;
+            color: #b2ebf2;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid rgba(77, 208, 225, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 40, 70, 0.4);
+        }
+
+        .btn {
+            background: rgba(77, 208, 225, 0.1);
+            color: #4dd0e1;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 15px 30px;
+            border: 1px solid #4dd0e1;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(77, 208, 225, 0.1);
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #4dd0e1;
+            color: #00334d;
+            box-shadow: 0 0 30px rgba(77, 208, 225, 0.6);
+            transform: translateY(-2px);
+        }
+
+        #fileInput { display: none; }
+
+        /* Recording UI */
+        #recordContainer {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 150;
+            display: none;
+            flex-direction: row;
+            gap: 15px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .rec-btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: sans-serif;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        #recordButton {
+            background: rgba(255, 80, 80, 0.9);
+            color: white;
+            box-shadow: 0 0 20px rgba(255, 80, 80, 0.4);
+            min-width: 180px;
+        }
+
+        #recordButton:hover { background: #ff6b6b; }
+
+        #recordButton.recording {
+            background: #ff3333;
+            animation: pulseRed 1.5s infinite;
+        }
+
+        #leaveButton {
+            background: rgba(77, 208, 225, 0.2);
+            color: #4dd0e1;
+            border: 1px solid rgba(77, 208, 225, 0.4);
+            backdrop-filter: blur(5px);
+        }
+        #leaveButton:hover { background: #4dd0e1; color: #00334d; }
+
+        @keyframes pulseRed {
+            0% { box-shadow: 0 0 0 0 rgba(255, 50, 50, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 50, 50, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 50, 50, 0); }
+        }
+
+        #fullscreenBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            background: rgba(0, 40, 70, 0.6);
+            border: 1px solid rgba(77, 208, 225, 0.4);
+            border-radius: 50%;
+            color: #4dd0e1;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 150;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        #fullscreenBtn:hover {
+            background: #4dd0e1;
+            color: #00334d;
+            box-shadow: 0 0 15px #4dd0e1;
+        }
+
+        #message { margin-top: 15px; color: #80deea; font-size: 0.9rem; min-height: 1.2em; font-style: italic;}
+
+        /* Custom Checkbox */
+        .checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; color: #b2ebf2; margin-top: 15px; font-size: 0.9rem;}
+        input[type="checkbox"] { accent-color: #4dd0e1; width: 16px; height: 16px; cursor: pointer; }
+
+        /* Subtle Vignette for screen */
+        .vignette {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle, transparent 50%, #002244 100%); /* Deep Blue Vignette */
+            z-index: 10;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+<div class="vignette"></div>
+
+<button id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
+
+<div id="recordContainer">
+    <button id="recordButton" class="rec-btn">Start Capture</button>
+    <button id="leaveButton" class="rec-btn">Reset Voyage</button>
+</div>
+
+<div id="overlay">
+    <h1>Crystal Ocean</h1>
+    <h2>Audio Reactive Voyage</h2>
+    <div class="control-group">
+        <p style="margin-top:0; color:#b2ebf2; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 15px;">INITIALIZE SONAR SYSTEM</p>
+        <button id="selectFileBtn" class="btn">Upload Audio</button>
+        <input type="file" id="fileInput" accept="audio/*">
+    </div>
+
+    <div class="checkbox-wrapper">
+        <input type="checkbox" id="record4k">
+        <label for="record4k">Render in 4K (High GPU)</label>
+    </div>
+
+    <div class="checkbox-wrapper">
+        <input type="checkbox" id="autoRecord">
+        <label for="autoRecord">Auto-capture on play</label>
+    </div>
+
+    <div id="message"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- FRAGMENT SHADER: THE OCEAN ENGINE -->
+<script type="x-shader/x-fragment" id="fragShader">
+    uniform float uTime;
+    uniform vec2 uResolution;
+    uniform float uBass;
+    uniform float uMid;
+    uniform float uHigh;
+    uniform float uTotalRotation;
+
+    #define PI 3.14159265359
+
+    // More varied palette (Cosine based)
+    // Allows for blues, purples, and aquas
+    vec3 palette( in float t ) {
+        vec3 a = vec3(0.5, 0.5, 0.5);
+        vec3 b = vec3(0.5, 0.5, 0.5);
+        vec3 c = vec3(1.0, 1.0, 1.0);
+        // Phase shifted for a broader spectrum (Blue/Purple/Green)
+        vec3 d = vec3(0.30, 0.20, 0.20);
+
+        return a + b*cos( 6.28318*(c*t+d) );
+    }
+
+    // 2D Rotation Matrix
+    mat2 rot(float a) {
+        float s = sin(a);
+        float c = cos(a);
+        return mat2(c, -s, s, c);
+    }
+
+    void main() {
+        vec2 uv = (gl_FragCoord.xy * 2.0 - uResolution.xy) / uResolution.y;
+        vec2 uv0 = uv;
+
+        // --- CAMERA MOTION ---
+        // Add a "swimming" sway
+        uv += vec2(sin(uTime * 0.5), cos(uTime * 0.4)) * 0.03;
+
+        // Audio Reactive kick (zoom slightly on beat)
+        uv *= 1.0 - (uBass * 0.05);
+
+        // --- SPIRAL VORTEX TRANSFORM ---
+        // Twist space based on log distance (logarithmic spiral)
+        float rLen = length(uv);
+        uv *= rot(uTotalRotation * 0.2 + 2.0 * log(rLen + 0.05));
+
+        vec3 finalColor = vec3(0.0);
+
+        // Loop for Fractal Complexity (2 Layers)
+        for(float i = 1.0; i <= 2.0; i++) {
+
+            // Sub-coordinate system for this layer
+            vec2 uvi = uv * i; // Scale up
+
+            float r = length(uvi);
+            float angle = atan(uvi.y, uvi.x);
+
+            // --- FORWARD TRAVEL LOGIC ---
+            // Create a perspective Z coordinate: 1/r
+            // This maps center to infinity and edge to near
+            float z = 1.0 / (r + 0.05);
+
+            // Travel Speed (base speed + audio boost)
+            // Moving in +z direction means features flow from center (high z) to edge (low z)
+            // So we add time to the phase.
+            float travelSpeed = uTime * 3.0 * i + (uBass * uTime * 0.1);
+
+            // --- COMPLEX FLUID DISTORTION ---
+            float fluid = 0.0;
+
+            // Main Travel Wave (Perspective Tunnel)
+            // Using sin(z + time) creates forward motion
+            fluid += sin(z * 3.0 + travelSpeed) * 0.8;
+
+            // Spiral interference (Rotational drag)
+            fluid += sin(angle * (5.0 + i) + z * 1.0) * 0.5;
+
+            // High frequency side-detail
+            fluid += sin(uvi.x * 10.0 + uTime) * 0.3;
+            fluid += cos(uvi.y * 10.0 + uTime) * 0.3;
+
+            // Audio Distortion
+            fluid += (sin(r * 20.0) * uBass * 0.5);
+
+            // Distance Field / Rings
+            // We use the fluid value to carve out the rings
+            float depth = 0.12 / abs(fluid + 0.1);
+
+            // Base Color Calculation
+            // Cycle color based on depth to emphasize the travel
+            vec3 col = palette(z * 0.2 + fluid * 0.1 + uTime * 0.2);
+
+            // Base Underwater Tint
+            col = mix(col, vec3(0.0, 0.1, 0.3), 0.3);
+
+            // --- DYNAMIC AUDIO COLOR INJECTION ---
+
+            // Bass: Adds Deep Violet/Magenta
+            col.r += uBass * 0.6 * smoothstep(0.0, 0.5, sin(r*10.0));
+            col.b += uBass * 0.2;
+
+            // Mids: Adds vibrant Neon Green/Teal
+            col.g += uMid * 0.7;
+
+            // Highs: Golden Sunbeams / White Sparkles at the center
+            float centerGlow = 1.0 / (r * 5.0 + 0.1);
+            col += vec3(1.0, 0.9, 0.6) * uHigh * centerGlow;
+
+            // Accumulate
+            // Fade out distant layers slightly (fog)
+            finalColor += col * depth * (1.0/i);
+        }
+
+        // --- POST PROCESS ---
+
+        // Depth Fog - darker in the center (deep water)
+        float fog = smoothstep(0.0, 1.5, length(uv0));
+        // Fade edges to dark blue
+        finalColor = mix(vec3(0.0, 0.05, 0.1), finalColor, fog);
+
+        // Brightness adjustments (Gamma)
+        finalColor = pow(finalColor, vec3(0.9));
+
+        // Add a subtle center glow (The "Light" at end of tunnel)
+        finalColor += vec3(0.5, 0.8, 1.0) * (0.05 / length(uv0));
+
+        gl_FragColor = vec4(finalColor, 1.0);
+    }
+</script>
+
+<script>
+    (function(){
+        // --- CONFIG & STATE ---
+        let audioContext, analyser, dataArray, sourceNode;
+        let renderer, scene, camera, material, mesh;
+        let isRunning = false;
+        let currentAudioFile = null;
+
+        // BPM / Audio State
+        let lastBeatTime = 0;
+        let beatThreshold = 0.4;
+        let detectedBPM = 0;
+        let beatIntervals = [];
+        let accumulatedRotation = 0;
+        let smoothBPM = 60;
+
+        // Recording
+        let mediaRecorder;
+        let recordedChunks = [];
+        let isRecording = false;
+        let was4k = false;
+
+        // Elements
+        const container = document.getElementById('canvas-container');
+        const overlay = document.getElementById('overlay');
+        const fileInput = document.getElementById('fileInput');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const messageDiv = document.getElementById('message');
+        const recordBtn = document.getElementById('recordButton');
+        const leaveBtn = document.getElementById('leaveButton');
+        const recordContainer = document.getElementById('recordContainer');
+        const autoRecordCheck = document.getElementById('autoRecord');
+        const record4kCheck = document.getElementById('record4k');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+        // --- THREE.JS SETUP ---
+        function initThree() {
+            scene = new THREE.Scene();
+            camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            const geometry = new THREE.PlaneGeometry(2, 2);
+
+            material = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTime: { value: 0 },
+                    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                    uBass: { value: 0.0 },
+                    uMid: { value: 0.0 },
+                    uHigh: { value: 0.0 },
+                    uTotalRotation: { value: 0.0 }
+                },
+                fragmentShader: document.getElementById('fragShader').textContent
+            });
+
+            mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            window.addEventListener('resize', onResize);
+        }
+
+        function onResize() {
+            // Prevent resize from messing up 4K recording if active
+            if(isRecording && was4k) return;
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            material.uniforms.uResolution.value.x = window.innerWidth;
+            material.uniforms.uResolution.value.y = window.innerHeight;
+        }
+
+        // --- AUDIO ENGINE ---
+        function initAudio() {
+            if(!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 512; // Increased for smoother resolution
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+            }
+        }
+
+        function getAudioData() {
+            if(!analyser) return { bass:0, mid:0, high:0 };
+            analyser.getByteFrequencyData(dataArray);
+
+            // Tuned ranges for "Underwater" feel (emphasis on sub-bass)
+            const bassRange = dataArray.slice(0, 15);
+            const midRange = dataArray.slice(15, 100);
+            const highRange = dataArray.slice(100, 255);
+
+            const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
+
+            return {
+                bass: avg(bassRange) / 255,
+                mid: avg(midRange) / 255,
+                high: avg(highRange) / 255
+            };
+        }
+
+        function detectBeat(highLevel) {
+            const now = performance.now();
+            if (highLevel > beatThreshold && highLevel > 0.3) {
+                if (now - lastBeatTime > 200) {
+                    const interval = now - lastBeatTime;
+                    lastBeatTime = now;
+                    beatIntervals.push(interval);
+                    if(beatIntervals.length > 8) beatIntervals.shift();
+                    const avgInterval = beatIntervals.reduce((a,b)=>a+b,0) / beatIntervals.length;
+                    const bpm = 60000 / avgInterval;
+                    if(bpm > 60 && bpm < 220) detectedBPM = bpm;
+                    beatThreshold = 1.1;
+                }
+            } else {
+                beatThreshold *= 0.95;
+                if(beatThreshold < 0.3) beatThreshold = 0.3;
+            }
+        }
+
+        // --- ANIMATION ---
+        let lastFrameTime = 0;
+
+        function animate(time) {
+            if(!isRunning) return;
+            requestAnimationFrame(animate);
+
+            const deltaTime = (time - lastFrameTime) / 1000;
+            lastFrameTime = time;
+
+            const audioData = getAudioData();
+            detectBeat(audioData.high);
+
+            const targetBPM = (detectedBPM > 0) ? detectedBPM : 10;
+            smoothBPM += (targetBPM - smoothBPM) * 0.05;
+
+            // Slower rotation for underwater feel
+            const rotationSpeed = (smoothBPM / 60.0) * 0.5;
+            accumulatedRotation += rotationSpeed * deltaTime;
+
+            material.uniforms.uTime.value = time / 1000;
+            material.uniforms.uTotalRotation.value = accumulatedRotation;
+
+            // Fluid Smoothing
+            material.uniforms.uBass.value += (audioData.bass - material.uniforms.uBass.value) * 0.1;
+            material.uniforms.uMid.value += (audioData.mid - material.uniforms.uMid.value) * 0.1;
+            material.uniforms.uHigh.value += (audioData.high - material.uniforms.uHigh.value) * 0.1;
+
+            renderer.render(scene, camera);
+        }
+
+        // --- FILE HANDLING ---
+        selectFileBtn.onclick = () => {
+            initAudio();
+            fileInput.click();
+        };
+
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            currentAudioFile = file;
+            messageDiv.innerText = "Pressurizing Cabin...";
+
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    const audioBuffer = await audioContext.decodeAudioData(ev.target.result);
+                    startVisualizer(audioBuffer);
+                } catch(err) {
+                    messageDiv.innerText = "Hull Breach: " + err.message;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        };
+
+        function startVisualizer(buffer) {
+            if(sourceNode) { sourceNode.disconnect(); sourceNode.stop(); }
+
+            sourceNode = audioContext.createBufferSource();
+            sourceNode.buffer = buffer;
+            sourceNode.connect(analyser);
+            analyser.connect(audioContext.destination);
+
+            sourceNode.onended = resetUI;
+            sourceNode.start(0);
+
+            overlay.style.opacity = 0;
+            setTimeout(() => overlay.style.display = 'none', 500);
+
+            recordContainer.style.display = 'flex';
+            setTimeout(() => recordContainer.style.opacity = 1, 10);
+
+            isRunning = true;
+            lastFrameTime = performance.now();
+
+            detectedBPM = 0;
+            beatIntervals = [];
+            smoothBPM = 60;
+
+            animate(lastFrameTime);
+
+            if(autoRecordCheck.checked) {
+                setTimeout(toggleRecord, 500);
+            }
+        }
+
+        function resetUI() {
+            isRunning = false;
+            if(isRecording) toggleRecord();
+            overlay.style.display = 'block';
+            setTimeout(() => overlay.style.opacity = 1, 10);
+            recordContainer.style.opacity = 0;
+            setTimeout(() => recordContainer.style.display = 'none', 500);
+            if(sourceNode) { sourceNode.disconnect(); }
+        }
+
+        leaveBtn.onclick = resetUI;
+
+        // --- RECORDING ---
+        recordBtn.onclick = toggleRecord;
+
+        function toggleRecord() {
+            if(isRecording) {
+                // STOP RECORDING
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.innerText = "Start Capture";
+                recordBtn.classList.remove('recording');
+
+                if (was4k) {
+                    renderer.setSize(window.innerWidth, window.innerHeight, true);
+                    material.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+                    was4k = false;
+                }
+
+            } else {
+                // START RECORDING
+                if (record4kCheck.checked) {
+                    was4k = true;
+                    renderer.setSize(3840, 2160, false);
+                    material.uniforms.uResolution.value.set(3840, 2160);
+                }
+
+                const stream = renderer.domElement.captureStream(60);
+                const dest = audioContext.createMediaStreamDestination();
+                sourceNode.connect(dest);
+                const tracks = [...stream.getVideoTracks(), ...dest.stream.getAudioTracks()];
+
+                try {
+                    mediaRecorder = new MediaRecorder(new MediaStream(tracks), { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 25000000 });
+                } catch (e) {
+                    mediaRecorder = new MediaRecorder(new MediaStream(tracks));
+                }
+
+                mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = saveVideo;
+
+                recordedChunks = [];
+                mediaRecorder.start();
+
+                isRecording = true;
+                recordBtn.innerText = "Stop Capture";
+                recordBtn.classList.add('recording');
+            }
+        }
+
+        function saveVideo() {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            const fileName = currentAudioFile ? `abyssal-voyage-${currentAudioFile.name.split('.')[0]}.webm` : 'abyssal-voyage.webm';
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+        }
+
+        fullscreenBtn.onclick = () => {
+            if (!document.fullscreenElement) {
+                document.body.requestFullscreen();
+                fullscreenBtn.innerHTML = "🡼";
+            } else {
+                document.exitFullscreen();
+                fullscreenBtn.innerHTML = "⛶";
+            }
+        };
+
+        initThree();
+    })();
+</script>
+</body>
+</html>
