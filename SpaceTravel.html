@@ -22,39 +22,6 @@
             z-index: 1;
         }
 
-        /* --- COMPACT MODULAR HUD LAYOUT --- */
-        #hud-container {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 10;
-            pointer-events: none;
-            display: grid;
-            grid-template-columns: 175px 1fr 175px;
-            grid-template-rows: 70px 1fr 70px;
-            grid-template-areas:
-                "top-left top-mid top-right"
-                "side-left center side-right"
-                "bot-left bot-mid bot-right";
-        }
-
-        /* Panel Positioning */
-        .hud-panel { position: relative; width: 100%; height: 100%; overflow: visible; }
-        .area-top { grid-area: top-left; grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: flex-start; }
-        .area-left { grid-area: side-left; display: flex; align-items: center; justify-content: flex-start; }
-        .area-right { grid-area: side-right; display: flex; align-items: center; justify-content: flex-end; }
-        .area-bottom { grid-area: bot-mid; display: flex; align-items: flex-end; justify-content: center; grid-column: 1 / -1; }
-        .area-center { grid-area: center; display: flex; align-items: center; justify-content: center; }
-
-        /* SVG Styles */
-        .hud-svg { overflow: visible; width: 100%; height: 100%; }
-        .hud-line { fill: none; stroke: #00f3ff; stroke-width: 1.5; opacity: 0.8; vector-effect: non-scaling-stroke; }
-        .hud-thin { fill: none; stroke: #00f3ff; stroke-width: 0.5; opacity: 0.4; vector-effect: non-scaling-stroke; }
-        .hud-fill { fill: #00f3ff; opacity: 0.15; }
-        .hud-text { fill: #00f3ff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
-        .hud-text-sm { fill: #00f3ff; font-size: 9px; font-weight: normal; letter-spacing: 0px; opacity: 0.8; }
-        .hud-text-lg { fill: #fff; font-size: 14px; letter-spacing: 3px; text-shadow: 0 0 5px #00f3ff; }
-
         /* UI OVERLAY */
         #overlay {
             position: fixed;
@@ -192,120 +159,12 @@
             background: radial-gradient(circle, transparent 40%, #000 100%);
             z-index: 5;
         }
-
-        .scanlines {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 3px, 3px 100%;
-            z-index: 6;
-        }
     </style>
 </head>
 <body>
 
 <div id="canvas-container"></div>
 <div class="vignette"></div>
-<div class="scanlines"></div>
-
-<!-- RESPONSIVE MODULAR HUD -->
-<div id="hud-container">
-
-    <!-- TOP BAR -->
-    <div class="hud-panel area-top">
-        <!-- Top Left -->
-        <svg class="hud-svg" style="width: 300px; height: 100%;">
-            <path d="M0,0 L300,0 L300,20 L260,50 L0,50 Z" class="hud-fill"/>
-            <path d="M0,50 L260,50 L300,20 L300,0" class="hud-line"/>
-            <text x="15" y="30" class="hud-text-lg">USS XENON</text>
-        </svg>
-
-        <!-- Top Right -->
-        <svg class="hud-svg" style="width: 200px; height: 100%; margin-right: 50px;">
-            <path d="M0,0 L200,0 L200,50 L0,50 L40,20 L40,0 Z" class="hud-fill"/>
-            <path d="M40,0 L40,20 L0,50 L200,50" class="hud-line"/>
-            <text x="60" y="30" class="hud-text" id="clock-display">T-00:00</text>
-        </svg>
-    </div>
-
-    <!-- LEFT PANEL (Engine Stats) -->
-    <div class="hud-panel area-left">
-        <svg class="hud-svg" viewBox="0 0 175 600" preserveAspectRatio="xMinYMid meet">
-            <path d="M0,0 L100,0 L140,40 L140,500 L100,540 L0,540 Z" class="hud-fill"/>
-            <path d="M100,0 L140,40 L140,500 L100,540" class="hud-line"/>
-
-            <!-- Bars -->
-            <g transform="translate(20, 80)">
-                <text x="0" y="-15" class="hud-text">THRUSTER_L</text>
-                <rect x="0" y="0" width="15" height="150" class="hud-thin"/>
-                <rect id="bar-thrust-l" x="2" y="150" width="11" height="0" fill="#00f3ff" opacity="0.6"/>
-
-                <text x="60" y="-15" class="hud-text">THRUSTER_R</text>
-                <rect x="60" y="0" width="15" height="150" class="hud-thin"/>
-                <rect id="bar-thrust-r" x="62" y="150" width="11" height="0" fill="#00f3ff" opacity="0.6"/>
-            </g>
-
-            <g transform="translate(20, 350)">
-                <text x="0" y="0" class="hud-text">GEOMETRY_SCAN</text>
-                <text x="0" y="20" class="hud-text-lg" id="shield-val">SCANNING...</text>
-            </g>
-        </svg>
-    </div>
-
-    <!-- RIGHT PANEL (Detailed Music Stats) -->
-    <div class="hud-panel area-right">
-        <svg class="hud-svg" viewBox="0 0 175 600" preserveAspectRatio="xMaxYMid meet">
-            <g transform="translate(35,0)">
-                <path d="M140,0 L40,0 L0,40 L0,500 L40,540 L140,540 Z" class="hud-fill"/>
-                <path d="M40,0 L0,40 L0,500 L40,540" class="hud-line"/>
-
-                <g transform="translate(20, 80)">
-                    <text x="0" y="-15" class="hud-text">SENSOR_ARRAY</text>
-
-                    <!-- Spectral Bars -->
-                    <rect id="bar-spec-1" x="0" y="0" width="80" height="8" fill="#00f3ff" opacity="0.4"/>
-                    <rect id="bar-spec-2" x="0" y="15" width="60" height="8" fill="#00f3ff" opacity="0.4"/>
-                    <rect id="bar-spec-3" x="0" y="30" width="90" height="8" fill="#00f3ff" opacity="0.4"/>
-
-                    <!-- New Statistics -->
-                    <g transform="translate(0, 80)">
-                        <text x="0" y="0" class="hud-text-sm">OUTPUT_LEVEL</text>
-                        <text x="0" y="15" class="hud-text" id="stat-db">- inf dB</text>
-
-                        <text x="0" y="45" class="hud-text-sm">RESONANCE</text>
-                        <text x="0" y="60" class="hud-text" id="stat-hz">0 Hz</text>
-
-                        <text x="0" y="90" class="hud-text-sm">SIGNAL FLUX</text>
-                        <text x="0" y="105" class="hud-text" id="stat-flux">STABLE</text>
-                    </g>
-                </g>
-            </g>
-        </svg>
-    </div>
-
-    <!-- BOTTOM FRAME -->
-    <div class="hud-panel area-bottom">
-        <svg class="hud-svg" style="width: 100%; height: 60px;">
-            <g transform="translate(0, 20)">
-                <rect x="30%" y="0" width="40%" height="40" class="hud-fill"/>
-                <line x1="30%" y1="0" x2="70%" y2="0" class="hud-line"/>
-                <line x1="30%" y1="0" x2="28%" y2="40" class="hud-line"/>
-                <line x1="70%" y1="0" x2="72%" y2="40" class="hud-line"/>
-                <text x="50%" y="25" class="hud-text" text-anchor="middle" style="letter-spacing:5px;">SYSTEM: ONLINE</text>
-            </g>
-        </svg>
-    </div>
-
-    <!-- CENTER RETICLE -->
-    <div class="hud-panel area-center">
-        <svg class="hud-svg" viewBox="-100 -100 200 200" style="width: 300px; height: 300px;">
-            <circle cx="0" cy="0" r="80" class="hud-thin" stroke-dasharray="10 20" opacity="0.2"/>
-            <line x1="-20" y1="0" x2="20" y2="0" class="hud-line" opacity="0.5"/>
-            <line x1="0" y1="-20" x2="0" y2="20" class="hud-line" opacity="0.5"/>
-        </svg>
-    </div>
-</div>
 
 <button id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
 
@@ -409,6 +268,8 @@
         let audioContext, analyser, dataArray, sourceNode;
         let renderer, sceneBG, cameraBG, materialBG, meshBG;
         let scene3D, camera3D;
+        let sceneHUD, cameraHUD; // HUD Overlay Scene
+        let hudCanvas, hudCtx, hudTexture;
         let isRunning = false;
         let currentAudioFile = null;
 
@@ -433,27 +294,15 @@
         // Fading State
         let isFading = false;
         let fadeStartTime = 0;
+        let fadeCompleteTime = 0;
         const FADE_DURATION = 3.0;
+        const END_BUFFER = 1.0;
 
         // Recording
         let mediaRecorder;
         let recordedChunks = [];
         let isRecording = false;
         let was4k = false;
-
-        // DOM Elements
-        const barThrustL = document.getElementById('bar-thrust-l');
-        const barThrustR = document.getElementById('bar-thrust-r');
-        const shieldVal = document.getElementById('shield-val');
-        const clockDisplay = document.getElementById('clock-display');
-        const statDb = document.getElementById('stat-db');
-        const statHz = document.getElementById('stat-hz');
-        const statFlux = document.getElementById('stat-flux');
-        const specBars = [
-            document.getElementById('bar-spec-1'),
-            document.getElementById('bar-spec-2'),
-            document.getElementById('bar-spec-3')
-        ];
 
         const container = document.getElementById('canvas-container');
         const overlay = document.getElementById('overlay');
@@ -477,6 +326,7 @@
             renderer.autoClear = false;
             container.appendChild(renderer.domElement);
 
+            // 1. BG Scene (Hyperdrive)
             sceneBG = new THREE.Scene();
             cameraBG = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
             const geometry = new THREE.PlaneGeometry(2, 2);
@@ -495,11 +345,27 @@
             meshBG = new THREE.Mesh(geometry, materialBG);
             sceneBG.add(meshBG);
 
+            // 2. 3D Scene (Vector Graphics)
             scene3D = new THREE.Scene();
             camera3D = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
             camera3D.position.z = 10;
-
             create3DInterface();
+
+            // 3. HUD Scene (2D Overlay via Canvas)
+            hudCanvas = document.createElement('canvas');
+            hudCanvas.width = window.innerWidth;
+            hudCanvas.height = window.innerHeight;
+            hudCtx = hudCanvas.getContext('2d');
+            hudTexture = new THREE.CanvasTexture(hudCanvas);
+            hudTexture.minFilter = THREE.LinearFilter;
+
+            sceneHUD = new THREE.Scene();
+            cameraHUD = new THREE.OrthographicCamera(-window.innerWidth/2, window.innerWidth/2, window.innerHeight/2, -window.innerHeight/2, 0, 30);
+            const hudPlane = new THREE.Mesh(
+                new THREE.PlaneGeometry(window.innerWidth, window.innerHeight),
+                new THREE.MeshBasicMaterial({ map: hudTexture, transparent: true })
+            );
+            sceneHUD.add(hudPlane);
 
             container.addEventListener("webglcontextlost", (event) => { event.preventDefault(); resetUI(); }, false);
             container.addEventListener("webglcontextrestored", initThree, false);
@@ -514,13 +380,11 @@
             // 1. MORPHING SHIP (Left)
             const shipGroup = new THREE.Group();
 
-            // Initial Core with dedicated material for fading
             const coreGeo = new THREE.IcosahedronGeometry(1, 0);
             const coreMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.6 });
             shipCoreMesh = new THREE.LineSegments(new THREE.WireframeGeometry(coreGeo), coreMat);
             shipGroup.add(shipCoreMesh);
 
-            // Fixed Ring
             const ringGeo = new THREE.TorusGeometry(1.6, 0.05, 4, 32);
             const ring = new THREE.LineSegments(new THREE.WireframeGeometry(ringGeo), wireMat);
             ring.rotation.x = Math.PI / 2;
@@ -556,18 +420,10 @@
             }
         }
 
-        function onResize() {
-            if(isRecording && was4k) return;
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-
-            renderer.setSize(w, h);
-            materialBG.uniforms.uResolution.value.x = w;
-            materialBG.uniforms.uResolution.value.y = h;
-
-            camera3D.aspect = w / h;
-            camera3D.updateProjectionMatrix();
-
+        // --- CENTRALIZED LAYOUT UPDATE ---
+        // Handles 3D Object positioning based on whatever current camera aspect is
+        function update3DLayout() {
+            if (!camera3D) return;
             const vFOV = THREE.MathUtils.degToRad(camera3D.fov);
             const distance = camera3D.position.z;
             const heightAtZero = 2 * Math.tan(vFOV / 2) * distance;
@@ -583,6 +439,213 @@
             }
         }
 
+        // --- CENTRALIZED RESIZING LOGIC ---
+        // Call this to force entire app to resize to (w, h)
+        // Set updateStyle=true for screen resize, false for internal 4K buffer
+        function resizeApp(w, h, updateStyle = true) {
+            if (!renderer) return;
+
+            // 1. Resize WebGL Buffer
+            renderer.setSize(w, h, updateStyle);
+
+            // 2. Resize HUD Canvas (Texture)
+            hudCanvas.width = w;
+            hudCanvas.height = h;
+
+            // 3. Update HUD Scene Plane & Camera
+            if(sceneHUD && sceneHUD.children[0]) {
+                sceneHUD.children[0].geometry.dispose();
+                sceneHUD.children[0].geometry = new THREE.PlaneGeometry(w, h);
+            }
+            if(cameraHUD) {
+                cameraHUD.left = -w/2;
+                cameraHUD.right = w/2;
+                cameraHUD.top = h/2;
+                cameraHUD.bottom = -h/2;
+                cameraHUD.updateProjectionMatrix();
+            }
+
+            // 4. Update Background Shader Uniforms
+            if(materialBG) {
+                materialBG.uniforms.uResolution.value.x = w;
+                materialBG.uniforms.uResolution.value.y = h;
+            }
+
+            // 5. Update 3D Scene Camera
+            if(camera3D) {
+                camera3D.aspect = w / h;
+                camera3D.updateProjectionMatrix();
+            }
+
+            // 6. Recalculate positions based on new bounds
+            update3DLayout();
+        }
+
+        function onResize() {
+            if(isRecording && was4k) return; // Prevent interference during 4K record
+            resizeApp(window.innerWidth, window.innerHeight, true);
+        }
+
+        // --- HUD DRAWING (CANVAS 2D) ---
+        function drawHUD(bass, mid, high, time, stats) {
+            if(!hudCtx) return;
+            const w = hudCanvas.width;
+            const h = hudCanvas.height;
+            const ctx = hudCtx;
+
+            ctx.clearRect(0, 0, w, h);
+            // Dynamic font sizing for 4K support
+            const scale = (w / 1920);
+            // Clamp minimal scale for small screens
+            const s = Math.max(scale, 0.6);
+
+            ctx.font = `bold ${11 * s}px 'Courier New'`;
+            ctx.fillStyle = "#00f3ff";
+            ctx.strokeStyle = "#00f3ff";
+            ctx.lineWidth = 1.5 * s;
+
+            const cw = 175 * s; // Column width
+            const rh = 70 * s; // Row height
+
+            // --- TOP BAR ---
+            // Left
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(300*s, 0); ctx.lineTo(300*s, 20*s); ctx.lineTo(260*s, 50*s); ctx.lineTo(0, 50*s); ctx.closePath();
+            ctx.globalAlpha = 0.15; ctx.fill();
+            ctx.globalAlpha = 0.8; ctx.stroke();
+            ctx.font = `${14 * s}px 'Courier New'`;
+            ctx.fillStyle = "#fff";
+            ctx.fillText("USS XENON", 15*s, 30*s);
+            ctx.restore();
+
+            // Right
+            ctx.save();
+            ctx.translate(w, 0);
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(-200*s, 0); ctx.lineTo(-200*s, 50*s); ctx.lineTo(-40*s, 50*s); ctx.lineTo(0, 20*s); ctx.closePath();
+            ctx.globalAlpha = 0.15; ctx.fill();
+            ctx.globalAlpha = 0.8; ctx.stroke();
+            ctx.fillStyle = "#00f3ff";
+            ctx.fillText(`T-${Math.floor(time/60).toString().padStart(2,'0')}:${Math.floor(time%60).toString().padStart(2,'0')}`, -140*s, 30*s);
+            ctx.restore();
+
+            // --- LEFT PANEL ---
+            ctx.save();
+            ctx.translate(0, h/2 - 300*s);
+            // Frame
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(100*s, 0); ctx.lineTo(140*s, 40*s); ctx.lineTo(140*s, 500*s); ctx.lineTo(100*s, 540*s); ctx.lineTo(0, 540*s); ctx.closePath();
+            ctx.globalAlpha = 0.15; ctx.fill();
+            ctx.globalAlpha = 0.8; ctx.stroke();
+
+            // Bars
+            ctx.translate(20*s, 80*s);
+            ctx.globalAlpha = 1.0;
+            ctx.font = `bold ${11 * s}px 'Courier New'`;
+            ctx.fillStyle = "#00f3ff";
+            ctx.fillText("THRUSTER_L", 0, -15*s);
+            ctx.strokeRect(0, 0, 15*s, 150*s);
+            ctx.globalAlpha = 0.6;
+            ctx.fillRect(2*s, (150*s) - (150*s * bass), 11*s, (150*s * bass));
+
+            ctx.globalAlpha = 1.0;
+            ctx.fillText("THRUSTER_R", 60*s, -15*s);
+            ctx.strokeRect(60*s, 0, 15*s, 150*s);
+            ctx.globalAlpha = 0.6;
+            ctx.fillRect(62*s, (150*s) - (150*s * mid), 11*s, (150*s * mid));
+
+            // Text
+            ctx.translate(0, 270*s);
+            ctx.globalAlpha = 1.0;
+            ctx.fillText("GEOMETRY_SCAN", 0, 0);
+            ctx.font = `${14 * s}px 'Courier New'`;
+            ctx.fillStyle = "#fff";
+            let shapeName = ["ICOSAHEDRON", "OCTAHEDRON", "DODECAHEDRON", "TETRAHEDRON"][currentShapeIdx];
+            ctx.fillText(shapeName, 0, 20*s);
+            ctx.restore();
+
+            // --- RIGHT PANEL ---
+            ctx.save();
+            ctx.translate(w, h/2 - 300*s);
+            ctx.beginPath();
+            ctx.moveTo(0,0); ctx.lineTo(-100*s,0); ctx.lineTo(-140*s,40*s); ctx.lineTo(-140*s,500*s); ctx.lineTo(-100*s,540*s); ctx.lineTo(0,540*s); ctx.closePath();
+            ctx.globalAlpha = 0.15; ctx.fill();
+            ctx.globalAlpha = 0.8; ctx.stroke();
+
+            ctx.translate(-120*s, 80*s);
+            ctx.globalAlpha = 1.0;
+            ctx.font = `bold ${11 * s}px 'Courier New'`;
+            ctx.fillStyle = "#00f3ff";
+            ctx.fillText("SENSOR_ARRAY", 0, -15*s);
+
+            ctx.globalAlpha = 0.4;
+            ctx.fillRect(0, 0, (20 + bass * 80)*s, 8*s);
+            ctx.fillRect(0, 15*s, (20 + mid * 80)*s, 8*s);
+            ctx.fillRect(0, 30*s, (20 + high * 80)*s, 8*s);
+
+            ctx.translate(0, 80*s);
+            ctx.globalAlpha = 0.8;
+            ctx.font = `${9 * s}px 'Courier New'`;
+            ctx.fillText("OUTPUT_LEVEL", 0, 0);
+            ctx.font = `bold ${11 * s}px 'Courier New'`;
+            ctx.globalAlpha = 1.0;
+            if(stats) ctx.fillText(stats.db.toFixed(1) + " dB", 0, 15*s);
+
+            ctx.translate(0, 45*s);
+            ctx.globalAlpha = 0.8;
+            ctx.font = `${9 * s}px 'Courier New'`;
+            ctx.fillText("RESONANCE", 0, 0);
+            ctx.font = `bold ${11 * s}px 'Courier New'`;
+            ctx.globalAlpha = 1.0;
+            if(stats) ctx.fillText(Math.round(stats.hz) + " Hz", 0, 15*s);
+
+            ctx.translate(0, 45*s);
+            ctx.globalAlpha = 0.8;
+            ctx.font = `${9 * s}px 'Courier New'`;
+            ctx.fillText("SIGNAL FLUX", 0, 0);
+            ctx.font = `bold ${11 * s}px 'Courier New'`;
+            ctx.globalAlpha = 1.0;
+            if(stats) {
+                if(stats.flux > 0.1) {
+                    ctx.fillStyle = "#ff0055";
+                    ctx.fillText("VOLATILE", 0, 15*s);
+                } else {
+                    ctx.fillText("STABLE", 0, 15*s);
+                }
+            }
+            ctx.restore();
+
+            // --- BOTTOM BAR ---
+            ctx.save();
+            ctx.translate(w/2, h - 60*s);
+            const bw = w * 0.4;
+            ctx.beginPath();
+            ctx.moveTo(-bw/2, 40*s); ctx.lineTo(-bw/2, 20*s); ctx.lineTo(-bw/2 + 20*s, 0); ctx.lineTo(bw/2 - 20*s, 0); ctx.lineTo(bw/2, 20*s); ctx.lineTo(bw/2, 40*s);
+            ctx.globalAlpha = 0.15; ctx.fill();
+            ctx.globalAlpha = 0.8; ctx.stroke();
+            ctx.fillStyle = "#00f3ff";
+            ctx.textAlign = "center";
+            ctx.font = `bold ${11 * s}px 'Courier New'`;
+            ctx.fillText("SYSTEM: ONLINE", 0, 25*s);
+            ctx.restore();
+
+            // --- CENTER RETICLE ---
+            ctx.save();
+            ctx.translate(w/2, h/2);
+            ctx.strokeStyle = "#00f3ff";
+            ctx.lineWidth = 0.5 * s;
+            ctx.globalAlpha = 0.2;
+            ctx.beginPath(); ctx.arc(0, 0, 80*s, 0, Math.PI*2); ctx.stroke();
+            ctx.globalAlpha = 0.5;
+            ctx.lineWidth = 1.5 * s;
+            ctx.beginPath(); ctx.moveTo(-20*s, 0); ctx.lineTo(20*s, 0); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, -20*s); ctx.lineTo(0, 20*s); ctx.stroke();
+            ctx.restore();
+
+            hudTexture.needsUpdate = true;
+        }
+
         // --- SMOOTH MORPHING LOGIC ---
         function updateMorphing(time) {
             // Trigger new morph if idle
@@ -594,7 +657,6 @@
                 // Advance Shape
                 currentShapeIdx = (currentShapeIdx + 1) % 4;
                 let newGeo;
-                const shapeName = ["ICOSAHEDRON", "OCTAHEDRON", "DODECAHEDRON", "TETRAHEDRON"][currentShapeIdx];
 
                 switch(currentShapeIdx) {
                     case 0: newGeo = new THREE.IcosahedronGeometry(1, 0); break;
@@ -603,18 +665,14 @@
                     case 3: newGeo = new THREE.TetrahedronGeometry(1, 0); break;
                 }
 
-                // Create new mesh (hidden initially)
                 const wireGeo = new THREE.WireframeGeometry(newGeo);
-                newGeo.dispose(); // Cleanup prim
+                newGeo.dispose();
 
                 const mat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.0 });
                 morphState.newMesh = new THREE.LineSegments(wireGeo, mat);
                 morphState.newMesh.scale.setScalar(0.5); // Start small
 
                 shipWireframe.add(morphState.newMesh);
-
-                // Update label mid-transition
-                setTimeout(() => { if(shieldVal) shieldVal.textContent = shapeName; }, morphState.duration * 500);
             }
 
             // Animate Transition
@@ -625,21 +683,18 @@
                     // FINISHED
                     morphState.active = false;
 
-                    // Cleanup old
                     if (morphState.oldMesh) {
                         morphState.oldMesh.geometry.dispose();
                         morphState.oldMesh.material.dispose();
                         shipWireframe.remove(morphState.oldMesh);
                     }
 
-                    // Promote new
                     shipCoreMesh = morphState.newMesh;
                     shipCoreMesh.material.opacity = 0.6;
                     shipCoreMesh.scale.setScalar(1.0);
 
                 } else {
                     // INTERPOLATE
-                    // Old fades out and shrinks
                     if (morphState.oldMesh) {
                         morphState.oldMesh.material.opacity = 0.6 * (1.0 - progress);
                         morphState.oldMesh.scale.setScalar(1.0 - (0.5 * progress));
@@ -647,7 +702,6 @@
                         morphState.oldMesh.rotation.x += 0.005;
                     }
 
-                    // New fades in and grows
                     if (morphState.newMesh) {
                         morphState.newMesh.material.opacity = 0.6 * progress;
                         morphState.newMesh.scale.setScalar(0.5 + (0.5 * progress));
@@ -656,31 +710,6 @@
                     }
                 }
             }
-        }
-
-        function updateSVG(bass, mid, high, time, stats) {
-            const heightL = 150 * bass;
-            const heightR = 150 * mid;
-            barThrustL.setAttribute('height', heightL);
-            barThrustL.setAttribute('y', 150 - heightL);
-            barThrustR.setAttribute('height', heightR);
-            barThrustR.setAttribute('y', 150 - heightR);
-
-            specBars.forEach((bar, i) => {
-                const val = (i % 2 === 0) ? bass : high;
-                bar.setAttribute('width', 20 + val * 80);
-            });
-
-            if(stats) {
-                statDb.textContent = stats.db.toFixed(1) + " dB";
-                statHz.textContent = Math.round(stats.hz) + " Hz";
-                statFlux.textContent = stats.flux > 0.1 ? "VOLATILE" : "STABLE";
-                statFlux.setAttribute('fill', stats.flux > 0.1 ? "#ff0055" : "#00f3ff");
-            }
-
-            const mins = Math.floor(time / 60).toString().padStart(2, '0');
-            const secs = Math.floor(time % 60).toString().padStart(2, '0');
-            clockDisplay.textContent = `T-${mins}:${secs}`;
         }
 
         function initAudio() {
@@ -748,9 +777,18 @@
                 const fadeProgress = (currentTimeSec - fadeStartTime) / FADE_DURATION;
                 if (fadeProgress >= 1.0) {
                     materialBG.uniforms.uFade.value = 1.0;
+
+                    if (fadeCompleteTime === 0) fadeCompleteTime = currentTimeSec;
+
                     renderer.clear();
                     renderer.render(sceneBG, cameraBG);
-                    resetUI();
+
+                    if (currentTimeSec - fadeCompleteTime >= END_BUFFER) {
+                        resetUI();
+                        return;
+                    }
+
+                    animationFrameId = requestAnimationFrame(animate);
                     return;
                 }
                 materialBG.uniforms.uFade.value = fadeProgress;
@@ -766,11 +804,10 @@
             materialBG.uniforms.uMid.value = smoothMid;
             materialBG.uniforms.uHigh.value = smoothHigh;
 
-            // Handle Ship
             if(shipWireframe) {
                 shipWireframe.rotation.x += deltaTime * 0.5;
                 shipWireframe.rotation.y += deltaTime * 0.2;
-                // Run continuous smooth morph
+                if(shipCoreMesh) shipCoreMesh.rotation.y -= deltaTime;
                 updateMorphing(currentTimeSec);
             }
 
@@ -787,12 +824,14 @@
                 }
             });
 
-            updateSVG(smoothBass, smoothMid, smoothHigh, currentTimeSec, data.stats);
+            drawHUD(smoothBass, smoothMid, smoothHigh, currentTimeSec, data.stats);
 
             renderer.clear();
             renderer.render(sceneBG, cameraBG);
             renderer.clearDepth();
             renderer.render(scene3D, camera3D);
+            renderer.clearDepth();
+            renderer.render(sceneHUD, cameraHUD);
 
             animationFrameId = requestAnimationFrame(animate);
         }
@@ -835,6 +874,7 @@
 
             isRunning = true;
             isFading = false;
+            fadeCompleteTime = 0;
             materialBG.uniforms.uFade.value = 0.0;
             lastFrameTime = performance.now();
             smoothBass = 0; smoothMid = 0; smoothHigh = 0;
@@ -850,11 +890,13 @@
             if (!isRunning || isFading) return;
             isFading = true;
             fadeStartTime = performance.now() / 1000;
+            fadeCompleteTime = 0;
         }
 
         function resetUI() {
             isRunning = false;
             isFading = false;
+            fadeCompleteTime = 0;
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             if(isRecording) toggleRecord();
             overlay.style.display = 'block';
@@ -874,19 +916,13 @@
                 recordBtn.innerText = "Init Record";
                 recordBtn.classList.remove('recording');
                 if (was4k) {
-                    renderer.setSize(window.innerWidth, window.innerHeight, true);
-                    materialBG.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
-                    camera3D.aspect = window.innerWidth / window.innerHeight;
-                    camera3D.updateProjectionMatrix();
+                    resizeApp(window.innerWidth, window.innerHeight, true);
                     was4k = false;
                 }
             } else {
                 if (record4kCheck.checked) {
                     was4k = true;
-                    renderer.setSize(3840, 2160, false);
-                    materialBG.uniforms.uResolution.value.set(3840, 2160);
-                    camera3D.aspect = 3840 / 2160;
-                    camera3D.updateProjectionMatrix();
+                    resizeApp(3840, 2160, false);
                 }
                 const stream = renderer.domElement.captureStream(60);
                 const dest = audioContext.createMediaStreamDestination();
