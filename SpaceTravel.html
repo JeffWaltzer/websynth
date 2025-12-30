@@ -31,9 +31,9 @@
             z-index: 100;
             padding: 40px;
             text-align: center;
-            background: rgba(0, 10, 20, 0.9);
+            background: rgba(0, 10, 20, 0.95);
             border: 1px solid #00f3ff;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2), inset 0 0 50px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2), inset 0 0 50px rgba(0, 0, 0, 0.9);
             clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
             backdrop-filter: blur(8px);
             max-width: 500px;
@@ -164,7 +164,6 @@
 <body>
 
 <div id="canvas-container"></div>
-<div class="vignette"></div>
 
 <button id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
 
@@ -253,7 +252,12 @@
         streaks = smoothstep(0.8, 1.0, streaks);
         finalColor += vec3(0.8, 0.9, 1.0) * streaks * uHigh;
 
-        finalColor *= smoothstep(0.0, 0.4, r);
+        // Center darken (Reduced significantly to allow visibility at center)
+        finalColor *= smoothstep(0.0, 0.05, r);
+
+        // Edge Vignette (Reduce brightness of yellow/streaks at edges)
+        // Darkens rapidly past r=1.2
+        finalColor *= 1.0 - smoothstep(1.0, 2.0, r);
 
         vec3 fadeColor = vec3(0.0, 0.02, 0.05);
         finalColor = mix(finalColor, fadeColor, uFade);
@@ -390,7 +394,8 @@
             ring.rotation.x = Math.PI / 2;
             shipGroup.add(ring);
 
-            shipGroup.position.set(-6, -3, 0);
+            // Moved inward slightly (x: -5) to avoid opaque panel occlusion
+            shipGroup.position.set(-5, -3, 0);
             shipGroup.rotation.y = 0.5;
             scene3D.add(shipGroup);
             shipWireframe = shipGroup;
@@ -405,18 +410,34 @@
             orbit.rotation.x = Math.PI / 2.3;
             planetGroup.add(orbit);
 
-            planetGroup.position.set(6, -3, 0);
+            // Moved inward slightly (x: 5) to avoid opaque panel occlusion
+            planetGroup.position.set(5, -3, 0);
             scene3D.add(planetGroup);
             planetWireframe = planetGroup;
 
-            // 3. TUNNEL
+            // 3. TUNNEL (Denser, deeper generation)
             tunnelRings = [];
-            for(let i=0; i<6; i++) {
-                const tunnelGeo = new THREE.OctahedronGeometry(1 + i*0.5, 0);
-                const tunnelRing = new THREE.LineSegments(new THREE.WireframeGeometry(tunnelGeo), new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.3 - (i*0.05) }));
-                tunnelRing.position.z = -10 - (i * 5);
-                scene3D.add(tunnelRing);
-                tunnelRings.push(tunnelRing);
+            // Increased count to 12 to fill the void
+            for(let i=0; i<12; i++) {
+                // Scale starts smaller (0.5) to look further away
+                const s = 0.5 + i * 0.5;
+                // Create a cross-frame (two squares rotated) using PlaneGeometry edges
+                const frameGeo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(s, s));
+                // Opacity fades slightly with distance but remains visible
+                const frameMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.8 - (i*0.06) });
+
+                const frame1 = new THREE.LineSegments(frameGeo, frameMat);
+                const frame2 = new THREE.LineSegments(frameGeo, frameMat);
+                frame2.rotation.z = Math.PI / 4;
+
+                const tunnelGroup = new THREE.Group();
+                tunnelGroup.add(frame1);
+                tunnelGroup.add(frame2);
+
+                // Start much deeper (-50) and space them out
+                tunnelGroup.position.z = -5 - (i * 4);
+                scene3D.add(tunnelGroup);
+                tunnelRings.push(tunnelGroup);
             }
         }
 
@@ -429,30 +450,26 @@
             const heightAtZero = 2 * Math.tan(vFOV / 2) * distance;
             const widthAtZero = heightAtZero * camera3D.aspect;
 
+            // Moved objects slightly more towards center (widthAtZero/2.5) to clear panels
             if (shipWireframe) {
-                shipWireframe.position.x = (-widthAtZero / 2) + 4;
+                shipWireframe.position.x = (-widthAtZero / 2.5);
                 shipWireframe.position.y = -heightAtZero/4;
             }
             if (planetWireframe) {
-                planetWireframe.position.x = (widthAtZero / 2) - 4;
+                planetWireframe.position.x = (widthAtZero / 2.5);
                 planetWireframe.position.y = -heightAtZero/4;
             }
         }
 
         // --- CENTRALIZED RESIZING LOGIC ---
-        // Call this to force entire app to resize to (w, h)
-        // Set updateStyle=true for screen resize, false for internal 4K buffer
         function resizeApp(w, h, updateStyle = true) {
             if (!renderer) return;
 
-            // 1. Resize WebGL Buffer
             renderer.setSize(w, h, updateStyle);
 
-            // 2. Resize HUD Canvas (Texture)
             hudCanvas.width = w;
             hudCanvas.height = h;
 
-            // 3. Update HUD Scene Plane & Camera
             if(sceneHUD && sceneHUD.children[0]) {
                 sceneHUD.children[0].geometry.dispose();
                 sceneHUD.children[0].geometry = new THREE.PlaneGeometry(w, h);
@@ -465,24 +482,23 @@
                 cameraHUD.updateProjectionMatrix();
             }
 
-            // 4. Update Background Shader Uniforms
             if(materialBG) {
-                materialBG.uniforms.uResolution.value.x = w;
-                materialBG.uniforms.uResolution.value.y = h;
+                const drawingSize = new THREE.Vector2();
+                renderer.getDrawingBufferSize(drawingSize);
+                materialBG.uniforms.uResolution.value.x = drawingSize.x;
+                materialBG.uniforms.uResolution.value.y = drawingSize.y;
             }
 
-            // 5. Update 3D Scene Camera
             if(camera3D) {
                 camera3D.aspect = w / h;
                 camera3D.updateProjectionMatrix();
             }
 
-            // 6. Recalculate positions based on new bounds
             update3DLayout();
         }
 
         function onResize() {
-            if(isRecording && was4k) return; // Prevent interference during 4K record
+            if(isRecording && was4k) return;
             resizeApp(window.innerWidth, window.innerHeight, true);
         }
 
@@ -494,29 +510,47 @@
             const ctx = hudCtx;
 
             ctx.clearRect(0, 0, w, h);
-            // Dynamic font sizing for 4K support
             const scale = (w / 1920);
-            // Clamp minimal scale for small screens
             const s = Math.max(scale, 0.6);
 
-            ctx.font = `bold ${11 * s}px 'Courier New'`;
-            ctx.fillStyle = "#00f3ff";
+            // Base Styles
             ctx.strokeStyle = "#00f3ff";
             ctx.lineWidth = 1.5 * s;
 
-            const cw = 175 * s; // Column width
-            const rh = 70 * s; // Row height
+            // PANEL BACKGROUND STYLE (High Contrast + Slight Tint)
+            const fillPanel = () => {
+                ctx.fillStyle = "rgba(0, 5, 15, 0.85)";
+                ctx.fill();
+                ctx.stroke();
+            };
+
+            // TEXT STYLE
+            const applyTextStyle = (size = 11, color = "#00f3ff") => {
+                ctx.font = `bold ${size * s}px 'Courier New'`;
+                ctx.fillStyle = color;
+                ctx.shadowColor = "black";
+                ctx.shadowBlur = 4 * s;
+                ctx.shadowOffsetX = 2 * s;
+                ctx.shadowOffsetY = 2 * s;
+            };
+
+            const resetShadow = () => {
+                ctx.shadowColor = "transparent";
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+            };
 
             // --- TOP BAR ---
             // Left
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(0, 0); ctx.lineTo(300*s, 0); ctx.lineTo(300*s, 20*s); ctx.lineTo(260*s, 50*s); ctx.lineTo(0, 50*s); ctx.closePath();
-            ctx.globalAlpha = 0.15; ctx.fill();
-            ctx.globalAlpha = 0.8; ctx.stroke();
-            ctx.font = `${14 * s}px 'Courier New'`;
-            ctx.fillStyle = "#fff";
+            fillPanel();
+
+            applyTextStyle(14, "#fff");
             ctx.fillText("USS XENON", 15*s, 30*s);
+            resetShadow();
             ctx.restore();
 
             // Right
@@ -524,10 +558,11 @@
             ctx.translate(w, 0);
             ctx.beginPath();
             ctx.moveTo(0, 0); ctx.lineTo(-200*s, 0); ctx.lineTo(-200*s, 50*s); ctx.lineTo(-40*s, 50*s); ctx.lineTo(0, 20*s); ctx.closePath();
-            ctx.globalAlpha = 0.15; ctx.fill();
-            ctx.globalAlpha = 0.8; ctx.stroke();
-            ctx.fillStyle = "#00f3ff";
+            fillPanel();
+
+            applyTextStyle(12, "#00f3ff");
             ctx.fillText(`T-${Math.floor(time/60).toString().padStart(2,'0')}:${Math.floor(time%60).toString().padStart(2,'0')}`, -140*s, 30*s);
+            resetShadow();
             ctx.restore();
 
             // --- LEFT PANEL ---
@@ -536,33 +571,38 @@
             // Frame
             ctx.beginPath();
             ctx.moveTo(0, 0); ctx.lineTo(100*s, 0); ctx.lineTo(140*s, 40*s); ctx.lineTo(140*s, 500*s); ctx.lineTo(100*s, 540*s); ctx.lineTo(0, 540*s); ctx.closePath();
-            ctx.globalAlpha = 0.15; ctx.fill();
-            ctx.globalAlpha = 0.8; ctx.stroke();
+            fillPanel();
 
             // Bars
             ctx.translate(20*s, 80*s);
-            ctx.globalAlpha = 1.0;
-            ctx.font = `bold ${11 * s}px 'Courier New'`;
-            ctx.fillStyle = "#00f3ff";
+
+            applyTextStyle(11, "#00f3ff");
             ctx.fillText("THRUSTER_L", 0, -15*s);
+            resetShadow();
             ctx.strokeRect(0, 0, 15*s, 150*s);
+            ctx.fillStyle = "#00f3ff";
             ctx.globalAlpha = 0.6;
             ctx.fillRect(2*s, (150*s) - (150*s * bass), 11*s, (150*s * bass));
 
             ctx.globalAlpha = 1.0;
+            applyTextStyle(11, "#00f3ff");
             ctx.fillText("THRUSTER_R", 60*s, -15*s);
+            resetShadow();
             ctx.strokeRect(60*s, 0, 15*s, 150*s);
+            ctx.fillStyle = "#00f3ff";
             ctx.globalAlpha = 0.6;
             ctx.fillRect(62*s, (150*s) - (150*s * mid), 11*s, (150*s * mid));
 
             // Text
             ctx.translate(0, 270*s);
             ctx.globalAlpha = 1.0;
+            applyTextStyle(11, "#00f3ff");
             ctx.fillText("GEOMETRY_SCAN", 0, 0);
-            ctx.font = `${14 * s}px 'Courier New'`;
-            ctx.fillStyle = "#fff";
+
+            applyTextStyle(14, "#fff");
             let shapeName = ["ICOSAHEDRON", "OCTAHEDRON", "DODECAHEDRON", "TETRAHEDRON"][currentShapeIdx];
             ctx.fillText(shapeName, 0, 20*s);
+            resetShadow();
             ctx.restore();
 
             // --- RIGHT PANEL ---
@@ -570,42 +610,39 @@
             ctx.translate(w, h/2 - 300*s);
             ctx.beginPath();
             ctx.moveTo(0,0); ctx.lineTo(-100*s,0); ctx.lineTo(-140*s,40*s); ctx.lineTo(-140*s,500*s); ctx.lineTo(-100*s,540*s); ctx.lineTo(0,540*s); ctx.closePath();
-            ctx.globalAlpha = 0.15; ctx.fill();
-            ctx.globalAlpha = 0.8; ctx.stroke();
+            fillPanel();
 
             ctx.translate(-120*s, 80*s);
-            ctx.globalAlpha = 1.0;
-            ctx.font = `bold ${11 * s}px 'Courier New'`;
-            ctx.fillStyle = "#00f3ff";
+            applyTextStyle(11, "#00f3ff");
             ctx.fillText("SENSOR_ARRAY", 0, -15*s);
+            resetShadow();
 
+            ctx.fillStyle = "#00f3ff";
             ctx.globalAlpha = 0.4;
             ctx.fillRect(0, 0, (20 + bass * 80)*s, 8*s);
             ctx.fillRect(0, 15*s, (20 + mid * 80)*s, 8*s);
             ctx.fillRect(0, 30*s, (20 + high * 80)*s, 8*s);
 
             ctx.translate(0, 80*s);
-            ctx.globalAlpha = 0.8;
-            ctx.font = `${9 * s}px 'Courier New'`;
-            ctx.fillText("OUTPUT_LEVEL", 0, 0);
-            ctx.font = `bold ${11 * s}px 'Courier New'`;
             ctx.globalAlpha = 1.0;
+            applyTextStyle(9, "#00f3ff");
+            ctx.fillText("OUTPUT_LEVEL", 0, 0);
+
+            applyTextStyle(11, "#00f3ff");
             if(stats) ctx.fillText(stats.db.toFixed(1) + " dB", 0, 15*s);
 
             ctx.translate(0, 45*s);
-            ctx.globalAlpha = 0.8;
-            ctx.font = `${9 * s}px 'Courier New'`;
+            applyTextStyle(9, "#00f3ff");
             ctx.fillText("RESONANCE", 0, 0);
-            ctx.font = `bold ${11 * s}px 'Courier New'`;
-            ctx.globalAlpha = 1.0;
+
+            applyTextStyle(11, "#00f3ff");
             if(stats) ctx.fillText(Math.round(stats.hz) + " Hz", 0, 15*s);
 
             ctx.translate(0, 45*s);
-            ctx.globalAlpha = 0.8;
-            ctx.font = `${9 * s}px 'Courier New'`;
+            applyTextStyle(9, "#00f3ff");
             ctx.fillText("SIGNAL FLUX", 0, 0);
-            ctx.font = `bold ${11 * s}px 'Courier New'`;
-            ctx.globalAlpha = 1.0;
+
+            applyTextStyle(11, "#00f3ff");
             if(stats) {
                 if(stats.flux > 0.1) {
                     ctx.fillStyle = "#ff0055";
@@ -614,6 +651,7 @@
                     ctx.fillText("STABLE", 0, 15*s);
                 }
             }
+            resetShadow();
             ctx.restore();
 
             // --- BOTTOM BAR ---
@@ -622,12 +660,12 @@
             const bw = w * 0.4;
             ctx.beginPath();
             ctx.moveTo(-bw/2, 40*s); ctx.lineTo(-bw/2, 20*s); ctx.lineTo(-bw/2 + 20*s, 0); ctx.lineTo(bw/2 - 20*s, 0); ctx.lineTo(bw/2, 20*s); ctx.lineTo(bw/2, 40*s);
-            ctx.globalAlpha = 0.15; ctx.fill();
-            ctx.globalAlpha = 0.8; ctx.stroke();
-            ctx.fillStyle = "#00f3ff";
+            fillPanel();
+
+            applyTextStyle(11, "#00f3ff");
             ctx.textAlign = "center";
-            ctx.font = `bold ${11 * s}px 'Courier New'`;
             ctx.fillText("SYSTEM: ONLINE", 0, 25*s);
+            resetShadow();
             ctx.restore();
 
             // --- CENTER RETICLE ---
@@ -817,10 +855,12 @@
             }
 
             tunnelRings.forEach((ring, i) => {
-                ring.position.z += deltaTime * (5 + smoothBass * 10);
-                ring.rotation.z += deltaTime * (i%2==0 ? 1 : -1);
+                ring.position.z += deltaTime * (8 + smoothBass * 15); // Faster base speed
+                ring.rotation.z += deltaTime * (i%2==0 ? 0.5 : -0.5);
+
+                // Reset to deep background when it passes camera
                 if(ring.position.z > 5) {
-                    ring.position.z = -25;
+                    ring.position.z = -43; // Cycle back to the end of the line (12 rings * 4 units spacing - 5 start offset)
                 }
             });
 
