@@ -22,22 +22,37 @@
             z-index: 1;
         }
 
-        /* HOLOGRAPHIC HUD LAYER */
-        #hud-layer {
+        /* --- COMPACT MODULAR HUD LAYOUT --- */
+        #hud-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             z-index: 10;
             pointer-events: none;
+            display: grid;
+            grid-template-columns: 175px 1fr 175px;
+            grid-template-rows: 70px 1fr 70px;
+            grid-template-areas:
+                "top-left top-mid top-right"
+                "side-left center side-right"
+                "bot-left bot-mid bot-right";
         }
 
-        .hud-line { fill: none; stroke: #00f3ff; stroke-width: 1.5; opacity: 0.8; }
-        .hud-thin { fill: none; stroke: #00f3ff; stroke-width: 0.5; opacity: 0.4; }
+        /* Panel Positioning */
+        .hud-panel { position: relative; width: 100%; height: 100%; overflow: visible; }
+        .area-top { grid-area: top-left; grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: flex-start; }
+        .area-left { grid-area: side-left; display: flex; align-items: center; justify-content: flex-start; }
+        .area-right { grid-area: side-right; display: flex; align-items: center; justify-content: flex-end; }
+        .area-bottom { grid-area: bot-mid; display: flex; align-items: flex-end; justify-content: center; grid-column: 1 / -1; }
+        .area-center { grid-area: center; display: flex; align-items: center; justify-content: center; }
+
+        /* SVG Styles */
+        .hud-svg { overflow: visible; width: 100%; height: 100%; }
+        .hud-line { fill: none; stroke: #00f3ff; stroke-width: 1.5; opacity: 0.8; vector-effect: non-scaling-stroke; }
+        .hud-thin { fill: none; stroke: #00f3ff; stroke-width: 0.5; opacity: 0.4; vector-effect: non-scaling-stroke; }
         .hud-fill { fill: #00f3ff; opacity: 0.15; }
-        .hud-fill-alert { fill: #ff0055; opacity: 0.2; }
         .hud-text { fill: #00f3ff; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
+        .hud-text-sm { fill: #00f3ff; font-size: 9px; font-weight: normal; letter-spacing: 0px; opacity: 0.8; }
         .hud-text-lg { fill: #fff; font-size: 14px; letter-spacing: 3px; text-shadow: 0 0 5px #00f3ff; }
 
         /* UI OVERLAY */
@@ -104,18 +119,14 @@
             clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
         }
 
-        .btn:hover {
-            background: #00f3ff;
-            color: #000;
-            box-shadow: 0 0 25px rgba(0, 243, 255, 0.6);
-        }
+        .btn:hover { background: #00f3ff; color: #000; box-shadow: 0 0 25px rgba(0, 243, 255, 0.6); }
 
         #fileInput { display: none; }
 
         /* Recording UI */
         #recordContainer {
             position: fixed;
-            bottom: 30px;
+            bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 150;
@@ -127,22 +138,21 @@
         }
 
         .rec-btn {
-            padding: 12px 24px;
+            padding: 10px 20px;
             border: none;
             font-weight: 600;
             cursor: pointer;
             font-family: 'Courier New', monospace;
             text-transform: uppercase;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             letter-spacing: 1px;
             transition: all 0.2s;
             clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
         }
 
-        #recordButton { background: #ff0055; color: white; min-width: 180px; }
+        #recordButton { background: #ff0055; color: white; min-width: 150px; }
         #recordButton:hover { background: #ff3377; }
         #recordButton.recording { animation: pulseAlert 1s infinite; }
-
         #leaveButton { background: rgba(0, 243, 255, 0.2); color: #00f3ff; border: 1px solid #00f3ff; }
         #leaveButton:hover { background: #00f3ff; color: #000; }
 
@@ -154,14 +164,14 @@
 
         #fullscreenBtn {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
+            top: 15px;
+            right: 15px;
+            width: 35px;
+            height: 35px;
             background: rgba(0, 20, 40, 0.8);
             border: 1px solid #00f3ff;
             color: #00f3ff;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
             z-index: 150;
             display: flex;
@@ -171,9 +181,7 @@
         }
 
         #fullscreenBtn:hover { background: #00f3ff; color: #000; }
-
         #message { margin-top: 15px; color: #00f3ff; font-size: 0.8rem; min-height: 1.2em; }
-
         .checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; color: #81d4fa; margin-top: 15px; font-size: 0.8rem;}
         input[type="checkbox"] { accent-color: #00f3ff; cursor: pointer; }
 
@@ -193,7 +201,6 @@
             background-size: 100% 3px, 3px 100%;
             z-index: 6;
         }
-
     </style>
 </head>
 <body>
@@ -202,73 +209,103 @@
 <div class="vignette"></div>
 <div class="scanlines"></div>
 
-<!-- HOLOGRAPHIC HUD SVG -->
-<svg id="hud-layer" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+<!-- RESPONSIVE MODULAR HUD -->
+<div id="hud-container">
 
-    <!-- TOP FRAME -->
-    <g transform="translate(0, 0)">
-        <path d="M0,0 L1920,0 L1920,60 L1400,60 L1350,100 L570,100 L520,60 L0,60 Z" class="hud-fill"/>
-        <path d="M0,60 L520,60 L570,100 L1350,100 L1400,60 L1920,60" class="hud-line"/>
-        <text x="50" y="35" class="hud-text-lg">USS XENON // FLIGHT DECK</text>
-        <text x="1750" y="35" class="hud-text" id="clock-display">T-MINUS 00:00</text>
+    <!-- TOP BAR -->
+    <div class="hud-panel area-top">
+        <!-- Top Left -->
+        <svg class="hud-svg" style="width: 300px; height: 100%;">
+            <path d="M0,0 L300,0 L300,20 L260,50 L0,50 Z" class="hud-fill"/>
+            <path d="M0,50 L260,50 L300,20 L300,0" class="hud-line"/>
+            <text x="15" y="30" class="hud-text-lg">USS XENON</text>
+        </svg>
 
-        <!-- Top Ticks -->
-        <g transform="translate(600, 80)">
-            <line x1="0" y1="0" x2="720" y2="0" class="hud-thin"/>
-            <rect id="compass-tick" x="360" y="-10" width="4" height="20" fill="#ff0055"/>
-        </g>
-    </g>
+        <!-- Top Right -->
+        <svg class="hud-svg" style="width: 200px; height: 100%; margin-right: 50px;">
+            <path d="M0,0 L200,0 L200,50 L0,50 L40,20 L40,0 Z" class="hud-fill"/>
+            <path d="M40,0 L40,20 L0,50 L200,50" class="hud-line"/>
+            <text x="60" y="30" class="hud-text" id="clock-display">T-00:00</text>
+        </svg>
+    </div>
 
     <!-- LEFT PANEL (Engine Stats) -->
-    <g transform="translate(0, 200)">
-        <path d="M0,0 L120,0 L160,40 L160,600 L120,640 L0,640 Z" class="hud-fill"/>
-        <path d="M120,0 L160,40 L160,600 L120,640" class="hud-line"/>
+    <div class="hud-panel area-left">
+        <svg class="hud-svg" viewBox="0 0 175 600" preserveAspectRatio="xMinYMid meet">
+            <path d="M0,0 L100,0 L140,40 L140,500 L100,540 L0,540 Z" class="hud-fill"/>
+            <path d="M100,0 L140,40 L140,500 L100,540" class="hud-line"/>
 
-        <!-- Bars -->
-        <g transform="translate(30, 100)">
-            <text x="0" y="-20" class="hud-text">THRUSTER_L</text>
-            <rect x="0" y="0" width="20" height="200" class="hud-thin"/>
-            <rect id="bar-thrust-l" x="2" y="100" width="16" height="100" fill="#00f3ff" opacity="0.6"/>
+            <!-- Bars -->
+            <g transform="translate(20, 80)">
+                <text x="0" y="-15" class="hud-text">THRUSTER_L</text>
+                <rect x="0" y="0" width="15" height="150" class="hud-thin"/>
+                <rect id="bar-thrust-l" x="2" y="150" width="11" height="0" fill="#00f3ff" opacity="0.6"/>
 
-            <text x="50" y="-20" class="hud-text">THRUSTER_R</text>
-            <rect x="50" y="0" width="20" height="200" class="hud-thin"/>
-            <rect id="bar-thrust-r" x="52" y="100" width="16" height="100" fill="#00f3ff" opacity="0.6"/>
-        </g>
+                <text x="60" y="-15" class="hud-text">THRUSTER_R</text>
+                <rect x="60" y="0" width="15" height="150" class="hud-thin"/>
+                <rect id="bar-thrust-r" x="62" y="150" width="11" height="0" fill="#00f3ff" opacity="0.6"/>
+            </g>
 
-        <g transform="translate(30, 400)">
-            <text x="0" y="0" class="hud-text">SHIELD_INTEGRITY</text>
-            <text x="0" y="20" class="hud-text-lg" id="shield-val">100%</text>
-        </g>
-    </g>
+            <g transform="translate(20, 350)">
+                <text x="0" y="0" class="hud-text">GEOMETRY_SCAN</text>
+                <text x="0" y="20" class="hud-text-lg" id="shield-val">SCANNING...</text>
+            </g>
+        </svg>
+    </div>
 
-    <!-- RIGHT PANEL (Nav/Comms) -->
-    <g transform="translate(1760, 200)">
-        <path d="M160,0 L40,0 L0,40 L0,600 L40,640 L160,640 Z" class="hud-fill"/>
-        <path d="M40,0 L0,40 L0,600 L40,640" class="hud-line"/>
+    <!-- RIGHT PANEL (Detailed Music Stats) -->
+    <div class="hud-panel area-right">
+        <svg class="hud-svg" viewBox="0 0 175 600" preserveAspectRatio="xMaxYMid meet">
+            <g transform="translate(35,0)">
+                <path d="M140,0 L40,0 L0,40 L0,500 L40,540 L140,540 Z" class="hud-fill"/>
+                <path d="M40,0 L0,40 L0,500 L40,540" class="hud-line"/>
 
-        <g transform="translate(30, 100)">
-            <text x="0" y="-20" class="hud-text">SPECTRAL_ANALYSIS</text>
-            <rect id="bar-spec-1" x="0" y="0" width="80" height="10" fill="#00f3ff" opacity="0.4"/>
-            <rect id="bar-spec-2" x="0" y="20" width="60" height="10" fill="#00f3ff" opacity="0.4"/>
-            <rect id="bar-spec-3" x="0" y="40" width="90" height="10" fill="#00f3ff" opacity="0.4"/>
-            <rect id="bar-spec-4" x="0" y="60" width="30" height="10" fill="#00f3ff" opacity="0.4"/>
-        </g>
-    </g>
+                <g transform="translate(20, 80)">
+                    <text x="0" y="-15" class="hud-text">SENSOR_ARRAY</text>
+
+                    <!-- Spectral Bars -->
+                    <rect id="bar-spec-1" x="0" y="0" width="80" height="8" fill="#00f3ff" opacity="0.4"/>
+                    <rect id="bar-spec-2" x="0" y="15" width="60" height="8" fill="#00f3ff" opacity="0.4"/>
+                    <rect id="bar-spec-3" x="0" y="30" width="90" height="8" fill="#00f3ff" opacity="0.4"/>
+
+                    <!-- New Statistics -->
+                    <g transform="translate(0, 80)">
+                        <text x="0" y="0" class="hud-text-sm">OUTPUT_LEVEL</text>
+                        <text x="0" y="15" class="hud-text" id="stat-db">- inf dB</text>
+
+                        <text x="0" y="45" class="hud-text-sm">RESONANCE</text>
+                        <text x="0" y="60" class="hud-text" id="stat-hz">0 Hz</text>
+
+                        <text x="0" y="90" class="hud-text-sm">SIGNAL FLUX</text>
+                        <text x="0" y="105" class="hud-text" id="stat-flux">STABLE</text>
+                    </g>
+                </g>
+            </g>
+        </svg>
+    </div>
 
     <!-- BOTTOM FRAME -->
-    <g transform="translate(0, 1000)">
-        <path d="M0,80 L1920,80 L1920,0 L1520,0 L1470,40 L450,40 L400,0 L0,0 Z" class="hud-fill"/>
-        <path d="M400,0 L450,40 L1470,40 L1520,0" class="hud-line"/>
-        <text x="880" y="65" class="hud-text" style="letter-spacing:5px;">SYSTEM: ONLINE</text>
-    </g>
+    <div class="hud-panel area-bottom">
+        <svg class="hud-svg" style="width: 100%; height: 60px;">
+            <g transform="translate(0, 20)">
+                <rect x="30%" y="0" width="40%" height="40" class="hud-fill"/>
+                <line x1="30%" y1="0" x2="70%" y2="0" class="hud-line"/>
+                <line x1="30%" y1="0" x2="28%" y2="40" class="hud-line"/>
+                <line x1="70%" y1="0" x2="72%" y2="40" class="hud-line"/>
+                <text x="50%" y="25" class="hud-text" text-anchor="middle" style="letter-spacing:5px;">SYSTEM: ONLINE</text>
+            </g>
+        </svg>
+    </div>
 
-    <!-- CENTER RETICLE (Simple) -->
-    <g transform="translate(960, 540)">
-        <circle cx="0" cy="0" r="150" class="hud-thin" stroke-dasharray="10 20" opacity="0.2"/>
-        <line x1="-20" y1="0" x2="20" y2="0" class="hud-line" opacity="0.5"/>
-        <line x1="0" y1="-20" x2="0" y2="20" class="hud-line" opacity="0.5"/>
-    </g>
-</svg>
+    <!-- CENTER RETICLE -->
+    <div class="hud-panel area-center">
+        <svg class="hud-svg" viewBox="-100 -100 200 200" style="width: 300px; height: 300px;">
+            <circle cx="0" cy="0" r="80" class="hud-thin" stroke-dasharray="10 20" opacity="0.2"/>
+            <line x1="-20" y1="0" x2="20" y2="0" class="hud-line" opacity="0.5"/>
+            <line x1="0" y1="-20" x2="0" y2="20" class="hud-line" opacity="0.5"/>
+        </svg>
+    </div>
+</div>
 
 <button id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
 
@@ -334,7 +371,6 @@
 
         vec2 uv = (gl_FragCoord.xy * 2.0 - uResolution.xy) / uResolution.y;
 
-        // --- WARP TUNNEL ---
         float r = length(uv);
         float a = atan(uv.y, uv.x);
         float z = 1.0 / (r + 0.01);
@@ -343,8 +379,8 @@
         vec3 finalColor = vec3(0.0);
 
         for(float i = 0.0; i < 2.0; i++) {
-            vec2 p = vec2(z * 0.5 + speed * 0.2, a / PI + i * 0.5);
-            float cloud = sin(p.x * 5.0) * sin(p.y * 5.0);
+            vec2 p = vec2(z * 0.5 + speed * 0.2, a);
+            float cloud = sin(p.x * 5.0) * sin(p.y * 5.0 + i * 3.0);
             cloud += sin(p.x * 10.0 + uTime) * 0.5;
             float depth = 0.1 / abs(cloud + 0.1);
             vec3 col = palette(z * 0.1 + i * 0.2 + uBass * 0.1);
@@ -358,7 +394,6 @@
         streaks = smoothstep(0.8, 1.0, streaks);
         finalColor += vec3(0.8, 0.9, 1.0) * streaks * uHigh;
 
-        // Darken center for 3D objects to pop
         finalColor *= smoothstep(0.0, 0.4, r);
 
         vec3 fadeColor = vec3(0.0, 0.02, 0.05);
@@ -373,15 +408,27 @@
         // --- CONFIG & STATE ---
         let audioContext, analyser, dataArray, sourceNode;
         let renderer, sceneBG, cameraBG, materialBG, meshBG;
-        let scene3D, camera3D; // For Vector Graphics
+        let scene3D, camera3D;
         let isRunning = false;
         let currentAudioFile = null;
 
         // 3D HUD Objects
         let shipWireframe, planetWireframe, tunnelRings = [];
+        let shipCoreMesh; // Separate ref for the core shape
+        let currentShapeIdx = 0;
+
+        // Morphing State
+        let morphState = {
+            active: false,
+            start: 0,
+            duration: 10.0, // SLOW SMOOTH TRANSITION
+            oldMesh: null,
+            newMesh: null
+        };
 
         // Audio State
         let smoothBass = 0, smoothMid = 0, smoothHigh = 0;
+        let lastVolume = 0;
 
         // Fading State
         let isFading = false;
@@ -398,13 +445,14 @@
         const barThrustL = document.getElementById('bar-thrust-l');
         const barThrustR = document.getElementById('bar-thrust-r');
         const shieldVal = document.getElementById('shield-val');
-        const compassTick = document.getElementById('compass-tick');
         const clockDisplay = document.getElementById('clock-display');
+        const statDb = document.getElementById('stat-db');
+        const statHz = document.getElementById('stat-hz');
+        const statFlux = document.getElementById('stat-flux');
         const specBars = [
             document.getElementById('bar-spec-1'),
             document.getElementById('bar-spec-2'),
-            document.getElementById('bar-spec-3'),
-            document.getElementById('bar-spec-4')
+            document.getElementById('bar-spec-3')
         ];
 
         const container = document.getElementById('canvas-container');
@@ -421,14 +469,14 @@
 
         // --- THREE.JS SETUP ---
         function initThree() {
-            // RENDERER
+            if (renderer) { container.innerHTML = ''; }
+
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.autoClear = false; // Important for multi-pass
+            renderer.autoClear = false;
             container.appendChild(renderer.domElement);
 
-            // SCENE 1: BACKGROUND SHADER
             sceneBG = new THREE.Scene();
             cameraBG = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
             const geometry = new THREE.PlaneGeometry(2, 2);
@@ -447,9 +495,7 @@
             meshBG = new THREE.Mesh(geometry, materialBG);
             sceneBG.add(meshBG);
 
-            // SCENE 2: 3D VECTOR GRAPHICS
             scene3D = new THREE.Scene();
-            // Perspective Camera: FOV 75, Aspect, Near 0.1, Far 1000
             camera3D = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
             camera3D.position.z = 10;
 
@@ -458,49 +504,49 @@
             container.addEventListener("webglcontextlost", (event) => { event.preventDefault(); resetUI(); }, false);
             container.addEventListener("webglcontextrestored", initThree, false);
             window.addEventListener('resize', onResize);
+            onResize();
         }
 
         function create3DInterface() {
             const wireMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.6 });
             const alertMat = new THREE.LineBasicMaterial({ color: 0xff0055, transparent: true, opacity: 0.8 });
 
-            // 1. SHIP DIAGNOSTIC (Left Bottom)
+            // 1. MORPHING SHIP (Left)
             const shipGroup = new THREE.Group();
 
-            // Core
+            // Initial Core with dedicated material for fading
             const coreGeo = new THREE.IcosahedronGeometry(1, 0);
-            const core = new THREE.LineSegments(new THREE.WireframeGeometry(coreGeo), wireMat);
-            shipGroup.add(core);
+            const coreMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.6 });
+            shipCoreMesh = new THREE.LineSegments(new THREE.WireframeGeometry(coreGeo), coreMat);
+            shipGroup.add(shipCoreMesh);
 
-            // Rings around ship
+            // Fixed Ring
             const ringGeo = new THREE.TorusGeometry(1.6, 0.05, 4, 32);
             const ring = new THREE.LineSegments(new THREE.WireframeGeometry(ringGeo), wireMat);
             ring.rotation.x = Math.PI / 2;
             shipGroup.add(ring);
 
-            shipGroup.position.set(-6, -3, 0); // Bottom Left position in 3D space
+            shipGroup.position.set(-6, -3, 0);
             shipGroup.rotation.y = 0.5;
             scene3D.add(shipGroup);
             shipWireframe = shipGroup;
 
-            // 2. TACTICAL PLANET (Right Bottom)
+            // 2. TACTICAL PLANET (Right)
             const planetGroup = new THREE.Group();
             const planetGeo = new THREE.SphereGeometry(1.5, 16, 16);
             const planet = new THREE.LineSegments(new THREE.WireframeGeometry(planetGeo), alertMat);
             planetGroup.add(planet);
-
-            // Orbit line
             const orbitGeo = new THREE.TorusGeometry(2.2, 0.02, 4, 64);
             const orbit = new THREE.Line(new THREE.WireframeGeometry(orbitGeo), wireMat);
             orbit.rotation.x = Math.PI / 2.3;
             planetGroup.add(orbit);
 
-            planetGroup.position.set(6, -3, 0); // Bottom Right
+            planetGroup.position.set(6, -3, 0);
             scene3D.add(planetGroup);
             planetWireframe = planetGroup;
 
-            // 3. TARGETING TUNNEL RINGS
-            // Create a series of rings moving towards camera
+            // 3. TUNNEL
+            tunnelRings = [];
             for(let i=0; i<6; i++) {
                 const tunnelGeo = new THREE.OctahedronGeometry(1 + i*0.5, 0);
                 const tunnelRing = new THREE.LineSegments(new THREE.WireframeGeometry(tunnelGeo), new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.3 - (i*0.05) }));
@@ -516,51 +562,132 @@
             const h = window.innerHeight;
 
             renderer.setSize(w, h);
-
-            // Update BG Uniforms
             materialBG.uniforms.uResolution.value.x = w;
             materialBG.uniforms.uResolution.value.y = h;
 
-            // Update 3D Camera
             camera3D.aspect = w / h;
             camera3D.updateProjectionMatrix();
+
+            const vFOV = THREE.MathUtils.degToRad(camera3D.fov);
+            const distance = camera3D.position.z;
+            const heightAtZero = 2 * Math.tan(vFOV / 2) * distance;
+            const widthAtZero = heightAtZero * camera3D.aspect;
+
+            if (shipWireframe) {
+                shipWireframe.position.x = (-widthAtZero / 2) + 4;
+                shipWireframe.position.y = -heightAtZero/4;
+            }
+            if (planetWireframe) {
+                planetWireframe.position.x = (widthAtZero / 2) - 4;
+                planetWireframe.position.y = -heightAtZero/4;
+            }
         }
 
-        // --- HUD UPDATE LOGIC (SVG) ---
-        function updateSVG(bass, mid, high, time) {
-            // Bars (Engines)
-            const heightL = 200 * bass;
-            const heightR = 200 * mid;
+        // --- SMOOTH MORPHING LOGIC ---
+        function updateMorphing(time) {
+            // Trigger new morph if idle
+            if (!morphState.active) {
+                morphState.active = true;
+                morphState.start = time;
+                morphState.oldMesh = shipCoreMesh;
+
+                // Advance Shape
+                currentShapeIdx = (currentShapeIdx + 1) % 4;
+                let newGeo;
+                const shapeName = ["ICOSAHEDRON", "OCTAHEDRON", "DODECAHEDRON", "TETRAHEDRON"][currentShapeIdx];
+
+                switch(currentShapeIdx) {
+                    case 0: newGeo = new THREE.IcosahedronGeometry(1, 0); break;
+                    case 1: newGeo = new THREE.OctahedronGeometry(1, 0); break;
+                    case 2: newGeo = new THREE.DodecahedronGeometry(1, 0); break;
+                    case 3: newGeo = new THREE.TetrahedronGeometry(1, 0); break;
+                }
+
+                // Create new mesh (hidden initially)
+                const wireGeo = new THREE.WireframeGeometry(newGeo);
+                newGeo.dispose(); // Cleanup prim
+
+                const mat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.0 });
+                morphState.newMesh = new THREE.LineSegments(wireGeo, mat);
+                morphState.newMesh.scale.setScalar(0.5); // Start small
+
+                shipWireframe.add(morphState.newMesh);
+
+                // Update label mid-transition
+                setTimeout(() => { if(shieldVal) shieldVal.textContent = shapeName; }, morphState.duration * 500);
+            }
+
+            // Animate Transition
+            if (morphState.active) {
+                const progress = (time - morphState.start) / morphState.duration;
+
+                if (progress >= 1.0) {
+                    // FINISHED
+                    morphState.active = false;
+
+                    // Cleanup old
+                    if (morphState.oldMesh) {
+                        morphState.oldMesh.geometry.dispose();
+                        morphState.oldMesh.material.dispose();
+                        shipWireframe.remove(morphState.oldMesh);
+                    }
+
+                    // Promote new
+                    shipCoreMesh = morphState.newMesh;
+                    shipCoreMesh.material.opacity = 0.6;
+                    shipCoreMesh.scale.setScalar(1.0);
+
+                } else {
+                    // INTERPOLATE
+                    // Old fades out and shrinks
+                    if (morphState.oldMesh) {
+                        morphState.oldMesh.material.opacity = 0.6 * (1.0 - progress);
+                        morphState.oldMesh.scale.setScalar(1.0 - (0.5 * progress));
+                        morphState.oldMesh.rotation.y -= 0.01;
+                        morphState.oldMesh.rotation.x += 0.005;
+                    }
+
+                    // New fades in and grows
+                    if (morphState.newMesh) {
+                        morphState.newMesh.material.opacity = 0.6 * progress;
+                        morphState.newMesh.scale.setScalar(0.5 + (0.5 * progress));
+                        morphState.newMesh.rotation.y += 0.01;
+                        morphState.newMesh.rotation.x -= 0.005;
+                    }
+                }
+            }
+        }
+
+        function updateSVG(bass, mid, high, time, stats) {
+            const heightL = 150 * bass;
+            const heightR = 150 * mid;
             barThrustL.setAttribute('height', heightL);
-            barThrustL.setAttribute('y', 200 - heightL);
+            barThrustL.setAttribute('y', 150 - heightL);
             barThrustR.setAttribute('height', heightR);
-            barThrustR.setAttribute('y', 200 - heightR);
+            barThrustR.setAttribute('y', 150 - heightR);
 
-            // Shield %
-            shieldVal.textContent = Math.floor(100 - (high * 20)) + "%";
-
-            // Compass Tick
-            const compassX = 360 + Math.sin(time) * 100;
-            compassTick.setAttribute('x', compassX);
-
-            // Spec Bars (Right)
             specBars.forEach((bar, i) => {
                 const val = (i % 2 === 0) ? bass : high;
-                bar.setAttribute('width', 20 + val * 100);
+                bar.setAttribute('width', 20 + val * 80);
             });
 
-            // Clock
+            if(stats) {
+                statDb.textContent = stats.db.toFixed(1) + " dB";
+                statHz.textContent = Math.round(stats.hz) + " Hz";
+                statFlux.textContent = stats.flux > 0.1 ? "VOLATILE" : "STABLE";
+                statFlux.setAttribute('fill', stats.flux > 0.1 ? "#ff0055" : "#00f3ff");
+            }
+
             const mins = Math.floor(time / 60).toString().padStart(2, '0');
             const secs = Math.floor(time % 60).toString().padStart(2, '0');
-            clockDisplay.textContent = `FLIGHT TIME ${mins}:${secs}`;
+            clockDisplay.textContent = `T-${mins}:${secs}`;
         }
 
-        // --- AUDIO ENGINE ---
         function initAudio() {
             if(!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
-                analyser.fftSize = 512;
+                analyser.fftSize = 2048;
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
             } else if (audioContext.state === 'suspended') {
                 audioContext.resume();
@@ -568,19 +695,41 @@
         }
 
         function getAudioData() {
-            if(!analyser) return { bass:0, mid:0, high:0 };
+            if(!analyser) return { bass:0, mid:0, high:0, stats: {db: -100, hz: 0, flux: 0} };
             analyser.getByteFrequencyData(dataArray);
 
+            const len = dataArray.length;
             const avg = (start, end) => {
                 let sum = 0;
                 for(let i=start; i<end; i++) sum += dataArray[i];
                 return sum / (end-start);
             };
 
+            let sumSq = 0;
+            let peakVal = 0;
+            let peakIdx = 0;
+            for(let i=0; i<len; i++) {
+                const val = dataArray[i] / 255.0;
+                sumSq += val * val;
+                if(dataArray[i] > peakVal) {
+                    peakVal = dataArray[i];
+                    peakIdx = i;
+                }
+            }
+
+            const rms = Math.sqrt(sumSq / len);
+            let db = 20 * Math.log10(rms);
+            if (!isFinite(db)) db = -100;
+
+            const hz = peakIdx * (audioContext.sampleRate / analyser.fftSize);
+            const flux = Math.abs(rms - lastVolume);
+            lastVolume = rms;
+
             return {
                 bass: avg(0, 10) / 255,
                 mid: avg(10, 80) / 255,
-                high: avg(80, 200) / 255
+                high: avg(80, 200) / 255,
+                stats: { db, hz, flux }
             };
         }
 
@@ -607,30 +756,29 @@
                 materialBG.uniforms.uFade.value = fadeProgress;
             }
 
-            const audioData = getAudioData();
-            smoothBass += (audioData.bass - smoothBass) * 0.15;
-            smoothMid += (audioData.mid - smoothMid) * 0.15;
-            smoothHigh += (audioData.high - smoothHigh) * 0.15;
+            const data = getAudioData();
+            smoothBass += (data.bass - smoothBass) * 0.15;
+            smoothMid += (data.mid - smoothMid) * 0.15;
+            smoothHigh += (data.high - smoothHigh) * 0.15;
 
-            // 1. UPDATE SHADER BG
             materialBG.uniforms.uTime.value = currentTimeSec;
             materialBG.uniforms.uBass.value = smoothBass;
             materialBG.uniforms.uMid.value = smoothMid;
             materialBG.uniforms.uHigh.value = smoothHigh;
 
-            // 2. UPDATE 3D OBJECTS
+            // Handle Ship
             if(shipWireframe) {
                 shipWireframe.rotation.x += deltaTime * 0.5;
                 shipWireframe.rotation.y += deltaTime * 0.2;
-                shipWireframe.scale.setScalar(1 + smoothBass * 0.3); // Pulse
+                // Run continuous smooth morph
+                updateMorphing(currentTimeSec);
             }
 
             if(planetWireframe) {
                 planetWireframe.rotation.y -= deltaTime;
-                planetWireframe.children[0].material.opacity = 0.5 + smoothHigh; // Glow
+                planetWireframe.children[0].material.opacity = 0.5 + smoothHigh;
             }
 
-            // Move Tunnel Rings
             tunnelRings.forEach((ring, i) => {
                 ring.position.z += deltaTime * (5 + smoothBass * 10);
                 ring.rotation.z += deltaTime * (i%2==0 ? 1 : -1);
@@ -639,14 +787,12 @@
                 }
             });
 
-            // 3. UPDATE SVG
-            updateSVG(smoothBass, smoothMid, smoothHigh, currentTimeSec);
+            updateSVG(smoothBass, smoothMid, smoothHigh, currentTimeSec, data.stats);
 
-            // 4. RENDER PASSES
             renderer.clear();
-            renderer.render(sceneBG, cameraBG); // Draw BG
-            renderer.clearDepth(); // Clear depth buffer so 3D draws on top
-            renderer.render(scene3D, camera3D); // Draw 3D HUD
+            renderer.render(sceneBG, cameraBG);
+            renderer.clearDepth();
+            renderer.render(scene3D, camera3D);
 
             animationFrameId = requestAnimationFrame(animate);
         }
@@ -692,6 +838,8 @@
             materialBG.uniforms.uFade.value = 0.0;
             lastFrameTime = performance.now();
             smoothBass = 0; smoothMid = 0; smoothHigh = 0;
+
+            onResize();
 
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             animate(lastFrameTime);
