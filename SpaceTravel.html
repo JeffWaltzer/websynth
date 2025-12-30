@@ -207,11 +207,12 @@
 
     #define PI 3.14159265359
 
+    // COOLER PALETTE (Cyan, Magenta, Blue - Reduced Yellow potential)
     vec3 palette( in float t ) {
         vec3 a = vec3(0.5, 0.5, 0.5);
         vec3 b = vec3(0.5, 0.5, 0.5);
         vec3 c = vec3(1.0, 1.0, 1.0);
-        vec3 d = vec3(0.80, 0.90, 0.30);
+        vec3 d = vec3(0.263, 0.416, 0.557); // Cool Neon Palette
         return a + b*cos( 6.28318*(c*t+d) );
     }
 
@@ -242,9 +243,11 @@
             cloud += sin(p.x * 10.0 + uTime) * 0.5;
             float depth = 0.1 / abs(cloud + 0.1);
             vec3 col = palette(z * 0.1 + i * 0.2 + uBass * 0.1);
-            col.r += uBass * 0.4;
-            col.g += uMid * 0.3;
-            col.b += uHigh * 0.8;
+
+            // Rebalance channels to favor cool colors
+            col.r *= 0.8; // Reduce red slightly
+            col.b += uHigh * 0.5; // Boost blue
+
             finalColor += col * depth * (r * r);
         }
 
@@ -252,12 +255,18 @@
         streaks = smoothstep(0.8, 1.0, streaks);
         finalColor += vec3(0.8, 0.9, 1.0) * streaks * uHigh;
 
-        // Center darken (Reduced significantly to allow visibility at center)
+        // --- EDGE COLOR CORRECTION ---
+        // Reduce Green and Red mixing at edges to kill Yellow
+        float edgeDeYellow = smoothstep(0.5, 1.5, r);
+        finalColor.g *= 1.0 - (edgeDeYellow * 0.8); // Kill Green at edges
+        finalColor.r *= 1.0 - (edgeDeYellow * 0.4); // Dampen Red
+        finalColor.b += edgeDeYellow * 0.2;         // Boost Blue
+
+        // Center darken (Minimal to show center)
         finalColor *= smoothstep(0.0, 0.05, r);
 
-        // Edge Vignette (Reduce brightness of yellow/streaks at edges)
-        // Darkens rapidly past r=1.2
-        finalColor *= 1.0 - smoothstep(1.0, 2.0, r);
+        // Edge Vignette
+        finalColor *= 1.0 - smoothstep(1.0, 2.2, r);
 
         vec3 fadeColor = vec3(0.0, 0.02, 0.05);
         finalColor = mix(finalColor, fadeColor, uFade);
@@ -279,14 +288,15 @@
 
         // 3D HUD Objects
         let shipWireframe, planetWireframe, tunnelRings = [];
-        let shipCoreMesh; // Separate ref for the core shape
+        let shipCoreMesh;
+        let centerSpinner;
         let currentShapeIdx = 0;
 
         // Morphing State
         let morphState = {
             active: false,
             start: 0,
-            duration: 10.0, // SLOW SMOOTH TRANSITION
+            duration: 10.0,
             oldMesh: null,
             newMesh: null
         };
@@ -394,7 +404,6 @@
             ring.rotation.x = Math.PI / 2;
             shipGroup.add(ring);
 
-            // Moved inward slightly (x: -5) to avoid opaque panel occlusion
             shipGroup.position.set(-5, -3, 0);
             shipGroup.rotation.y = 0.5;
             scene3D.add(shipGroup);
@@ -410,39 +419,51 @@
             orbit.rotation.x = Math.PI / 2.3;
             planetGroup.add(orbit);
 
-            // Moved inward slightly (x: 5) to avoid opaque panel occlusion
             planetGroup.position.set(5, -3, 0);
             scene3D.add(planetGroup);
             planetWireframe = planetGroup;
 
-            // 3. TUNNEL (Denser, deeper generation)
+            // 3. TUNNEL
             tunnelRings = [];
-            // Increased count to 12 to fill the void
-            for(let i=0; i<12; i++) {
-                // Scale starts smaller (0.5) to look further away
-                const s = 0.5 + i * 0.5;
-                // Create a cross-frame (two squares rotated) using PlaneGeometry edges
-                const frameGeo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(s, s));
-                // Opacity fades slightly with distance but remains visible
-                const frameMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.8 - (i*0.06) });
+            const baseTunnelGeo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(4.0, 4.0));
 
-                const frame1 = new THREE.LineSegments(frameGeo, frameMat);
-                const frame2 = new THREE.LineSegments(frameGeo, frameMat);
+            for(let i=0; i<40; i++) {
+                const frameMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.0 });
+                const frame1 = new THREE.LineSegments(baseTunnelGeo, frameMat);
+                const frame2 = new THREE.LineSegments(baseTunnelGeo, frameMat);
                 frame2.rotation.z = Math.PI / 4;
 
                 const tunnelGroup = new THREE.Group();
                 tunnelGroup.add(frame1);
                 tunnelGroup.add(frame2);
 
-                // Start much deeper (-50) and space them out
-                tunnelGroup.position.z = -5 - (i * 4);
+                tunnelGroup.position.z = - (i * 3);
                 scene3D.add(tunnelGroup);
                 tunnelRings.push(tunnelGroup);
             }
+
+            // 4. CENTER SPINNER (NEW)
+            const spinnerGroup = new THREE.Group();
+
+            // Core Crystal
+            const spinGeo = new THREE.OctahedronGeometry(0.3, 0);
+            const spinMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.9 });
+            const spinMesh = new THREE.LineSegments(new THREE.WireframeGeometry(spinGeo), spinMat);
+
+            // Gyroscope Ring
+            const spinRingGeo = new THREE.TorusGeometry(0.5, 0.01, 2, 32); // Thin vector ring
+            const spinRingMesh = new THREE.LineSegments(new THREE.WireframeGeometry(spinRingGeo), wireMat);
+            spinRingMesh.rotation.x = Math.PI / 2;
+
+            spinnerGroup.add(spinMesh);
+            spinnerGroup.add(spinRingMesh);
+
+            spinnerGroup.position.z = 0; // Absolute center
+            scene3D.add(spinnerGroup);
+            centerSpinner = spinnerGroup;
         }
 
         // --- CENTRALIZED LAYOUT UPDATE ---
-        // Handles 3D Object positioning based on whatever current camera aspect is
         function update3DLayout() {
             if (!camera3D) return;
             const vFOV = THREE.MathUtils.degToRad(camera3D.fov);
@@ -450,7 +471,6 @@
             const heightAtZero = 2 * Math.tan(vFOV / 2) * distance;
             const widthAtZero = heightAtZero * camera3D.aspect;
 
-            // Moved objects slightly more towards center (widthAtZero/2.5) to clear panels
             if (shipWireframe) {
                 shipWireframe.position.x = (-widthAtZero / 2.5);
                 shipWireframe.position.y = -heightAtZero/4;
@@ -517,14 +537,12 @@
             ctx.strokeStyle = "#00f3ff";
             ctx.lineWidth = 1.5 * s;
 
-            // PANEL BACKGROUND STYLE (High Contrast + Slight Tint)
             const fillPanel = () => {
                 ctx.fillStyle = "rgba(0, 5, 15, 0.85)";
                 ctx.fill();
                 ctx.stroke();
             };
 
-            // TEXT STYLE
             const applyTextStyle = (size = 11, color = "#00f3ff") => {
                 ctx.font = `bold ${size * s}px 'Courier New'`;
                 ctx.fillStyle = color;
@@ -686,13 +704,11 @@
 
         // --- SMOOTH MORPHING LOGIC ---
         function updateMorphing(time) {
-            // Trigger new morph if idle
             if (!morphState.active) {
                 morphState.active = true;
                 morphState.start = time;
                 morphState.oldMesh = shipCoreMesh;
 
-                // Advance Shape
                 currentShapeIdx = (currentShapeIdx + 1) % 4;
                 let newGeo;
 
@@ -708,17 +724,15 @@
 
                 const mat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.0 });
                 morphState.newMesh = new THREE.LineSegments(wireGeo, mat);
-                morphState.newMesh.scale.setScalar(0.5); // Start small
+                morphState.newMesh.scale.setScalar(0.5);
 
                 shipWireframe.add(morphState.newMesh);
             }
 
-            // Animate Transition
             if (morphState.active) {
                 const progress = (time - morphState.start) / morphState.duration;
 
                 if (progress >= 1.0) {
-                    // FINISHED
                     morphState.active = false;
 
                     if (morphState.oldMesh) {
@@ -732,14 +746,12 @@
                     shipCoreMesh.scale.setScalar(1.0);
 
                 } else {
-                    // INTERPOLATE
                     if (morphState.oldMesh) {
                         morphState.oldMesh.material.opacity = 0.6 * (1.0 - progress);
                         morphState.oldMesh.scale.setScalar(1.0 - (0.5 * progress));
                         morphState.oldMesh.rotation.y -= 0.01;
                         morphState.oldMesh.rotation.x += 0.005;
                     }
-
                     if (morphState.newMesh) {
                         morphState.newMesh.material.opacity = 0.6 * progress;
                         morphState.newMesh.scale.setScalar(0.5 + (0.5 * progress));
@@ -833,9 +845,9 @@
             }
 
             const data = getAudioData();
-            smoothBass += (data.bass - smoothBass) * 0.15;
-            smoothMid += (data.mid - smoothMid) * 0.15;
-            smoothHigh += (data.high - smoothHigh) * 0.15;
+            smoothBass += (data.bass - smoothBass) * 0.1;
+            smoothMid += (data.mid - smoothMid) * 0.1;
+            smoothHigh += (data.high - smoothHigh) * 0.1;
 
             materialBG.uniforms.uTime.value = currentTimeSec;
             materialBG.uniforms.uBass.value = smoothBass;
@@ -854,14 +866,62 @@
                 planetWireframe.children[0].material.opacity = 0.5 + smoothHigh;
             }
 
-            tunnelRings.forEach((ring, i) => {
-                ring.position.z += deltaTime * (8 + smoothBass * 15); // Faster base speed
-                ring.rotation.z += deltaTime * (i%2==0 ? 0.5 : -0.5);
-
-                // Reset to deep background when it passes camera
-                if(ring.position.z > 5) {
-                    ring.position.z = -43; // Cycle back to the end of the line (12 rings * 4 units spacing - 5 start offset)
+            // Spinner Logic
+            if(centerSpinner) {
+                // Rotate entire group
+                centerSpinner.rotation.z -= deltaTime * 0.5;
+                // Rotate internal core faster
+                if(centerSpinner.children[0]) {
+                    centerSpinner.children[0].rotation.y += deltaTime * 2;
+                    centerSpinner.children[0].rotation.x += deltaTime;
+                    // Pulse core with High frequencies (snare/hats)
+                    const pulse = 1.0 + (smoothHigh * 0.5);
+                    centerSpinner.children[0].scale.setScalar(pulse);
                 }
+                // Rotate outer ring counter
+                if(centerSpinner.children[1]) {
+                    centerSpinner.children[1].rotation.x += deltaTime * 0.2;
+                }
+            }
+
+            const baseHue = (currentTimeSec * 0.05) % 1.0;
+
+            tunnelRings.forEach((ring, i) => {
+                ring.position.z += deltaTime * (6 + smoothBass * 8);
+                ring.rotation.z += deltaTime * (i%2==0 ? 0.1 : -0.1);
+
+                const spinSpeed = 0.4 + (i * 0.02) + (smoothMid * 0.5);
+                if (ring.children[0]) ring.children[0].rotation.z += deltaTime * spinSpeed;
+                if (ring.children[1]) ring.children[1].rotation.z -= deltaTime * spinSpeed;
+
+                if(ring.position.z > 5) {
+                    ring.position.z -= 120;
+                }
+
+                ring.scale.setScalar(1.0);
+
+                const z = ring.position.z;
+
+                let opacity = 0;
+                if (z < -115) opacity = 0;
+                else if (z < -100) opacity = (z + 115) / 15;
+                else if (z < -10) opacity = 1.0;
+                else opacity = (2 - z) / 12;
+
+                opacity = Math.max(0, Math.min(1, opacity));
+
+                const hue = (baseHue + (i * 0.02) + (smoothBass * 0.1)) % 1.0;
+                const saturation = 0.8;
+                const lightness = 0.5 + (smoothHigh * 0.4);
+
+                const ringColor = new THREE.Color().setHSL(hue, saturation, lightness);
+
+                ring.children.forEach(child => {
+                    if(child.material) {
+                        child.material.opacity = opacity * 0.8;
+                        child.material.color.copy(ringColor);
+                    }
+                });
             });
 
             drawHUD(smoothBass, smoothMid, smoothHigh, currentTimeSec, data.stats);
