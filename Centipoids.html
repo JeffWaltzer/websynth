@@ -1,0 +1,2348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Centipoids 22.6: Short & Deadly</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #020502;
+            color: #fff;
+            font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        canvas {
+            display: block;
+            background-color: #000;
+            cursor: crosshair;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            font-size: 20px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px #000;
+            width: 90%;
+            display: flex;
+            justify-content: space-between;
+            z-index: 5;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #484;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            pointer-events: none;
+            text-shadow: 0 0 2px #000;
+            background: rgba(0,0,0,0.5);
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            background: rgba(10, 20, 10, 0.95);
+            padding: 40px;
+            border: 2px solid #4f4;
+            box-shadow: 0 0 30px #020;
+            z-index: 10;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            min-width: 320px;
+            max-width: 90%;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            color: #ff3333;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }
+
+        button {
+            background: #020;
+            border: 2px solid #4f4;
+            color: #4f4;
+            padding: 10px 20px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #4f4;
+            color: #000;
+        }
+
+        button:disabled {
+            border-color: #444;
+            color: #444;
+            cursor: not-allowed;
+        }
+
+        .mouse-msg {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffff00;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ff0000;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            z-index: 8;
+        }
+
+        #startMsg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #4f4;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            text-align: center;
+            animation: blink 1s infinite;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 8;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* High Score UI */
+        #highScoreList {
+            text-align: left;
+            margin: 15px 0;
+            font-size: 14px;
+            color: #aaa;
+            border-top: 1px solid #444;
+            border-bottom: 1px solid #444;
+            padding: 10px 0;
+            height: 150px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.5);
+            scrollbar-width: thin;
+            scrollbar-color: #4f4 #000;
+        }
+
+        .hs-entry {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            padding: 2px 5px;
+        }
+
+        .hs-entry:nth-child(even) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .hs-rank {
+            color: #888;
+            width: 30px;
+        }
+
+        .hs-name {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .hs-score {
+            color: #4f4;
+        }
+
+        #nameInputContainer {
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        #nameInput {
+            background: #000;
+            border: 1px solid #4f4;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            padding: 5px;
+            width: 100px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        #statusMsg {
+            font-size: 10px;
+            color: #888;
+            margin-top: 5px;
+            min-height: 14px;
+        }
+
+        #refreshBtn {
+            font-size: 10px;
+            padding: 5px;
+            margin-left: 10px;
+            border: 1px solid #666;
+            color: #888;
+            background: transparent;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <div>SCORE: <span id="scoreEl">0</span> | LEVEL: <span id="levelEl">1</span></div>
+    <div id="livesContainer">LIVES: <span id="livesEl"></span></div>
+</div>
+<div class="mouse-msg" id="mouseMsg">MOUSE ALLY DEPLOYED!</div>
+<div id="startMsg">PRESS ANY KEY TO START<br><span style="font-size:16px; color:#8f8">ATTRACT MODE</span></div>
+
+<div class="controls">
+    ARROWS: Thrust/Rotate | SPACE: Fire | R: Reboot System
+</div>
+
+<div id="gameOver">
+    <h1>Signal Lost</h1>
+    <p>Final Score: <span id="finalScore">0</span></p>
+
+    <div id="nameInputContainer">
+        <p style="color:#ff0">NEW HIGH SCORE!</p>
+        <input id="nameInput" maxlength="3" placeholder="AAA" type="text">
+        <button id="submitScoreBtn">SAVE</button>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+        <span style="font-size:12px; color:#4f4;">LEADERBOARD</span>
+        <button id="refreshBtn">REFRESH</button>
+    </div>
+    <div id="highScoreList">Initializing...</div>
+    <div id="statusMsg"></div>
+
+    <button id="restartBtn">Re-Initialize</button>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script type="module">
+    import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import {
+        getAuth,
+        signInAnonymously,
+        signInWithCustomToken,
+        onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+    import {
+        getFirestore,
+        collection,
+        addDoc,
+        getDocs,
+        query
+    } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+    // --- FIREBASE CONFIGURATION ---
+    let app, auth, db, appId;
+    let currentUser = null;
+    let highScores = [];
+    const COLLECTION_NAME = 'centipoids_scores';
+
+    function updateStatus(msg) {
+        const el = document.getElementById('statusMsg');
+        if (el) el.innerText = msg;
+    }
+
+    try {
+        if (typeof __firebase_config !== 'undefined') {
+            const firebaseConfig = JSON.parse(__firebase_config);
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+            updateStatus("Authenticating...");
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    updateStatus("Connected.");
+                    fetchHighScores();
+                } else {
+                    currentUser = null;
+                    updateStatus("Disconnected.");
+                }
+            });
+
+            const initAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Auth failed", error);
+                    updateStatus("Auth Error: " + error.message);
+                }
+            };
+            initAuth();
+
+        } else {
+            updateStatus("Local mode (No DB)");
+            document.getElementById('highScoreList').innerHTML = '<div style="padding:20px; text-align:center">Arcade Mode<br>(No Database)</div>';
+        }
+    } catch (err) {
+        console.error("Firebase init error:", err);
+        updateStatus("DB Config Error");
+    }
+
+    // --- HIGHSCORE LOGIC ---
+
+    async function fetchHighScores() {
+        if (!currentUser || !db) return;
+        updateStatus("Fetching scores...");
+        try {
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', COLLECTION_NAME));
+            const querySnapshot = await getDocs(q);
+            const scores = [];
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                data.score = Number(data.score); // Ensure number
+                scores.push(data);
+            });
+            scores.sort((a, b) => b.score - a.score);
+            highScores = scores.slice(0, 10);
+            renderHighScores();
+            updateStatus("Ready.");
+        } catch (e) {
+            console.error("Error fetching scores:", e);
+            updateStatus("Fetch Error. Check Console.");
+        }
+    }
+
+    async function saveHighScore(name, score) {
+        if (!currentUser || !db) return;
+        updateStatus("Saving...");
+        const btn = document.getElementById('submitScoreBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = "SAVING...";
+        }
+
+        try {
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', COLLECTION_NAME), {
+                name: name.toUpperCase(),
+                score: Number(score),
+                date: new Date().toISOString(),
+                uid: currentUser.uid
+            });
+            await fetchHighScores();
+            updateStatus("Saved Successfully.");
+        } catch (e) {
+            console.error("Error saving score:", e);
+            updateStatus("Save Failed: " + e.message);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = "RETRY";
+            }
+        }
+    }
+
+    function renderHighScores() {
+        const list = document.getElementById('highScoreList');
+        if (!list) return;
+        if (highScores.length === 0) {
+            list.innerHTML = '<div style="text-align:center; padding-top:20px;">No high scores yet.<br>Be the first!</div>';
+            return;
+        }
+        let html = '';
+        highScores.forEach((entry, i) => {
+            html += `
+                <div class="hs-entry">
+                    <span class="hs-rank">#${i + 1}</span>
+                    <span class="hs-name">${escapeHtml(entry.name)}</span>
+                    <span class="hs-score">${entry.score}</span>
+                </div>
+            `;
+        });
+        list.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return "";
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    window.checkHighScore = function (finalScore) {
+        const container = document.getElementById('nameInputContainer');
+        const submitBtn = document.getElementById('submitScoreBtn');
+        const input = document.getElementById('nameInput');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // Logic: If no DB, we just skip showing the input container, unless we implement localstorage fallback (not doing to keep it simple)
+        if (!db) {
+            container.style.display = 'none';
+            restartBtn.style.display = 'inline-block';
+            return;
+        }
+
+        const lowestScore = highScores.length > 0 ? highScores[highScores.length - 1].score : 0;
+        // Qualify if list is not full OR score beats the lowest
+        const qualifies = highScores.length < 10 || finalScore > lowestScore;
+
+        if (qualifies && currentUser) {
+            container.style.display = 'block';
+            restartBtn.style.display = 'none';
+            input.value = '';
+            input.focus();
+
+            submitBtn.disabled = false;
+            submitBtn.innerText = "SAVE";
+
+            // One-time listener for this specific game over instance
+            submitBtn.onclick = async () => {
+                const name = input.value || 'UNK';
+                await saveHighScore(name, finalScore);
+                container.style.display = 'none';
+                restartBtn.style.display = 'inline-block';
+            };
+        } else {
+            container.style.display = 'none';
+            restartBtn.style.display = 'inline-block';
+        }
+        if (currentUser) fetchHighScores();
+    };
+
+    document.getElementById('refreshBtn').addEventListener('click', fetchHighScores);
+
+    // --- GAME ENGINE ---
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Initial Size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Background Canvas (Offscreen)
+    const bgCanvas = document.createElement('canvas');
+    bgCanvas.width = canvas.width;
+    bgCanvas.height = canvas.height;
+    const bgCtx = bgCanvas.getContext('2d');
+
+    function generateJungle() {
+        bgCanvas.width = window.innerWidth;
+        bgCanvas.height = window.innerHeight;
+
+        bgCtx.fillStyle = '#020b02';
+        bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+        bgCtx.strokeStyle = '#061a06';
+        bgCtx.lineWidth = 20;
+        bgCtx.lineCap = 'round';
+
+        // Background Vines
+        for (let i = 0; i < 30; i++) {
+            bgCtx.beginPath();
+            bgCtx.moveTo(Math.random() * bgCanvas.width, -50);
+            bgCtx.bezierCurveTo(
+                Math.random() * bgCanvas.width, bgCanvas.height / 2,
+                Math.random() * bgCanvas.width, bgCanvas.height / 2,
+                Math.random() * bgCanvas.width, bgCanvas.height + 50
+            );
+            bgCtx.stroke();
+        }
+
+        // Background Spots
+        bgCtx.fillStyle = '#081f08';
+        for (let i = 0; i < 50; i++) {
+            const x = Math.random() * bgCanvas.width;
+            const y = Math.random() * bgCanvas.height;
+            const s = Math.random() * 50 + 20;
+            bgCtx.beginPath();
+            bgCtx.ellipse(x, y, s, s / 2, Math.random() * Math.PI, 0, Math.PI * 2);
+            bgCtx.fill();
+        }
+    }
+
+    generateJungle();
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        generateJungle();
+    });
+
+    // --- CONFIG ---
+    const SHIP_SIZE = 15;
+    const TURN_SPEED = 300;
+    const THRUST = 250;
+    const MAX_SPEED = 400;
+
+    const BULLET_SPEED = 600;
+    const CENTIPEDE_SPEED = 180;
+    const SPIDER_SPEED = 150;
+    const HUNTER_SPEED = 110;
+    const LADYBUG_SPEED = 140;
+    const TICK_SPEED = 80;
+    const SCARAB_SPEED = 50;
+    const FLEA_JUMP_FORCE = 650;
+    const DRONE_SPEED = 220;
+    const MOUSE_SPEED = 250;
+    const MUSHROOM_DRIFT_SPEED = 30;
+    const MAX_MUSHROOMS = 100;
+
+    const SEGMENT_SPACING = 18;
+    const MUSHROOM_BASE_SIZE = 43;
+    const SPIDER_SIZE = 28;
+
+    // --- AUDIO SYSTEM ---
+    const Sound = {
+        ctx: new (window.AudioContext || window.webkitAudioContext)(),
+        thrustNode: null,
+        thrustGain: null,
+        droneNode: null,
+        droneGain: null,
+        initialized: false,
+
+        init: function () {
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            if (!this.initialized) {
+                this.initialized = true;
+                this.startup();
+            }
+        },
+
+        startup: function () {
+            if (this.ctx.state === 'suspended') return;
+            const now = this.ctx.currentTime;
+            // Little melodic arpeggio
+            const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 261.63];
+            notes.forEach((freq, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'square';
+                osc.frequency.value = freq;
+
+                const startTime = now + i * 0.1;
+                gain.gain.setValueAtTime(0.1, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+
+                osc.start(startTime);
+                osc.stop(startTime + 0.2);
+            });
+            // Bass swell
+            setTimeout(() => {
+                [261.63, 329.63, 392.00].forEach(f => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = f / 2;
+                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1.0);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 1.0);
+                });
+            }, 800);
+        },
+
+        levelStart: function () {
+            if (this.ctx.state === 'suspended') return;
+            const now = this.ctx.currentTime;
+            for (let i = 0; i < 12; i++) {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(300 + (i * 100), now + i * 0.08);
+                osc.frequency.exponentialRampToValueAtTime(1000 + (i * 100), now + i * 0.08 + 0.05);
+                gain.gain.setValueAtTime(0.05, now + i * 0.08);
+                gain.gain.linearRampToValueAtTime(0, now + i * 0.08 + 0.05);
+                osc.start(now + i * 0.08);
+                osc.stop(now + i * 0.08 + 0.05);
+            }
+        },
+
+        ladybugSiren: function () {
+            if (this.ctx.state === 'suspended') return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.type = 'sawtooth';
+            const now = this.ctx.currentTime;
+
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.linearRampToValueAtTime(800, now + 0.2);
+            osc.frequency.linearRampToValueAtTime(600, now + 0.4);
+
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.4);
+
+            osc.start(now);
+            osc.stop(now + 0.4);
+        },
+
+        startThrust: function () {
+            if (this.ctx.state === 'suspended' || this.thrustNode) return;
+            const bufferSize = this.ctx.sampleRate * 2;
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+            noise.loop = true;
+
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 400;
+
+            this.thrustGain = this.ctx.createGain();
+            this.thrustGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+            this.thrustGain.gain.linearRampToValueAtTime(0.15, this.ctx.currentTime + 0.1);
+
+            noise.connect(filter);
+            filter.connect(this.thrustGain);
+            this.thrustGain.connect(this.ctx.destination);
+
+            noise.start();
+            this.thrustNode = noise;
+        },
+
+        stopThrust: function () {
+            if (this.thrustNode) {
+                this.thrustGain.gain.cancelScheduledValues(this.ctx.currentTime);
+                this.thrustGain.gain.setValueAtTime(this.thrustGain.gain.value, this.ctx.currentTime);
+                this.thrustGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+                this.thrustNode.stop(this.ctx.currentTime + 0.1);
+                this.thrustNode = null;
+                this.thrustGain = null;
+            }
+        },
+
+        eat: function () {
+            if (this.ctx.state === 'suspended') return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+            osc.frequency.linearRampToValueAtTime(300, this.ctx.currentTime + 0.05);
+            osc.frequency.linearRampToValueAtTime(100, this.ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.1);
+        },
+
+        pop: function () {
+            if (this.ctx.state === 'suspended') return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.1);
+        },
+
+        fleaJump: function () {
+            if (this.ctx.state === 'suspended') return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+            osc.frequency.linearRampToValueAtTime(900, this.ctx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.15);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.15);
+        },
+
+        scarabStep: function () {
+            if (this.ctx.state === 'suspended') return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.15);
+        },
+
+        hunterHiss: function () {
+            if (this.ctx.state === 'suspended') return;
+            const bufferSize = this.ctx.sampleRate * 0.2;
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.value = 1000;
+
+            const gain = this.ctx.createGain();
+            gain.gain.value = 0.04;
+            gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
+            noise.start();
+        },
+
+        spiderSkitter: function () {
+            if (this.ctx.state === 'suspended') return;
+            const bufferSize = this.ctx.sampleRate * 0.1;
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 1200;
+            const gain = this.ctx.createGain();
+            gain.gain.value = 0.05;
+            gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
+            noise.start();
+        },
+
+        tickGroan: function () {
+            if (this.ctx.state === 'suspended') return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.2);
+        },
+
+        updateDroneHum: function (active) {
+            if (this.ctx.state === 'suspended') return;
+            if (active && !this.droneNode) {
+                this.droneNode = this.ctx.createOscillator();
+                this.droneGain = this.ctx.createGain();
+                this.droneNode.type = 'sawtooth';
+                this.droneNode.frequency.value = 150;
+                this.droneGain.gain.value = 0.015;
+
+                const lfo = this.ctx.createOscillator();
+                lfo.frequency.value = 15;
+                const lfoGain = this.ctx.createGain();
+                lfoGain.gain.value = 10;
+                lfo.connect(lfoGain);
+                lfoGain.connect(this.droneNode.detune);
+                lfo.start();
+
+                this.droneNode.connect(this.droneGain);
+                this.droneGain.connect(this.ctx.destination);
+                this.droneNode.start();
+            } else if (!active && this.droneNode) {
+                this.droneNode.stop();
+                this.droneNode = null;
+            }
+        },
+
+        stopAllLoops: function () {
+            this.stopThrust();
+            if (this.droneNode) {
+                this.droneNode.stop();
+                this.droneNode = null;
+            }
+        },
+
+        bugNoise: function () {
+            if (this.ctx.state === 'suspended') return;
+            const osc = this.ctx.createOscillator();
+            const mod = this.ctx.createOscillator();
+            const modGain = this.ctx.createGain();
+            const mainGain = this.ctx.createGain();
+
+            osc.connect(mainGain);
+            mainGain.connect(this.ctx.destination);
+            mod.connect(modGain);
+            modGain.connect(osc.frequency);
+
+            osc.type = 'sine';
+            mod.type = 'square';
+
+            const now = this.ctx.currentTime;
+            const baseFreq = 400 + Math.random() * 600;
+            const length = 0.1;
+
+            osc.frequency.setValueAtTime(baseFreq, now);
+            mod.frequency.setValueAtTime(50, now);
+            modGain.gain.setValueAtTime(200, now);
+
+            mainGain.gain.setValueAtTime(0.02, now);
+            mainGain.gain.linearRampToValueAtTime(0, now + length);
+
+            osc.start(now);
+            mod.start(now);
+            osc.stop(now + length);
+            mod.stop(now + length);
+        },
+
+        shoot: function () {
+            if (this.ctx.state === 'suspended') return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.1);
+        },
+        hit: function () {
+            if (this.ctx.state === 'suspended') return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.05);
+        },
+        explode: function () {
+            if (this.ctx.state === 'suspended') return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.4);
+        },
+        powerup: function () {
+            if (this.ctx.state === 'suspended') return;
+            const now = this.ctx.currentTime;
+            [440, 554, 659, 880].forEach((freq, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.05, now + i * 0.08);
+                gain.gain.linearRampToValueAtTime(0, now + i * 0.08 + 0.1);
+                osc.start(now + i * 0.08);
+                osc.stop(now + i * 0.08 + 0.1);
+            });
+        }
+    };
+
+    // --- STATE ---
+    let score = 0;
+    let lives = 3;
+    let nextLifeScore = 6000;
+    let nextMouseScore = 3000;
+    let level = 1;
+    let playing = true;
+    let attractMode = true;
+    let gameStarted = false;
+    let playerDead = false;
+    let respawnTimer = 0;
+    let lastTime = 0;
+    let shipInvulnerable = 0;
+
+    let spiderTimer = 0;
+    let tickTimer = 0;
+    let enemySpawnTimer = 0;
+    let bugSoundTimer = 0;
+    let ladybugTimer = 30;
+
+    let mushroomsToSpawn = 0;
+    let mushroomSpawnTimer = 0;
+
+    const keys = {ArrowUp: false, ArrowLeft: false, ArrowRight: false, Space: false};
+
+    window.addEventListener('keydown', e => {
+        Sound.init();
+
+        if (attractMode) {
+            attractMode = false;
+            document.getElementById('startMsg').style.display = 'none';
+            window.resetGame();
+        } else {
+            if (keys.hasOwnProperty(e.code)) keys[e.code] = true;
+            if (e.code === 'KeyR') window.resetGame();
+        }
+    });
+    window.addEventListener('keyup', e => {
+        if (keys.hasOwnProperty(e.code)) keys[e.code] = false;
+    });
+
+    // --- UTILS ---
+    function wrap(obj, margin) {
+        if (obj.x < -margin) obj.x = canvas.width + margin;
+        if (obj.x > canvas.width + margin) obj.x = -margin;
+        if (obj.y < -margin) obj.y = canvas.height + margin;
+        if (obj.y > canvas.height + margin) obj.y = -margin;
+    }
+
+    function updateLivesUI() {
+        const el = document.getElementById('livesEl');
+        el.innerHTML = attractMode ? 'DEMO' : '❤️ '.repeat(Math.max(0, lives));
+    }
+
+    function showMouseMsg() {
+        const el = document.getElementById('mouseMsg');
+        el.style.opacity = 1;
+        setTimeout(() => el.style.opacity = 0, 2000);
+    }
+
+    // --- CLASSES ---
+
+    class Particle {
+        constructor(x, y, color, speedMulti = 1) {
+            this.x = x;
+            this.y = y;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = (Math.random() * 100 + 50) * speedMulti;
+            this.vx = Math.cos(angle) * speed;
+            this.vy = Math.sin(angle) * speed;
+            this.life = 1.0;
+            this.color = color;
+            this.size = Math.random() * 4 + 2;
+        }
+
+        update(dt) {
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+            this.life -= dt * 1.5;
+        }
+
+        draw() {
+            ctx.globalAlpha = Math.max(0, this.life);
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.size, this.size);
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    class Ship {
+        constructor() {
+            this.reset();
+            this.canShoot = true; // Added for manual fire check
+        }
+
+        reset() {
+            this.x = canvas.width / 2;
+            this.y = canvas.height / 2;
+            this.a = -Math.PI / 2;
+            this.r = SHIP_SIZE;
+            this.vx = 0;
+            this.vy = 0;
+            this.reloadTime = 0;
+            this.visible = true;
+            this.canShoot = true;
+        }
+
+        update(dt) {
+            if (!this.visible) {
+                Sound.stopThrust();
+                return;
+            }
+
+            if (attractMode) {
+                this.updateAI(dt);
+            }
+
+            if (keys.ArrowLeft) this.a -= (TURN_SPEED * Math.PI / 180) * dt;
+            if (keys.ArrowRight) this.a += (TURN_SPEED * Math.PI / 180) * dt;
+
+            if (keys.ArrowUp) {
+                this.vx += Math.cos(this.a) * THRUST * dt;
+                this.vy += Math.sin(this.a) * THRUST * dt;
+                Sound.startThrust();
+
+                if (Math.random() < 0.5) {
+                    particles.push(new Particle(
+                        this.x - Math.cos(this.a) * this.r,
+                        this.y - Math.sin(this.a) * this.r,
+                        '#fff', 0.5));
+                }
+            } else {
+                Sound.stopThrust();
+            }
+
+            const speed = Math.hypot(this.vx, this.vy);
+            if (speed > MAX_SPEED) {
+                const scale = MAX_SPEED / speed;
+                this.vx *= scale;
+                this.vy *= scale;
+            }
+
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+            wrap(this, this.r);
+
+            // Manual Fire Logic (Semi-Auto)
+            if (keys.Space) {
+                if (this.canShoot) {
+                    Sound.shoot();
+                    bullets.push(new Bullet(
+                        this.x + Math.cos(this.a) * this.r,
+                        this.y + Math.sin(this.a) * this.r,
+                        this.a
+                    ));
+                    this.canShoot = false; // Prevent continuous fire
+                }
+            } else {
+                this.canShoot = true; // Reset when key released
+            }
+        }
+
+        updateAI(dt) {
+            let target = null;
+            let minDist = 10000;
+            const allEnemies = [].concat(centipedes.flatMap(c => c.segments), spiders, hunters, drones, ticks, scarabs, fleas, ladybugs);
+            for (const e of allEnemies) {
+                const d = Math.hypot(e.x - this.x, e.y - this.y);
+                if (d < minDist) {
+                    minDist = d;
+                    target = e;
+                }
+            }
+
+            if (target) {
+                const dx = target.x - this.x;
+                const dy = target.y - this.y;
+                const desiredAngle = Math.atan2(dy, dx);
+
+                let diff = desiredAngle - this.a;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+
+                if (diff > 0.1) keys.ArrowRight = true; else keys.ArrowRight = false;
+                if (diff < -0.1) keys.ArrowLeft = true; else keys.ArrowLeft = false;
+
+                // AI can still autofire for attract mode spectacle
+                if (Math.abs(diff) < 0.5) {
+                    keys.Space = true;
+                    this.canShoot = true; // Force enable for AI
+                } else {
+                    keys.Space = false;
+                }
+
+                if (minDist > 300) keys.ArrowUp = true; else keys.ArrowUp = false;
+            } else {
+                keys.Space = false;
+                keys.ArrowUp = false;
+                keys.ArrowLeft = true;
+            }
+        }
+
+        draw() {
+            if (!this.visible) return;
+            if (shipInvulnerable > 0 && Math.floor(Date.now() / 100) % 2 === 0) return;
+
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.a);
+
+            ctx.strokeStyle = shipInvulnerable > 0 ? '#0ff' : '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(15, 0);
+            ctx.lineTo(-10, 10);
+            ctx.lineTo(-5, 0);
+            ctx.lineTo(-10, -10);
+            ctx.closePath();
+            ctx.stroke();
+
+            if (keys.ArrowUp) {
+                ctx.strokeStyle = '#f00';
+                ctx.beginPath();
+                ctx.moveTo(-6, 0);
+                ctx.lineTo(-20 - Math.random() * 10, 0);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+    }
+
+    class MouseHelper {
+        constructor() {
+            this.x = Math.random() < 0.5 ? -20 : canvas.width + 20;
+            this.y = Math.random() * canvas.height;
+            this.char = '🐭';
+            this.speed = MOUSE_SPEED;
+            this.life = 15.0; // Acts as "time until bored" if not full
+            this.target = null;
+            this.angle = 0;
+            this.r = 22; // Bigger (was 15)
+            this.eatDelay = 0; // Digestion timer
+            this.bugsEaten = 0;
+            this.capacity = 5;
+            this.leaving = false;
+            this.exitAngle = null;
+            Sound.powerup();
+        }
+
+        update(dt) {
+            this.eatDelay -= dt; // Process cooldown
+
+            if (this.leaving) {
+                // Move off screen
+                if (!this.exitAngle) {
+                    // Pick direction away from center
+                    this.exitAngle = Math.atan2(this.y - canvas.height / 2, this.x - canvas.width / 2);
+                }
+                this.x += Math.cos(this.exitAngle) * this.speed * dt;
+                this.y += Math.sin(this.exitAngle) * this.speed * dt;
+
+                // Remove if far off screen
+                if (this.x < -100 || this.x > canvas.width + 100 || this.y < -100 || this.y > canvas.height + 100) {
+                    this.life = 0; // Kill flag
+                }
+                return;
+            }
+
+            this.life -= dt;
+            this.findTarget();
+
+            if (this.target) {
+                const dx = this.target.x - this.x;
+                const dy = this.target.y - this.y;
+                const dist = Math.hypot(dx, dy);
+
+                if (dist > 1500) {
+                    this.target = null;
+                } else {
+                    this.angle = Math.atan2(dy, dx);
+                    this.x += Math.cos(this.angle) * this.speed * dt;
+                    this.y += Math.sin(this.angle) * this.speed * dt;
+                }
+            } else {
+                this.x += Math.cos(this.angle) * (this.speed * 0.5) * dt;
+                this.y += Math.sin(this.angle) * (this.speed * 0.5) * dt;
+                if (this.x < 0 || this.x > canvas.width) this.angle = Math.PI - this.angle;
+                if (this.y < 0 || this.y > canvas.height) this.angle = -this.angle;
+            }
+        }
+
+        findTarget() {
+            if (this.leaving) return;
+
+            let highPriority = [].concat(spiders, hunters, drones, ticks, scarabs, fleas, ladybugs);
+            let candidates = highPriority;
+
+            // Priority 2: Centipedes (only if no bugs)
+            if (candidates.length === 0) {
+                centipedes.forEach(c => candidates.push(c.segments[0]));
+            }
+
+            let minDist = 9999;
+            let nearest = null;
+
+            for (let e of candidates) {
+                if (!e) continue;
+                let d = Math.hypot(e.x - this.x, e.y - this.y);
+                if (d < minDist) {
+                    minDist = d;
+                    nearest = e;
+                }
+            }
+            this.target = nearest;
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            if (Math.abs(this.angle) < Math.PI / 2) {
+                ctx.scale(-1, 1);
+            }
+
+            const scale = 1.5; // Scale up visual
+            ctx.scale(scale, scale);
+
+            // Tail
+            ctx.beginPath();
+            ctx.moveTo(5, 5);
+            ctx.bezierCurveTo(15, 5, 20, 0, 25, 5);
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Body
+            ctx.fillStyle = '#999';
+            ctx.beginPath();
+            ctx.ellipse(5, 5, 14, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Head
+            ctx.font = '30px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.char, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    class Scarab {
+        constructor() {
+            const edge = Math.floor(Math.random() * 4);
+            if (edge === 0) {
+                this.x = Math.random() * canvas.width;
+                this.y = -30;
+            } else if (edge === 1) {
+                this.x = canvas.width + 30;
+                this.y = Math.random() * canvas.height;
+            } else if (edge === 2) {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 30;
+            } else {
+                this.x = -30;
+                this.y = Math.random() * canvas.height;
+            }
+
+            this.vx = (Math.random() - 0.5) * SCARAB_SPEED * 2;
+            this.vy = (Math.random() - 0.5) * SCARAB_SPEED * 2;
+            this.r = 25;
+            this.hp = 5;
+            this.char = '🪲';
+            this.angle = 0;
+            this.soundTimer = 0;
+        }
+
+        update(dt) {
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+            this.angle = Math.atan2(this.vy, this.vx);
+            wrap(this, 30);
+
+            this.soundTimer -= dt;
+            if (this.soundTimer <= 0) {
+                Sound.scarabStep();
+                this.soundTimer = 0.8; // Step interval
+            }
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.angle + Math.PI / 2);
+            ctx.font = '45px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.char, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    class Flea {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = -20;
+            this.vx = 0;
+            this.vy = 0;
+            this.r = 15;
+            this.char = '🦗';
+            this.jumpTimer = 2.0;
+            this.angle = 0;
+        }
+
+        update(dt) {
+            this.vx *= 0.92;
+            this.vy *= 0.92;
+
+            this.jumpTimer -= dt;
+            if (this.jumpTimer <= 0) {
+                Sound.fleaJump(); // Jump Sound!
+                if (ship.visible) {
+                    const dx = ship.x - this.x;
+                    const dy = ship.y - this.y;
+                    this.angle = Math.atan2(dy, dx);
+                    this.vx = Math.cos(this.angle) * FLEA_JUMP_FORCE;
+                    this.vy = Math.sin(this.angle) * FLEA_JUMP_FORCE;
+                } else {
+                    this.angle = Math.random() * Math.PI * 2;
+                    this.vx = Math.cos(this.angle) * FLEA_JUMP_FORCE;
+                    this.vy = Math.sin(this.angle) * FLEA_JUMP_FORCE;
+                }
+                this.jumpTimer = 1.0 + Math.random() * 2.0;
+            }
+
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+            wrap(this, 20);
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            if (Math.hypot(this.vx, this.vy) > 10) {
+                ctx.rotate(this.angle + Math.PI);
+            }
+            ctx.font = '30px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.char, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    class Tick {
+        constructor() {
+            const edge = Math.floor(Math.random() * 4);
+            if (edge === 0) {
+                this.x = Math.random() * canvas.width;
+                this.y = -20;
+            } else if (edge === 1) {
+                this.x = canvas.width + 20;
+                this.y = Math.random() * canvas.height;
+            } else if (edge === 2) {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 20;
+            } else {
+                this.x = -20;
+                this.y = Math.random() * canvas.height;
+            }
+
+            this.r = 16;
+            this.speed = TICK_SPEED;
+            this.angle = 0;
+            this.wobbleTimer = 0;
+            this.soundTimer = 0;
+            this.char = '🦠';
+        }
+
+        update(dt) {
+            let dx = ship.x - this.x;
+            let dy = ship.y - this.y;
+
+            this.wobbleTimer -= dt;
+            if (this.wobbleTimer <= 0) {
+                let baseAngle = Math.atan2(dy, dx);
+                let noise = (Math.random() - 0.5) * 2.5;
+                this.angle = baseAngle + noise;
+                this.wobbleTimer = 0.3 + Math.random() * 0.5;
+            }
+
+            this.soundTimer -= dt;
+            if (this.soundTimer <= 0) {
+                Sound.tickGroan();
+                this.soundTimer = 1.0 + Math.random() * 2.0;
+            }
+
+            this.x += Math.cos(this.angle) * this.speed * dt;
+            this.y += Math.sin(this.angle) * this.speed * dt;
+            wrap(this, 20);
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            const scale = 1 + Math.sin(Date.now() / 150) * 0.1;
+            ctx.scale(scale, scale);
+            ctx.font = '32px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.char, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    class Hunter {
+        constructor() {
+            this.x = Math.random() < 0.5 ? -20 : canvas.width + 20;
+            this.y = Math.random() * canvas.height;
+            this.r = 20;
+            this.hp = 1;
+            this.angle = 0;
+            this.char = '🦂';
+            this.soundTimer = 2.0;
+        }
+
+        update(dt) {
+            this.soundTimer -= dt;
+            if (this.soundTimer <= 0) {
+                Sound.hunterHiss();
+                this.soundTimer = 2 + Math.random() * 3;
+            }
+
+            if (ship.visible) {
+                const dx = ship.x - this.x;
+                const dy = ship.y - this.y;
+                const targetAngle = Math.atan2(dy, dx);
+
+                let diff = targetAngle - this.angle;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+
+                this.angle += diff * 2 * dt;
+
+                this.x += Math.cos(this.angle) * HUNTER_SPEED * dt;
+                this.y += Math.sin(this.angle) * HUNTER_SPEED * dt;
+            } else {
+                this.x += Math.cos(this.angle) * HUNTER_SPEED * dt;
+                this.y += Math.sin(this.angle) * HUNTER_SPEED * dt;
+            }
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.angle + Math.PI / 2);
+            ctx.font = '36px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.char, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    class Drone {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = -20;
+            this.r = 16;
+            const a = Math.random() * Math.PI / 2 + Math.PI / 4;
+            this.vx = Math.cos(a) * DRONE_SPEED;
+            this.vy = Math.sin(a) * DRONE_SPEED;
+            this.char = '🦟';
+            this.rot = 0;
+        }
+
+        update(dt) {
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+            wrap(this, 20);
+            this.rot = Math.atan2(this.vy, this.vx);
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rot + Math.PI);
+            ctx.font = '30px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.char, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    class Spider {
+        constructor() {
+            const fromLeft = Math.random() > 0.5;
+            this.x = fromLeft ? -20 : canvas.width + 20;
+            this.y = Math.random() * (canvas.height - 100) + 50;
+            this.vx = (fromLeft ? 1 : -1) * SPIDER_SPEED;
+            this.vy = 0;
+            this.r = SPIDER_SIZE;
+            this.timer = 0;
+            this.hp = 1;
+            this.animTimer = 0;
+            this.soundTimer = 0;
+            this.char = '🕷️';
+        }
+
+        update(dt) {
+            this.timer -= dt;
+            if (this.timer <= 0) {
+                this.vy = (Math.random() - 0.5) * SPIDER_SPEED * 2;
+                this.timer = Math.random() * 0.5 + 0.2;
+            }
+
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+            this.animTimer += dt * 10;
+
+            this.soundTimer -= dt;
+            if (this.soundTimer <= 0) {
+                Sound.spiderSkitter();
+                this.soundTimer = 0.5 + Math.random();
+            }
+
+            if (this.y < this.r || this.y > canvas.height - this.r) this.vy *= -1;
+
+            for (let i = mushrooms.length - 1; i >= 0; i--) {
+                let m = mushrooms[i];
+                if (Math.hypot(this.x - m.x, this.y - m.y) < this.r + m.r) {
+                    mushrooms.splice(i, 1);
+                    createExplosion(m.x, m.y, '#f0f', 5);
+                }
+            }
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            const wiggle = Math.sin(this.animTimer) * 0.3;
+            ctx.rotate(wiggle);
+            ctx.font = '40px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.char, 0, 2);
+            ctx.restore();
+        }
+    }
+
+    class Ladybug {
+        constructor() {
+            // Spawn logic
+            const edge = Math.floor(Math.random() * 4);
+            if (edge === 0) {
+                this.x = Math.random() * canvas.width;
+                this.y = -30;
+            } else if (edge === 1) {
+                this.x = canvas.width + 30;
+                this.y = Math.random() * canvas.height;
+            } else if (edge === 2) {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 30;
+            } else {
+                this.x = -30;
+                this.y = Math.random() * canvas.height;
+            }
+
+            this.r = 20;
+            this.speed = LADYBUG_SPEED;
+            this.char = '🐞';
+            this.hp = 2; // Tougher than normal bug
+            this.soundTimer = 0;
+        }
+
+        update(dt) {
+            this.soundTimer -= dt;
+            if (this.soundTimer <= 0) {
+                Sound.ladybugSiren();
+                this.soundTimer = 1.0;
+            }
+
+            // Predictive tracking
+            const dist = Math.hypot(ship.x - this.x, ship.y - this.y);
+            const timeToIntercept = dist / this.speed;
+
+            const targetX = ship.x + ship.vx * timeToIntercept;
+            const targetY = ship.y + ship.vy * timeToIntercept;
+
+            const dx = targetX - this.x;
+            const dy = targetY - this.y;
+            const angle = Math.atan2(dy, dx);
+
+            this.x += Math.cos(angle) * this.speed * dt;
+            this.y += Math.sin(angle) * this.speed * dt;
+
+            // Ladybugs are relentless, no wrapping
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            // Face direction
+            const dx = ship.x - this.x;
+            const dy = ship.y - this.y;
+            const angle = Math.atan2(dy, dx);
+            ctx.rotate(angle + Math.PI / 2);
+
+            ctx.font = '35px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.char, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    class Bullet {
+        constructor(x, y, a) {
+            this.x = x;
+            this.y = y;
+            this.vx = Math.cos(a) * BULLET_SPEED;
+            this.vy = Math.sin(a) * BULLET_SPEED;
+            this.life = 1.0;
+            this.dead = false;
+        }
+
+        update(dt) {
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+            this.life -= dt;
+            wrap(this, 0);
+            if (this.life <= 0) this.dead = true;
+        }
+
+        draw() {
+            ctx.fillStyle = '#ff0';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    class Mushroom {
+        constructor(x, y, sizeOverride = null) {
+            this.x = x;
+            this.y = y;
+            // Varied Sizes
+            if (sizeOverride) {
+                this.r = sizeOverride;
+            } else {
+                // ~25px to ~50px
+                this.r = MUSHROOM_BASE_SIZE * (0.8 + Math.random() * 0.4);
+            }
+
+            const angle = Math.random() * Math.PI * 2;
+            this.vx = Math.cos(angle) * (Math.random() * MUSHROOM_DRIFT_SPEED);
+            this.vy = Math.sin(angle) * (Math.random() * MUSHROOM_DRIFT_SPEED);
+            this.char = '🍄';
+
+            this.spin = 0;
+            this.spinSpeed = (Math.random() - 0.5) * 2;
+
+            // Visual Variety
+            this.hue = Math.floor(Math.random() * 360);
+            this.scaleX = 0.8 + Math.random() * 0.4;
+            this.scaleY = 0.8 + Math.random() * 0.4;
+        }
+
+        update(dt) {
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+            this.spin += this.spinSpeed * dt;
+            wrap(this, this.r);
+        }
+
+        draw() {
+            const size = Math.floor(this.r * 2);
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.spin);
+            ctx.scale(this.scaleX, this.scaleY);
+            ctx.filter = `hue-rotate(${this.hue}deg)`;
+            ctx.font = `${size}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.char, 0, 4);
+            ctx.restore();
+        }
+    }
+
+    class Segment {
+        constructor(x, y, isHead = false) {
+            this.x = x;
+            this.y = y;
+            this.isHead = isHead;
+            this.angle = Math.random() * Math.PI * 2;
+        }
+    }
+
+    class Centipede {
+        constructor(segmentsArray = null, hue = 120, speed = CENTIPEDE_SPEED) {
+            this.segments = segmentsArray || [];
+            this.speed = speed;
+            this.hue = hue; // Base Hue
+            this.turnTimer = 0;
+            this.headChar = '🐲';
+            this.bodyChar = '🔴';
+            this.pulse = 0; // For rainbow effect
+        }
+
+        update(dt) {
+            this.pulse += dt * 5; // Animate rainbow
+
+            const head = this.segments[0];
+
+            head.x += Math.cos(head.angle) * this.speed * dt;
+            head.y += Math.sin(head.angle) * this.speed * dt;
+
+            let bounced = false;
+            // Walls
+            if (head.x < SEGMENT_SPACING || head.x > canvas.width - SEGMENT_SPACING) {
+                head.angle = Math.PI - head.angle;
+                head.x = Math.max(SEGMENT_SPACING, Math.min(canvas.width - SEGMENT_SPACING, head.x));
+                bounced = true;
+            }
+            if (head.y < SEGMENT_SPACING || head.y > canvas.height - SEGMENT_SPACING) {
+                head.angle = -head.angle;
+                head.y = Math.max(SEGMENT_SPACING, Math.min(canvas.height - SEGMENT_SPACING, head.y));
+                bounced = true;
+            }
+
+            if (!bounced && this.turnTimer <= 0) {
+                for (let m of mushrooms) {
+                    if (Math.hypot(head.x - m.x, head.y - m.y) < SEGMENT_SPACING + m.r) {
+                        // NEW ZIG ZAG LOGIC
+                        // Calculate angle to ship
+                        const angleToShip = Math.atan2(ship.y - head.y, ship.x - head.x);
+                        // Pick a direction ~60 degrees off direct line to create zig zag approach
+                        // Randomly left or right of target
+                        head.angle = angleToShip + (Math.random() < 0.5 ? 1 : -1) * (Math.PI / 3);
+
+                        this.turnTimer = 0.2;
+                        break;
+                    }
+                }
+            }
+            if (this.turnTimer > 0) this.turnTimer -= dt;
+
+            for (let i = 1; i < this.segments.length; i++) {
+                const current = this.segments[i];
+                const leader = this.segments[i - 1];
+
+                const dx = leader.x - current.x;
+                const dy = leader.y - current.y;
+                const dist = Math.hypot(dx, dy);
+                const angle = Math.atan2(dy, dx);
+
+                current.angle = angle;
+
+                if (dist > SEGMENT_SPACING) {
+                    current.x = leader.x - Math.cos(angle) * SEGMENT_SPACING;
+                    current.y = leader.y - Math.sin(angle) * SEGMENT_SPACING;
+                }
+            }
+        }
+
+        draw() {
+            this.segments.forEach((seg, i) => {
+                ctx.save();
+                ctx.translate(seg.x, seg.y);
+
+                // RAINBOW COLOR LOGIC
+                const hue = (this.hue + i * 10 + this.pulse * 20) % 360;
+                ctx.filter = `hue-rotate(${hue}deg)`;
+
+                if (i === 0) {
+                    ctx.rotate(seg.angle + Math.PI / 2);
+                    ctx.rotate(-Math.PI / 2);
+                }
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                if (i === 0) {
+                    ctx.font = '28px sans-serif';
+                    ctx.fillText(this.headChar, 0, 0);
+                } else {
+                    ctx.font = '20px sans-serif';
+                    ctx.fillText(this.bodyChar, 0, 0);
+                }
+
+                ctx.restore();
+            });
+        }
+    }
+
+    // --- GAME MGR ---
+    let ship;
+    let bullets = [];
+    let mushrooms = [];
+    let centipedes = [];
+    let spiders = [];
+    let hunters = [];
+    let drones = [];
+    let ticks = [];
+    let scarabs = [];
+    let fleas = [];
+    let ladybugs = [];
+    let particles = [];
+    let mice = [];
+
+    // Screen Shake (Consolidated)
+    let screenShake = 0;
+
+    function triggerShake(amt) {
+        screenShake = Math.min(screenShake + amt, 40);
+    }
+
+    function init() {
+        ship = new Ship();
+        bullets = [];
+        mushrooms = [];
+        centipedes = [];
+        spiders = [];
+        hunters = [];
+        drones = [];
+        ticks = [];
+        scarabs = [];
+        fleas = [];
+        ladybugs = [];
+        particles = [];
+        mice = [];
+
+        if (attractMode) {
+            score = 0;
+            level = 1;
+            lives = 0;
+        } else {
+            score = 0;
+            level = 1;
+            lives = 3;
+        }
+
+        nextLifeScore = 6000;
+        nextMouseScore = 3000;
+        playerDead = false;
+        playing = true;
+
+        shipInvulnerable = 3;
+        spiderTimer = 5;
+        tickTimer = 8;
+        enemySpawnTimer = 8;
+        bugSoundTimer = 0;
+        ladybugTimer = 30;
+
+        mushroomsToSpawn = 0;
+        mushroomSpawnTimer = 0;
+
+        updateLivesUI();
+        spawnLevel();
+    }
+
+    function createExplosion(x, y, color, count = 10, speedMulti = 1) {
+        Sound.explode();
+        for (let i = 0; i < count; i++) {
+            particles.push(new Particle(x, y, color, speedMulti));
+        }
+    }
+
+    function spawnLevel() {
+        document.getElementById('levelEl').innerText = level;
+        Sound.levelStart();
+
+        // REDUCED MUSHROOM SPAWN COUNT (Half of 8+level)
+        const spawnCount = Math.floor(12 + level);
+
+        const spaceLeft = MAX_MUSHROOMS - mushrooms.length;
+        mushroomsToSpawn = Math.min(spawnCount, spaceLeft);
+        if (mushroomsToSpawn < 0) mushroomsToSpawn = 0;
+
+        const numWorms = 1 + Math.floor((level - 1) / 3);
+        // Reduced Length (Half of previous 30 -> 15)
+        const len = Math.min(15 + Math.floor(level), 75);
+
+        for (let w = 0; w < numWorms; w++) {
+            let startSegments = [];
+            let startX = 0;
+            let startY = Math.random() * (canvas.height - 200) + 100;
+
+            const hue = Math.floor(Math.random() * 360);
+            const speed = CENTIPEDE_SPEED * (0.8 + Math.random() * 0.4);
+
+            for (let i = 0; i < len; i++) {
+                startSegments.push(new Segment(startX - (i * SEGMENT_SPACING), startY, i === 0));
+            }
+            centipedes.push(new Centipede(startSegments, hue, speed));
+        }
+    }
+
+    function spawnSingleMushroom() {
+        let mx, my, safe = false;
+        let attempts = 0;
+        const safeDist = Math.min(200, Math.min(canvas.width, canvas.height) / 4);
+
+        while (!safe && attempts < 50) {
+            mx = Math.random() * (canvas.width - 40) + 20;
+            my = Math.random() * (canvas.height - 40) + 20;
+            if (Math.hypot(mx - canvas.width / 2, my - canvas.height / 2) > safeDist) {
+                safe = true;
+            }
+            attempts++;
+        }
+        mushrooms.push(new Mushroom(mx, my));
+    }
+
+    function checkScore() {
+        if (score >= nextLifeScore) {
+            lives++;
+            updateLivesUI();
+            nextLifeScore += 6000 + (lives * 2000);
+            createExplosion(ship.x, ship.y, '#0ff', 20);
+            Sound.powerup();
+        }
+        if (score >= nextMouseScore) {
+            nextMouseScore += 3000;
+            if (mice.length === 0) {
+                mice.push(new MouseHelper());
+                showMouseMsg();
+            }
+        }
+    }
+
+    function handleDeath() {
+        if (shipInvulnerable > 0 || playerDead) return;
+
+        if (attractMode) {
+            createExplosion(ship.x, ship.y, '#fff', 30, 2);
+            ship.reset();
+            shipInvulnerable = 2;
+            return;
+        }
+
+        Sound.stopAllLoops();
+        lives--;
+        playerDead = true;
+        ship.visible = false;
+        updateLivesUI();
+
+        createExplosion(ship.x, ship.y, '#fff', 30, 2);
+        createExplosion(ship.x, ship.y, '#f00', 20, 1.5);
+        createExplosion(ship.x, ship.y, '#ff0', 20, 0.5);
+
+        if (lives > 0) {
+            respawnTimer = 2.0;
+        } else {
+            setTimeout(() => {
+                playing = false;
+                document.getElementById('finalScore').innerText = score;
+                document.getElementById('gameOver').style.display = 'block';
+                if (typeof window.checkHighScore === 'function') {
+                    window.checkHighScore(score);
+                }
+            }, 2000);
+        }
+    }
+
+    window.resetGame = function () {
+        Sound.stopAllLoops();
+        document.getElementById('gameOver').style.display = 'none';
+        attractMode = false;
+
+        // RESET KEYS (Fixes auto-fire/thrust bug from AI)
+        keys.ArrowUp = false;
+        keys.ArrowLeft = false;
+        keys.ArrowRight = false;
+        keys.Space = false;
+
+        init();
+        lastTime = performance.now();
+        requestAnimationFrame(loop);
+    };
+    document.getElementById('restartBtn').addEventListener('click', window.resetGame);
+
+    function loop(timestamp) {
+        if (!playing) return;
+
+        const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+        lastTime = timestamp;
+
+        if (mushroomsToSpawn > 0) {
+            mushroomSpawnTimer -= dt;
+            if (mushroomSpawnTimer <= 0) {
+                spawnSingleMushroom();
+                mushroomsToSpawn--;
+                mushroomSpawnTimer = 0.15;
+            }
+        }
+
+        if (!playerDead) {
+            Sound.updateDroneHum(drones.length > 0);
+
+            bugSoundTimer -= dt;
+            if (bugSoundTimer <= 0) {
+                Sound.bugNoise();
+                bugSoundTimer = 0.5 + Math.random() * 2.0;
+            }
+
+            ladybugTimer -= dt;
+            if (ladybugTimer <= 0) {
+                ladybugs.push(new Ladybug());
+                ladybugTimer = 30;
+            }
+
+            spiderTimer -= dt;
+            if (spiderTimer <= 0) {
+                spiders.push(new Spider());
+                spiderTimer = Math.random() * 20 + 10;
+            }
+
+            if (level >= 1) {
+                tickTimer -= dt;
+                if (tickTimer <= 0) {
+                    ticks.push(new Tick());
+                    tickTimer = Math.random() * 10 + 6;
+                }
+            }
+
+            if (level > 1) {
+                enemySpawnTimer -= dt;
+                if (enemySpawnTimer <= 0) {
+                    const r = Math.random();
+                    if (r < 0.3) hunters.push(new Hunter());
+                    else if (r < 0.6) drones.push(new Drone());
+                    else if (r < 0.8) scarabs.push(new Scarab());
+                    else fleas.push(new Flea());
+
+                    enemySpawnTimer = (Math.random() * 6 + (4 - Math.min(level, 3))) * 2;
+                }
+            }
+        } else {
+            Sound.updateDroneHum(false);
+        }
+
+        if (playerDead && lives > 0) {
+            respawnTimer -= dt;
+            if (respawnTimer <= 0) {
+                playerDead = false;
+                ship.reset();
+                shipInvulnerable = 3;
+                const safeZone = 250;
+                hunters = hunters.filter(h => Math.hypot(h.x - ship.x, h.y - ship.y) > safeZone);
+                ticks = ticks.filter(t => Math.hypot(t.x - ship.x, t.y - ship.y) > safeZone);
+                spiders = spiders.filter(s => Math.hypot(s.x - ship.x, s.y - ship.y) > safeZone);
+                ladybugs = ladybugs.filter(l => Math.hypot(l.x - ship.x, l.y - ship.y) > safeZone);
+            }
+        }
+
+        // Draw Background
+        ctx.drawImage(bgCanvas, 0, 0);
+
+        if (shipInvulnerable > 0) shipInvulnerable -= dt;
+        ship.update(dt);
+        ship.draw();
+
+        bullets.forEach(b => b.update(dt));
+        bullets = bullets.filter(b => !b.dead);
+        bullets.forEach(b => b.draw());
+
+        particles.forEach(p => p.update(dt));
+        particles = particles.filter(p => p.life > 0);
+        particles.forEach(p => p.draw());
+
+        mushrooms.forEach(m => m.update(dt));
+        mushrooms.forEach(m => m.draw());
+
+        spiders.forEach(s => s.update(dt));
+        spiders.forEach(s => s.draw());
+        spiders = spiders.filter(s => s.x > -50 && s.x < canvas.width + 50);
+
+        ticks.forEach(t => t.update(dt));
+        ticks.forEach(t => t.draw());
+
+        hunters.forEach(h => h.update(dt));
+        hunters.forEach(h => h.draw());
+
+        drones.forEach(d => d.update(dt));
+        drones.forEach(d => d.draw());
+
+        scarabs.forEach(s => s.update(dt));
+        scarabs.forEach(s => s.draw());
+
+        fleas.forEach(f => f.update(dt));
+        fleas.forEach(f => f.draw());
+
+        ladybugs.forEach(l => l.update(dt));
+        ladybugs.forEach(l => l.draw());
+
+        centipedes.forEach(c => c.update(dt));
+        centipedes.forEach(c => c.draw());
+        centipedes = centipedes.filter(c => c.segments.length > 0);
+
+        mice.forEach(m => m.update(dt));
+        mice = mice.filter(m => m.life > 0);
+        mice.forEach(m => m.draw());
+
+        // --- COLLISION LOGIC ---
+
+        // 1. Mouse vs Enemies
+        mice.forEach(m => {
+            const eat = (arr, scoreBonus) => {
+                if (m.eatDelay > 0) return;
+
+                for (let i = arr.length - 1; i >= 0; i--) {
+                    let e = arr[i];
+                    if (Math.hypot(m.x - e.x, m.y - e.y) < m.r + e.r + 15) {
+                        Sound.eat();
+                        createExplosion(e.x, e.y, '#ff0', 5);
+                        arr.splice(i, 1);
+                        m.bugsEaten++;
+                        if (m.bugsEaten >= m.capacity) m.leaving = true;
+
+                        if (!attractMode) {
+                            score += scoreBonus;
+                            checkScore();
+                        }
+                        m.eatDelay = 0.5;
+                        return;
+                    }
+                }
+            };
+
+            eat(spiders, 300);
+            eat(ticks, 100);
+            eat(hunters, 200);
+            eat(drones, 150);
+            eat(scarabs, 500);
+            eat(fleas, 200);
+            eat(ladybugs, 500);
+
+            if (m.eatDelay <= 0 && !m.leaving) {
+                for (let cIndex = centipedes.length - 1; cIndex >= 0; cIndex--) {
+                    let c = centipedes[cIndex];
+                    let hitIdx = -1;
+
+                    for (let s = 0; s < c.segments.length; s++) {
+                        let seg = c.segments[s];
+                        if (Math.hypot(m.x - seg.x, m.y - seg.y) < 45) {
+                            hitIdx = s;
+                            break;
+                        }
+                    }
+
+                    if (hitIdx !== -1) {
+                        Sound.eat();
+                        createExplosion(c.segments[hitIdx].x, c.segments[hitIdx].y, '#0f0', 8);
+                        if (!attractMode) {
+                            score += 100;
+                            checkScore();
+                        }
+                        m.eatDelay = 0.5;
+                        m.bugsEaten++;
+                        if (m.bugsEaten >= m.capacity) m.leaving = true;
+
+                        if (hitIdx === 0) {
+                            c.segments.shift();
+                            if (c.segments.length > 0) {
+                                c.segments[0].isHead = true;
+                                c.segments[0].angle = Math.random() * Math.PI * 2;
+                            } else {
+                                centipedes.splice(cIndex, 1);
+                            }
+                        } else {
+                            let tail = c.segments.slice(hitIdx + 1);
+                            c.segments.length = hitIdx;
+                            if (tail.length > 0) {
+                                tail[0].isHead = true;
+                                tail[0].angle = Math.random() * Math.PI * 2;
+                                centipedes.push(new Centipede(tail, c.hue, c.speed));
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        });
+
+        // 2. Bullets vs Enemies
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            let b = bullets[i];
+            let hit = false;
+
+            const checkHit = (arr, bonus, color) => {
+                for (let k = arr.length - 1; k >= 0; k--) {
+                    let e = arr[k];
+                    if (Math.hypot(b.x - e.x, b.y - e.y) < e.r + 5) {
+                        e.hp = (e.hp || 1) - 1;
+                        Sound.hit();
+                        createExplosion(e.x, e.y, color, 8);
+                        b.dead = true;
+                        hit = true;
+
+                        if (e.hp <= 0) {
+                            arr.splice(k, 1);
+                            if (!attractMode) {
+                                score += bonus;
+                                checkScore();
+                            }
+                            createExplosion(e.x, e.y, color, 15);
+                            Sound.pop();
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            if (checkHit(spiders, 300, '#f00')) continue;
+            if (checkHit(ticks, 100, '#aa0')) continue;
+            if (checkHit(hunters, 200, '#f00')) continue;
+            if (checkHit(drones, 150, '#0ff')) continue;
+            if (checkHit(scarabs, 500, '#fd0')) continue;
+            if (checkHit(fleas, 200, '#f0a')) continue;
+            if (checkHit(ladybugs, 500, '#f00')) continue;
+
+            for (let j = mushrooms.length - 1; j >= 0; j--) {
+                let m = mushrooms[j];
+                if (Math.hypot(b.x - m.x, b.y - m.y) < m.r + 3) {
+                    m.r -= 20;
+                    b.dead = true;
+                    Sound.hit();
+                    createExplosion(m.x, m.y, '#a0a', 5);
+                    hit = true;
+
+                    mushrooms.splice(j, 1);
+                    if (!attractMode) score += 5;
+
+                    if (m.r > 15) {
+                        const newR = m.r * 0.6;
+                        const m1 = new Mushroom(m.x - 10, m.y, newR);
+                        const m2 = new Mushroom(m.x + 10, m.y, newR);
+                        m1.vx = -30 - Math.random() * 20;
+                        m2.vx = 30 + Math.random() * 20;
+                        m1.vy = (Math.random() - 0.5) * 40;
+                        m2.vy = (Math.random() - 0.5) * 40;
+
+                        if (mushrooms.length < MAX_MUSHROOMS) mushrooms.push(m1);
+                        if (mushrooms.length < MAX_MUSHROOMS) mushrooms.push(m2);
+                    } else {
+                        Sound.pop();
+                        createExplosion(m.x, m.y, '#fff', 8);
+                    }
+
+                    break;
+                }
+            }
+            if (hit) continue;
+
+            for (let cIndex = centipedes.length - 1; cIndex >= 0; cIndex--) {
+                let c = centipedes[cIndex];
+                let hitIdx = -1;
+
+                for (let s = 0; s < c.segments.length; s++) {
+                    let seg = c.segments[s];
+                    if (Math.hypot(b.x - seg.x, b.y - seg.y) < SEGMENT_SPACING / 2 + 8) {
+                        hitIdx = s;
+                        break;
+                    }
+                }
+
+                if (hitIdx !== -1) {
+                    b.dead = true;
+                    if (!attractMode) {
+                        score += 50;
+                        checkScore();
+                    }
+                    let hitSeg = c.segments[hitIdx];
+                    createExplosion(hitSeg.x, hitSeg.y, '#0f0', 10);
+                    Sound.pop();
+
+                    if (mushrooms.length < MAX_MUSHROOMS) {
+                        mushrooms.push(new Mushroom(hitSeg.x, hitSeg.y, MUSHROOM_BASE_SIZE * 0.5));
+                    }
+
+                    let newHue = c.hue;
+                    let newSpeed = c.speed;
+
+                    if (hitIdx === 0) {
+                        c.segments.shift();
+                        if (c.segments.length > 0) {
+                            c.segments[0].isHead = true;
+                            c.segments[0].angle = Math.random() * Math.PI * 2;
+                        } else {
+                            centipedes.splice(cIndex, 1);
+                        }
+                    } else {
+                        let tail = c.segments.slice(hitIdx + 1);
+                        c.segments.length = hitIdx;
+                        if (tail.length > 0) {
+                            tail[0].isHead = true;
+                            tail[0].angle = Math.random() * Math.PI * 2;
+                            centipedes.push(new Centipede(tail, newHue, newSpeed));
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (!playerDead && shipInvulnerable <= 0) {
+            let hit = false;
+            const checkCollide = (arr) => arr.some(e => Math.hypot(ship.x - e.x, ship.y - e.y) < ship.r + e.r - 4);
+
+            if (checkCollide(spiders)) hit = true;
+            if (checkCollide(ticks)) hit = true;
+            if (checkCollide(hunters)) hit = true;
+            if (checkCollide(drones)) hit = true;
+            if (checkCollide(scarabs)) hit = true;
+            if (checkCollide(fleas)) hit = true;
+            if (checkCollide(ladybugs)) hit = true;
+
+            centipedes.forEach(c => {
+                c.segments.forEach(s => {
+                    if (Math.hypot(ship.x - s.x, ship.y - s.y) < ship.r + SEGMENT_SPACING / 2 - 2) hit = true;
+                });
+            });
+            mushrooms.forEach(m => {
+                if (Math.hypot(ship.x - m.x, ship.y - m.y) < ship.r + m.r - 4) hit = true;
+            });
+
+            if (hit) handleDeath();
+        }
+
+        if (centipedes.length === 0) {
+            level++;
+            shipInvulnerable = 2;
+            mushrooms = mushrooms.filter(() => Math.random() > 0.33);
+            spawnLevel();
+        }
+
+        if (!attractMode) document.getElementById('scoreEl').innerText = score;
+        requestAnimationFrame(loop);
+    }
+
+    init();
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>
