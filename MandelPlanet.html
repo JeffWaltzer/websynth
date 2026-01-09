@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HYPER-FRACTAL - Orbit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* --- LAYOUT & BACKGROUND --- */
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Montserrat', sans-serif;
+      color: #ff00ff;
+    }
+
+    #canvas-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+    }
+
+    .vignette {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(20, 0, 40, 0.6) 120%);
+      z-index: 5;
+    }
+
+    /* --- MAIN MENU / OVERLAY --- */
+    #overlay {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      padding: 40px;
+      text-align: center;
+      background: rgba(40, 0, 40, 0.75);
+      border: 2px solid #ff00ff;
+      box-shadow: 0 0 60px rgba(255, 0, 255, 0.5), inset 0 0 40px rgba(255, 0, 255, 0.2);
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+      max-width: 500px;
+      width: 90%;
+      transition: opacity 0.5s ease;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin: 0 0 10px 0;
+      color: #fff;
+      text-shadow: 0 0 15px #ff00ff, 0 0 30px #00ffff;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      font-weight: 800;
+    }
+
+    h2 {
+      font-size: 0.9rem;
+      color: #00ffff;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #00ffff;
+      display: inline-block;
+      padding-bottom: 8px;
+    }
+
+    /* --- INPUT CONTROLS --- */
+    .control-group {
+      margin-bottom: 25px;
+      padding: 20px;
+      border: 1px solid #ff00ff;
+      background: rgba(50, 0, 50, 0.4);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #aa00aa, #440044);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 15px 30px;
+      border: 1px solid #fff;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.3s ease;
+      width: 100%;
+      border-radius: 2px;
+    }
+
+    .btn:hover {
+      background: #fff;
+      color: #ff00ff;
+      box-shadow: 0 0 30px rgba(255, 0, 255, 0.8);
+    }
+
+    .btn-demo {
+      background: linear-gradient(135deg, #00aaaa, #004444);
+      border-color: #00ffff;
+    }
+
+    .btn-demo:hover {
+      color: #00aaaa;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+    }
+
+    #fileInput { display: none; }
+
+    /* --- RECORDING CONTROLS --- */
+    #recordContainer {
+      position: fixed;
+      bottom: 60px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 150;
+      display: none;
+      flex-direction: row;
+      gap: 20px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .rec-btn {
+      padding: 10px 24px;
+      border: 1px solid #00ffff;
+      background: rgba(0, 50, 50, 0.8);
+      color: #00ffff;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: monospace;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      transition: all 0.2s;
+    }
+
+    #recordButton:hover { background: #00ffff; color: black; }
+    #recordButton.recording {
+      animation: pulseRec 1.5s infinite alternate;
+      background: #ff0055;
+      border-color: #ff0055;
+      color: white;
+    }
+    #leaveButton:hover { background: #00ffff; color: black; }
+
+    @keyframes pulseRec {
+      from { box-shadow: 0 0 5px #ff0055; }
+      to { box-shadow: 0 0 20px #ff0055; }
+    }
+
+    /* --- UTILITY BUTTONS & HELPERS --- */
+    #fullscreenBtn {
+      position: fixed;
+      top: 20px; right: 20px;
+      width: 40px; height: 40px;
+      background: rgba(50, 0, 50, 0.8);
+      border: 1px solid #ff00ff;
+      color: #ff00ff;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 150;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    #fullscreenBtn:hover { background: #ff00ff; color: #fff; }
+
+    #message {
+      margin-top: 20px;
+      color: #00ffff;
+      font-size: 0.75rem;
+      min-height: 1.2em;
+      letter-spacing: 1px;
+    }
+
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #ff00ff;
+      margin-top: 20px;
+      font-size: 0.8rem;
+    }
+
+    input[type="checkbox"] { accent-color: #ff00ff; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<!-- CORE DOM ELEMENTS -->
+<div id="canvas-container"></div>
+<div class="vignette"></div>
+
+<button id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
+
+<div id="recordContainer">
+  <button id="recordButton" class="rec-btn">RECORD</button>
+  <button id="leaveButton" class="rec-btn">EXIT</button>
+</div>
+
+<div id="overlay">
+  <h1>HYPER-FRACTAL</h1>
+  <h2>Prismatic Core</h2>
+  <div class="control-group">
+    <p style="margin-top:0; color:#00ffff; font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 5px;">INPUT AUDIO STREAM</p>
+    <button id="selectFileBtn" class="btn">Initialize Audio File</button>
+    <button id="demoBtn" class="btn btn-demo">Demo Mode (Synth)</button>
+    <input type="file" id="fileInput" accept="audio/*">
+  </div>
+
+  <div class="checkbox-wrapper">
+    <input type="checkbox" id="record4k">
+    <label for="record4k">4K Resolution</label>
+  </div>
+
+  <div class="checkbox-wrapper">
+    <input type="checkbox" id="autoRecord">
+    <label for="autoRecord">Auto-Capture</label>
+  </div>
+
+  <div id="message"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!--
+    ================================================================
+    GLSL FRAGMENT SHADER
+    Contains Raymarching Logic, SDFs, and Coloring
+    ================================================================
+-->
+<script type="x-shader/x-fragment" id="fragShader">
+  precision highp float;
+
+  // -- UNIFORMS --
+  uniform float uTime;
+  uniform vec2 uResolution;
+  uniform float uBass;
+  uniform float uMid;
+  uniform float uHigh;
+  uniform float uFade;
+
+  // -- SETTINGS --
+  #define MAX_STEPS 80
+  #define MAX_DIST 40.0
+  #define SURF_DIST 0.002
+  #define ITERATIONS 6
+
+  // -- MATH HELPERS --
+  mat2 rot(float a) {
+      float s = sin(a), c = cos(a);
+      return mat2(c, -s, s, c);
+  }
+
+  float hash(vec3 p) {
+      p  = fract( p*0.3183099+.1 );
+      p *= 17.0;
+      return fract( p.x*p.y*p.z*(p.x+p.y+p.z) );
+  }
+
+  float noise( in vec3 x ) {
+      vec3 i = floor(x);
+      vec3 f = fract(x);
+      f = f*f*(3.0-2.0*f);
+      return mix(mix(mix( hash(i+vec3(0,0,0)),
+                          hash(i+vec3(1,0,0)),f.x),
+                     mix( hash(i+vec3(0,1,0)),
+                          hash(i+vec3(1,1,0)),f.x),f.y),
+                 mix(mix( hash(i+vec3(0,0,1)),
+                          hash(i+vec3(1,0,1)),f.x),
+                     mix( hash(i+vec3(0,1,1)),
+                          hash(i+vec3(1,1,1)),f.x),f.y),f.z);
+  }
+
+  float fbm(vec3 p) {
+      float f = 0.0;
+      float amp = 0.5;
+      for(int i=0; i<3; i++) {
+          f += amp * noise(p);
+          p *= 2.0;
+          amp *= 0.5;
+      }
+      return f;
+  }
+
+  vec3 palette( in float t ) {
+      vec3 a = vec3(0.5, 0.5, 0.5);
+      vec3 b = vec3(0.5, 0.5, 0.5);
+      vec3 c = vec3(1.0, 1.0, 1.0);
+      vec3 d = vec3(0.263, 0.416, 0.557);
+      return a + b*cos( 6.28318*(c*t+d) );
+  }
+
+  vec3 getSatellitePos(float t, float r, float offset, float eccentricity) {
+      float warpT = t + sin(t)*eccentricity;
+      return vec3(
+          sin(warpT + offset) * r * (1.0 + eccentricity),
+          sin(warpT * 1.3 + offset) * r * 0.4,
+          cos(warpT + offset) * r * (1.0 - eccentricity)
+      );
+  }
+
+  // -- SDF GEOMETRY --
+
+  // Sharper rock details using abs(sin) for ridges
+  float sdRocky(vec3 p, float r) {
+      float d = length(p) - r;
+      // Large, low-freq distortion for general shape irregularity
+      float shape = sin(3.0 * p.x) * sin(3.5 * p.y) * sin(4.0 * p.z) * 0.1;
+      // Sharp, high-freq distortion (ridges/cuts)
+      float sharp = (1.0 - abs(sin(p.x * 8.0))) * (1.0 - abs(sin(p.y * 8.0))) * (1.0 - abs(sin(p.z * 8.0))) * 0.06;
+      return d + shape - sharp;
+  }
+
+  // Main Scene Map
+  vec2 map(vec3 p) {
+      // 1. Fractal Core
+      vec3 w = p;
+      w.yz *= rot(1.57);
+      w.xz *= rot(uTime * 0.05);
+
+      float m = dot(w,w);
+      vec2 res = vec2(100.0, 0.0);
+
+      float dz = 1.0;
+      float power = 8.0 + sin(uTime * 0.1) * 2.5 + uBass * 1.5;
+
+      // Bounding sphere optimization
+      if (length(p) < 5.0) {
+          for(int i=0; i<ITERATIONS; i++) {
+              dz = power * pow(m, (power-1.0)/2.0) * dz + 1.0;
+              float r = length(w);
+              float b = power * acos( clamp(w.y/r, -1.0, 1.0) );
+              float a = power * atan(w.x, w.z);
+
+              w = p + pow(r, power) * vec3(sin(b)*sin(a), cos(b), sin(b)*cos(a));
+              m = dot(w,w);
+              if(m > 4.0) break;
+          }
+          float dFractal = 0.25 * log(m) * sqrt(m) / dz;
+          res = vec2(dFractal, 0.0);
+      } else {
+          res = vec2(length(p) - 4.5, 0.0);
+      }
+
+      // 2. Satellite 1 (Camera Mount) - Fractal Rock
+      vec3 sat1 = getSatellitePos(uTime * 0.15, 3.5, 0.0, 0.3);
+      vec3 pSat1 = p - sat1;
+      pSat1.xy *= rot(uTime * 0.1);
+      pSat1.y += 1.8; // Offset below camera
+
+      float dSat1 = sdRocky(pSat1, 0.9);
+      if (dSat1 < res.x) res = vec2(dSat1, 1.0);
+
+      // 3. Satellite 2 (Sister ship)
+      vec3 sat2 = getSatellitePos(uTime * 0.12, 5.0, 2.0, 0.6);
+      vec3 pSat2 = p - sat2;
+      pSat2.xy *= rot(uTime * 0.2);
+
+      float dSat2 = sdRocky(pSat2, 0.8);
+      if (dSat2 < res.x) res = vec2(dSat2, 2.0);
+
+      return res;
+  }
+
+  void main() {
+      if (uFade >= 1.0) { gl_FragColor = vec4(0.0); return; }
+
+      vec2 uv = (gl_FragCoord.xy * 2.0 - uResolution.xy) / uResolution.y;
+
+      // -- CAMERA SETUP --
+      vec3 satPos = getSatellitePos(uTime * 0.15, 3.5, 0.0, 0.3);
+      vec3 center = vec3(0.0);
+
+      vec3 fwdVec = normalize(center - satPos);
+      vec3 upVec = vec3(0.0, 1.0, 0.0);
+
+      // CAMERA POS: Riding at the orbital point
+      vec3 ro = satPos;
+      vec3 ta = vec3(0.0, 0.0, 0.0);
+      vec3 fwd = normalize(ta - ro);
+      vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), fwd));
+      vec3 up = cross(fwd, right);
+
+      // Camera Shake
+      float roll = sin(uTime * 0.1) * 0.1 + uBass * 0.05;
+      vec3 upRot = up * cos(roll) + right * sin(roll);
+      vec3 rightRot = normalize(cross(fwd, upRot));
+      vec3 rd = normalize(fwd * 1.0 + uv.x * rightRot + (uv.y - 0.3) * upRot);
+
+      // -- RAYMARCHING LOOP --
+      float t = 0.1;
+      vec2 res = vec2(0.0);
+      float d = 0.0;
+
+      for(int i=0; i<MAX_STEPS; i++) {
+          vec3 p = ro + rd * t;
+          res = map(p);
+          d = res.x;
+          if(d < SURF_DIST || t > MAX_DIST) break;
+          t += d;
+      }
+
+      vec3 col = vec3(0.0);
+
+      // -- LIGHTING & MATERIALS --
+      if(t < MAX_DIST) {
+          vec3 p = ro + rd * t;
+          float matID = res.y;
+
+          vec2 e = vec2(0.001, 0.0);
+          vec3 n = normalize(vec3(
+              map(p+e.xyy).x - map(p-e.xyy).x,
+              map(p+e.yxy).x - map(p-e.yxy).x,
+              map(p+e.yyx).x - map(p-e.yyx).x
+          ));
+
+          vec3 objCol;
+
+          if (matID < 0.5) {
+              // Fractal Core Material
+              float var = dot(n, vec3(0.0, 1.0, 0.0)) * 0.5 + 0.5;
+              float hue = var * 2.0 + length(p)*0.2 + uTime * 0.1 + uMid;
+              objCol = palette(hue);
+              objCol = pow(objCol, vec3(0.8));
+          } else {
+              // Rocky Material
+              vec3 texP = p;
+              texP.xy *= rot(uTime * 0.1);
+
+              float rock = fbm(texP * 12.0); // Detailed noise
+              float grit = noise(texP * 30.0); // Micro details
+              float craters = smoothstep(0.2, 0.7, noise(texP * 3.0)); // Larger features
+
+              if (matID < 1.5) {
+                  objCol = mix(vec3(0.1, 0.1, 0.15), vec3(0.65, 0.7, 0.75), rock);
+                  objCol *= (0.8 + 0.4 * grit);
+                  objCol *= craters;
+              } else {
+                  objCol = mix(vec3(0.2, 0.05, 0.0), vec3(0.8, 0.4, 0.2), rock);
+                  objCol *= (0.8 + 0.4 * grit);
+                  objCol *= craters;
+              }
+          }
+
+          // Lighting
+          vec3 l1Pos = ro + vec3(1.0, 4.0, 0.0);
+          vec3 l1Dir = normalize(l1Pos - p);
+
+          float diff = max(dot(n, l1Dir), 0.0);
+          float spec = pow(max(dot(reflect(-l1Dir, n), -rd), 0.0), 16.0);
+
+          col = objCol * (diff * 0.8 + 0.4);
+          if (matID < 0.5) col += vec3(1.0) * spec * 0.8;
+
+      } else {
+          // Background / Skybox
+          float bg = length(uv);
+          vec3 bgBase = palette(bg * 0.2 + uTime * 0.05);
+          col = mix(vec3(0.1, 0.0, 0.2), bgBase, 0.8);
+
+          vec3 dir = rd;
+          float tBg = uTime * 0.1;
+          dir.xz *= rot(tBg);
+          dir.xy *= rot(tBg * 0.5);
+          vec2 skyUV = vec2(atan(dir.z, dir.x), acos(dir.y));
+          float wave = sin(skyUV.y * 10.0 + uTime) * 0.2;
+
+          vec2 grid = fract((skyUV + wave) * 30.0 / 3.14159);
+          float lattice = step(0.97, grid.x) + step(0.97, grid.y);
+
+          col += bgBase * lattice * (0.8 + uMid);
+
+          float star = fract(sin(dot(rd.xy, vec2(12.9898, 78.233))) * 43758.5453);
+          if (star > 0.995) col += vec3(1.0) * (0.5 + uHigh);
+      }
+
+      // Post-processing tone mapping
+      col = pow(col, vec3(0.5));
+      vec3 gray = vec3(dot(col, vec3(0.299, 0.587, 0.114)));
+      col = mix(gray, col, 1.2);
+
+      col = mix(col, vec3(0.0), uFade);
+
+      gl_FragColor = vec4(col, 1.0);
+  }
+</script>
+
+<!--
+    ================================================================
+    JAVASCRIPT APPLICATION LOGIC
+    Modularized for SRP (Single Responsibility Principle)
+    ================================================================
+-->
+<script>
+  (function(){
+    // ==========================================
+    // 1. CONFIGURATION
+    // All tweakable constants in one place
+    // ==========================================
+    const Config = {
+      colors: {
+        primary: "#ff00ff",
+        secondary: "#00ffff",
+        accent: "#aa00aa",
+        white: "#ffffff",
+        alert: "#ff0000"
+      },
+      audio: {
+        fftSize: 4096,
+        smoothing: 0.8,
+        demoBPM: 120,
+        smoothingDecay: 8.0
+      },
+      graphics: {
+        maxPixels: 2073600, // 1080p limit
+        fadeDuration: 4.0,
+        endBuffer: 1.0
+      },
+      recording: {
+        bitrate: 25000000,
+        fps: 30
+      }
+    };
+
+    // ==========================================
+    // 2. SHARED STATE
+    // Reactive data store shared across modules
+    // ==========================================
+    const State = {
+      // Flags
+      isAudioActive: false,
+      isDecoding: false,
+      isFading: false,
+      isRecording: false,
+      isDemoMode: false,
+      isFixedStep: false, // true = deterministic rendering for video
+      was4k: false,       // toggle state memory
+
+      // Timing
+      virtualTime: 0,
+      lastFrameTime: 0,
+      fadeStartTime: 0,
+      fadeCompleteTime: 0,
+
+      // Performance
+      fps: 60,
+      targetPixelRatio: 1.0,
+      frameCount: 0,
+      lastFpsCheck: 0,
+      animationFrameId: null
+    };
+
+    // ==========================================
+    // 3. AUDIO CONTROLLER
+    // Handles Web Audio API, Analysis, and Synthesis
+    // ==========================================
+    const AudioController = {
+      context: null,
+      analyser: null,
+      dataArray: null,
+      sourceNode: null,
+      currentFile: null,
+      trackAverageGain: 128,
+      smoothBass: 0,
+      smoothMid: 0,
+      smoothHigh: 0,
+      demoInterval: null,
+
+      init() {
+        if(!this.context) {
+          this.context = new (window.AudioContext || window.webkitAudioContext)();
+          this.analyser = this.context.createAnalyser();
+          this.analyser.fftSize = Config.audio.fftSize;
+          this.analyser.smoothingTimeConstant = Config.audio.smoothing;
+          this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        } else if (this.context.state === 'suspended') {
+          this.context.resume();
+        }
+      },
+
+      async decodeAndPlay(file) {
+        this.init();
+        this.currentFile = file;
+        const arrayBuffer = await file.arrayBuffer();
+        const audioBuffer = await this.context.decodeAudioData(arrayBuffer);
+
+        this.analyzeStructure(audioBuffer);
+        this.playBuffer(audioBuffer);
+      },
+
+      playBuffer(buffer) {
+        this.stop(); // Stop any existing sound
+        this.sourceNode = this.context.createBufferSource();
+        this.sourceNode.buffer = buffer;
+        this.sourceNode.connect(this.analyser);
+        this.analyser.connect(this.context.destination);
+
+        this.sourceNode.onended = () => {
+          if (State.isAudioActive && !State.isDemoMode) App.triggerFadeOut();
+        };
+        this.sourceNode.start(0);
+      },
+
+      stop() {
+        if(this.sourceNode) {
+          try {
+            this.sourceNode.onended = null;
+            this.sourceNode.disconnect();
+            this.sourceNode.stop();
+          } catch(e) {}
+          this.sourceNode = null;
+        }
+        if(this.demoInterval) clearInterval(this.demoInterval);
+      },
+
+      // Basic normalization based on track loudness
+      analyzeStructure(buffer) {
+        const data = buffer.getChannelData(0);
+        let sum = 0; let count = 0;
+        for(let i=0; i<data.length; i+=5000) {
+          sum += Math.abs(data[i]); count++;
+        }
+        const avg = (sum / count) * 255;
+        this.trackAverageGain = Math.max(avg, 20);
+        UIController.setMessage(`READY. AVG: ${this.trackAverageGain.toFixed(1)}`);
+      },
+
+      startDemo() {
+        this.init();
+        this.stop();
+        State.isDemoMode = true;
+        this.trackAverageGain = 100;
+
+        const intervalMs = 60000 / Config.audio.demoBPM;
+        this.demoInterval = setInterval(() => {
+          const now = this.context.currentTime;
+          this.synthKick(now);
+          this.synthHat(now + (intervalMs/1000)/2);
+        }, intervalMs);
+        this.synthKick(this.context.currentTime);
+      },
+
+      synthKick(time) {
+        const osc = this.context.createOscillator();
+        const gain = this.context.createGain();
+        osc.frequency.setValueAtTime(150, time);
+        osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+        gain.gain.setValueAtTime(1, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+        osc.connect(gain);
+        gain.connect(this.analyser);
+        gain.connect(this.context.destination);
+        osc.start(time);
+        osc.stop(time + 0.5);
+      },
+
+      synthHat(time) {
+        const bufSz = this.context.sampleRate * 0.1;
+        const buf = this.context.createBuffer(1, bufSz, this.context.sampleRate);
+        const data = buf.getChannelData(0);
+        for(let i=0; i<bufSz; i++) data[i] = Math.random()*2-1;
+
+        const src = this.context.createBufferSource();
+        src.buffer = buf;
+        const gain = this.context.createGain();
+        const filter = this.context.createBiquadFilter();
+        filter.type = 'highpass'; filter.frequency.value = 5000;
+
+        gain.gain.setValueAtTime(0.3, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time+0.1);
+
+        src.connect(filter); filter.connect(gain);
+        gain.connect(this.analyser); gain.connect(this.context.destination);
+        src.start(time);
+      },
+
+      getAnalysisData() {
+        if(!this.analyser) return { bass:0, mid:0, high:0 };
+
+        this.analyser.getByteFrequencyData(this.dataArray);
+
+        const getAvg = (start, end) => {
+          let s=0; for(let i=start; i<end; i++) s+=this.dataArray[i];
+          return s/(end-start);
+        };
+
+        const norm = 128 / this.trackAverageGain;
+        return {
+          bass: (getAvg(1, 15) / 255) * norm * 0.9,
+          mid: (getAvg(20, 100) / 255) * norm,
+          high: (getAvg(200, 600) / 255) * norm
+        };
+      },
+
+      updateSmoothing(deltaTime, rawData) {
+        const factor = 1.0 - Math.exp(-Config.audio.smoothingDecay * deltaTime);
+        this.smoothBass += (rawData.bass - this.smoothBass) * factor;
+        this.smoothMid += (rawData.mid - this.smoothMid) * factor;
+        this.smoothHigh += (rawData.high - this.smoothHigh) * factor;
+        return { bass: this.smoothBass, mid: this.smoothMid, high: this.smoothHigh };
+      }
+    };
+
+    // ==========================================
+    // 4. GRAPHICS CONTROLLER
+    // Handles Three.js Renderer and Scene
+    // ==========================================
+    const GraphicsController = {
+      renderer: null,
+      scene: null, camera: null, mesh: null, material: null,
+
+      init(container) {
+        this.cleanup();
+        try {
+          this.renderer = new THREE.WebGLRenderer({
+            antialias: false, preserveDrawingBuffer: true, powerPreference: "default"
+          });
+          this.renderer.autoClear = false;
+          container.appendChild(this.renderer.domElement);
+
+          this.scene = new THREE.Scene();
+          this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
+          this.camera.position.z = 1;
+
+          this.material = new THREE.ShaderMaterial({
+            uniforms: {
+              uTime: { value: 0 },
+              uResolution: { value: new THREE.Vector2() },
+              uBass: { value: 0 }, uMid: { value: 0 }, uHigh: { value: 0 },
+              uFade: { value: 0 }
+            },
+            fragmentShader: document.getElementById('fragShader').textContent
+          });
+
+          this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(2,2), this.material);
+          this.scene.add(this.mesh);
+
+          this.resize();
+
+          // Handle Context Loss
+          container.addEventListener("webglcontextlost", (e) => {
+            e.preventDefault();
+            App.handleContextLoss();
+          });
+          container.addEventListener("webglcontextrestored", () => App.init());
+
+        } catch(e) { console.error("WebGL Init Failed", e); }
+      },
+
+      resize() {
+        if(!this.renderer) return;
+
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+
+        // If 4K is requested, force 4K dims, otherwise clamp to max pixels
+        let width = w, height = h;
+
+        if (State.was4k) {
+          width = 3840; height = 2160;
+        } else {
+          const ratio = w / h;
+          const pixels = w * h;
+          if(pixels > Config.graphics.maxPixels) {
+            height = Math.sqrt(Config.graphics.maxPixels / ratio);
+            width = height * ratio;
+          }
+        }
+
+        this.renderer.setSize(width, height, false); // false = don't update style
+        this.renderer.domElement.style.width = "100%";
+        this.renderer.domElement.style.height = "100%";
+
+        // Update Uniforms
+        this.material.uniforms.uResolution.value.set(
+                width * State.targetPixelRatio,
+                height * State.targetPixelRatio
+        );
+
+        HUDController.resize(width, height);
+      },
+
+      setQuality(ratio) {
+        this.renderer.setPixelRatio(ratio);
+        this.resize(); // Trigger uniform update
+      },
+
+      render(audioData) {
+        this.material.uniforms.uTime.value = State.virtualTime;
+        this.material.uniforms.uBass.value = audioData.bass;
+        this.material.uniforms.uMid.value = audioData.mid;
+        this.material.uniforms.uHigh.value = audioData.high;
+
+        if(State.isFading) {
+          const progress = (State.virtualTime - State.fadeStartTime) / Config.graphics.fadeDuration;
+          this.material.uniforms.uFade.value = Math.min(progress, 1.0);
+        } else {
+          this.material.uniforms.uFade.value = 0.0;
+        }
+
+        this.renderer.clear();
+        this.renderer.render(this.scene, this.camera);
+      },
+
+      cleanup() {
+        if(this.renderer) {
+          this.renderer.dispose();
+          this.renderer.domElement.remove();
+        }
+      }
+    };
+
+    // ==========================================
+    // 5. HUD CONTROLLER
+    // Handles 2D Overlay Drawing
+    // ==========================================
+    const HUDController = {
+      scene: null, camera: null, texture: null, context: null,
+
+      init(renderer) {
+        const w = 100, h = 100; // Placeholder, resized immediately
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+
+        this.context = canvas.getContext('2d');
+        this.texture = new THREE.CanvasTexture(canvas);
+        this.texture.minFilter = THREE.LinearFilter;
+
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.OrthographicCamera(-w/2, w/2, h/2, -h/2, 0, 30);
+        this.camera.position.z = 10;
+
+        const plane = new THREE.Mesh(
+                new THREE.PlaneGeometry(w, h),
+                new THREE.MeshBasicMaterial({ map: this.texture, transparent: true })
+        );
+        this.scene.add(plane);
+      },
+
+      resize(w, h) {
+        if(!this.texture) this.init();
+
+        // Resize Canvas
+        this.texture.image.width = w;
+        this.texture.image.height = h;
+
+        // Resize Camera
+        this.camera.left = -w/2; this.camera.right = w/2;
+        this.camera.top = h/2;   this.camera.bottom = -h/2;
+        this.camera.updateProjectionMatrix();
+
+        // Resize Mesh
+        this.scene.children[0].geometry.dispose();
+        this.scene.children[0].geometry = new THREE.PlaneGeometry(w, h);
+      },
+
+      draw(audioData) {
+        const ctx = this.context;
+        const w = this.texture.image.width;
+        const h = this.texture.image.height;
+        const s = Math.max(w / 1280, 0.6); // Scale factor
+        const C = Config.colors;
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.lineWidth = 1.0 * s;
+
+        // Text Helper
+        const txt = (str, x, y, sz, col, align="left") => {
+          ctx.font = `bold ${sz * s}px 'Montserrat'`;
+          ctx.fillStyle = col; ctx.textAlign = align; ctx.fillText(str, x, y);
+        };
+
+        // Header
+        txt("HYPER FRACTAL", w/2, 40*s, 16, C.primary, "center");
+        txt("ORBITAL VIEW", w/2, 60*s, 10, C.secondary, "center");
+
+        // Divider
+        ctx.strokeStyle = C.secondary;
+        ctx.beginPath(); ctx.moveTo(w/2 - 150*s, 75*s); ctx.lineTo(w/2 + 150*s, 75*s); ctx.stroke();
+
+        // Stats
+        txt(`FPS: ${State.fps}`, 50*s, h - 70*s, 12, State.fps < 30 ? C.alert : C.secondary);
+
+        // Equalizer Bars
+        const bw = 15*s, bh = 60*s, bx = w - 80*s, by = h - 80*s;
+        ctx.fillStyle = C.primary; ctx.fillRect(bx, by + (1-audioData.bass)*bh, bw, audioData.bass*bh);
+        ctx.fillStyle = C.accent;  ctx.fillRect(bx + 20*s, by + (1-audioData.mid)*bh, bw, audioData.mid*bh);
+        ctx.fillStyle = C.white;   ctx.fillRect(bx + 40*s, by + (1-audioData.high)*bh, bw, audioData.high*bh);
+
+        // Waveform
+        if(AudioController.dataArray && State.isAudioActive) {
+          ctx.beginPath();
+          ctx.strokeStyle = C.primary; ctx.lineWidth = 1.5;
+          const ww = 300*s, wh = 40*s, wx = w/2 - ww/2, wy = h - 60*s;
+          const arr = AudioController.dataArray;
+          const step = Math.ceil(arr.length / ww);
+
+          for(let i=0; i<ww; i++) {
+            const v = (arr[i*step] / 128.0) - 1.0;
+            const y = wy + (v * wh);
+            i===0 ? ctx.moveTo(wx, y) : ctx.lineTo(wx+i, y);
+          }
+          ctx.stroke();
+        }
+
+        this.texture.needsUpdate = true;
+        GraphicsController.renderer.render(this.scene, this.camera);
+      }
+    };
+
+    // ==========================================
+    // 6. RECORDER CONTROLLER
+    // Handles MediaRecorder
+    // ==========================================
+    const RecorderController = {
+      mediaRecorder: null,
+      chunks: [],
+
+      start() {
+        if (UIController.els.record4kCheck.checked) {
+          State.was4k = true;
+          GraphicsController.resize();
+        }
+        State.isFixedStep = true; // Enable deterministic rendering
+
+        try {
+          const canvasStream = GraphicsController.renderer.domElement.captureStream(Config.recording.fps);
+          const dest = AudioController.context.createMediaStreamDestination();
+          if(AudioController.sourceNode) AudioController.sourceNode.connect(dest);
+
+          const tracks = [...canvasStream.getVideoTracks(), ...dest.stream.getAudioTracks()];
+
+          // Try VP9, fall back to default
+          try {
+            this.mediaRecorder = new MediaRecorder(new MediaStream(tracks), {
+              mimeType: 'video/webm;codecs=vp9',
+              videoBitsPerSecond: Config.recording.bitrate
+            });
+          } catch(e) {
+            this.mediaRecorder = new MediaRecorder(new MediaStream(tracks));
+          }
+
+          this.chunks = [];
+          this.mediaRecorder.ondataavailable = e => { if(e.data.size > 0) this.chunks.push(e.data); };
+          this.mediaRecorder.onstop = () => this.saveFile();
+
+          this.mediaRecorder.start();
+          State.isRecording = true;
+          UIController.setRecordingState(true);
+
+        } catch(e) {
+          UIController.setMessage("Capture Error: " + e.message);
+          this.stop();
+        }
+      },
+
+      stop() {
+        if(this.mediaRecorder && this.mediaRecorder.state !== 'inactive') this.mediaRecorder.stop();
+        State.isRecording = false;
+        State.isFixedStep = false;
+        State.was4k = UIController.els.record4kCheck.checked;
+        GraphicsController.resize(); // Restore resolution
+        UIController.setRecordingState(false);
+      },
+
+      saveFile() {
+        if(!this.chunks.length) return;
+        const blob = new Blob(this.chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const name = AudioController.currentFile ?
+                AudioController.currentFile.name.split('.')[0] : "demo";
+
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `hyper-fractal-${name}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+      }
+    };
+
+    // ==========================================
+    // 7. UI CONTROLLER
+    // Handles DOM Events
+    // ==========================================
+    const UIController = {
+      els: {},
+
+      init() {
+        // Map IDs to elements
+        ['canvas-container', 'overlay', 'fileInput', 'selectFileBtn', 'demoBtn',
+          'message', 'recordButton', 'leaveButton', 'recordContainer',
+          'autoRecord', 'record4k', 'fullscreenBtn'].forEach(id => {
+          this.els[id] = document.getElementById(id); // map simple ids
+          // map complex ids to clearer names if needed
+          if(id === 'recordButton') this.els.recordBtn = this.els[id];
+          if(id === 'record4k') this.els.record4kCheck = this.els[id];
+        });
+
+        // Listeners
+        this.els.selectFileBtn.onclick = () => {
+          if(State.isDecoding) return;
+          AudioController.init();
+          this.els.fileInput.value = '';
+          this.els.fileInput.click();
+        };
+
+        this.els.fileInput.onchange = (e) => {
+          const file = e.target.files[0];
+          if(!file) return;
+          State.isDecoding = true;
+          this.setMessage("DECODING...");
+          AudioController.decodeAndPlay(file)
+                  .then(() => {
+                    State.isDecoding = false;
+                    App.startVisuals();
+                  })
+                  .catch(err => {
+                    State.isDecoding = false;
+                    this.setMessage("Error: " + err.message);
+                  });
+        };
+
+        this.els.demoBtn.onclick = () => {
+          AudioController.startDemo();
+          App.startVisuals();
+        };
+
+        this.els.leaveButton.onclick = () => App.reset();
+        this.els.recordButton.onclick = () => {
+          State.isRecording ? RecorderController.stop() : RecorderController.start();
+        };
+
+        this.els.record4kCheck.onchange = () => {
+          State.was4k = this.els.record4kCheck.checked;
+          GraphicsController.resize();
+        };
+
+        this.els.fullscreenBtn.onclick = () => {
+          if (!document.fullscreenElement) {
+            document.body.requestFullscreen();
+            this.els.fullscreenBtn.innerHTML = "🡼";
+          } else {
+            document.exitFullscreen();
+            this.els.fullscreenBtn.innerHTML = "⛶";
+          }
+        };
+      },
+
+      showOverlay(show) {
+        this.els.overlay.style.display = show ? 'block' : 'none';
+        setTimeout(() => this.els.overlay.style.opacity = show ? 1 : 0, 10);
+
+        this.els.recordContainer.style.display = show ? 'none' : 'flex';
+        setTimeout(() => this.els.recordContainer.style.opacity = show ? 0 : 1, 10);
+      },
+
+      setMessage(msg) {
+        this.els.message.innerText = msg;
+      },
+
+      setRecordingState(isRec) {
+        this.els.recordBtn.innerText = isRec ? "STOP" : "RECORD";
+        isRec ? this.els.recordBtn.classList.add('recording')
+                : this.els.recordBtn.classList.remove('recording');
+      }
+    };
+
+    // ==========================================
+    // 8. MAIN APP LOGIC
+    // Orchestrates the modules
+    // ==========================================
+    const App = {
+      init() {
+        UIController.init();
+        GraphicsController.init(UIController.els['canvas-container']);
+        HUDController.init();
+
+        // Start Render Loop
+        this.lastTime = performance.now();
+        requestAnimationFrame(t => this.loop(t));
+
+        window.addEventListener('resize', () => {
+          if(!State.isRecording) GraphicsController.resize();
+        });
+      },
+
+      startVisuals() {
+        UIController.showOverlay(false);
+        State.isAudioActive = true;
+        State.isFading = false;
+        State.virtualTime = 0;
+        State.lastFrameTime = performance.now();
+
+        if(UIController.els.autoRecord.checked) {
+          setTimeout(() => RecorderController.start(), 800);
+        }
+      },
+
+      reset() {
+        State.isAudioActive = false;
+        State.isDemoMode = false;
+        AudioController.stop();
+        if(State.isRecording) RecorderController.stop();
+        UIController.showOverlay(true);
+      },
+
+      triggerFadeOut() {
+        if(!State.isFading) {
+          State.isFading = true;
+          State.fadeStartTime = State.virtualTime;
+        }
+      },
+
+      handleContextLoss() {
+        cancelAnimationFrame(State.animationFrameId);
+        this.reset();
+      },
+
+      loop(now) {
+        State.animationFrameId = requestAnimationFrame(t => this.loop(t));
+
+        // 1. Calculate Delta Time
+        let dt;
+        if (State.isFixedStep) {
+          dt = 1.0 / Config.recording.fps;
+        } else {
+          dt = (now - State.lastFrameTime) / 1000;
+          State.lastFrameTime = now;
+        }
+        State.virtualTime += dt;
+
+        // 2. Update FPS Counter
+        State.frameCount++;
+        if (now - State.lastFpsCheck > 1000) {
+          State.fps = Math.round(State.frameCount * 1000 / (now - State.lastFpsCheck));
+          State.lastFpsCheck = now;
+          State.frameCount = 0;
+          if(!State.isRecording) this.adjustQuality();
+        }
+
+        // 3. Audio & Physics
+        const rawAudio = AudioController.getAnalysisData();
+        if(!State.isAudioActive) {
+          // Idle Animation
+          rawAudio.bass = (Math.sin(State.virtualTime * 2) * 0.5 + 0.5) * 0.1;
+        }
+        const smoothAudio = AudioController.updateSmoothing(dt, rawAudio);
+
+        // 4. Check Fade End
+        if (State.isFading) {
+          const progress = (State.virtualTime - State.fadeStartTime) / Config.graphics.fadeDuration;
+          if(progress >= 1.0 + Config.graphics.endBuffer) {
+            this.reset();
+            return;
+          }
+        }
+
+        // 5. Render
+        GraphicsController.render(smoothAudio);
+        HUDController.draw(smoothAudio);
+      },
+
+      adjustQuality() {
+        // Dynamic Resolution Scaling
+        if(State.was4k) return;
+        if(State.fps < 30) State.targetPixelRatio = Math.max(0.5, State.targetPixelRatio - 0.1);
+        else if(State.fps > 55) State.targetPixelRatio = Math.min(1.0, State.targetPixelRatio + 0.01);
+
+        // Only apply if changed significantly
+        if(Math.abs(GraphicsController.renderer.getPixelRatio() - State.targetPixelRatio) > 0.05) {
+          GraphicsController.setQuality(State.targetPixelRatio);
+        }
+      }
+    };
+
+    // Initialize on load
+    if (document.readyState === 'complete') App.init();
+    else window.addEventListener('DOMContentLoaded', () => App.init());
+
+  })();
+</script>
+</body>
+</html>

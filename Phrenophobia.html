@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phrenophobia - Bad Trip</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #050005; /* Dark Purple Void */
+      font-family: 'Courier New', Courier, monospace;
+      color: #00ff00; /* Toxic Green Text */
+    }
+
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* --- COMPACT MODULAR HUD LAYOUT --- */
+    #hud-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: grid;
+      grid-template-columns: 175px 1fr 175px;
+      grid-template-rows: 70px 1fr 70px;
+      grid-template-areas:
+                "top-left top-mid top-right"
+                "side-left center side-right"
+                "bot-left bot-mid bot-right";
+    }
+
+    /* UI OVERLAY */
+    #overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      padding: 40px;
+      text-align: center;
+      background: rgba(20, 0, 20, 0.9);
+      border: 1px solid #00ff00;
+      box-shadow: 0 0 50px rgba(0, 255, 0, 0.2), inset 0 0 50px rgba(50, 0, 50, 0.9);
+      clip-path: polygon(0 0, 100% 0, 100% 90%, 90% 100%, 0 100%);
+      backdrop-filter: blur(4px);
+      max-width: 500px;
+      width: 90%;
+      transition: opacity 0.5s ease;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin: 0 0 10px 0;
+      color: #ff00ff;
+      text-shadow: 2px 2px 0px #00ff00;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      font-weight: 900;
+    }
+
+    h2 {
+      font-size: 0.8rem;
+      color: #00ff00;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 30px;
+      border-bottom: 1px solid #ff00ff;
+      display: inline-block;
+      padding-bottom: 5px;
+    }
+
+    .control-group {
+      margin-bottom: 25px;
+      padding: 20px;
+      border: 1px solid #ff00ff;
+      background: rgba(30, 0, 30, 0.6);
+    }
+
+    .btn {
+      background: rgba(0, 50, 0, 0.3);
+      color: #ff00ff;
+      font-family: inherit;
+      font-size: 1.0rem;
+      font-weight: 700;
+      padding: 15px 30px;
+      border: 1px solid #00ff00;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.1s ease;
+      box-shadow: 0 0 5px rgba(255, 0, 255, 0.4);
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .btn:hover { background: #00ff00; color: #000; box-shadow: 0 0 20px rgba(0, 255, 0, 0.8); }
+
+    #fileInput { display: none; }
+
+    /* Recording UI */
+    #recordContainer {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 150;
+      display: none;
+      flex-direction: row;
+      gap: 15px;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .rec-btn {
+      padding: 10px 20px;
+      border: 1px solid #00ff00;
+      background: #1a001a;
+      color: #00ff00;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      transition: all 0.1s;
+    }
+
+    #recordButton { background: #550055; color: #00ff00; min-width: 150px; border: 1px solid #ff00ff; }
+    #recordButton:hover { background: #ff00ff; color: #000; }
+    #recordButton.recording { animation: pulseWarning 0.2s infinite alternate; }
+    #leaveButton:hover { background: #00ff00; color: #000; }
+
+    @keyframes pulseWarning {
+      from { box-shadow: 0 0 5px #ff00ff; background: #550055; transform: scale(1.0); }
+      to { box-shadow: 0 0 20px #00ff00; background: #880088; transform: scale(1.05); }
+    }
+
+    #fullscreenBtn {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      width: 35px;
+      height: 35px;
+      background: rgba(20, 0, 20, 0.8);
+      border: 1px solid #00ff00;
+      color: #ff00ff;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 150;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    #fullscreenBtn:hover { background: #00ff00; color: #000; }
+    #message { margin-top: 15px; color: #ff00ff; font-size: 0.8rem; min-height: 1.2em; font-weight: bold; }
+
+    .checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; color: #cc55cc; margin-top: 15px; font-size: 0.8rem;}
+    input[type="checkbox"] { accent-color: #ff00ff; cursor: pointer; }
+
+    .vignette {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      /* Uneven, unsettling vignette */
+      background: radial-gradient(circle at 50% 45%, transparent 30%, #1a001a 95%);
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<button id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
+
+<div id="recordContainer">
+  <button id="recordButton" class="rec-btn">INITIATE</button>
+  <button id="leaveButton" class="rec-btn">ABORT</button>
+</div>
+
+<div id="overlay">
+  <h1>BAD TRIP</h1>
+  <h2>Sensory Overload</h2>
+  <div class="control-group">
+    <p style="margin-top:0; color:#00ff00; font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 15px;">INGEST AUDIO</p>
+    <button id="selectFileBtn" class="btn">Select Track</button>
+    <input type="file" id="fileInput" accept="audio/*">
+  </div>
+
+  <div class="checkbox-wrapper">
+    <input type="checkbox" id="record4k">
+    <label for="record4k">High Definition Nightmare (4K)</label>
+  </div>
+
+  <div class="checkbox-wrapper">
+    <input type="checkbox" id="autoRecord">
+    <label for="autoRecord">Auto-Log Psychosis</label>
+  </div>
+
+  <div id="message"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- FRAGMENT SHADER: FRACTAL PLASMA -->
+<script type="x-shader/x-fragment" id="fragShader">
+  uniform float uTime;
+  uniform vec2 uResolution;
+  uniform float uBass;
+  uniform float uMid;
+  uniform float uHigh;
+  uniform float uFade;
+
+  #define PI 3.14159265359
+
+  vec3 palette( in float t ) {
+      vec3 a = vec3(0.5, 0.5, 0.5);
+      vec3 b = vec3(0.5, 0.5, 0.5);
+      vec3 c = vec3(1.0, 1.0, 1.0);
+      vec3 d = vec3(0.263, 0.416, 0.557);
+      return a + b*cos( 6.28318*(c*t+d) );
+  }
+
+  mat2 rot(float a) {
+      float s = sin(a);
+      float c = cos(a);
+      return mat2(c, -s, s, c);
+  }
+
+  void main() {
+      if (uFade >= 1.0) {
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+          return;
+      }
+
+      vec2 uv = (gl_FragCoord.xy * 2.0 - uResolution.xy) / uResolution.y;
+      vec2 uv0 = uv;
+
+      // --- BRIGHT PSYCHEDELIC WAVE BACKGROUND ---
+      vec2 p = uv * 1.3; // Slight Zoom for detail
+
+      // DYNAMIC MOTION: Rotate the background domain
+      // Increased rotation speed
+      float bgRot = uTime * 0.3 + uBass * 0.3;
+      float c = cos(bgRot);
+      float s = sin(bgRot);
+      p = vec2(p.x * c - p.y * s, p.x * s + p.y * c);
+
+      vec3 finalColor = vec3(0.0);
+
+      // Wave distortion loop - Increased Intensity & Speed
+      // Increased iterations to 5.0 for more complex ripples
+      for(float i = 1.0; i < 5.0; i++){
+          // Amplitude increased to 0.8 / i (was 0.6)
+          // Time speed increased to 0.5 (was 0.2)
+          p.x += 0.8 / i * sin(i * 3.5 * p.y + uTime * 0.5 + uBass * 2.5);
+          p.y += 0.8 / i * cos(i * 3.5 * p.x + uTime * 0.5 + uMid * 2.5);
+      }
+
+      // Pattern calculation
+      float pattern = sin(p.x + p.y + uTime * 2.0);
+
+      // Map to palette and boost brightness
+      vec3 bg = palette(pattern * 0.5 + 0.5 + length(uv) * 0.5);
+
+      // High baseline brightness + Stronger Audio boost
+      finalColor = bg * (0.6 + uBass * 0.6);
+
+      // --- TUNNEL OVERLAY (Vector Streaks) ---
+      float r = length(uv);
+      float a = atan(uv.y, uv.x);
+      float z = 1.0 / (r + 0.05);
+      float speed = uTime * 4.0 + uBass * 2.0;
+
+      float streaks = sin(z * 20.0 + speed * 5.0) * sin(a * 10.0);
+      streaks = smoothstep(0.9, 1.0, streaks);
+
+      vec3 streakCol = vec3(0.0, 1.0, 0.0) * uMid + vec3(1.0, 0.0, 1.0) * uHigh;
+      finalColor += streakCol * streaks;
+
+      // Center darken
+      finalColor *= smoothstep(0.0, 0.15, r);
+
+      // Edge Vignette & Anti-Yellow
+      float edgeDeYellow = smoothstep(0.5, 2.0, r);
+      finalColor.g *= 1.0 - (edgeDeYellow * 0.7);
+      finalColor.r *= 1.0 - (edgeDeYellow * 0.3);
+      finalColor.b += edgeDeYellow * 0.3;
+
+      // Final contrast adjustment
+      finalColor = pow(finalColor, vec3(0.9));
+
+      vec3 fadeColor = vec3(0.0, 0.0, 0.0);
+      finalColor = mix(finalColor, fadeColor, uFade);
+
+      gl_FragColor = vec4(finalColor, 1.0);
+  }
+</script>
+
+<script>
+  (function(){
+    // --- CONFIG & STATE ---
+    let audioContext, analyser, dataArray, sourceNode;
+    let renderer, sceneBG, cameraBG, materialBG, meshBG;
+    let scene3D, camera3D;
+    let sceneHUD, cameraHUD; // HUD Overlay Scene
+    let hudCanvas, hudCtx, hudTexture;
+    let isRunning = false;
+    let currentAudioFile = null;
+
+    // 3D HUD Objects
+    let spikeObj, eyeObj, tunnelRings = [];
+    let shipCoreMesh;
+    let centerSpinner;
+    let currentShapeIdx = 0;
+
+    // Morphing State
+    let morphState = { active: false, start: 0, duration: 10.0, oldMesh: null, newMesh: null };
+
+    // Audio State
+    let smoothBass = 0, smoothMid = 0, smoothHigh = 0;
+    let lastVolume = 0;
+
+    // Fading State
+    let isFading = false;
+    let fadeStartTime = 0;
+    let fadeCompleteTime = 0;
+    const FADE_DURATION = 3.0;
+    const END_BUFFER = 1.0;
+
+    // Recording
+    let mediaRecorder;
+    let recordedChunks = [];
+    let isRecording = false;
+    let was4k = false;
+
+    const container = document.getElementById('canvas-container');
+    const overlay = document.getElementById('overlay');
+    const fileInput = document.getElementById('fileInput');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const messageDiv = document.getElementById('message');
+    const recordBtn = document.getElementById('recordButton');
+    const leaveBtn = document.getElementById('leaveButton');
+    const recordContainer = document.getElementById('recordContainer');
+    const autoRecordCheck = document.getElementById('autoRecord');
+    const record4kCheck = document.getElementById('record4k');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+    // --- THREE.JS SETUP ---
+    function initThree() {
+      if (renderer) { container.innerHTML = ''; }
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.autoClear = false;
+      container.appendChild(renderer.domElement);
+
+      // 1. BG Scene (Hyperdrive)
+      sceneBG = new THREE.Scene();
+      cameraBG = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
+      const geometry = new THREE.PlaneGeometry(2, 2);
+      materialBG = new THREE.ShaderMaterial({
+        uniforms: {
+          uTime: { value: 0 },
+          uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+          uBass: { value: 0.0 },
+          uMid: { value: 0.0 },
+          uHigh: { value: 0.0 },
+          uFade: { value: 0.0 }
+        },
+        fragmentShader: document.getElementById('fragShader').textContent,
+        depthWrite: false
+      });
+      meshBG = new THREE.Mesh(geometry, materialBG);
+      sceneBG.add(meshBG);
+
+      // 2. 3D Scene (Vector Graphics)
+      scene3D = new THREE.Scene();
+      camera3D = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera3D.position.z = 10;
+      create3DInterface();
+
+      // 3. HUD Scene (2D Overlay via Canvas)
+      hudCanvas = document.createElement('canvas');
+      hudCanvas.width = window.innerWidth;
+      hudCanvas.height = window.innerHeight;
+      hudCtx = hudCanvas.getContext('2d');
+      hudTexture = new THREE.CanvasTexture(hudCanvas);
+      hudTexture.minFilter = THREE.LinearFilter;
+
+      sceneHUD = new THREE.Scene();
+      cameraHUD = new THREE.OrthographicCamera(-window.innerWidth/2, window.innerWidth/2, window.innerHeight/2, -window.innerHeight/2, 0, 30);
+      const hudPlane = new THREE.Mesh(
+              new THREE.PlaneGeometry(window.innerWidth, window.innerHeight),
+              new THREE.MeshBasicMaterial({ map: hudTexture, transparent: true })
+      );
+      sceneHUD.add(hudPlane);
+
+      container.addEventListener("webglcontextlost", (event) => { event.preventDefault(); resetUI(); }, false);
+      container.addEventListener("webglcontextrestored", initThree, false);
+      window.addEventListener('resize', onResize);
+      onResize();
+    }
+
+    function create3DInterface() {
+      // BAD TRIP MATERIALS: Max Contrast, No Transparency Fade on edges
+      const wireMat = new THREE.LineBasicMaterial({ color: 0xd000ff, transparent: false, opacity: 1.0, linewidth: 2 }); // Hot Purple
+      const whiteMat = new THREE.LineBasicMaterial({ color: 0x00ff00, transparent: false, opacity: 1.0, linewidth: 2 }); // Acid Green
+
+      // 1. LEFT: HYPER-SPIKE (Fractal Cluster)
+      const spikeGroup = new THREE.Group();
+
+      // Layer 1: Dense Core
+      const coreGeo = new THREE.IcosahedronGeometry(0.8, 1);
+      spikeCore = new THREE.LineSegments(new THREE.WireframeGeometry(coreGeo), wireMat);
+      spikeGroup.add(spikeCore);
+
+      // Layer 2: Rotating Octahedron
+      const midGeo = new THREE.OctahedronGeometry(1.2, 0);
+      const midMesh = new THREE.LineSegments(new THREE.WireframeGeometry(midGeo), whiteMat);
+      spikeGroup.add(midMesh);
+
+      // Layer 3: Outer Dodecahedron Shell
+      const cageGeo = new THREE.DodecahedronGeometry(1.6, 0);
+      const cage = new THREE.LineSegments(new THREE.WireframeGeometry(cageGeo), wireMat);
+      spikeGroup.add(cage);
+
+      spikeGroup.position.set(-5, -2, 0);
+      scene3D.add(spikeGroup);
+      spikeObj = spikeGroup;
+
+      // 2. RIGHT: FRACTAL EYE (Torus Knot)
+      const eyeGroup = new THREE.Group();
+
+      const knotGeo = new THREE.TorusKnotGeometry(1.0, 0.25, 100, 16, 3, 7);
+      const eye = new THREE.LineSegments(new THREE.WireframeGeometry(knotGeo), wireMat);
+      eyeGroup.add(eye);
+
+      const sphereGeo = new THREE.IcosahedronGeometry(1.8, 1);
+      const sphere = new THREE.LineSegments(new THREE.WireframeGeometry(sphereGeo), whiteMat);
+      eyeGroup.add(sphere);
+
+      eyeGroup.position.set(5, -2, 0);
+      scene3D.add(eyeGroup);
+      eyeObj = eyeGroup;
+
+      // 3. CENTER: FRACTAL TUNNEL (Composite Geometry)
+      tunnelRings = [];
+
+      const createPoly = (radius, sides) => {
+        const pts = [];
+        for(let i=0; i<=sides; i++) {
+          const theta = (i/sides) * Math.PI * 2;
+          pts.push(new THREE.Vector3(Math.cos(theta)*radius, Math.sin(theta)*radius, 0));
+        }
+        return new THREE.BufferGeometry().setFromPoints(pts);
+      };
+
+      const triGeo = createPoly(3.5, 3);
+      const squareGeo = createPoly(3.5, 4);
+      const hexGeo = createPoly(3.5, 6);
+
+      for(let i=0; i<30; i++) {
+        // High contrast white for tunnel
+        const frameMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.0 });
+
+        const tunnelGroup = new THREE.Group();
+
+        const frameA = new THREE.Line(hexGeo, frameMat);
+
+        const frameB = new THREE.Line(squareGeo, frameMat);
+        frameB.rotation.z = Math.PI / 4;
+        frameB.scale.setScalar(0.8);
+
+        const frameC = new THREE.Line(triGeo, frameMat);
+        frameC.rotation.z = Math.PI;
+        frameC.scale.setScalar(0.6);
+
+        tunnelGroup.add(frameA);
+        tunnelGroup.add(frameB);
+        tunnelGroup.add(frameC);
+
+        tunnelGroup.position.z = - (i * 3);
+
+        tunnelGroup.userData = {
+          rotSpeed: (Math.random() - 0.5) * 0.8 // Increased spin speed
+        };
+
+        scene3D.add(tunnelGroup);
+        tunnelRings.push(tunnelGroup);
+      }
+
+      // 4. CENTER: HYPER-CUBE SPINNER
+      const spinnerGroup = new THREE.Group();
+
+      const boxGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+      const spinMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: false, opacity: 1.0 });
+      const box1 = new THREE.LineSegments(new THREE.WireframeGeometry(boxGeo), spinMat);
+
+      const box2 = new THREE.LineSegments(new THREE.WireframeGeometry(boxGeo), spinMat);
+      box2.scale.setScalar(0.6);
+      box2.rotation.set(0.5, 0.5, 0.5);
+
+      spinnerGroup.add(box1);
+      spinnerGroup.add(box2);
+      spinnerGroup.position.z = 0;
+      scene3D.add(spinnerGroup);
+      centerSpinner = spinnerGroup;
+    }
+
+    function update3DLayout() {
+      if (!camera3D) return;
+      const vFOV = THREE.MathUtils.degToRad(camera3D.fov);
+      const distance = camera3D.position.z;
+      const heightAtZero = 2 * Math.tan(vFOV / 2) * distance;
+      const widthAtZero = heightAtZero * camera3D.aspect;
+
+      if (spikeObj) {
+        spikeObj.position.x = (-widthAtZero / 2.5);
+        spikeObj.position.y = -heightAtZero/4;
+      }
+      if (eyeObj) {
+        eyeObj.position.x = (widthAtZero / 2.5);
+        eyeObj.position.y = -heightAtZero/4;
+      }
+    }
+
+    function resizeApp(w, h, updateStyle = true) {
+      if (!renderer) return;
+      renderer.setSize(w, h, updateStyle);
+      hudCanvas.width = w;
+      hudCanvas.height = h;
+      if(sceneHUD && sceneHUD.children[0]) {
+        sceneHUD.children[0].geometry.dispose();
+        sceneHUD.children[0].geometry = new THREE.PlaneGeometry(w, h);
+      }
+      if(cameraHUD) {
+        cameraHUD.left = -w/2; cameraHUD.right = w/2; cameraHUD.top = h/2; cameraHUD.bottom = -h/2;
+        cameraHUD.updateProjectionMatrix();
+      }
+      if(materialBG) {
+        const drawingSize = new THREE.Vector2();
+        renderer.getDrawingBufferSize(drawingSize);
+        materialBG.uniforms.uResolution.value.x = drawingSize.x;
+        materialBG.uniforms.uResolution.value.y = drawingSize.y;
+      }
+      if(camera3D) {
+        camera3D.aspect = w / h;
+        camera3D.updateProjectionMatrix();
+      }
+      update3DLayout();
+    }
+
+    function onResize() {
+      if(isRecording && was4k) return;
+      resizeApp(window.innerWidth, window.innerHeight, true);
+    }
+
+    // --- HUD DRAWING (BAD TRIP THEME) ---
+    function drawHUD(bass, mid, high, time, stats) {
+      if(!hudCtx) return;
+      const w = hudCanvas.width;
+      const h = hudCanvas.height;
+      const ctx = hudCtx;
+
+      const isGlitch = Math.random() < (0.05 + bass * 0.3);
+      const shakeX = isGlitch ? (Math.random() - 0.5) * 10 : 0;
+      const shakeY = isGlitch ? (Math.random() - 0.5) * 10 : 0;
+
+      ctx.clearRect(0, 0, w, h);
+      const scale = (w / 1920);
+      const s = Math.max(scale, 0.6);
+
+      const primary = "#00ff00";
+      const secondary = "#ff00ff";
+      const bg = "rgba(20, 0, 20, 0.85)";
+
+      ctx.lineWidth = 1.5 * s;
+      ctx.translate(shakeX, shakeY);
+
+      const fillPanel = () => {
+        ctx.fillStyle = bg;
+        ctx.fill();
+        ctx.strokeStyle = isGlitch ? secondary : primary;
+        ctx.stroke();
+      };
+
+      const applyTextStyle = (size = 11, color = primary) => {
+        ctx.font = `bold ${size * s}px 'Courier New'`;
+        ctx.fillStyle = isGlitch ? secondary : color;
+        ctx.shadowColor = secondary;
+        ctx.shadowBlur = 3 * s;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      };
+
+      const resetShadow = () => {
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      };
+
+      // TOP BAR
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(300*s, 0); ctx.lineTo(300*s, 30*s); ctx.lineTo(250*s, 60*s); ctx.lineTo(0, 60*s); ctx.closePath();
+      fillPanel();
+      applyTextStyle(14, secondary);
+      ctx.fillText("MIND: FRACTURED", 15*s, 35*s);
+      resetShadow();
+      ctx.restore();
+
+      // Right
+      ctx.save();
+      ctx.translate(w, 0);
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(-200*s, 0); ctx.lineTo(-200*s, 30*s); ctx.lineTo(-150*s, 60*s); ctx.lineTo(0, 60*s); ctx.closePath();
+      fillPanel();
+      applyTextStyle(12, primary);
+      ctx.fillText(`TRIP: ${Math.floor(time).toString().padStart(3,'0')}`, -180*s, 35*s);
+      resetShadow();
+      ctx.restore();
+
+      // LEFT PANEL
+      ctx.save();
+      ctx.translate(0, h/2 - 300*s);
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(100*s, 0); ctx.lineTo(140*s, 40*s); ctx.lineTo(140*s, 500*s); ctx.lineTo(100*s, 540*s); ctx.lineTo(0, 540*s); ctx.closePath();
+      fillPanel();
+
+      ctx.translate(20*s, 80*s);
+      applyTextStyle(11, primary);
+      ctx.fillText("PARANOIA", 0, -15*s);
+      resetShadow();
+      ctx.strokeStyle = secondary;
+      ctx.strokeRect(0, 0, 15*s, 150*s);
+      ctx.fillStyle = primary;
+      ctx.fillRect(2*s, (150*s) - (150*s * bass * (0.8 + Math.random()*0.4)), 11*s, (150*s * bass));
+
+      ctx.fillText("DELUSION", 60*s, -15*s);
+      ctx.strokeRect(60*s, 0, 15*s, 150*s);
+      ctx.fillStyle = secondary;
+      ctx.fillRect(62*s, (150*s) - (150*s * mid), 11*s, (150*s * mid));
+
+      ctx.translate(0, 270*s);
+      ctx.globalAlpha = 1.0;
+      applyTextStyle(11, secondary);
+      ctx.fillText("HALLUCINATION", 0, 0);
+      applyTextStyle(14, primary);
+      if (!isGlitch) ctx.fillText("MANIFESTING...", 0, 20*s);
+      resetShadow();
+      ctx.restore();
+
+      // RIGHT PANEL
+      ctx.save();
+      ctx.translate(w, h/2 - 300*s);
+      ctx.beginPath();
+      ctx.moveTo(0,0); ctx.lineTo(-100*s,0); ctx.lineTo(-140*s,40*s); ctx.lineTo(-140*s,500*s); ctx.lineTo(-100*s,540*s); ctx.lineTo(0,540*s); ctx.closePath();
+      fillPanel();
+
+      ctx.translate(-120*s, 80*s);
+      applyTextStyle(11, primary);
+      ctx.fillText("SYNAPSE FIRING", 0, -15*s);
+      resetShadow();
+
+      ctx.fillStyle = secondary;
+      ctx.globalAlpha = 0.5;
+      ctx.fillRect(0, 0, (10 + bass * 100)*s, 4*s);
+      ctx.fillRect(0, 15*s, (10 + mid * 100)*s, 4*s);
+      ctx.fillRect(0, 30*s, (10 + high * 100)*s, 4*s);
+      ctx.globalAlpha = 1.0;
+
+      ctx.translate(0, 80*s);
+      applyTextStyle(9, secondary);
+      ctx.fillText("BPM", 0, 0);
+      applyTextStyle(12, primary);
+      if(stats) ctx.fillText(stats.db.toFixed(1), 0, 15*s);
+
+      ctx.translate(0, 45*s);
+      applyTextStyle(9, secondary);
+      ctx.fillText("FREQ", 0, 0);
+      applyTextStyle(12, primary);
+      if(stats) ctx.fillText(Math.round(stats.hz) + " Hz", 0, 15*s);
+
+      ctx.translate(0, 45*s);
+      applyTextStyle(9, secondary);
+      ctx.fillText("REALITY", 0, 0);
+      applyTextStyle(12, primary);
+      if(stats && stats.flux > 0.1) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("DISSOLVING", 0, 15*s);
+      } else {
+        ctx.fillText("UNSTABLE", 0, 15*s);
+      }
+      resetShadow();
+      ctx.restore();
+
+      // BOTTOM BAR
+      ctx.save();
+      ctx.translate(w/2, h - 60*s);
+      const bw = w * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(-bw/2, 40*s); ctx.lineTo(-bw/2 + 20*s, 0); ctx.lineTo(bw/2 - 20*s, 0); ctx.lineTo(bw/2, 40*s);
+      fillPanel();
+
+      applyTextStyle(12, isGlitch ? primary : secondary);
+      ctx.textAlign = "center";
+      ctx.fillText(isGlitch ? "DONT LOOK DONT LOOK" : "WAKE UP WAKE UP WAKE UP", 0, 25*s);
+      resetShadow();
+      ctx.restore();
+
+      // CENTER CROSSHAIR
+      ctx.save();
+      ctx.translate(w/2, h/2);
+      ctx.strokeStyle = primary;
+      ctx.lineWidth = 1 * s;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(-30*s, 0); ctx.lineTo(-10*s, 0);
+      ctx.moveTo(30*s, 0); ctx.lineTo(10*s, 0);
+      ctx.moveTo(0, -30*s); ctx.lineTo(0, -10*s);
+      ctx.moveTo(0, 30*s); ctx.lineTo(0, 10*s);
+      ctx.stroke();
+
+      if(isGlitch) {
+        ctx.beginPath();
+        ctx.strokeStyle = secondary;
+        ctx.moveTo((Math.random()-0.5)*100, (Math.random()-0.5)*100);
+        ctx.lineTo((Math.random()-0.5)*100, (Math.random()-0.5)*100);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      hudTexture.needsUpdate = true;
+    }
+
+    // --- SMOOTH MORPHING LOGIC ---
+    function updateMorphing(time) {
+      if (!morphState.active && Math.random() > 0.95) {
+        morphState.active = true;
+        morphState.start = time;
+        morphState.oldMesh = spikeCore;
+
+        const s = 0.5 + Math.random() * 1.5;
+        const newGeo = new THREE.IcosahedronGeometry(s, Math.floor(Math.random()*2));
+        const wireGeo = new THREE.WireframeGeometry(newGeo);
+        newGeo.dispose();
+
+        const mat = new THREE.LineBasicMaterial({ color: 0xaa00ff, transparent: true, opacity: 0.0 });
+        morphState.newMesh = new THREE.LineSegments(wireGeo, mat);
+
+        spikeObj.add(morphState.newMesh);
+      }
+
+      if (morphState.active) {
+        const progress = (time - morphState.start) / morphState.duration;
+        if (progress >= 1.0) {
+          morphState.active = false;
+          if (morphState.oldMesh) {
+            morphState.oldMesh.geometry.dispose();
+            morphState.oldMesh.material.dispose();
+            spikeObj.remove(morphState.oldMesh);
+          }
+          spikeCore = morphState.newMesh;
+          spikeCore.material.opacity = 0.9;
+        } else {
+          if (morphState.oldMesh) morphState.oldMesh.material.opacity = 1.0 - progress;
+          if (morphState.newMesh) morphState.newMesh.material.opacity = progress;
+        }
+      }
+    }
+
+    function initAudio() {
+      if(!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+      } else if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }
+
+    function getAudioData() {
+      if(!analyser) return { bass:0, mid:0, high:0, stats: {db: -100, hz: 0, flux: 0} };
+      analyser.getByteFrequencyData(dataArray);
+
+      const len = dataArray.length;
+      const avg = (start, end) => {
+        let sum = 0;
+        for(let i=start; i<end; i++) sum += dataArray[i];
+        return sum / (end-start);
+      };
+
+      let sumSq = 0;
+      let peakVal = 0;
+      let peakIdx = 0;
+      for(let i=0; i<len; i++) {
+        const val = dataArray[i] / 255.0;
+        sumSq += val * val;
+        if(dataArray[i] > peakVal) {
+          peakVal = dataArray[i];
+          peakIdx = i;
+        }
+      }
+
+      const rms = Math.sqrt(sumSq / len);
+      let db = 20 * Math.log10(rms);
+      if (!isFinite(db)) db = -100;
+
+      const hz = peakIdx * (audioContext.sampleRate / analyser.fftSize);
+      const flux = Math.abs(rms - lastVolume);
+      lastVolume = rms;
+
+      return {
+        bass: avg(0, 10) / 255,
+        mid: avg(10, 80) / 255,
+        high: avg(80, 200) / 255,
+        stats: { db, hz, flux }
+      };
+    }
+
+    // --- ANIMATION ---
+    let lastFrameTime = 0;
+    let animationFrameId;
+
+    function animate(time) {
+      if(!isRunning && !isFading) return;
+
+      const currentTimeSec = time / 1000;
+      const deltaTime = (time - lastFrameTime) / 1000;
+      lastFrameTime = time;
+
+      if (isFading) {
+        const fadeProgress = (currentTimeSec - fadeStartTime) / FADE_DURATION;
+        if (fadeProgress >= 1.0) {
+          materialBG.uniforms.uFade.value = 1.0;
+          if (fadeCompleteTime === 0) fadeCompleteTime = currentTimeSec;
+          renderer.clear();
+          renderer.render(sceneBG, cameraBG);
+          if (currentTimeSec - fadeCompleteTime >= END_BUFFER) {
+            resetUI();
+            return;
+          }
+          animationFrameId = requestAnimationFrame(animate);
+          return;
+        }
+        materialBG.uniforms.uFade.value = fadeProgress;
+      }
+
+      const data = getAudioData();
+      smoothBass += (data.bass - smoothBass) * 0.2;
+      smoothMid += (data.mid - smoothMid) * 0.2;
+      smoothHigh += (data.high - smoothHigh) * 0.2;
+
+      materialBG.uniforms.uTime.value = currentTimeSec;
+      materialBG.uniforms.uBass.value = smoothBass;
+      materialBG.uniforms.uMid.value = smoothMid;
+      materialBG.uniforms.uHigh.value = smoothHigh;
+
+      // --- GLOBAL SPIN (Camera Roll) ---
+      // Increased rotation speed significantly
+      camera3D.rotation.z += deltaTime * (0.3 + smoothBass * 0.5);
+
+      if(spikeObj) {
+        // Hyper-fast morphing rotation
+        spikeObj.rotation.x += deltaTime * (1.5 + smoothHigh * 4.0);
+        spikeObj.rotation.y += deltaTime * (1.0 + smoothBass * 4.0);
+        updateMorphing(currentTimeSec);
+      }
+
+      if(eyeObj) {
+        eyeObj.rotation.y = Math.sin(currentTimeSec * 1.5) * 0.8; // Faster swing
+        eyeObj.rotation.z += deltaTime * 0.8; // Faster spin
+
+        if(eyeObj.children[1]) eyeObj.children[1].rotation.x += deltaTime * (3.0 + smoothMid);
+        if(eyeObj.children[2]) eyeObj.children[2].rotation.y += deltaTime * (4.0 + smoothHigh);
+
+        eyeObj.scale.setScalar(1.0 + smoothBass * 0.3);
+      }
+
+      if(centerSpinner) {
+        // Hyper-speed spin
+        centerSpinner.children[0].rotation.z += deltaTime * (4.0 + smoothHigh * 15.0);
+        centerSpinner.children[1].rotation.x -= deltaTime * (5.0 + smoothMid * 8.0);
+        centerSpinner.scale.setScalar(1.0 + smoothBass * 0.5);
+      }
+
+      tunnelRings.forEach((ring, i) => {
+        ring.position.z += deltaTime * (10 + Math.pow(smoothBass, 2) * 40); // Faster tunnel
+
+        // Faster tunnel twist
+        ring.rotation.z += deltaTime * ring.userData.rotSpeed * 3.0;
+
+        if (ring.children[0]) ring.children[0].rotation.z += deltaTime * 1.5;
+        if (ring.children[1]) ring.children[1].rotation.z -= deltaTime * 1.5;
+
+        if(ring.position.z > 5) {
+          ring.position.z -= 120;
+        }
+
+        const z = ring.position.z;
+        let opacity = 0;
+        if (z < -80) opacity = 0;
+        else if (z < -10) opacity = 1.0;
+        else opacity = (2 - z) / 10;
+
+        opacity = Math.max(0, Math.min(1, opacity));
+
+        if (Math.random() > 0.95) opacity = 0.0;
+
+        ring.children.forEach(child => {
+          if(child.material) {
+            child.material.opacity = opacity;
+            const col = new THREE.Color(0xff00ff).lerp(new THREE.Color(0x00ff00), smoothHigh);
+            child.material.color.copy(col);
+          }
+        });
+      });
+
+      drawHUD(smoothBass, smoothMid, smoothHigh, currentTimeSec, data.stats);
+
+      renderer.clear();
+      renderer.render(sceneBG, cameraBG);
+      renderer.clearDepth();
+      renderer.render(scene3D, camera3D);
+      renderer.clearDepth();
+      renderer.render(sceneHUD, cameraHUD);
+
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    // --- FILE HANDLING & UTILS ---
+    selectFileBtn.onclick = () => { initAudio(); fileInput.value = ''; fileInput.click(); };
+
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      currentAudioFile = file;
+      messageDiv.innerText = "SUBJECT PREPARING...";
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const audioBuffer = await audioContext.decodeAudioData(ev.target.result);
+          await startVisualizer(audioBuffer);
+        } catch(err) {
+          messageDiv.innerText = "ERROR: " + err.message;
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    };
+
+    async function startVisualizer(buffer) {
+      if (audioContext.state === 'suspended') await audioContext.resume();
+      if(sourceNode) { try { sourceNode.onended = null; sourceNode.disconnect(); sourceNode.stop(); } catch(e) {} }
+
+      sourceNode = audioContext.createBufferSource();
+      sourceNode.buffer = buffer;
+      sourceNode.connect(analyser);
+      analyser.connect(audioContext.destination);
+      sourceNode.onended = () => { if (isRunning) triggerFadeOut(); };
+      sourceNode.start(0);
+
+      overlay.style.opacity = 0;
+      setTimeout(() => overlay.style.display = 'none', 800);
+      recordContainer.style.display = 'flex';
+      setTimeout(() => recordContainer.style.opacity = 1, 10);
+
+      isRunning = true;
+      isFading = false;
+      fadeCompleteTime = 0;
+      materialBG.uniforms.uFade.value = 0.0;
+      lastFrameTime = performance.now();
+      smoothBass = 0; smoothMid = 0; smoothHigh = 0;
+
+      onResize();
+
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      animate(lastFrameTime);
+      if(autoRecordCheck.checked) setTimeout(toggleRecord, 800);
+    }
+
+    function triggerFadeOut() {
+      if (!isRunning || isFading) return;
+      isFading = true;
+      fadeStartTime = performance.now() / 1000;
+      fadeCompleteTime = 0;
+    }
+
+    function resetUI() {
+      isRunning = false;
+      isFading = false;
+      fadeCompleteTime = 0;
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if(isRecording) toggleRecord();
+      overlay.style.display = 'block';
+      setTimeout(() => overlay.style.opacity = 1, 10);
+      recordContainer.style.opacity = 0;
+      setTimeout(() => recordContainer.style.display = 'none', 500);
+      if(sourceNode) { try { sourceNode.onended = null; sourceNode.disconnect(); } catch(e){} }
+    }
+
+    leaveBtn.onclick = () => { if(sourceNode) { try { sourceNode.stop(); } catch(e){} } resetUI(); };
+    recordBtn.onclick = toggleRecord;
+
+    function toggleRecord() {
+      if(isRecording) {
+        try { mediaRecorder.stop(); } catch(e){}
+        isRecording = false;
+        recordBtn.innerText = "INITIATE";
+        recordBtn.classList.remove('recording');
+        if (was4k) {
+          resizeApp(window.innerWidth, window.innerHeight, true);
+          was4k = false;
+        }
+      } else {
+        if (record4kCheck.checked) {
+          was4k = true;
+          resizeApp(3840, 2160, false);
+        }
+        const stream = renderer.domElement.captureStream(60);
+        const dest = audioContext.createMediaStreamDestination();
+        sourceNode.connect(dest);
+        const tracks = [...stream.getVideoTracks(), ...dest.stream.getAudioTracks()];
+        try { mediaRecorder = new MediaRecorder(new MediaStream(tracks), { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 15000000 }); }
+        catch (e) { try { mediaRecorder = new MediaRecorder(new MediaStream(tracks)); } catch (e2) { messageDiv.innerText = "Recording not supported"; return; } }
+        mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = saveVideo;
+        recordedChunks = [];
+        mediaRecorder.start();
+        isRecording = true;
+        recordBtn.innerText = "STOP REC";
+        recordBtn.classList.add('recording');
+      }
+    }
+
+    function saveVideo() {
+      if (recordedChunks.length === 0) return;
+      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = currentAudioFile ? `phrenophobia-${currentAudioFile.name.split('.')[0]}.webm` : 'phrenophobia.webm';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+    }
+
+    fullscreenBtn.onclick = () => {
+      if (!document.fullscreenElement) { document.body.requestFullscreen(); fullscreenBtn.innerHTML = "🡼"; }
+      else { document.exitFullscreen(); fullscreenBtn.innerHTML = "⛶"; }
+    };
+
+    initThree();
+  })();
+</script>
+</body>
+</html>road w
