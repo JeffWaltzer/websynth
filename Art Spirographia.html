@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shepard's Chord - Infinite Visualizer</title>
+    <!-- Infinity Symbol Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>∞</text></svg>">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #050510;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #ffffff;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI OVERLAY STYLES - SHEPARD'S THEME */
+        #overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            padding: 40px;
+            text-align: center;
+            background: rgba(5, 5, 20, 0.85);
+            border: 1px solid #00f0ff; /* Cyan */
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.2), inset 0 0 20px rgba(0, 0, 50, 0.5);
+            border-radius: 12px;
+            backdrop-filter: blur(15px);
+            max-width: 500px;
+            width: 90%;
+            transition: opacity 0.5s;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin: 0 0 10px 0;
+            color: #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            font-weight: 300;
+        }
+
+        .subtitle {
+            color: #aaaaff;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid rgba(0, 240, 255, 0.1);
+            background: rgba(0, 20, 40, 0.3);
+            border-radius: 4px;
+        }
+
+        .btn {
+            background: transparent;
+            color: #00f0ff;
+            font-family: inherit;
+            font-size: 1.0rem;
+            font-weight: 600;
+            padding: 15px 30px;
+            border: 1px solid #00f0ff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+
+        .btn:hover {
+            background: rgba(0, 240, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+            text-shadow: 0 0 8px #00f0ff;
+        }
+
+        #fileInput { display: none; }
+
+        /* Recording UI */
+        #recordContainer {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 150;
+            display: none;
+            flex-direction: row;
+            gap: 15px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .rec-btn {
+            padding: 12px 24px;
+            border-radius: 4px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: sans-serif;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        #recordButton {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #ff0055;
+            color: #ff0055;
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.2);
+            min-width: 160px;
+        }
+        #recordButton:hover {
+            background: #ff0055;
+            color: white;
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
+        }
+
+        #recordButton.recording { animation: pulseRed 1s infinite; background: #ff0055; color: white; }
+
+        #leaveButton {
+            background: rgba(0, 0, 0, 0.6);
+            color: #00f0ff;
+            border: 1px solid #00f0ff;
+            backdrop-filter: blur(5px);
+        }
+        #leaveButton:hover { background: #00f0ff; color: #000; box-shadow: 0 0 15px #00f0ff; }
+
+        @keyframes pulseRed {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 0, 85, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
+        }
+
+        #fullscreenBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 150;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        #fullscreenBtn:hover {
+            box-shadow: 0 0 15px #00f0ff;
+            background: rgba(0, 240, 255, 0.2);
+        }
+
+        #message { margin-top: 15px; color: #00f0ff; font-size: 0.8rem; min-height: 1.2em; letter-spacing: 1px; }
+
+        /* Custom Checkbox */
+        .checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; color: #88aaff; margin-top: 10px; font-size: 0.9rem;}
+        input[type="checkbox"] { accent-color: #00f0ff; width: 16px; height: 16px; }
+
+    </style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<button id="fullscreenBtn">⛶</button>
+
+<div id="recordContainer">
+    <button id="recordButton" class="rec-btn">Start Recording</button>
+    <button id="leaveButton" class="rec-btn">Stop & Reset</button>
+</div>
+
+<div id="overlay">
+    <h1>SHEPARD'S CHORD</h1>
+    <div class="subtitle">Auditory Illusion Visualizer</div>
+
+    <div class="control-group">
+        <p style="margin-top:0; color:#6688aa; font-size: 0.75rem; letter-spacing: 1px;">INITIATE AUDIO STREAM</p>
+        <button id="selectFileBtn" class="btn">Upload Audio</button>
+        <input type="file" id="fileInput" accept="audio/*">
+    </div>
+
+    <div class="checkbox-wrapper">
+        <input type="checkbox" id="record4k">
+        <label for="record4k">Record in 4K (High GPU)</label>
+    </div>
+
+    <div class="checkbox-wrapper">
+        <input type="checkbox" id="autoRecord">
+        <label for="autoRecord">Auto-record on play</label>
+    </div>
+
+    <div id="message"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- FRAGMENT SHADER: THE INFINITE CHORD -->
+<script type="x-shader/x-fragment" id="fragShader">
+    uniform float uTime;
+    uniform vec2 uResolution;
+    uniform float uBass;
+    uniform float uMid;
+    uniform float uHigh;
+    uniform float uTotalRotation;
+
+    #define PI 3.14159265359
+
+    // Palette function for smooth color cycling
+    vec3 palette( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d ) {
+        return a + b*cos( 6.28318*(c*t+d) );
+    }
+
+    void main() {
+        // Normalize UVs centered
+        vec2 uv = (gl_FragCoord.xy * 2.0 - uResolution.xy) / uResolution.y;
+        vec2 uv0 = uv; // Store original UV
+
+        // Bass Distortion (Subtle breathing)
+        float zoom = 1.0 - (uBass * 0.15);
+        uv *= zoom;
+
+        // Polar Coordinates
+        float r = length(uv);
+        float angle = atan(uv.y, uv.x);
+
+        // --- INFINITE SPIRAL MATH ---
+        // Shepard tones rely on continuity. We use a high arm count for a "turbine" effect.
+        float armCount = 8.0;
+
+        // Warp the angle based on radius to create the spiral twist
+        // The higher the multiplier on 'r', the tighter the spiral
+        float twist = 4.0;
+
+        // Dynamic Warp based on music (Make the spiral "shiver" with highs)
+        float warp = sin(r * 10.0 - uTime * 2.0) * (uHigh * 0.2);
+
+        // Speed: Constant forward motion + Bass kick
+        // Shepard Tone visual = Always moving inward/outward
+        float speed = uTime * 2.0 + (uTotalRotation * 0.5);
+
+        // Spiral 1: Counter-Clockwise Twist & Rotation
+        float spiralAngle1 = angle + (r * twist);
+        float wave1 = sin(spiralAngle1 * armCount - speed + warp);
+
+        // Spiral 2: Clockwise Twist & Rotation (Opposite Direction)
+        float spiralAngle2 = angle - (r * twist);
+        float wave2 = sin(spiralAngle2 * armCount + speed + warp);
+
+        // Create "Rings" that interfere with the spiral
+        float rings = sin(r * 20.0 - uTime * 4.0);
+
+        // Combine: Multiply waves to create an interference lattice/grid
+        // This creates lines where EITHER wave crosses zero
+        float pattern = (wave1 * wave2) + (rings * 0.5 * uMid);
+
+        // Abs for sharp neon lines
+        pattern = abs(pattern);
+
+        // Invert for glowing lines on dark background
+        float glow = 0.05 / pattern;
+
+        // --- ETHEREAL COLOR PALETTE ---
+        // Palette: Cyan, Magenta, Deep Blue
+        vec3 a = vec3(0.5, 0.5, 0.5);
+        vec3 b = vec3(0.5, 0.5, 0.5);
+        vec3 c = vec3(1.0, 1.0, 1.0);
+        vec3 d = vec3(0.00, 0.33, 0.67); // Phase shift for blue/cyan/purple
+
+        // Color varies by radius and time to create the "infinite rising" color effect
+        vec3 col = palette(length(uv0) + uTime * 0.2 + (uBass*0.5), a, b, c, d);
+
+        // Apply pattern mask
+        col *= glow;
+
+        // Add a "Core" glow
+        col += vec3(0.2, 0.5, 1.0) * (0.1 / length(uv));
+
+        // Add sparkle from Highs
+        float sparkle = step(0.99, sin(uv.x * 60.0 + uTime) * cos(uv.y * 60.0 - uTime));
+        col += sparkle * uHigh * vec3(1.0, 1.0, 1.0);
+
+        // Vignette
+        float vignette = 1.0 - smoothstep(0.5, 1.5, r);
+        col *= vignette;
+
+        // Final output
+        gl_FragColor = vec4(col, 1.0);
+    }
+</script>
+
+<script>
+    (function(){
+        // --- CONFIG & STATE ---
+        let audioContext, analyser, dataArray, sourceNode;
+        let renderer, scene, camera, material, mesh;
+        let isRunning = false;
+        let currentAudioFile = null;
+
+        // BPM / Audio State
+        let lastBeatTime = 0;
+        let beatThreshold = 0.4;
+        let detectedBPM = 0;
+        let beatIntervals = [];
+        let accumulatedRotation = 0;
+        let smoothBPM = 60;
+        let audioData = { bass: 0, mid: 0, high: 0 };
+
+        // Particles
+        let particles = [];
+        // Abstract & Musical Symbol Set
+        const particleChars = [
+            '∞', '∞', '∞', // Infinity
+            '∫', '∑', '∏', '∆', '∇', // Math
+            '♩', '♪', '♫', '♬', '♭', '♯', // Music
+            '○', '□', '◇', '◎', // Geometry
+            '∅', '∄', '∃', // Logic
+            '★', '✦', '✧' // Stars
+        ];
+        let particleTextureCache = {};
+
+        // Recording
+        let mediaRecorder;
+        let recordedChunks = [];
+        let isRecording = false;
+        let was4k = false;
+
+        // Elements
+        const container = document.getElementById('canvas-container');
+        const overlay = document.getElementById('overlay');
+        const fileInput = document.getElementById('fileInput');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const messageDiv = document.getElementById('message');
+        const recordBtn = document.getElementById('recordButton');
+        const leaveBtn = document.getElementById('leaveButton');
+        const recordContainer = document.getElementById('recordContainer');
+        const autoRecordCheck = document.getElementById('autoRecord');
+        const record4kCheck = document.getElementById('record4k');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+        // --- PARTICLE SYSTEM UTILS ---
+
+        function createTextTexture(char, color) {
+            if (particleTextureCache[char + color]) return particleTextureCache[char + color];
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = color;
+            ctx.font = 'bold 150px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Strong glow for neon look
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 30;
+
+            ctx.fillText(char, 128, 128);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            particleTextureCache[char + color] = tex;
+            return tex;
+        }
+
+        class IllusionParticle {
+            constructor() {
+                const char = particleChars[Math.floor(Math.random() * particleChars.length)];
+                // Cyan, Magenta, White, Electric Blue, Deep Purple
+                const colors = ['#00f0ff', '#ff00aa', '#ffffff', '#4488ff', '#aa00ff'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+
+                const map = createTextTexture(char, color);
+                // Switched from SpriteMaterial to MeshBasicMaterial for 3D tumbling
+                const mat = new THREE.MeshBasicMaterial({
+                    map: map,
+                    transparent: true,
+                    opacity: 0.0,
+                    blending: THREE.AdditiveBlending,
+                    side: THREE.DoubleSide // Visible from both sides when rotating
+                });
+
+                // Use PlaneGeometry instead of Sprite
+                this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
+
+                // Spawn in a spiral pattern distribution
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 0.2 + Math.random() * 2.0; // Scatter widely
+
+                this.x = Math.cos(angle) * radius * (window.innerWidth / window.innerHeight);
+                this.y = Math.sin(angle) * radius;
+
+                this.virtualZ = 0; // Start at screen plane
+                this.speed = 0.005 + Math.random() * 0.02; // Slower, more hypnotic speed
+
+                // 3D Rotation Parameters
+                this.mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                this.rotSpeedX = (Math.random() - 0.5) * 4.0;
+                this.rotSpeedY = (Math.random() - 0.5) * 4.0;
+                this.rotSpeedZ = (Math.random() - 0.5) * 4.0;
+
+                // Random size variation (Vary size of icons)
+                this.baseSize = 0.5 + Math.random() * 1.5;
+
+                this.updatePosition();
+                scene.add(this.mesh);
+            }
+
+            update(deltaTime, bass, mid) {
+                // Move "away" into the tunnel
+                this.virtualZ += this.speed * (1 + bass * 1.5);
+
+                // 3D Rotation (Rotate icons in different 3d axises)
+                this.mesh.rotation.x += this.rotSpeedX * deltaTime;
+                this.mesh.rotation.y += this.rotSpeedY * deltaTime;
+                this.mesh.rotation.z += this.rotSpeedZ * deltaTime;
+
+                // Spiral motion (twist the x/y as it goes deeper)
+                const twist = deltaTime * 0.5 * (1 + mid);
+                const ca = Math.cos(twist);
+                const sa = Math.sin(twist);
+                const nx = this.x * ca - this.y * sa;
+                const ny = this.x * sa + this.y * ca;
+                this.x = nx;
+                this.y = ny;
+
+                // Scale: 1 / distance * random base size
+                const scaleFactor = 1.0 / (0.1 + this.virtualZ);
+                this.mesh.scale.set(scaleFactor * 0.5 * this.baseSize, scaleFactor * 0.5 * this.baseSize, scaleFactor * 0.5 * this.baseSize);
+
+                // Opacity logic: Fade in, stay, fade out at very end
+                // 1.0 - (z / maxZ)
+                const maxZ = 15.0;
+                let opacity = 1.0;
+
+                // Fade in at start
+                if(this.virtualZ < 1.0) opacity = this.virtualZ;
+                // Fade out at end
+                else opacity = 1.0 - (this.virtualZ / maxZ);
+
+                this.mesh.material.opacity = Math.max(0, opacity);
+
+                // Position update with perspective
+                const posFactor = 1.0 / (0.5 + this.virtualZ);
+                this.mesh.position.x = this.x * posFactor;
+                this.mesh.position.y = this.y * posFactor;
+
+                return this.virtualZ < maxZ;
+            }
+
+            dispose() {
+                scene.remove(this.mesh);
+                this.mesh.geometry.dispose();
+                this.mesh.material.dispose();
+            }
+
+            updatePosition() {
+                this.mesh.position.set(this.x, this.y, 0);
+            }
+        }
+
+        // --- THREE.JS SETUP ---
+        function initThree() {
+            scene = new THREE.Scene();
+
+            const aspect = window.innerWidth / window.innerHeight;
+            camera = new THREE.OrthographicCamera( -aspect, aspect, 1, -1, 0, 10 );
+            camera.position.z = 1;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            const geometry = new THREE.PlaneGeometry(4, 4);
+            geometry.translate(0, 0, -1);
+
+            material = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTime: { value: 0 },
+                    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                    uBass: { value: 0.0 },
+                    uMid: { value: 0.0 },
+                    uHigh: { value: 0.0 },
+                    uTotalRotation: { value: 0.0 }
+                },
+                fragmentShader: document.getElementById('fragShader').textContent,
+                depthTest: false
+            });
+
+            mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            window.addEventListener('resize', onResize);
+        }
+
+        function onResize() {
+            if(isRecording && was4k) return;
+
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const aspect = width / height;
+
+            renderer.setSize(width, height);
+            camera.left = -aspect;
+            camera.right = aspect;
+            camera.top = 1;
+            camera.bottom = -1;
+            camera.updateProjectionMatrix();
+
+            material.uniforms.uResolution.value.set(width, height);
+        }
+
+        // --- AUDIO ENGINE ---
+        function initAudio() {
+            if(!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 512; // Increased for better resolution
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+            }
+        }
+
+        function getAudioData() {
+            if(!analyser) return { bass:0, mid:0, high:0 };
+            analyser.getByteFrequencyData(dataArray);
+
+            const bassRange = dataArray.slice(0, 20);
+            const midRange = dataArray.slice(20, 100);
+            const highRange = dataArray.slice(100, 250);
+            const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
+
+            return {
+                bass: avg(bassRange) / 255,
+                mid: avg(midRange) / 255,
+                high: avg(highRange) / 255
+            };
+        }
+
+        function detectBeat(highLevel) {
+            const now = performance.now();
+            if (highLevel > beatThreshold && highLevel > 0.3) {
+                if (now - lastBeatTime > 200) {
+                    const interval = now - lastBeatTime;
+                    lastBeatTime = now;
+                    beatIntervals.push(interval);
+                    if(beatIntervals.length > 8) beatIntervals.shift();
+                    const avgInterval = beatIntervals.reduce((a,b)=>a+b,0) / beatIntervals.length;
+                    const bpm = 60000 / avgInterval;
+                    if(bpm > 60 && bpm < 220) detectedBPM = bpm;
+                    beatThreshold = 1.1;
+                }
+            } else {
+                beatThreshold *= 0.95;
+                if(beatThreshold < 0.3) beatThreshold = 0.3;
+            }
+        }
+
+        // --- ANIMATION ---
+        let lastFrameTime = 0;
+
+        function animate(time) {
+            if(!isRunning) return;
+            requestAnimationFrame(animate);
+
+            const deltaTime = (time - lastFrameTime) / 1000;
+            lastFrameTime = time;
+
+            audioData = getAudioData();
+            detectBeat(audioData.bass); // Beat detection on Bass usually works better for Shepard Drone rhythm
+
+            const targetBPM = (detectedBPM > 0) ? detectedBPM : 10;
+            smoothBPM += (targetBPM - smoothBPM) * 0.05;
+
+            const rotationSpeed = (smoothBPM / 60.0) * 1.5; // Slower rotation for Shepard theme
+            accumulatedRotation += rotationSpeed * deltaTime;
+
+            material.uniforms.uTime.value = time / 1000;
+            material.uniforms.uTotalRotation.value = accumulatedRotation;
+            material.uniforms.uBass.value += (audioData.bass - material.uniforms.uBass.value) * 0.1;
+            material.uniforms.uMid.value += (audioData.mid - material.uniforms.uMid.value) * 0.1;
+            material.uniforms.uHigh.value += (audioData.high - material.uniforms.uHigh.value) * 0.1;
+
+            // --- PARTICLE LOGIC ---
+            // Spawn Rate: Cut in half (Multiplied by 0.4 instead of 0.8)
+            const spawnChance = (0.02 + (audioData.mid * 0.2)) * 0.4;
+            if(Math.random() < spawnChance) {
+                particles.push(new IllusionParticle());
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const alive = particles[i].update(deltaTime, audioData.bass, audioData.mid);
+                if (!alive) {
+                    particles[i].dispose();
+                    particles.splice(i, 1);
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // --- FILE HANDLING ---
+        selectFileBtn.onclick = () => {
+            initAudio();
+            fileInput.click();
+        };
+
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            currentAudioFile = file;
+            messageDiv.innerText = "Analyzing Frequencies...";
+
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    const audioBuffer = await audioContext.decodeAudioData(ev.target.result);
+                    startVisualizer(audioBuffer);
+                } catch(err) {
+                    messageDiv.innerText = "Error: " + err.message;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        };
+
+        function startVisualizer(buffer) {
+            if(sourceNode) { sourceNode.disconnect(); sourceNode.stop(); }
+
+            sourceNode = audioContext.createBufferSource();
+            sourceNode.buffer = buffer;
+            sourceNode.connect(analyser);
+            analyser.connect(audioContext.destination);
+
+            sourceNode.onended = resetUI;
+            sourceNode.start(0);
+
+            overlay.style.opacity = 0;
+            setTimeout(() => overlay.style.display = 'none', 500);
+
+            recordContainer.style.display = 'flex';
+            setTimeout(() => recordContainer.style.opacity = 1, 10);
+
+            isRunning = true;
+            lastFrameTime = performance.now();
+
+            detectedBPM = 0;
+            beatIntervals = [];
+            smoothBPM = 60;
+            particles = [];
+
+            animate(lastFrameTime);
+
+            if(autoRecordCheck.checked) {
+                setTimeout(toggleRecord, 500);
+            }
+        }
+
+        function resetUI() {
+            isRunning = false;
+            if(isRecording) toggleRecord();
+            overlay.style.display = 'block';
+            setTimeout(() => overlay.style.opacity = 1, 10);
+            recordContainer.style.opacity = 0;
+            setTimeout(() => recordContainer.style.display = 'none', 500);
+            if(sourceNode) { sourceNode.disconnect(); }
+        }
+
+        leaveBtn.onclick = resetUI;
+
+        // --- RECORDING ---
+        recordBtn.onclick = toggleRecord;
+
+        function toggleRecord() {
+            if(isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.innerText = "Start Recording";
+                recordBtn.classList.remove('recording');
+
+                if (was4k) {
+                    renderer.setSize(window.innerWidth, window.innerHeight, true);
+                    material.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+                    was4k = false;
+                }
+
+            } else {
+                if (record4kCheck.checked) {
+                    was4k = true;
+                    renderer.setSize(3840, 2160, false);
+                    material.uniforms.uResolution.value.set(3840, 2160);
+                }
+
+                const stream = renderer.domElement.captureStream(60);
+                const dest = audioContext.createMediaStreamDestination();
+                sourceNode.connect(dest);
+                const tracks = [...stream.getVideoTracks(), ...dest.stream.getAudioTracks()];
+
+                try {
+                    mediaRecorder = new MediaRecorder(new MediaStream(tracks), { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 25000000 });
+                } catch (e) {
+                    mediaRecorder = new MediaRecorder(new MediaStream(tracks));
+                }
+
+                mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = saveVideo;
+
+                recordedChunks = [];
+                mediaRecorder.start();
+
+                isRecording = true;
+                recordBtn.innerText = "Stop Recording";
+                recordBtn.classList.add('recording');
+            }
+        }
+
+        function saveVideo() {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            const fileName = currentAudioFile ? `shepard-illusion-${currentAudioFile.name.split('.')[0]}.webm` : 'shepard-illusion.webm';
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+        }
+
+        fullscreenBtn.onclick = () => {
+            if (!document.fullscreenElement) {
+                document.body.requestFullscreen();
+                fullscreenBtn.innerHTML = "🡼";
+            } else {
+                document.exitFullscreen();
+                fullscreenBtn.innerHTML = "⛶";
+            }
+        };
+
+        initThree();
+    })();
+</script>
+</body>
+</html>

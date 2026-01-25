@@ -1,0 +1,59 @@
+**Act as an expert Creative Coder and WebGPU Engineer.**
+
+Create a single-file, self-contained HTML5 audio visualizer application named **"Hyperspirographia"**.
+
+**Core Technology Stack:**
+
+* Use **Three.js** with the **WebGPURenderer** (import via CDN).
+* Use **TSL (Three Shading Language)** for all shader logic (nodes like `Fn`, `uniform`, `texture`, `float`, `vec3`, etc.).
+
+**Visual Style & Behavior:**
+
+1. **The Aesthetic:** A futuristic, high-contrast, neon-on-black aesthetic.
+2. **The Pattern:** A complex, kaleidoscopic spirograph consisting of 3 distinct 3D layers of oscillating rings.
+* Apply a "Mandala" effect by mirroring UV coordinates (`abs(uv)`) and rotating the entire coordinate system based on time and Bass levels.
+* **Colors:** A dynamic palette that shifts from Cool Teal/Cyan (low energy) to Hot Orange/Magenta (high energy/morph).
+* **Effects:** Apply chromatic aberration (RGB split) to the lines when Bass hits.
+
+
+3. **The Background:** A "Deep Liquid Plasma" effect. It should look like a dark, moving fluid surface behind the spirograph, reacting to audio frequencies.
+4. **Animations:** The layers must rotate on X, Y, and Z axes independently (gyroscopic motion). Rotation speed should increase with audio intensity.
+5. **Fading:** Implement a logic to fade the visualizer in (0s-3s) and out (last 3s) based on the audio track duration.
+
+**Audio Analysis:**
+
+* Use the Web Audio API (`AudioContext`, `AnalyserNode`).
+* Extract 5 distinct metrics: `Bass`, `Mid`, `High`, `Morph` (low-mid variation), and `Complexity` (high-freq noise).
+* Implement smooth dampening so the visuals don't jitter.
+
+**UI Requirements:**
+
+* A sleek, sci-fi overlay that fades out when playback starts.
+* Buttons: "Select Track", "Initiate/Stop Recording".
+* Toggles: "Render High Def (4K)", "Auto-Record Session".
+* Fullscreen toggle button.
+
+**Critical Technical constraints (To prevent bugs):**
+
+1. **Robust Recording Logic:**
+* Use `canvas.captureStream(fps)` where FPS matches the render target (30 for 4K, 60 for standard).
+* **Crucial:** Use `mediaRecorder.start(1000)` (1-second slices) to prevent browser encoder stalls.
+* **Crucial:** Implement a **Render Lock** (`isRendering` flag) in the animation loop. Do not request a new animation frame or submit a WebGPU command if the previous `renderAsync` promise hasn't resolved. This prevents "freezing" during heavy 4K encoding.
+
+
+2. **4K Scaling Safety:**
+* Do **not** use pixel-based viewport coordinates (`gl_FragCoord` equivalent) for the pattern generation.
+* Instead, pass a specific `uAspect` (aspect ratio) uniform to the shader. Calculate UVs as `(uv * 2 - 1) * vec2(aspect, 1.0)`. This ensures the kaleidoscope stays perfectly centered and symmetrical regardless of whether the canvas is 1080p or 4K.
+
+
+3. **Resource Management:**
+* Ensure old Audio buffers/nodes are disconnected and cleaned up before starting a new track.
+* Handle WebGPU context loss/restoration gracefully.
+
+4. ** Code Quality
+* Make sure code is easily extensible
+* Make sure code is refactored
+* Make sure code is human readable (avoid abbreviations)
+
+**Output:**
+Provide the complete, runnable code in a single `index.html` file.
