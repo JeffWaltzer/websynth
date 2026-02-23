@@ -3,714 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web MIDI Player</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Music Tools</title>
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
     <style>
         body {
-            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            margin: 0;
+            padding-top: 80px;
+            background: #0a0a0a;
+            font-family: 'Courier New', Courier, monospace;
+            color: #ccc;
         }
-        /* Piano Key Styles */
-        .piano-wrapper { overflow-x: auto; background: #111; border-radius: 0 0 0.5rem 0.5rem; padding-bottom: 2px; }
-        .piano-container { position: relative; display: flex; height: 50px; width: max-content; }
-        .white-key { flex: 0 0 20px; height: 100%; background: #fff; border: 1px solid #ccc; border-radius: 0 0 3px 3px; position: relative; z-index: 1; margin-right: 1px; }
-        .black-key { position: absolute; width: 12px; height: 60%; background: #222; border-radius: 0 0 3px 3px; z-index: 2; transform: translateX(-50%); box-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-        .key-active-white { background: #60a5fa !important; }
-        .key-active-black { background: #3b82f6 !important; }
-        /* Custom Scrollbar for the piano & logs */
-        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; border-radius: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 0, 0, 0.9);
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 1000;
+            border-bottom: 2px solid #ff0000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .toolbar button {
+            background: transparent;
+            color: #ff0000;
+            border: 1px solid #ff0000;
+            border-radius: 4px;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .toolbar button .icon {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+
+        .toolbar button:hover:not(:disabled) {
+            background: #ff0000;
+            color: #fff;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        .toolbar button:disabled {
+            color: #555;
+            border-color: #555;
+            cursor: default;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 40px;
+            text-align: center;
+            background: rgba(10, 0, 0, 0.9);
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 30px #ff0000, inset 0 0 20px #003300;
+            border-radius: 8px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0 0 10px 0;
+            color: #fff;
+            text-shadow: 3px 3px 0px #880000, -2px -2px 0px #004400;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-family: 'Georgia', serif;
+        }
+
+        p {
+            color: #00ff00;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .panel {
+            margin-bottom: 35px;
+            padding: 25px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            background: rgba(0, 50, 0, 0.1);
+            border-radius: 6px;
+        }
+
+        .panel h2 {
+            color: #fff;
+            text-shadow: 2px 2px 0px #880000;
+            margin: -25px -25px 20px -25px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 0, 0, 0.3);
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .grid-button {
+            background: transparent;
+            color: #fff;
+            border: 1px solid #ff0000;
+            border-radius: 4px;
+            padding: 12px 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-align: center;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .grid-button:hover {
+            background: #ff0000;
+            color: #fff;
+            box-shadow: 0 0 15px #ff0000;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen text-gray-200 p-2 font-sans">
-
-<div class="bg-gray-800 shadow-2xl rounded-xl w-full max-w-6xl p-3 border border-gray-700 flex flex-col gap-2">
-
-    <!-- Top Row: Configuration & Upload -->
-    <div class="flex flex-wrap items-end gap-3 border-b border-gray-700 pb-2">
-        <!-- Branding -->
-        <div class="mr-auto">
-            <h1 class="text-lg font-bold text-white tracking-tight leading-tight">🎹 Web MIDI Player</h1>
-            <p class="text-gray-400 text-[9px] mt-0.5">Direct hardware playback.</p>
-        </div>
-
-        <!-- Device Selection -->
-        <div class="w-40">
-            <label class="block text-[9px] font-medium text-gray-400 mb-0.5 uppercase">1. Output Device</label>
-            <select id="device-select" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50">
-                <option disabled>Requesting MIDI Access...</option>
-            </select>
-        </div>
-
-        <!-- File Upload -->
-        <div class="w-48">
-            <label class="block text-[9px] font-medium text-gray-400 mb-0.5 uppercase">2. Choose File</label>
-            <input type="file" id="file-upload" accept=".mid,.midi" class="block w-full text-[9px] text-gray-400
-                    file:mr-1 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-semibold
-                    file:bg-blue-600 file:text-white hover:file:bg-blue-500 file:cursor-pointer
-                    border border-gray-600 rounded cursor-pointer bg-gray-900 p-0.5 h-[24px]">
-        </div>
-
-        <!-- Master Override -->
-        <div class="w-24">
-            <label class="block text-[9px] font-medium text-gray-400 mb-0.5 uppercase">3. Master Routing</label>
-            <select id="master-select" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-white focus:outline-none focus:border-blue-500">
-                <option value="original">Original</option>
-                <!-- JS generates 1-16 -->
-            </select>
-        </div>
-
-        <!-- Volume -->
-        <div class="w-20">
-            <label class="block text-[9px] font-medium text-gray-400 mb-1 uppercase">Volume</label>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1" class="w-full accent-blue-500 h-1.5 bg-gray-900 rounded-lg appearance-none cursor-pointer">
-        </div>
+<body>
+    <div class="toolbar">
+        <button onclick="window.location.href='index.html'"><span class="icon">🏠</span> Home</button>
+        <button onclick="window.location.href='AudioCritic.html'"><span class="icon">🎯</span> Critic</button>
+        <button onclick="window.location.href='berlin.html'"><span class="icon">🎵</span> Berlin</button>
+        <button onclick="window.location.href='Centipoids.html'"><span class="icon">🐛</span> Centipoids</button>
+        <button onclick="window.location.href='chords.html'"><span class="icon">🎹</span> Chords</button>
+        <button onclick="window.location.href='delay.html'"><span class="icon">📊</span> Delay</button>
+        <button onclick="window.location.href='karplus.html'"><span class="icon">🌊</span> Karplus</button>
+        <button onclick="window.location.href='polychain.html'"><span class="icon">🔄</span> Polychain</button>
+        <button onclick="window.location.href='rhythm.html'"><span class="icon">🥁</span> Rhythm</button>
+        <button onclick="window.location.href='Shepard chord.html'"><span class="icon">🌀</span> Shepard</button>
     </div>
 
-    <!-- Error Banner (Hidden normally) -->
-    <div id="midi-error" class="hidden p-1.5 bg-red-900/40 border border-red-800 rounded text-red-200 text-[10px]"></div>
+    <div class="container">
+        <h1>Audio-Reactive Suite</h1>
+        <p>Select a Tool or Visualization</p>
 
-    <!-- Middle Row: Track Routing (Spans wide, compressed vertically) -->
-    <div class="bg-gray-900/50 border border-gray-700 rounded p-1.5 min-h-[50px]">
-        <div id="track-routing-list" class="grid gap-1 content-start relative">
-            <div class="text-[10px] text-gray-600 italic text-center w-full absolute col-span-full mt-2">Load a file to view and route individual tracks</div>
-        </div>
-    </div>
-
-    <!-- Transport Row -->
-    <div class="flex items-center gap-2 bg-gray-900 rounded p-1.5 border border-gray-700">
-        <button id="play-btn" disabled class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-1 px-3 rounded text-[11px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-16">
-            Play
-        </button>
-        <button id="stop-btn" disabled class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-1 px-3 rounded text-[11px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-16">
-            Stop
-        </button>
-        <button id="panic-btn" disabled title="Hard Reset" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-[11px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-20">
-            ⚠️ Panic
-        </button>
-
-        <div class="flex-1 flex flex-col border-l border-gray-700 ml-1 pl-2 min-w-0">
-            <div class="flex items-center justify-between mb-1">
-                <span id="status-text" class="text-[10px] font-medium text-blue-400 truncate pr-2">Waiting for file...</span>
-                <div class="flex items-center gap-1.5 text-[9px] font-mono text-gray-500 flex-shrink-0">
-                    <span id="time-current" class="text-blue-300">0:00</span>
-                    <span>/</span>
-                    <span id="time-total">0:00</span>
-                </div>
-            </div>
-            <!-- Progress Bar -->
-            <div class="w-full bg-gray-950 rounded-full h-1 overflow-hidden">
-                <div id="progress-bar" class="bg-blue-500 h-full w-0"></div>
+        <div class="panel">
+            <h2>Audio Tools</h2>
+            <div class="button-grid">
+                <button class="grid-button" onclick="window.location.href='AudioCritic.html'">
+                    <span style="font-size: 24px;">🎯</span> Audio Critic
+                </button>
+                <button class="grid-button" onclick="window.location.href='berlin.html'">
+                    <span style="font-size: 24px;">🎵</span> Berlin
+                </button>
+                <button class="grid-button" onclick="window.location.href='chords.html'">
+                    <span style="font-size: 24px;">🎹</span> Chords
+                </button>
+                <button class="grid-button" onclick="window.location.href='delay.html'">
+                    <span style="font-size: 24px;">📊</span> Delay
+                </button>
+                <button class="grid-button" onclick="window.location.href='karplus.html'">
+                    <span style="font-size: 24px;">🌊</span> Karplus
+                </button>
+                <button class="grid-button" onclick="window.location.href='polychain.html'">
+                    <span style="font-size: 24px;">🔄</span> Polychain
+                </button>
+                <button class="grid-button" onclick="window.location.href='rhythm.html'">
+                    <span style="font-size: 24px;">🥁</span> Rhythm
+                </button>
+                <button class="grid-button" onclick="window.location.href='Shepard chord.html'">
+                    <span style="font-size: 24px;">🌀</span> Shepard Chord
+                </button>
             </div>
         </div>
 
-        <!-- Analysis Displays -->
-        <div class="flex items-center gap-4 flex-shrink-0 border-l border-gray-800 ml-2 pl-3">
-            <div class="flex items-center gap-1.5 min-w-[70px]">
-                <span class="text-[8px] font-medium text-gray-500 uppercase">Chord:</span>
-                <span id="chord-display" class="text-sm font-bold text-yellow-400 truncate tabular-nums">-</span>
+        <div class="panel">
+            <h2>Interactive Visualizers</h2>
+            <div class="button-grid">
+                <button class="grid-button" onclick="window.location.href='Art Spirographia.html'">
+                    <span style="font-size: 24px;">🎨</span> Spirographia
+                </button>
+                <button class="grid-button" onclick="window.location.href='Centipoids.html'">
+                    <span style="font-size: 24px;">🐛</span> Centipoids
+                </button>
+                <button class="grid-button" onclick="window.location.href='CosmicDrift.html'">
+                    <span style="font-size: 24px;">🌌</span> Cosmic Drift
+                </button>
+                <button class="grid-button" onclick="window.location.href='LollipopLand.html'">
+                    <span style="font-size: 24px;">🍭</span> Lollipop Land
+                </button>
+                <button class="grid-button" onclick="window.location.href='OceanTravels.html'">
+                    <span style="font-size: 24px;">🌊</span> Ocean Travels
+                </button>
+                <button class="grid-button" onclick="window.location.href='Phrenophobia.html'">
+                    <span style="font-size: 24px;">😱</span> Phrenophobia
+                </button>
+                <button class="grid-button" onclick="window.location.href='pondviz.html'">
+                    <span style="font-size: 24px;">💧</span> Pond
+                </button>
+                <button class="grid-button" onclick="window.location.href='Psychedelia.html'">
+                    <span style="font-size: 24px;">🌈</span> Psychedelia
+                </button>
+                <button class="grid-button" onclick="window.location.href='SpaceTravel.html'">
+                    <span style="font-size: 24px;">🚀</span> Space Travel
+                </button>
+                <button class="grid-button" onclick="window.location.href='starfield.html'">
+                    <span style="font-size: 24px;">⭐</span> Starfield
+                </button>
+                <button class="grid-button" onclick="window.location.href='visualizer2.html'">
+                    <span style="font-size: 24px;">🎵</span> Visualizer 2
+                </button>
             </div>
-            <div class="flex items-center gap-1.5 min-w-[90px]">
-                <span class="text-[8px] font-medium text-gray-500 uppercase">Scale:</span>
-                <span id="scale-display" class="text-[10px] font-bold text-green-400 truncate">-</span>
+        </div>
+
+        <div class="panel">
+            <h2>Experimental Visualizers</h2>
+            <div class="button-grid">
+                <button class="grid-button" onclick="window.location.href='DarkHolidays.html'">
+                    <span style="font-size: 24px;">🌙</span> Dark Holiday
+                </button>
+                <button class="grid-button" onclick="window.location.href='MandelPlanet.html'">
+                    <span style="font-size: 24px;">🌍</span> Mandel Planet
+                </button>
+                <button class="grid-button" onclick="window.location.href='SpectralSquadron.html'">
+                    <span style="font-size: 24px;">📡</span> Spectral Squadron
+                </button>
+                <button class="grid-button" onclick="window.location.href='Spirals.html'">
+                    <span style="font-size: 24px;">💫</span> Spirals
+                </button>
             </div>
         </div>
     </div>
-
-    <!-- Bottom Row: Visualizer & Piano -->
-    <div class="bg-black rounded border border-gray-700 overflow-hidden shadow-inner mt-0.5">
-        <div class="piano-wrapper custom-scrollbar" id="piano-scroll">
-            <div style="position: relative; width: max-content;">
-                <!-- Note Visualizer Canvas -->
-                <canvas id="visualizer" height="40" class="block bg-gray-900 border-b border-gray-800"></canvas>
-
-                <!-- Piano Keyboard -->
-                <div id="keyboard" class="piano-container">
-                    <!-- Keys generated by JS -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Exception Logging Console -->
-    <div id="warnings-container" class="hidden p-1 bg-gray-900 border border-yellow-700/50 rounded text-yellow-500 text-[9px] h-10 overflow-y-auto font-mono space-y-0.5 custom-scrollbar shadow-inner mt-0.5">
-        <!-- Logs generated via JS -->
-    </div>
-
-</div>
-
-<script type="module">
-    import MidiPlayer from 'https://cdn.skypack.dev/midi-player-js';
-
-    // General MIDI 1 Instrument List
-    const GM_INSTRUMENTS = [
-        "Grand Piano", "Bright Piano", "E-Grand Piano", "Honky-tonk Piano", "E-Piano 1", "E-Piano 2", "Harpsichord", "Clavinet",
-        "Celesta", "Glockenspiel", "Music Box", "Vibraphone", "Marimba", "Xylophone", "Tubular Bells", "Dulcimer",
-        "Drawbar Organ", "Percussive Organ", "Rock Organ", "Church Organ", "Reed Organ", "Accordion", "Harmonica", "Tango Accordion",
-        "Nylon Guitar", "Steel Guitar", "Jazz Guitar", "Clean Guitar", "Muted Guitar", "Overdriven Guitar", "Distortion Guitar", "Harmonics",
-        "Acoustic Bass", "Finger Bass", "Pick Bass", "Fretless Bass", "Slap Bass 1", "Slap Bass 2", "Synth Bass 1", "Synth Bass 2",
-        "Violin", "Viola", "Cello", "Contrabass", "Tremolo Strings", "Pizzicato Strings", "Orchestral Harp", "Timpani",
-        "String Ensemble 1", "String Ensemble 2", "SynthStrings 1", "SynthStrings 2", "Choir Aahs", "Voice Oohs", "Synth Voice", "Orchestra Hit",
-        "Trumpet", "Trombone", "Tuba", "Muted Trumpet", "French Horn", "Brass Section", "SynthBrass 1", "SynthBrass 2",
-        "Soprano Sax", "Alto Sax", "Tenor Sax", "Baritone Sax", "Oboe", "English Horn", "Bassoon", "Clarinet",
-        "Piccolo", "Flute", "Recorder", "Pan Flute", "Blown Bottle", "Shakuhachi", "Whistle", "Ocarina",
-        "Square Lead", "Sawtooth Lead", "Calliope Lead", "Chiff Lead", "Charang Lead", "Voice Lead", "Fifth Lead", "Bass+Lead",
-        "New Age Pad", "Warm Pad", "Polysynth Pad", "Choir Pad", "Bowed Pad", "Metallic Pad", "Halo Pad", "Sweep Pad",
-        "Rain SFX", "Soundtrack SFX", "Crystal SFX", "Atmosphere SFX", "Brightness SFX", "Goblins SFX", "Echoes SFX", "Sci-Fi SFX",
-        "Sitar", "Banjo", "Shamisen", "Koto", "Kalimba", "Bagpipe", "Fiddle", "Shanai",
-        "Tinkle Bell", "Agogo", "Steel Drums", "Woodblock", "Taiko Drum", "Melodic Tom", "Synth Drum", "Reverse Cymbal",
-        "Guitar Fret Noise", "Breath Noise", "Seashore", "Bird Tweet", "Telephone Ring", "Helicopter", "Applause", "Gunshot"
-    ];
-
-    // DOM Elements
-    const deviceSelect = document.getElementById('device-select');
-    const fileUpload = document.getElementById('file-upload');
-    const masterSelect = document.getElementById('master-select');
-    const trackRoutingList = document.getElementById('track-routing-list');
-    const playBtn = document.getElementById('play-btn');
-    const stopBtn = document.getElementById('stop-btn');
-    const panicBtn = document.getElementById('panic-btn');
-    const statusText = document.getElementById('status-text');
-    const midiError = document.getElementById('midi-error');
-    const warningsContainer = document.getElementById('warnings-container');
-    const chordDisplay = document.getElementById('chord-display');
-    const scaleDisplay = document.getElementById('scale-display');
-    const progressBar = document.getElementById('progress-bar');
-    const timeCurrent = document.getElementById('time-current');
-    const timeTotal = document.getElementById('time-total');
-
-    // Visual elements
-    const volumeSlider = document.getElementById('volume-slider');
-    const keyboardContainer = document.getElementById('keyboard');
-    const canvas = document.getElementById('visualizer');
-    const ctx = canvas.getContext('2d');
-    const pianoScroll = document.getElementById('piano-scroll');
-
-    let midiAccess = null;
-    let selectedOutput = null;
-
-    let currentFileName = '';
-    let currentTrackRouting = {}; // Maps trackNumber -> 'master' | 'original' | 'mute' | '1'..'16'
-    let trackRows = {}; // DOM elements for live highlighting
-
-    let activeNotes = {}; // Track active notes: { [note]: { velocity, tracks: Set } }
-    let playingHardwareNotes = new Set(); // Specifically track notes playing on hardware to avoid MIDI choke
-    let activeTracks = {}; // Tracks currently outputting sound, mapped to Set of active note numbers (for color coding)
-    let keyElements = {}; // Map note number to DOM element
-
-    let isPanicking = false; // State flag to prevent overlapping panic commands
-    let autoPaused = false; // Track if the player paused automatically due to focus loss
-
-    const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-
-    // Populate Master Select 1-16
-    for(let i = 1; i <= 16; i++) {
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = `Ch ${i}`;
-        masterSelect.appendChild(opt);
-    }
-
-    // Load persisted Master Selection
-    const savedMaster = localStorage.getItem('midi_master_route');
-    if (savedMaster) masterSelect.value = savedMaster;
-
-    masterSelect.addEventListener('change', (e) => {
-        localStorage.setItem('midi_master_route', e.target.value);
-        stopAllNotes(); // Flush notes to apply new master routing
-    });
-
-    // Time formatting helper
-    function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    // Calculate and apply balanced grid layout to track routing list
-    function updateTrackGridLayout() {
-        const numTracks = Object.keys(trackRows).length;
-        if (numTracks === 0) return;
-
-        let maxCols = 8;
-        if (window.innerWidth < 640) maxCols = 2;
-        else if (window.innerWidth < 768) maxCols = 3;
-        else if (window.innerWidth < 1024) maxCols = 4;
-        else if (window.innerWidth < 1280) maxCols = 6;
-
-        const rows = Math.ceil(numTracks / maxCols);
-        const cols = Math.ceil(numTracks / rows);
-
-        trackRoutingList.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
-    }
-    window.addEventListener('resize', updateTrackGridLayout);
-
-    // Music Theory Data
-    const CHORD_TYPES = {
-        '0,4,7': ' Maj', '0,3,7': ' Min', '0,3,6': ' Dim', '0,4,8': ' Aug',
-        '0,2,7': ' Sus2', '0,5,7': ' Sus4', '0,4,7,11': ' Maj7', '0,3,7,10': ' Min7',
-        '0,4,7,10': ' Dom7', '0,3,6,9': ' Dim7', '0,3,6,10': ' m7b5', '0,7': '5'
-    };
-
-    const SCALE_TYPES = {
-        '0,2,4,5,7,9,11': 'Major',
-        '0,2,3,5,7,8,10': 'Minor',
-        '0,2,3,5,7,9,10': 'Dorian',
-        '0,1,3,5,7,8,10': 'Phrygian',
-        '0,2,4,6,7,9,11': 'Lydian',
-        '0,2,4,5,7,9,10': 'Mixolydian',
-        '0,1,3,5,6,8,10': 'Locrian',
-        '0,2,4,7,9': 'Maj Pentatonic',
-        '0,3,5,7,10': 'Min Pentatonic',
-        '0,3,5,6,7,10': 'Blues'
-    };
-
-    // Analyzes active notes and attempts to guess the musical chord and scale
-    function updateTheoryDisplay() {
-        const activeKeys = Object.keys(activeNotes).map(Number);
-        if (activeKeys.length === 0) {
-            chordDisplay.textContent = '-';
-            scaleDisplay.textContent = '-';
-            return;
-        }
-
-        const lowestNoteNumber = Math.min(...activeKeys);
-        const bassPitch = lowestNoteNumber % 12;
-        const pitches = [...new Set(activeKeys.map(n => n % 12))].sort((a, b) => a - b);
-
-        let guessedChord = '-';
-        if (pitches.length === 1) {
-            guessedChord = NOTE_NAMES[pitches[0]];
-        } else {
-            let bestMatch = null;
-            for (let root = 0; root < 12; root++) {
-                const intervals = pitches.map(p => (p - root + 12) % 12).sort((a, b) => a - b);
-                const intervalKey = intervals.join(',');
-                if (CHORD_TYPES[intervalKey]) {
-                    let chordName = NOTE_NAMES[root] + CHORD_TYPES[intervalKey];
-                    if (root !== bassPitch && intervals.includes((bassPitch - root + 12) % 12)) {
-                        chordName += '/' + NOTE_NAMES[bassPitch];
-                    }
-                    if (root === bassPitch) { guessedChord = chordName; break; }
-                    bestMatch = chordName;
-                }
-            }
-            if (guessedChord === '-' && bestMatch) guessedChord = bestMatch;
-        }
-        chordDisplay.textContent = guessedChord;
-
-        let guessedScale = '-';
-        for (let root = 0; root < 12; root++) {
-            for (const [pattern, name] of Object.entries(SCALE_TYPES)) {
-                const scaleIntervals = pattern.split(',').map(Number);
-                const matches = pitches.filter(p => scaleIntervals.includes((p - root + 12) % 12)).length;
-                if (matches === pitches.length) {
-                    guessedScale = NOTE_NAMES[root] + ' ' + name;
-                    if (NOTE_NAMES[root] === guessedChord.split(' ')[0]) break;
-                }
-            }
-            if (guessedScale !== '-' && guessedScale.startsWith(guessedChord.split(' ')[0])) break;
-        }
-        scaleDisplay.textContent = guessedScale;
-    }
-
-    function displayWarning(msg) {
-        warningsContainer.classList.remove('hidden');
-        const logEntry = document.createElement('div');
-        logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-        warningsContainer.appendChild(logEntry);
-        if (warningsContainer.childElementCount > 30) warningsContainer.removeChild(warningsContainer.firstChild);
-        warningsContainer.scrollTop = warningsContainer.scrollHeight;
-    }
-
-    function buildKeyboard() {
-        const whiteNotes = [0, 2, 4, 5, 7, 9, 11];
-        let whiteKeyCount = 0;
-        for (let note = 21; note <= 108; note++) {
-            const noteInOctave = note % 12;
-            const isWhite = whiteNotes.includes(noteInOctave);
-            const keyDiv = document.createElement('div');
-            keyDiv.dataset.note = note;
-            if (isWhite) {
-                keyDiv.className = 'white-key';
-                keyboardContainer.appendChild(keyDiv);
-                whiteKeyCount++;
-            } else {
-                keyDiv.className = 'black-key';
-                keyDiv.style.left = `${whiteKeyCount * 21}px`;
-                keyboardContainer.appendChild(keyDiv);
-            }
-            keyElements[note] = keyDiv;
-        }
-        canvas.width = whiteKeyCount * 21;
-        setTimeout(() => {
-            const middleC = keyElements[60];
-            if (middleC && pianoScroll) pianoScroll.scrollLeft = middleC.offsetLeft - (pianoScroll.clientWidth / 2);
-        }, 100);
-    }
-    buildKeyboard();
-
-    function drawVisualizer() {
-        ctx.fillStyle = 'rgba(17, 24, 39, 0.2)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        for (const [note, data] of Object.entries(activeNotes)) {
-            if (data.velocity > 0 && keyElements[note]) {
-                const keyEl = keyElements[note];
-                const isBlack = keyEl.classList.contains('black-key');
-                const width = keyEl.offsetWidth;
-                const left = isBlack ? keyEl.offsetLeft - (width / 2) : keyEl.offsetLeft;
-                const height = (data.velocity / 127) * (canvas.height - 10);
-                const y = canvas.height - height;
-                const alpha = 0.5 + (data.velocity / 127) * 0.5;
-                ctx.fillStyle = `rgba(96, 165, 250, ${alpha})`;
-                ctx.fillRect(left, y, width, height);
-                if (data.tracks && data.tracks.size > 0) {
-                    ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 8px sans-serif';
-                    ctx.textAlign = 'center';
-                    const trackText = Array.from(data.tracks).join(',');
-                    ctx.fillText(trackText, left + width/2, y - 2);
-                }
-            }
-        }
-        requestAnimationFrame(drawVisualizer);
-    }
-    drawVisualizer();
-
-    if (navigator.requestMIDIAccess) {
-        try { navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess).catch(onMIDIFailure); } catch (err) { onMIDIFailure(err); }
-    } else { onMIDIFailure(new Error("Web MIDI API not supported.")); }
-
-    function onMIDISuccess(access) {
-        midiAccess = access;
-        refreshOutputs();
-        midiAccess.onstatechange = refreshOutputs;
-    }
-
-    function refreshOutputs() {
-        const outputs = Array.from(midiAccess.outputs.values());
-        deviceSelect.innerHTML = '';
-        if (outputs.length === 0) {
-            deviceSelect.innerHTML = '<option disabled>No outputs detected</option>';
-            selectedOutput = null;
-            panicBtn.disabled = true;
-            return;
-        }
-        outputs.forEach(output => {
-            const opt = document.createElement('option');
-            opt.value = output.id; opt.textContent = output.name;
-            deviceSelect.appendChild(opt);
-        });
-        selectedOutput = midiAccess.outputs.get(deviceSelect.value);
-        panicBtn.disabled = false;
-        deviceSelect.addEventListener('change', (e) => {
-            stopAllNotes();
-            selectedOutput = midiAccess.outputs.get(e.target.value);
-        });
-    }
-
-    function onMIDIFailure(err) {
-        deviceSelect.innerHTML = '<option disabled>MIDI Access Error</option>';
-        midiError.classList.remove('hidden');
-        panicBtn.disabled = true;
-        if (err.name === 'SecurityError') {
-            midiError.innerHTML = `<strong>⚠️ Hardware MIDI blocked in previews.</strong><br/>Save this code to a local <code>.html</code> file to use it.`;
-        } else { midiError.textContent = "Please allow MIDI permissions."; }
-    }
-
-    function updateTrackHighlight(trackNum) {
-        const row = trackRows[trackNum];
-        if (!row) return;
-        const notes = activeTracks[trackNum];
-        if (notes && notes.size > 0) {
-            const highestNote = Math.max(...Array.from(notes));
-            const hue = (highestNote % 12) * 30;
-            row.style.borderColor = `hsl(${hue}, 80%, 55%)`;
-            row.style.backgroundColor = `hsla(${hue}, 80%, 40%, 0.35)`;
-        } else {
-            row.style.borderColor = 'transparent';
-            row.style.backgroundColor = '';
-        }
-    }
-
-    function stopAllNotes() {
-        if (isPanicking) return;
-        if (selectedOutput) {
-            for (let ch = 0; ch < 16; ch++) { try { selectedOutput.send([0xB0 + ch, 123, 0]); } catch (e) {} }
-            playingHardwareNotes.forEach(noteId => {
-                const [chStr, noteStr] = noteId.split('-');
-                const ch = parseInt(chStr), note = parseInt(noteStr);
-                if (!isNaN(ch) && !isNaN(note)) { try { selectedOutput.send([0x80 + ch, note, 0]); } catch (e) {} }
-            });
-        }
-        playingHardwareNotes.clear();
-        activeNotes = {};
-        document.querySelectorAll('.key-active-white, .key-active-black').forEach(el => {
-            el.classList.remove('key-active-white', 'key-active-black');
-        });
-        updateTheoryDisplay();
-        activeTracks = {};
-        Object.values(trackRows).forEach(row => { row.style.borderColor = 'transparent'; row.style.backgroundColor = ''; });
-    }
-
-    function executePanic() {
-        if (!selectedOutput || isPanicking) return;
-        isPanicking = true;
-        autoPaused = false;
-        if (midiPlayer.isPlaying()) { midiPlayer.stop(); playBtn.textContent = "Play"; }
-        playBtn.disabled = stopBtn.disabled = panicBtn.disabled = fileUpload.disabled = true;
-        statusText.textContent = "🚨 PANIC: Initializing hardware reset...";
-        statusText.className = "text-[10px] font-medium text-red-400 animate-pulse truncate flex-1";
-        for (let ch = 0; ch < 16; ch++) {
-            try { selectedOutput.send([0xB0 + ch, 120, 0]); selectedOutput.send([0xB0 + ch, 121, 0]); selectedOutput.send([0xB0 + ch, 123, 0]); } catch(e) {}
-        }
-        activeNotes = {};
-        document.querySelectorAll('.key-active-white, .key-active-black').forEach(el => { el.classList.remove('key-active-white', 'key-active-black'); });
-        playingHardwareNotes.clear();
-        updateTheoryDisplay();
-        activeTracks = {};
-        Object.values(trackRows).forEach(row => { row.style.borderColor = 'transparent'; row.style.backgroundColor = ''; });
-        let currentChannel = 0;
-        const panicInterval = setInterval(() => {
-            if (currentChannel >= 16) {
-                clearInterval(panicInterval); isPanicking = false;
-                if (midiPlayer.totalTicks > 0) playBtn.disabled = stopBtn.disabled = false;
-                panicBtn.disabled = fileUpload.disabled = false;
-                statusText.className = "text-[10px] font-medium text-green-400 truncate flex-1";
-                statusText.textContent = "✅ Panic complete.";
-                setTimeout(() => {
-                    statusText.className = "text-[10px] font-medium text-blue-400 truncate flex-1";
-                    if (!midiPlayer.isPlaying()) statusText.textContent = "Ready to play.";
-                }, 2000);
-                return;
-            }
-            for (let note = 0; note < 128; note++) { try { selectedOutput.send([0x80 + currentChannel, note, 0]); } catch(e){} }
-            statusText.textContent = `🚨 PANIC: Clearing Ch ${currentChannel + 1}/16...`;
-            currentChannel++;
-        }, 30);
-    }
-
-    function sanitize(val) {
-        if (typeof val !== 'number' || isNaN(val)) return 0;
-        return Math.max(0, Math.min(127, Math.floor(val)));
-    }
-
-    const midiPlayer = new MidiPlayer.Player(function(event) {
-        if (!selectedOutput || isPanicking) return;
-
-        // --- Update Progress UI based on MIDI ticks ---
-        const progress = (midiPlayer.getSongPercent() || 0);
-        progressBar.style.width = `${progress}%`;
-
-        // Note: midi-player-js doesn't give precise current seconds directly in the event callback,
-        // so we calculate a rough estimate based on percentage of total time
-        const totalSecs = midiPlayer.getSongTime() || 0;
-        const currentSecs = (progress / 100) * totalSecs;
-        timeCurrent.textContent = formatTime(currentSecs);
-
-        try {
-            const trackNum = event.track;
-            const setRoute = currentTrackRouting[trackNum] || 'master';
-            if (setRoute === 'mute') return;
-            let effRoute = (setRoute === 'master') ? masterSelect.value : setRoute;
-            let ch = (typeof event.channel === 'number') ? (event.channel - 1) : 0;
-            if (effRoute !== undefined && effRoute !== 'original') ch = parseInt(effRoute) - 1;
-            if (isNaN(ch) || ch < 0 || ch > 15) ch = 0;
-            let statusByte, data1 = null, data2 = null;
-            switch (event.name) {
-                case 'Note on':
-                    statusByte = 0x90 + ch;
-                    data1 = sanitize(event.noteNumber);
-                    data2 = sanitize((event.velocity || 0) * parseFloat(volumeSlider.value));
-                    if (data2 > 0) {
-                        playingHardwareNotes.add(`${ch}-${data1}`);
-                        if (!activeNotes[data1]) activeNotes[data1] = { velocity: 0, tracks: new Set() };
-                        activeNotes[data1].velocity = data2;
-                        activeNotes[data1].tracks.add(trackNum);
-                        if (keyElements[data1]) {
-                            const isWhite = keyElements[data1].classList.contains('white-key');
-                            keyElements[data1].classList.add(isWhite ? 'key-active-white' : 'key-active-black');
-                        }
-                        if (!activeTracks[trackNum]) activeTracks[trackNum] = new Set();
-                        activeTracks[trackNum].add(data1);
-                        updateTrackHighlight(trackNum);
-                    } else {
-                        playingHardwareNotes.delete(`${ch}-${data1}`);
-                        if (activeNotes[data1]) {
-                            activeNotes[data1].tracks.delete(trackNum);
-                            if (activeNotes[data1].tracks.size === 0) {
-                                delete activeNotes[data1];
-                                if (keyElements[data1]) keyElements[data1].classList.remove('key-active-white', 'key-active-black');
-                            }
-                        }
-                        if (activeTracks[trackNum]) { activeTracks[trackNum].delete(data1); updateTrackHighlight(trackNum); }
-                    }
-                    updateTheoryDisplay();
-                    break;
-                case 'Note off':
-                    statusByte = 0x80 + ch;
-                    data1 = sanitize(event.noteNumber);
-                    data2 = sanitize((event.velocity || 0) * parseFloat(volumeSlider.value));
-                    playingHardwareNotes.delete(`${ch}-${data1}`);
-                    if (activeNotes[data1]) {
-                        activeNotes[data1].tracks.delete(trackNum);
-                        if (activeNotes[data1].tracks.size === 0) {
-                            delete activeNotes[data1];
-                            if (keyElements[data1]) keyElements[data1].classList.remove('key-active-white', 'key-active-black');
-                        }
-                    }
-                    if (activeTracks[trackNum]) { activeTracks[trackNum].delete(data1); updateTrackHighlight(trackNum); }
-                    updateTheoryDisplay();
-                    break;
-                case 'Controller Change':
-                    statusByte = 0xB0 + ch;
-                    data1 = sanitize(event.number); data2 = sanitize(event.value);
-                    break;
-                case 'Program Change':
-                    statusByte = 0xC0 + ch; data1 = sanitize(event.value);
-                    break;
-                case 'Pitch Bend':
-                    statusByte = 0xE0 + ch;
-                    let bend = event.value || 0; data1 = bend & 0x7F; data2 = (bend >> 7) & 0x7F;
-                    break;
-            }
-            if (statusByte !== undefined) {
-                const message = [statusByte];
-                if (data1 !== null) message.push(data1);
-                if (data2 !== null) message.push(data2);
-                try { selectedOutput.send(message); } catch (e) {}
-            }
-        } catch (err) {}
-    });
-
-    midiPlayer.on('end', () => {
-        if (!isPanicking) {
-            statusText.textContent = "Finished playing.";
-            playBtn.textContent = "Play";
-            stopAllNotes();
-            progressBar.style.width = '0%';
-            timeCurrent.textContent = '0:00';
-        }
-    });
-
-    fileUpload.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        try {
-            if (midiPlayer.isPlaying()) midiPlayer.stop();
-            stopAllNotes();
-            autoPaused = false;
-            playBtn.textContent = "Play";
-            progressBar.style.width = '0%';
-            timeCurrent.textContent = '0:00';
-        } catch(err) {}
-        statusText.textContent = `Parsing ${file.name}...`;
-        statusText.className = "text-[10px] font-medium text-gray-400 truncate pr-2";
-        playBtn.disabled = stopBtn.disabled = true;
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            try {
-                midiPlayer.loadArrayBuffer(evt.target.result);
-                currentFileName = file.name;
-                timeTotal.textContent = formatTime(midiPlayer.getSongTime() || 0);
-
-                let savedRouting = {};
-                try {
-                    const stored = localStorage.getItem(`midi_routing_${currentFileName}`);
-                    if (stored) savedRouting = JSON.parse(stored);
-                } catch (e) {}
-
-                currentTrackRouting = {};
-                trackRows = {};
-                trackRoutingList.innerHTML = '';
-                if (midiPlayer.events && midiPlayer.events.length) {
-                    midiPlayer.events.forEach((trackEvents, index) => {
-                        const trackNum = index + 1;
-                        const firstChanEv = trackEvents.find(e => typeof e.channel === 'number');
-                        if (!firstChanEv) return;
-                        const nameEv = trackEvents.find(e => e.name === 'Track Name');
-                        const instEv = trackEvents.find(e => e.name === 'Instrument Name');
-                        const progEv = trackEvents.find(e => e.name === 'Program Change');
-                        const noteOnCount = trackEvents.filter(e => e.name === 'Note on' && e.velocity > 0).length;
-                        const trackName = (nameEv && nameEv.string) ? nameEv.string.trim() : `Track ${trackNum}`;
-                        const origChan = firstChanEv.channel;
-                        let instHint = (instEv && instEv.string) ? instEv.string.trim() : "";
-                        if (!instHint && progEv) instHint = GM_INSTRUMENTS[progEv.value] || `Prog ${progEv.value}`;
-                        const savedVal = savedRouting[trackNum] !== undefined ? savedRouting[trackNum] : 'master';
-                        currentTrackRouting[trackNum] = savedVal;
-                        const row = document.createElement('div');
-                        row.className = 'flex items-center justify-between bg-gray-800 p-1 rounded border border-transparent min-w-0 h-[38px]';
-                        row.innerHTML = `<div class="flex flex-col overflow-hidden mr-1 flex-1 leading-[1.1]">
-                                <span class="text-[9px] font-semibold text-gray-200 truncate">${trackName}</span>
-                                ${instHint ? `<span class="text-[8px] text-blue-300/80 truncate italic">${instHint}</span>` : ''}
-                                <span class="text-[7px] text-gray-500 uppercase">Ch ${origChan} • ${noteOnCount} notes</span>
-                            </div>
-                            <select class="bg-gray-900 border border-gray-600 rounded py-0 px-0.5 text-[9px] text-white focus:outline-none focus:border-blue-500 flex-shrink-0 w-[52px] h-[18px]">
-                                <option value="master">Master</option><option value="original">Orig</option>
-                                ${Array.from({length:16}, (_,i)=>`<option value="${i+1}">Ch ${i+1}</option>`).join('')}
-                                <option value="mute">Mute</option>
-                            </select>`;
-                        const selectEl = row.querySelector('select');
-                        selectEl.value = savedVal;
-                        selectEl.addEventListener('change', (ev) => {
-                            currentTrackRouting[trackNum] = ev.target.value;
-                            stopAllNotes();
-                            try { localStorage.setItem(`midi_routing_${currentFileName}`, JSON.stringify(currentTrackRouting)); } catch (e) {}
-                        });
-                        trackRows[trackNum] = row;
-                        trackRoutingList.appendChild(row);
-                    });
-                    updateTrackGridLayout();
-                }
-                if(Object.keys(trackRows).length === 0) trackRoutingList.innerHTML = '<div class="text-[10px] text-gray-600 italic text-center w-full absolute col-span-full mt-2">No playable tracks found</div>';
-                statusText.textContent = `Loaded: ${file.name}`;
-                statusText.className = "text-[10px] font-medium text-blue-400 truncate pr-2";
-                playBtn.disabled = stopBtn.disabled = false;
-                playBtn.textContent = "Play";
-            } catch (err) {
-                statusText.textContent = "Error: Invalid MIDI format.";
-                statusText.className = "text-[10px] font-medium text-red-400 truncate pr-2";
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    });
-
-    playBtn.addEventListener('click', () => {
-        if (!selectedOutput) { alert("Select a MIDI Output device."); return; }
-        autoPaused = false;
-        if (midiPlayer.isPlaying()) {
-            midiPlayer.pause(); stopAllNotes(); playBtn.textContent = "Play";
-            statusText.textContent = "Playback paused.";
-        } else {
-            midiPlayer.play(); playBtn.textContent = "Pause";
-            statusText.textContent = "▶ Playing...";
-        }
-    });
-
-    stopBtn.addEventListener('click', () => {
-        autoPaused = false; midiPlayer.stop(); stopAllNotes(); playBtn.textContent = "Play";
-        statusText.textContent = "Playback stopped.";
-        progressBar.style.width = '0%';
-        timeCurrent.textContent = '0:00';
-    });
-
-    panicBtn.addEventListener('click', executePanic);
-
-    window.addEventListener('blur', () => {
-        if (midiPlayer.isPlaying()) {
-            midiPlayer.pause(); stopAllNotes(); autoPaused = true; playBtn.textContent = "Play";
-            statusText.textContent = "Paused (Focus lost).";
-        }
-    });
-
-    window.addEventListener('focus', () => { if (autoPaused) { autoPaused = false; midiPlayer.play(); playBtn.textContent = "Pause"; statusText.textContent = "▶ Playing..."; } });
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            if (midiPlayer.isPlaying()) { midiPlayer.pause(); stopAllNotes(); autoPaused = true; playBtn.textContent = "Play"; statusText.textContent = "Paused (Tab hidden)."; }
-        } else if (autoPaused) { autoPaused = false; midiPlayer.play(); playBtn.textContent = "Pause"; statusText.textContent = "▶ Playing..."; }
-    });
-</script>
 </body>
 </html>
