@@ -9,14 +9,14 @@
     <style>
         body {
             margin: 0;
-            padding-top: 80px; /* Space for the fixed toolbar */
+            padding-top: 80px;
             background: #0a0a0a;
             font-family: 'Courier New', Courier, monospace;
             color: #ccc;
         }
 
         .toolbar {
-            position: fixed; /* Changed to fixed */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
@@ -45,6 +45,14 @@
             font-weight: bold;
             transition: all 0.2s;
             text-transform: uppercase;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .toolbar button .icon {
+            font-size: 24px;
+            margin-bottom: 2px;
         }
 
         .toolbar button:hover:not(:disabled) {
@@ -139,147 +147,111 @@
             transform: translateY(-2px);
         }
     </style>
-    <style>
-        .toolbar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: #333;
-            padding: 2px;
-            box-sizing: border-box;
-            text-align: center;
-            z-index: 1000;
-        }
-
-        .toolbar button {
-            background: #555;
-            color: white;
-            border: 1px solid #888;
-            border-radius: 3px;
-            padding: 4px 8px;
-            margin: 1px;
-            cursor: pointer;
-            font-size: 12px;
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .toolbar button .icon {
-            font-size: 24px;
-            margin-bottom: 2px;
-        }
-
-        .toolbar button:disabled {
-            background: #777;
-            color: #ccc;
-            cursor: default;
-        }
-    </style>
-
+</head>
+<body>
     <div class="toolbar">
         <button onclick="window.location.href='index.html'"><span class="icon">🏠</span> Home</button>
-        <button onclick="window.location.href='Art Spirographia.html'"><span class="icon">🎨</span> Spirographia</button>
         <button onclick="window.location.href='AudioCritic.html'"><span class="icon">🎯</span> Critic</button>
         <button onclick="window.location.href='berlin.html'"><span class="icon">🎵</span> Berlin</button>
         <button onclick="window.location.href='Centipoids.html'"><span class="icon">🐛</span> Centipoids</button>
         <button onclick="window.location.href='chords.html'"><span class="icon">🎹</span> Chords</button>
-        <button onclick="window.location.href='CosmicDrift.html'"><span class="icon">🌌</span> Cosmic</button>
-        <button onclick="window.location.href='DarkHolidays.html'"><span class="icon">🌙</span> Dark Holiday</button>
         <button onclick="window.location.href='delay.html'"><span class="icon">📊</span> Delay</button>
         <button onclick="window.location.href='karplus.html'"><span class="icon">🌊</span> Karplus</button>
-        <button onclick="window.location.href='LollipopLand.html'"><span class="icon">🍭</span> Lollipop</button>
-        <button onclick="window.location.href='MandelPlanet.html'"><span class="icon">🌍</span> Mandel</button>
-        <button onclick="window.location.href='OceanTravels.html'"><span class="icon">🌊</span> Ocean</button>
-        <button onclick="window.location.href='Phrenophobia.html'"><span class="icon">😱</span> Phreno</button>
         <button onclick="window.location.href='polychain.html'"><span class="icon">🔄</span> Polychain</button>
         <button onclick="window.location.href='rhythm.html'"><span class="icon">🥁</span> Rhythm</button>
         <button onclick="window.location.href='Shepard chord.html'"><span class="icon">🌀</span> Shepard</button>
-        <button onclick="window.location.href='SpaceTravel.html'"><span class="icon">🚀</span> Space</button>
-        <button onclick="window.location.href='SpectralSquadron.html'"><span class="icon">📡</span> Spectral</button>
-        <button onclick="window.location.href='Spirals.html'"><span class="icon">💫</span> Spirals</button>
-        <button onclick="window.location.href='starfield.html'"><span class="icon">⭐</span> Starfield</button>
     </div>
 
     <div class="container">
         <h1>Audio-Reactive Suite</h1>
-        <p>Select a Visualization</p>
+        <p>Select a Tool or Visualization</p>
 
         <div class="panel">
-            <h2>Cosmic & Sci-Fi</h2>
+            <h2>Audio Tools</h2>
             <div class="button-grid">
-                <button class="grid-button" onclick="window.location.href='CosmicDrift.html'"><span
-                        style="font-size: 24px;">🌌</span> Cosmic Drift
+                <button class="grid-button" onclick="window.location.href='AudioCritic.html'">
+                    <span style="font-size: 24px;">🎯</span> Audio Critic
                 </button>
-                <button class="grid-button" onclick="window.location.href='SpectralSquadron.html'"><span
-                        style="font-size: 24px;">📡</span> Spectral Squadron
+                <button class="grid-button" onclick="window.location.href='berlin.html'">
+                    <span style="font-size: 24px;">🎵</span> Berlin
                 </button>
-                <button class="grid-button" onclick="window.location.href='starfield.html'"><span
-                        style="font-size: 24px;">⭐</span> Starfield
+                <button class="grid-button" onclick="window.location.href='chords.html'">
+                    <span style="font-size: 24px;">🎹</span> Chords
                 </button>
-                <button class="grid-button" onclick="window.location.href='OceanTravels.html'"><span
-                        style="font-size: 24px;">🌊</span> Ocean Travels
+                <button class="grid-button" onclick="window.location.href='delay.html'">
+                    <span style="font-size: 24px;">📊</span> Delay
                 </button>
-                <button class="grid-button" onclick="window.location.href='SpaceTravel.html'"><span
-                        style="font-size: 24px;">🚀</span> Space Travel
+                <button class="grid-button" onclick="window.location.href='karplus.html'">
+                    <span style="font-size: 24px;">🌊</span> Karplus
+                </button>
+                <button class="grid-button" onclick="window.location.href='polychain.html'">
+                    <span style="font-size: 24px;">🔄</span> Polychain
+                </button>
+                <button class="grid-button" onclick="window.location.href='rhythm.html'">
+                    <span style="font-size: 24px;">🥁</span> Rhythm
+                </button>
+                <button class="grid-button" onclick="window.location.href='Shepard chord.html'">
+                    <span style="font-size: 24px;">🌀</span> Shepard Chord
                 </button>
             </div>
         </div>
 
         <div class="panel">
-            <h2>Psychedelic & Abstract</h2>
+            <h2>Interactive Visualizers</h2>
             <div class="button-grid">
-                <button class="grid-button" onclick="window.location.href='Spirals.html'"><span
-                        style="font-size: 24px;">🌀</span> Psychedelic Spiral
+                <button class="grid-button" onclick="window.location.href='Art Spirographia.html'">
+                    <span style="font-size: 24px;">🎨</span> Spirographia
                 </button>
-                <button class="grid-button" onclick="window.location.href='DarkHolidays.html'"><span
-                        style="font-size: 24px;">🌙</span> Dark Holiday Spiral
+                <button class="grid-button" onclick="window.location.href='Centipoids.html'">
+                    <span style="font-size: 24px;">🐛</span> Centipoids
                 </button>
-                <button class="grid-button" onclick="window.location.href='pondviz.html'"><span
-                        style="font-size: 24px;">💧</span> Mystic Pond
+                <button class="grid-button" onclick="window.location.href='CosmicDrift.html'">
+                    <span style="font-size: 24px;">🌌</span> Cosmic Drift
+                </button>
+                <button class="grid-button" onclick="window.location.href='LollipopLand.html'">
+                    <span style="font-size: 24px;">🍭</span> Lollipop Land
+                </button>
+                <button class="grid-button" onclick="window.location.href='OceanTravels.html'">
+                    <span style="font-size: 24px;">🌊</span> Ocean Travels
+                </button>
+                <button class="grid-button" onclick="window.location.href='Phrenophobia.html'">
+                    <span style="font-size: 24px;">😱</span> Phrenophobia
+                </button>
+                <button class="grid-button" onclick="window.location.href='pondviz.html'">
+                    <span style="font-size: 24px;">💧</span> Pond
+                </button>
+                <button class="grid-button" onclick="window.location.href='Psychedelia.html'">
+                    <span style="font-size: 24px;">🌈</span> Psychedelia
+                </button>
+                <button class="grid-button" onclick="window.location.href='SpaceTravel.html'">
+                    <span style="font-size: 24px;">🚀</span> Space Travel
+                </button>
+                <button class="grid-button" onclick="window.location.href='starfield.html'">
+                    <span style="font-size: 24px;">⭐</span> Starfield
+                </button>
+                <button class="grid-button" onclick="window.location.href='visualizer2.html'">
+                    <span style="font-size: 24px;">🎵</span> Visualizer 2
                 </button>
             </div>
         </div>
 
         <div class="panel">
-            <h2>Fun & Whimsical</h2>
+            <h2>Experimental Visualizers</h2>
             <div class="button-grid">
-                <button class="grid-button" onclick="window.location.href='LollipopLand.html'"><span
-                        style="font-size: 24px;">🍭</span> Marching on Lollipop Land
+                <button class="grid-button" onclick="window.location.href='DarkHolidays.html'">
+                    <span style="font-size: 24px;">🌙</span> Dark Holiday
                 </button>
-                <button class="grid-button" onclick="window.location.href='AudioCritic.html'"><span
-                        style="font-size: 24px;">🎯</span> Audio Critic
+                <button class="grid-button" onclick="window.location.href='MandelPlanet.html'">
+                    <span style="font-size: 24px;">🌍</span> Mandel Planet
                 </button>
-            </div>
-        </div>
-
-        <div class="panel">
-            <h2>Musical & Rhythmic</h2>
-            <div class="button-grid">
-                <button class="grid-button" onclick="window.location.href='Shepard chord.html'"><span
-                        style="font-size: 24px;">🌀</span> Shepard Chord Illusion
+                <button class="grid-button" onclick="window.location.href='SpectralSquadron.html'">
+                    <span style="font-size: 24px;">📡</span> Spectral Squadron
                 </button>
-                <button class="grid-button" onclick="window.location.href='berlin.html'"><span style="font-size: 24px;">🎵</span>
-                    Berlin
-                </button>
-                <button class="grid-button" onclick="window.location.href='chords.html'"><span style="font-size: 24px;">🎹</span>
-                    Chords
-                </button>
-                <button class="grid-button" onclick="window.location.href='delay.html'"><span style="font-size: 24px;">📊</span>
-                    Delay
-                </button>
-                <button class="grid-button" onclick="window.location.href='karplus.html'"><span
-                        style="font-size: 24px;">🌊</span> Karplus
-                </button>
-                <button class="grid-button" onclick="window.location.href='polychain.html'"><span
-                        style="font-size: 24px;">🔄</span> Polychain
-                </button>
-                <button class="grid-button" onclick="window.location.href='rhythm.html'"><span style="font-size: 24px;">🥁</span>
-                    Rhythm
+                <button class="grid-button" onclick="window.location.href='Spirals.html'">
+                    <span style="font-size: 24px;">💫</span> Spirals
                 </button>
             </div>
         </div>
     </div>
-    </body>
+</body>
 </html>

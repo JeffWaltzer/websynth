@@ -18,6 +18,7 @@
     <orderEntry type="library" scope="PROVIDED" name="midi-jruby (v0.2.0, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="midi-winmm (v0.1.10, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="unimidi (v0.5.1, ruby-3.4.4-p34) [gem]" level="application" />
+    <orderEntry type="library" name="midi-player-js" level="application" />
   </component>
   <component name="RubyModuleProperties">
     <option name="autoCreated" value="true" />
