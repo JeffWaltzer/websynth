@@ -29,7 +29,7 @@
 
     <!-- Top Row: Configuration -->
     <div class="flex flex-wrap items-end gap-3 border-b border-gray-700 pb-2">
-        <div class="mr-auto">
+        <div class="mr-auto text-nowrap">
             <h1 class="text-lg font-bold text-white tracking-tight leading-tight">🎹 Web MIDI Player</h1>
             <p class="text-gray-400 text-[9px] mt-0.5">Direct hardware playback.</p>
         </div>
@@ -37,7 +37,7 @@
         <div class="w-40">
             <label class="block text-[9px] font-medium text-gray-400 mb-0.5 uppercase">1. Output Device</label>
             <select id="device-select" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-xs text-white focus:outline-none focus:border-blue-500">
-                <option disabled>Discovering hardware...</option>
+                <option disabled>Initializing hardware...</option>
             </select>
         </div>
 
@@ -49,11 +49,16 @@
                     border border-gray-600 rounded cursor-pointer bg-gray-900 p-0.5 h-[24px]">
         </div>
 
-        <div class="w-24">
-            <label class="block text-[9px] font-medium text-gray-400 mb-0.5 uppercase">3. Master Routing</label>
-            <select id="master-select" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-white">
-                <option value="original">Original</option>
-            </select>
+        <div class="flex items-end gap-1">
+            <div class="w-24">
+                <label class="block text-[9px] font-medium text-gray-400 mb-0.5 uppercase">3. Master Routing</label>
+                <select id="master-select" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-[10px] text-white focus:outline-none">
+                    <option value="original">Original</option>
+                </select>
+            </div>
+            <button id="guess-mapping-btn" disabled title="Auto-assign channels based on track names" class="bg-gray-700 hover:bg-gray-600 text-blue-300 border border-gray-600 rounded px-2 h-[26px] text-[9px] font-bold uppercase transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                Guess Mapping
+            </button>
         </div>
 
         <div class="w-20">
@@ -64,7 +69,7 @@
 
     <div id="midi-error" class="hidden p-2 bg-red-900/40 border border-red-800 rounded text-red-100 text-[10px] leading-relaxed"></div>
 
-    <!-- Track Grid (Dynamic height) -->
+    <!-- Track Grid -->
     <div class="bg-gray-900/50 border border-gray-700 rounded p-1.5 min-h-[50px]">
         <div id="track-routing-list" class="grid gap-1 content-start relative transition-all duration-300">
             <div class="text-[10px] text-gray-600 italic text-center w-full absolute col-span-full mt-2">Load a file to route tracks</div>
@@ -79,7 +84,7 @@
 
         <div class="flex-1 flex flex-col border-l border-gray-700 ml-1 pl-2 min-w-0">
             <div class="flex items-center justify-between mb-1">
-                <span id="status-text" class="text-[10px] font-medium text-blue-400 truncate pr-2">Waiting for file...</span>
+                <span id="status-text" class="text-[10px] font-medium text-blue-400 truncate pr-2">Ready.</span>
                 <div class="flex items-center gap-1.5 text-[9px] font-mono text-gray-500 flex-shrink-0">
                     <span id="time-current" class="text-blue-300">0:00</span>
                     <span>/</span>
@@ -112,8 +117,9 @@
         </div>
     </div>
 
-    <div id="warnings-container" class="p-1 bg-gray-900 border border-gray-700/50 rounded text-yellow-500 text-[9px] h-12 overflow-y-auto font-mono custom-scrollbar mt-0.5">
-        <div class="text-gray-600 mb-1">System Logs & Errors:</div>
+    <!-- Expanded System Logs -->
+    <div id="warnings-container" class="p-1 bg-gray-900 border border-gray-700/50 rounded text-yellow-500 text-[9px] h-36 overflow-y-auto font-mono custom-scrollbar mt-0.5">
+        <div class="text-gray-600 mb-1 border-b border-gray-800 pb-0.5 font-bold uppercase tracking-widest">System Logs & Initialization:</div>
     </div>
 </div>
 
@@ -142,6 +148,7 @@
     const deviceSelect = document.getElementById('device-select');
     const fileUpload = document.getElementById('file-upload');
     const masterSelect = document.getElementById('master-select');
+    const guessMappingBtn = document.getElementById('guess-mapping-btn');
     const trackRoutingList = document.getElementById('track-routing-list');
     const playBtn = document.getElementById('play-btn');
     const stopBtn = document.getElementById('stop-btn');
@@ -163,6 +170,7 @@
     let midiAccess = null;
     let selectedOutput = null;
     let audioContext = null;
+    let midiPlayer = null; // Changed to let to avoid Temporal Dead Zone
     let currentFileName = '';
     let currentTrackRouting = {};
     let trackRows = {};
@@ -174,17 +182,18 @@
     let autoPaused = false;
     const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-    // --- ERROR REPORTING ---
+    // --- ERROR & LOGGING ---
     function displayWarning(msg) {
         const logEntry = document.createElement('div');
+        logEntry.className = 'py-0.5 border-b border-gray-800 last:border-0';
         logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
         warningsContainer.appendChild(logEntry);
-        if (warningsContainer.childElementCount > 30) warningsContainer.removeChild(warningsContainer.children[1]);
+        if (warningsContainer.childElementCount > 51) warningsContainer.removeChild(warningsContainer.children[1]);
         warningsContainer.scrollTop = warningsContainer.scrollHeight;
     }
 
     window.onerror = function(msg, url, lineNo, columnNo, error) {
-        displayWarning(`ERROR: ${msg} (Line: ${lineNo})`);
+        displayWarning(`CRITICAL SYSTEM ERROR: ${msg} | Line: ${lineNo} | Col: ${columnNo}`);
         return false;
     };
 
@@ -206,9 +215,20 @@
     function syncSelectedOutput() {
         if (!midiAccess) return;
         const id = deviceSelect.value;
-        selectedOutput = midiAccess.outputs.get(id);
-        if (selectedOutput) {
-            statusText.textContent = `Active: ${selectedOutput.name}`;
+        const outputs = Array.from(midiAccess.outputs.values());
+        const foundOutput = outputs.find(o => o.id === id);
+
+        if (foundOutput) {
+            selectedOutput = foundOutput;
+            statusText.textContent = `Active Hardware: ${selectedOutput.name}`;
+            displayWarning(`MIDI Routing Verified: ${selectedOutput.name}`);
+        } else if (outputs.length > 0) {
+            selectedOutput = outputs[0];
+            deviceSelect.value = selectedOutput.id;
+            statusText.textContent = `Active port switched to: ${selectedOutput.name}`;
+        } else {
+            selectedOutput = null;
+            statusText.textContent = "No MIDI ports active.";
         }
     }
 
@@ -224,6 +244,7 @@
     }
 
     function formatTime(seconds) {
+        if (isNaN(seconds) || seconds < 0) return "0:00";
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -285,9 +306,13 @@
     }
 
     function uiLoop() {
-        if (typeof midiPlayer !== 'undefined' && midiPlayer.isPlaying()) {
-            const progress = midiPlayer.getSongPercent() || 0;
+        if (midiPlayer && midiPlayer.isPlaying()) {
+            const currentTick = midiPlayer.getCurrentTick() || 0;
+            const totalTicks = midiPlayer.getTotalTicks() || 1;
+            const progress = (currentTick / totalTicks) * 100;
+
             progressBar.style.width = `${progress}%`;
+
             const totalSecs = midiPlayer.getSongTime() || 0;
             timeCurrent.textContent = formatTime((progress / 100) * totalSecs);
             updateTheoryDisplay();
@@ -343,36 +368,39 @@
                 .then(onMIDISuccess)
                 .catch(onMIDIFailure);
         } else {
-            onMIDIFailure(new Error("Web MIDI API not supported."));
+            onMIDIFailure(new Error("Web MIDI API not supported in this browser."));
         }
     }
     initMIDI();
 
     function onMIDISuccess(access) {
-        statusText.textContent = "Scanning for MIDI hardware...";
+        displayWarning("MIDI hardware initialization successful.");
         midiAccess = access;
         refreshOutputs();
-        midiAccess.onstatechange = refreshOutputs;
+        midiAccess.onstatechange = (e) => {
+            displayWarning(`Hardware Update: ${e.port.name} state changed to ${e.port.state}`);
+            refreshOutputs();
+        };
     }
 
     function refreshOutputs() {
         if (!midiAccess) return;
         const outputs = Array.from(midiAccess.outputs.values());
-        const currentSelectedId = deviceSelect.value;
+        const previousId = deviceSelect.value;
 
         deviceSelect.innerHTML = '';
         if (outputs.length === 0) {
-            deviceSelect.innerHTML = '<option disabled>No outputs found</option>';
+            deviceSelect.innerHTML = '<option disabled>No MIDI outputs found</option>';
             selectedOutput = null;
             panicBtn.disabled = true;
             return;
         }
 
-        outputs.forEach((output, idx) => {
+        outputs.forEach((output) => {
             const opt = document.createElement('option');
             opt.value = output.id;
             opt.textContent = output.name;
-            if (output.id === currentSelectedId) opt.selected = true;
+            if (output.id === previousId) opt.selected = true;
             deviceSelect.appendChild(opt);
         });
 
@@ -381,12 +409,15 @@
     }
 
     function onMIDIFailure(err) {
+        console.error("MIDI Init Failure:", err);
         deviceSelect.innerHTML = '<option disabled>MIDI Blocked</option>';
         midiError.classList.remove('hidden');
         if (err.name === 'SecurityError') {
-            midiError.innerHTML = `<strong>⚠️ Hardware MIDI blocked.</strong> Web MIDI is restricted in iframes.<br/>To fix: Save this file locally and open it directly in Chrome/Edge.`;
+            midiError.innerHTML = `<strong>⚠️ Hardware MIDI blocked.</strong> Discovery is restricted in embedded iframes.<br/><strong>TO FIX:</strong> Save this file locally and open it directly in Chrome or Edge.`;
+            displayWarning("SECURITY ERROR: MIDI access restricted by iframe policy.");
         } else {
             midiError.textContent = "MIDI Access Error: " + err.message;
+            displayWarning(`MIDI ERROR: ${err.message}`);
         }
     }
 
@@ -405,13 +436,14 @@
     function executePanic() {
         if (!selectedOutput || isPanicking) return;
         isPanicking = true;
-        midiPlayer.stop(); playBtn.textContent = "Play";
+        if (midiPlayer) midiPlayer.stop();
+        playBtn.textContent = "Play";
         stopAllNotes();
         statusText.textContent = "🚨 PANIC: Initializing hardware reset...";
         let ch = 0;
         const itv = setInterval(() => {
             if (ch >= 16) {
-                clearInterval(itv); isPanicking = false; statusText.textContent = "✅ Panic complete."; return;
+                clearInterval(itv); isPanicking = false; statusText.textContent = "✅ Reset complete."; return;
             }
             statusText.textContent = `🚨 PANIC: Clearing Ch ${ch + 1}/16...`;
             for (let n = 0; n < 128; n++) { try { selectedOutput.send([0x80 + ch, n, 0]); } catch(e){} }
@@ -419,12 +451,14 @@
         }, 30);
     }
 
+    // --- HARDWARE CLAMPING HELPER ---
     function sanitize(val) {
-        if (typeof val !== 'number' || isNaN(val)) return 0;
-        return Math.max(0, Math.min(127, Math.floor(val)));
+        let n = Math.floor(Number(val) || 0);
+        return Math.max(0, Math.min(127, n));
     }
 
-    const midiPlayer = new MidiPlayer.Player(function(event) {
+    // Initialize Player with Hardware Callback
+    midiPlayer = new MidiPlayer.Player(function(event) {
         if (!selectedOutput || isPanicking) return;
 
         try {
@@ -443,13 +477,15 @@
             }
             ch = Math.max(0, Math.min(15, ch));
 
-            let status = 0, d1 = 0, d2 = 0;
+            let status = 0;
+            let msg = [];
 
             if (event.name === 'Note on' || event.name === 'Note off') {
                 const isOff = event.name === 'Note off' || event.velocity === 0;
                 status = isOff ? (0x80 + ch) : (0x90 + ch);
-                d1 = event.noteNumber;
-                d2 = Math.floor((event.velocity || 0) * parseFloat(volumeSlider.value));
+                const d1 = sanitize(event.noteNumber);
+                const d2 = sanitize((event.velocity || 0) * parseFloat(volumeSlider.value));
+                msg = [status, d1, d2];
 
                 if (!isOff && d2 > 0) {
                     playingHardwareNotes.add(`${ch}-${d1}`);
@@ -478,28 +514,92 @@
                         row.style.borderColor = `hsl(${hue}, 80%, 55%)`; row.style.backgroundColor = `hsla(${hue}, 80%, 40%, 0.3)`;
                     } else { row.style.borderColor = 'transparent'; row.style.backgroundColor = ''; }
                 }
-            } else if (event.name === 'Controller Change') { status = 0xB0+ch; d1 = event.number; d2 = event.value; }
-            else if (event.name === 'Program Change') { status = 0xC0+ch; d1 = event.value; }
-            else if (event.name === 'Pitch Bend') { status = 0xE0+ch; d1 = event.value & 0x7F; d2 = (event.value >> 7) & 0x7F; }
+            } else if (event.name === 'Controller Change') {
+                status = 0xB0 + ch;
+                msg = [status, sanitize(event.number), sanitize(event.value)];
+            } else if (event.name === 'Program Change') {
+                status = 0xC0 + ch;
+                msg = [status, sanitize(event.value)];
+            } else if (event.name === 'Pitch Bend') {
+                status = 0xE0 + ch;
+                const bend = Number(event.value) || 0;
+                msg = [status, bend & 0x7F, (bend >> 7) & 0x7F];
+            }
 
-            if (status > 0) selectedOutput.send([status, d1, d2].filter(v => v !== undefined));
-        } catch (e) {}
+            if (msg.length > 0 && selectedOutput) {
+                selectedOutput.send(msg);
+            }
+        } catch (e) {
+            displayWarning(`MIDI Engine Trace Error: ${e.message}`);
+        }
     });
 
+    // Hooks for automated button updates
+    midiPlayer.on('start', () => { playBtn.textContent = "Pause"; statusText.textContent = "▶ Playing..."; });
+    midiPlayer.on('pause', () => { playBtn.textContent = "Play"; statusText.textContent = "Paused."; });
+    midiPlayer.on('stop', () => { playBtn.textContent = "Play"; statusText.textContent = "Stopped."; progressBar.style.width = '0%'; });
     midiPlayer.on('end', () => {
-        statusText.textContent = "Playback finished."; playBtn.textContent = "Play";
-        stopAllNotes(); progressBar.style.width = '0%';
+        displayWarning("Playback reached the end of the sequence.");
+        playBtn.textContent = "Play";
+        statusText.textContent = "Playback finished.";
+        stopAllNotes();
+        progressBar.style.width = '0%';
     });
+
+    // Mapping Guesser
+    function performMappingGuess() {
+        if (!midiPlayer || !midiPlayer.events) return;
+        displayWarning("Initiating intelligent track mapping guess...");
+        let changeCount = 0;
+        Object.keys(trackRows).forEach(trackKey => {
+            const trackNum = parseInt(trackKey);
+            const trackEvents = midiPlayer.events[trackNum - 1];
+            if (!trackEvents) return;
+            let metaName = "";
+            let instName = "";
+            trackEvents.forEach(ev => {
+                if (ev.name === 'Track Name') metaName = ev.string.toLowerCase();
+                if (ev.name === 'Instrument Name') instName = ev.string.toLowerCase();
+            });
+            const fullSearch = (metaName + " " + instName).trim();
+            let guess = null;
+            if (fullSearch.includes('drum') || fullSearch.includes('perc') || fullSearch.includes('rhythm')) guess = '10';
+            else if (fullSearch.includes('bass')) guess = '2';
+            else if (fullSearch.includes('piano')) guess = '1';
+            else if (fullSearch.includes('lead') || fullSearch.includes('solo')) guess = '5';
+            else if (fullSearch.includes('string') || fullSearch.includes('pad')) guess = '4';
+            else if (fullSearch.includes('brass') || fullSearch.includes('horn')) guess = '7';
+            else if (fullSearch.includes('guitar')) guess = '3';
+
+            if (guess !== null) {
+                const selectEl = trackRows[trackKey].querySelector('select');
+                if (selectEl && selectEl.value !== guess) {
+                    selectEl.value = guess;
+                    currentTrackRouting[trackKey] = guess;
+                    changeCount++;
+                }
+            }
+        });
+        if (changeCount > 0) {
+            stopAllNotes();
+            localStorage.setItem(`midi_routing_${currentFileName}`, JSON.stringify(currentTrackRouting));
+            displayWarning(`Mapping complete: Updated ${changeCount} track(s).`);
+        } else {
+            displayWarning("Mapping complete: No recognized keywords found.");
+        }
+    }
+    guessMappingBtn.addEventListener('click', performMappingGuess);
 
     fileUpload.addEventListener('change', function(e) {
         const file = e.target.files[0]; if (!file) return;
-        midiPlayer.stop(); stopAllNotes();
+        if (midiPlayer) midiPlayer.stop(); stopAllNotes();
 
         statusText.textContent = `1/4: Reading binary: ${file.name}...`;
+        displayWarning(`Incoming file detected: ${file.name}`);
         const reader = new FileReader();
         reader.onload = (evt) => {
             try {
-                statusText.textContent = "2/4: Parsing MIDI sequence data...";
+                statusText.textContent = "2/4: Parsing MIDI structure...";
                 midiPlayer.loadArrayBuffer(evt.target.result);
                 currentFileName = file.name;
                 timeTotal.textContent = formatTime(midiPlayer.getSongTime() || 0);
@@ -512,9 +612,7 @@
                     const trackNum = idx + 1;
                     let firstCh = -1, name = `Track ${trackNum}`, inst = "", notes = 0;
                     let minNote = 127, maxNote = 0;
-
-                    for(let i=0; i<events.length; i++) {
-                        const ev = events[i];
+                    events.forEach(ev => {
                         if (firstCh === -1 && typeof ev.channel === 'number') firstCh = ev.channel;
                         if (ev.name === 'Track Name') name = ev.string;
                         if (ev.name === 'Instrument Name') inst = ev.string;
@@ -524,15 +622,11 @@
                             if (ev.noteNumber < minNote) minNote = ev.noteNumber;
                             if (ev.noteNumber > maxNote) maxNote = ev.noteNumber;
                         }
-                    }
-
+                    });
                     if (firstCh === -1 && notes === 0) return;
-
                     const val = saved[trackNum] || 'master';
                     currentTrackRouting[trackNum] = val;
-
                     const rangeStr = notes > 0 ? `${getNoteName(minNote)} - ${getNoteName(maxNote)}` : "None";
-
                     const row = document.createElement('div');
                     row.className = 'flex items-center justify-between bg-gray-800 p-1 rounded border border-transparent min-w-0 h-[48px]';
                     row.innerHTML = `<div class="flex flex-col overflow-hidden mr-1 flex-1 leading-[1.1]">
@@ -541,7 +635,7 @@
                             <span class="text-[7px] text-gray-500 uppercase leading-none">Ch ${firstCh} • ${notes} notes</span>
                             <span class="text-[7px] text-gray-400 mt-0.5">Range: ${rangeStr}</span>
                         </div>
-                        <select class="bg-gray-900 border border-gray-600 rounded py-0 px-0.5 text-[9px] text-white w-[52px] h-[18px]">
+                        <select class="bg-gray-900 border border-gray-600 rounded py-0 px-0.5 text-[9px] text-white w-[52px] h-[18px] focus:outline-none">
                             <option value="master">Master</option><option value="original">Orig</option>
                             ${Array.from({length:16}, (_,i)=>`<option value="${i+1}">Ch ${i+1}</option>`).join('')}
                             <option value="mute">Mute</option>
@@ -556,44 +650,38 @@
 
                 statusText.textContent = "4/4: Initializing hardware mapping...";
                 updateTrackGridLayout();
-                statusText.textContent = `Ready: ${file.name}`;
-                playBtn.disabled = false; stopBtn.disabled = false;
+                statusText.textContent = `Loaded: ${file.name}`;
+                displayWarning(`File successfully processed: ${file.name}`);
+                playBtn.disabled = false; stopBtn.disabled = false; guessMappingBtn.disabled = false;
             } catch(e) {
-                statusText.textContent = "Error: Invalid or corrupted MIDI file.";
+                statusText.textContent = "Error: Invalid MIDI file.";
+                displayWarning(`MIDI PARSE EXCEPTION: ${e.message}`);
             }
         };
         reader.readAsArrayBuffer(file);
     });
 
+    const handleAutoPause = () => { if (midiPlayer && midiPlayer.isPlaying()) { midiPlayer.pause(); stopAllNotes(); autoPaused = true; } };
+    const handleAutoResume = async () => { if (autoPaused) { autoPaused = false; if (audioContext && audioContext.state === 'suspended') await audioContext.resume(); midiPlayer.play(); } };
+    window.addEventListener('blur', handleAutoPause);
+    window.addEventListener('focus', handleAutoResume);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) handleAutoPause(); else handleAutoResume(); });
+
     playBtn.addEventListener('click', async () => {
         if (midiAccess) refreshOutputs();
-        if (!selectedOutput) {
-            alert("Please select a MIDI Output device in Step 1."); return;
-        }
-
+        if (!selectedOutput) { alert("Please select a MIDI Output device in Step 1."); return; }
         if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') await audioContext.resume();
-
-        if (midiPlayer.isPlaying()) {
-            midiPlayer.pause(); stopAllNotes(); playBtn.textContent = "Play";
-            statusText.textContent = "Paused.";
-        } else {
-            midiPlayer.play(); playBtn.textContent = "Pause";
-            statusText.textContent = "▶ Playing...";
-        }
+        autoPaused = false;
+        if (midiPlayer.isPlaying()) { midiPlayer.pause(); stopAllNotes(); } else { midiPlayer.play(); }
     });
 
-    stopBtn.addEventListener('click', () => {
-        midiPlayer.stop(); stopAllNotes(); playBtn.textContent = "Play";
-        statusText.textContent = "Playback stopped."; progressBar.style.width = '0%';
-    });
-
+    stopBtn.addEventListener('click', () => { autoPaused = false; if (midiPlayer) midiPlayer.stop(); stopAllNotes(); });
     panicBtn.addEventListener('click', executePanic);
 
-    // Start animation and UI loops only after everything is ready
+    // Finalize initialization
     uiLoop();
     drawVisualizer();
-
 </script>
 </body>
 </html>
