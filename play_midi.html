@@ -17,6 +17,8 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        .arp-trigger { color: #ef4444; font-weight: 800; text-decoration: underline; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen text-gray-200 p-2 font-sans">
@@ -73,25 +75,18 @@
     <div class="flex items-center gap-2 bg-gray-900 rounded p-1.5 border border-gray-700">
         <button id="play-btn" disabled class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-1 px-3 rounded text-[11px] transition-colors w-16">Play</button>
         <button id="stop-btn" disabled class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-1 px-3 rounded text-[11px] transition-colors w-16">Stop</button>
-        <button id="panic-btn" disabled title="Hard Reset (All notes, channels, and stop command)" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-[11px] w-20">⚠️ Panic</button>
+        <button id="panic-btn" disabled title="Hard Reset (Works with Solina and gear)" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-[11px] w-20">⚠️ Panic</button>
 
         <div class="flex-1 flex flex-col border-l border-gray-700 ml-1 pl-2 min-w-0">
-            <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center justify-between">
                 <span id="status-text" class="text-[10px] font-medium text-blue-400 truncate">Ready.</span>
-                <div class="flex items-center gap-1.5 text-[9px] font-mono text-gray-500">
-                    <span id="time-current" class="text-blue-300">0:00</span>
-                    <span>/</span>
-                    <span id="time-total">0:00</span>
-                </div>
-            </div>
-            <div id="progress-container" class="w-full bg-gray-950 rounded-full h-2 overflow-hidden cursor-pointer relative group">
-                <div id="progress-bar" class="bg-blue-500 h-full w-0 transition-all duration-75"></div>
+                <div class="text-xs font-bold text-blue-300 tabular-nums" id="completion-percentage">0%</div>
             </div>
         </div>
 
         <div class="flex items-center gap-4 flex-shrink-0 border-l border-gray-800 ml-2 pl-3">
-            <div class="min-w-[70px]"><span class="text-[8px] text-gray-500 block">CHORD</span><span id="chord-display" class="text-sm font-bold text-yellow-400 tabular-nums">-</span></div>
-            <div class="min-w-[90px]"><span class="text-[8px] text-gray-500 block">SCALE</span><span id="scale-display" class="text-[10px] font-bold text-green-400 truncate">-</span></div>
+            <div class="min-w-[70px]"><span class="text-[8px] text-gray-500 block uppercase font-bold">Chord</span><span id="chord-display" class="text-sm font-bold text-yellow-400 tabular-nums">-</span></div>
+            <div class="min-w-[90px]"><span class="text-[8px] text-gray-500 block uppercase font-bold">Scale</span><span id="scale-display" class="text-[10px] font-bold text-green-400 truncate">-</span></div>
         </div>
     </div>
 
@@ -104,11 +99,20 @@
         </div>
     </div>
 
-    <!-- Logs -->
-    <div id="warnings-container" class="p-1 bg-gray-900 border border-gray-700/50 rounded text-yellow-500 text-[9px] h-36 overflow-y-auto font-mono custom-scrollbar mt-0.5">
-        <div class="flex items-center justify-between sticky top-0 bg-gray-900 border-b border-gray-800 pb-0.5 mb-1 z-10">
-            <span class="text-gray-600 font-bold uppercase tracking-widest">System Logs:</span>
-            <button id="copy-logs-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded border border-gray-700 uppercase font-bold text-[8px]">Copy Logs</button>
+    <!-- Log Panels -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-0.5">
+        <div id="warnings-container" class="p-1 bg-gray-900 border border-gray-700/50 rounded text-yellow-500 text-[9px] h-36 overflow-y-auto font-mono custom-scrollbar">
+            <div class="flex items-center justify-between sticky top-0 bg-gray-900 border-b border-gray-800 pb-0.5 mb-1 z-10">
+                <span class="text-gray-600 font-bold uppercase tracking-widest">System Logs:</span>
+                <button id="copy-logs-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded border border-gray-700 uppercase font-bold text-[8px]">Copy</button>
+            </div>
+        </div>
+        <div id="cc-monitor" class="p-1 bg-gray-950 border border-blue-900/30 rounded text-blue-400 text-[9px] h-36 overflow-y-auto font-mono custom-scrollbar">
+            <div class="flex items-center justify-between sticky top-0 bg-gray-950 border-b border-blue-900/30 pb-0.5 mb-1 z-10">
+                <span class="text-blue-700 font-bold uppercase tracking-widest">Live CC Monitor:</span>
+                <button id="clear-monitor-btn" class="bg-gray-900 hover:bg-gray-800 text-blue-600 px-1.5 py-0.5 rounded border border-blue-900/30 uppercase font-bold text-[8px]">Clear</button>
+            </div>
+            <div id="cc-log-list"></div>
         </div>
     </div>
 </div>
@@ -129,13 +133,12 @@
     const panicBtn = document.getElementById('panic-btn');
     const statusText = document.getElementById('status-text');
     const warningsContainer = document.getElementById('warnings-container');
+    const ccLogList = document.getElementById('cc-log-list');
+    const clearMonitorBtn = document.getElementById('clear-monitor-btn');
     const copyLogsBtn = document.getElementById('copy-logs-btn');
     const chordDisplay = document.getElementById('chord-display');
     const scaleDisplay = document.getElementById('scale-display');
-    const progressContainer = document.getElementById('progress-container');
-    const progressBar = document.getElementById('progress-bar');
-    const timeCurrent = document.getElementById('time-current');
-    const timeTotal = document.getElementById('time-total');
+    const completionPercentage = document.getElementById('completion-percentage');
     const keyboardContainer = document.getElementById('keyboard');
     const canvas = document.getElementById('visualizer');
     const ctx = canvas.getContext('2d');
@@ -144,8 +147,7 @@
     let midiAccess = null, selectedOutput = null, audioContext = null, midiPlayer = null;
     let currentFileName = '', currentTrackRouting = {}, trackRows = {}, activeNotes = {}, playingHardwareNotes = new Set(), activeTracks = {}, keyElements = {}, isPanicking = false, autoPaused = false;
 
-    let tempoMap = [];
-    let totalSongSeconds = 0;
+    let fileTotalTicks = 0; // Cached for high-performance percentage calculation
     const keyCache = {};
     const channelCCState = Array.from({length: 16}, () => ({ cc: new Int16Array(128).fill(-1), bend: -1 }));
     const noteReferenceCount = Array.from({length: 16}, () => new Uint8Array(128));
@@ -159,12 +161,20 @@
         warningsContainer.scrollTop = warningsContainer.scrollHeight;
     }
 
-    function formatTime(seconds) {
-        if (isNaN(seconds) || seconds < 0) return "0:00";
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    function logCC(track, ch, msg, val) {
+        const entry = document.createElement('div');
+        entry.className = 'py-0.5 border-b border-blue-900/10 last:border-0';
+        let extra = "";
+        let isWarning = false;
+        if (msg === "CC 112") { extra = " (PRO-800: ARP ON/OFF!)"; isWarning = true; }
+        if (msg === "CC 113") { extra = " (PRO-800: ARP MODE!)"; isWarning = true; }
+        if (msg === "CC 114") { extra = " (PRO-800: ARP RANGE!)"; isWarning = true; }
+        entry.innerHTML = `<span class="text-blue-800">Trk ${track} Ch ${ch+1}</span>: <span class="${isWarning ? 'arp-trigger' : 'text-blue-200 font-bold'}">${msg}</span> Value: <span class="text-white">${val}</span>${extra}`;
+        ccLogList.prepend(entry);
+        if (ccLogList.childElementCount > 100) ccLogList.removeChild(ccLogList.lastChild);
     }
+
+    clearMonitorBtn.addEventListener('click', () => ccLogList.innerHTML = '');
 
     function getNoteName(midiNumber) {
         const name = NOTE_NAMES[midiNumber % 12];
@@ -179,67 +189,20 @@
         trackRoutingList.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
     }
     window.addEventListener('resize', updateTrackGridLayout);
-
     window.onerror = (msg, url, line, col) => { displayWarning(`SYSTEM ERROR: ${msg} | Line: ${line}`); return false; };
 
     copyLogsBtn.addEventListener('click', () => {
         const logs = Array.from(warningsContainer.children).slice(1).map(el => el.textContent).join('\n');
         const temp = document.createElement('textarea');
         temp.value = logs; document.body.appendChild(temp); temp.select();
-        try { document.execCommand('copy'); copyLogsBtn.textContent = 'COPIED!'; setTimeout(() => copyLogsBtn.textContent = 'Copy Logs', 2000); } catch(e) {}
+        try { document.execCommand('copy'); copyLogsBtn.textContent = 'COPIED!'; setTimeout(() => copyLogsBtn.textContent = 'Copy', 2000); } catch(e) {}
         document.body.removeChild(temp);
     });
 
-    function buildTempoMap() {
-        if (!midiPlayer) return;
-        const ppqn = midiPlayer.division || 128;
-        const tempoEvents = [];
-        let maxTick = 0;
-        midiPlayer.events.forEach(track => {
-            track.forEach(ev => {
-                if (ev.name === 'Set Tempo') tempoEvents.push(ev);
-                if (ev.tick > maxTick) maxTick = ev.tick;
-            });
-        });
-        maxTick = Math.max(maxTick, midiPlayer.getTotalTicks() || 0);
-        tempoEvents.sort((a, b) => a.tick - b.tick);
-        tempoMap = [];
-        let currentTime = 0, currentTick = 0, currentMpqn = 500000;
-        tempoMap.push({ tick: 0, seconds: 0, mpqn: currentMpqn });
-        tempoEvents.forEach(ev => {
-            currentTime += ((ev.tick - currentTick) / ppqn) * (currentMpqn / 1000000);
-            currentTick = ev.tick;
-            currentMpqn = ev.microsecondsPerBeat;
-            tempoMap.push({ tick: currentTick, seconds: currentTime, mpqn: currentMpqn });
-        });
-        currentTime += ((maxTick - currentTick) / ppqn) * (currentMpqn / 1000000);
-        totalSongSeconds = currentTime;
-        tempoMap.push({ tick: maxTick, seconds: currentTime, mpqn: currentMpqn });
-        timeTotal.textContent = formatTime(totalSongSeconds);
-        displayWarning(`Timing Map Built: ${formatTime(totalSongSeconds)} total.`);
-    }
-
-    function getSecondsFromTick(tick) {
-        if (!tempoMap.length) return 0;
-        let low = 0, high = tempoMap.length - 1, idx = 0;
-        while (low <= high) {
-            let mid = (low + high) >> 1;
-            if (tempoMap[mid].tick <= tick) { idx = mid; low = mid + 1; } else high = mid - 1;
-        }
-        const entry = tempoMap[idx];
-        return entry.seconds + ((tick - entry.tick) / (midiPlayer.division || 128)) * (entry.mpqn / 1000000);
-    }
-
-    function getTickFromSeconds(seconds) {
-        if (!tempoMap.length) return 0;
-        let low = 0, high = tempoMap.length - 1, idx = 0;
-        while (low <= high) {
-            let mid = (low + high) >> 1;
-            if (tempoMap[mid].seconds <= seconds) { idx = mid; low = mid + 1; } else high = mid - 1;
-        }
-        const entry = tempoMap[idx];
-        return Math.floor(entry.tick + (seconds - entry.seconds) / (entry.mpqn / 1000000) * (midiPlayer.division || 128));
-    }
+    masterSelect.addEventListener('change', () => {
+        stopAllNotes();
+        displayWarning(`Master Route updated to: ${masterSelect.value === 'original' ? 'Individual Channels' : 'Channel ' + masterSelect.value}`);
+    });
 
     function updateTheoryDisplay() {
         const activeKeys = Object.keys(activeNotes).map(Number);
@@ -254,10 +217,16 @@
 
     function uiLoop() {
         if (midiPlayer) {
-            const cur = getSecondsFromTick(midiPlayer.getCurrentTick() || 0);
-            progressBar.style.width = `${totalSongSeconds > 0 ? (cur / totalSongSeconds) * 100 : 0}%`;
-            timeCurrent.textContent = formatTime(cur);
-            if (midiPlayer.isPlaying()) updateTheoryDisplay();
+            // High-performance percentage calculation using cached total ticks
+            if (fileTotalTicks > 0) {
+                const currentTick = midiPlayer.tick || 0;
+                const percent = Math.min(100, Math.floor((currentTick / fileTotalTicks) * 100));
+                completionPercentage.textContent = `${percent}%`;
+            }
+
+            if (midiPlayer.isPlaying()) {
+                updateTheoryDisplay();
+            }
         }
         requestAnimationFrame(uiLoop);
     }
@@ -315,20 +284,25 @@
 
     function stopAllNotes() {
         if (!selectedOutput) return;
-        // HARD PANIC SEQUENCE
+        selectedOutput.send([0xFC]); // MIDI System Stop
         for (let ch = 0; ch < 16; ch++) {
             selectedOutput.send([0xB0 + ch, 120, 0]); // All Sound Off
             selectedOutput.send([0xB0 + ch, 123, 0]); // All Notes Off
             selectedOutput.send([0xB0 + ch, 121, 0]); // Reset All Controllers
-            selectedOutput.send([0xE0 + ch, 0, 64]);  // Reset Pitch Bend
+            selectedOutput.send([0xB0 + ch, 64, 0]);  // Sustain Off
+            selectedOutput.send([0xE0 + ch, 0, 64]);  // Bend Reset
+            // Brute force note-off for vintage gear like the Solina
+            for (let n = 0; n < 128; n++) selectedOutput.send([0x80 + ch, n, 0]);
             noteReferenceCount[ch].fill(0);
             channelCCState[ch].cc.fill(-1);
             channelCCState[ch].bend = -1;
         }
-        // Send MIDI System Stop (Global Real-time)
-        selectedOutput.send([0xFC]);
-
         activeNotes = {};
+        activeTracks = {};
+        Object.values(trackRows).forEach(row => {
+            row.style.borderColor = 'transparent';
+            row.style.backgroundColor = '';
+        });
         document.querySelectorAll('.key-active-white, .key-active-black').forEach(el => el.classList.remove('key-active-white', 'key-active-black'));
     }
 
@@ -351,49 +325,64 @@
             }
 
             const ch = Math.max(0, Math.min(15, targetCh));
-            let msg = [];
 
             if (ev.name === 'Note on' || ev.name === 'Note off') {
                 const isOff = ev.name === 'Note off' || ev.velocity === 0;
                 const d1 = sanitize(ev.noteNumber), d2 = sanitize((ev.velocity || 0) * parseFloat(volumeSlider.value));
+
+                if (!activeTracks[trk]) activeTracks[trk] = new Set();
+
                 if (!isOff && d2 > 0) {
                     if (noteReferenceCount[ch][d1] === 0) selectedOutput.send([0x90 + ch, d1, d2]);
                     noteReferenceCount[ch][d1]++;
                     activeNotes[d1] = { velocity: d2, tracks: (activeNotes[d1]?.tracks || new Set()).add(trk) };
+                    activeTracks[trk].add(d1);
                     if (keyElements[d1]) keyElements[d1].classList.add(keyCache[d1].isBlack ? 'key-active-black' : 'key-active-white');
                 } else {
                     if (noteReferenceCount[ch][d1] > 0) noteReferenceCount[ch][d1]--;
                     if (noteReferenceCount[ch][d1] === 0) selectedOutput.send([0x80 + ch, d1, 0]);
+                    activeTracks[trk].delete(d1);
                     if (activeNotes[d1]) { activeNotes[d1].tracks.delete(trk); if (!activeNotes[d1].tracks.size) { delete activeNotes[d1]; if (keyElements[d1]) keyElements[d1].classList.remove('key-active-white', 'key-active-black'); } }
                 }
+
+                const row = trackRows[trk];
+                if (row) {
+                    const notes = activeTracks[trk];
+                    if (notes && notes.size > 0) {
+                        const lastNote = Array.from(notes).pop();
+                        const hue = (lastNote % 12) * 30;
+                        row.style.borderColor = `hsl(${hue}, 80%, 55%)`;
+                        row.style.backgroundColor = `hsla(${hue}, 80%, 40%, 0.3)`;
+                    } else {
+                        row.style.borderColor = 'transparent';
+                        row.style.backgroundColor = '';
+                    }
+                }
+
             } else if (ev.name === 'Controller Change') {
                 const val = sanitize(ev.value);
                 if (channelCCState[ch].cc[ev.number] !== val) {
                     channelCCState[ch].cc[ev.number] = val;
                     selectedOutput.send([0xB0 + ch, sanitize(ev.number), val]);
+                    logCC(trk, ch, `CC ${ev.number}`, val);
                 }
             } else if (ev.name === 'Pitch Bend') {
                 if (channelCCState[ch].bend !== ev.value) {
                     channelCCState[ch].bend = ev.value;
                     selectedOutput.send([0xE0 + ch, ev.value & 0x7F, (ev.value >> 7) & 0x7F]);
+                    logCC(trk, ch, `Bend`, ev.value);
                 }
             } else if (ev.name === 'Program Change') {
                 selectedOutput.send([0xC0 + ch, sanitize(ev.value)]);
+                logCC(trk, ch, `Program`, ev.value);
             }
         } catch (e) { displayWarning(`MIDI Trace Error: ${e.message}`); }
     });
 
-    midiPlayer.on('start', () => playBtn.textContent = "Pause");
-    midiPlayer.on('pause', () => playBtn.textContent = "Play");
-    midiPlayer.on('stop', () => playBtn.textContent = "Play");
-    midiPlayer.on('end', () => { playBtn.textContent = "Play"; stopAllNotes(); });
-
-    progressContainer.addEventListener('click', (e) => {
-        if (!midiPlayer || !tempoMap.length) return;
-        const ratio = (e.clientX - progressContainer.getBoundingClientRect().left) / progressContainer.offsetWidth;
-        stopAllNotes();
-        midiPlayer.skipToTick(getTickFromSeconds(ratio * totalSongSeconds));
-    });
+    midiPlayer.on('start', () => { playBtn.textContent = "Pause"; statusText.textContent = "Playing..."; });
+    midiPlayer.on('pause', () => { playBtn.textContent = "Play"; statusText.textContent = "Paused."; });
+    midiPlayer.on('stop', () => { playBtn.textContent = "Play"; statusText.textContent = "Stopped."; });
+    midiPlayer.on('end', () => { playBtn.textContent = "Play"; stopAllNotes(); statusText.textContent = "Finished."; completionPercentage.textContent = "100%"; });
 
     for(let i = 1; i <= 16; i++) {
         const opt = document.createElement('option');
@@ -407,7 +396,11 @@
         const reader = new FileReader();
         reader.onload = evt => {
             midiPlayer.loadArrayBuffer(evt.target.result);
-            buildTempoMap();
+
+            // Cache total ticks once for percentage calculations
+            fileTotalTicks = midiPlayer.getTotalTicks() || 0;
+            displayWarning(`Loaded MIDI: ${fileTotalTicks} total ticks.`);
+
             currentTrackRouting = {}; trackRows = {}; trackRoutingList.innerHTML = '';
             midiPlayer.events.forEach((events, idx) => {
                 const trackNum = idx + 1;
@@ -422,7 +415,6 @@
                     }
                     if (ev.name === 'Controller Change') ccs++;
                 });
-
                 if (firstCh === -1 && !notes && !ccs) return;
 
                 let saved = {}; try { saved = JSON.parse(localStorage.getItem(`midi_routing_${file.name}`)) || {}; } catch(e){}
@@ -430,14 +422,14 @@
                 currentTrackRouting[trackNum] = val;
 
                 const row = document.createElement('div');
-                row.className = 'flex items-center justify-between bg-gray-800 p-1 rounded border border-transparent h-[48px] overflow-hidden';
+                row.className = 'flex items-center justify-between bg-gray-800 p-1 rounded border border-transparent h-[48px] overflow-hidden transition-all duration-75';
                 row.innerHTML = `<div class="flex flex-col overflow-hidden mr-1 flex-1 leading-[1.1]"><span class="text-[9px] font-semibold text-gray-200 truncate" title="${name || `Track ${trackNum}`}">${name || `Track ${trackNum}`}</span>${inst ? `<span class="text-[8px] text-blue-300/80 truncate italic">${inst}</span>` : ''}<span class="text-[7px] text-gray-500 uppercase">Ch ${firstCh} • ${notes} notes</span><span class="text-[7px] text-gray-400 mt-0.5">Range: ${getNoteName(minN)}-${getNoteName(maxN)}</span></div><select class="bg-gray-900 border border-gray-600 rounded py-0 px-0.5 text-[9px] text-white w-[52px] h-[18px] focus:outline-none"><option value="master">Master</option><option value="original">Orig</option>${Array.from({length:16}, (_,i)=>`<option value="${i+1}">Ch ${i+1}</option>`).join('')}<option value="mute">Mute</option></select>`;
                 const sel = row.querySelector('select'); sel.value = val;
                 sel.addEventListener('change', ev => { currentTrackRouting[trackNum] = ev.target.value; stopAllNotes(); localStorage.setItem(`midi_routing_${file.name}`, JSON.stringify(currentTrackRouting)); });
                 trackRows[trackNum] = row; trackRoutingList.appendChild(row);
             });
-            updateTrackGridLayout();
-            playBtn.disabled = stopBtn.disabled = guessMappingBtn.disabled = false;
+            updateTrackGridLayout(); playBtn.disabled = stopBtn.disabled = guessMappingBtn.disabled = false;
+            completionPercentage.textContent = "0%";
         };
         reader.readAsArrayBuffer(file);
     });
@@ -463,23 +455,14 @@
     });
 
     playBtn.addEventListener('click', async () => {
-        if (!selectedOutput) {
-            displayWarning("ERROR: No output device selected. Please select one in Step 1.");
-            return;
-        }
+        if (!selectedOutput) { displayWarning("ERROR: No output device selected."); return; }
         if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') await audioContext.resume();
         midiPlayer.isPlaying() ? midiPlayer.pause() : midiPlayer.play();
     });
 
-    stopBtn.addEventListener('click', () => { midiPlayer.stop(); stopAllNotes(); });
-    panicBtn.addEventListener('click', () => {
-        isPanicking = true;
-        if (midiPlayer) midiPlayer.stop();
-        stopAllNotes();
-        displayWarning("🚨 PANIC: Hardware Reset & MIDI STOP sent to all channels.");
-        setTimeout(()=>isPanicking=false, 1000);
-    });
+    stopBtn.addEventListener('click', () => { midiPlayer.stop(); stopAllNotes(); completionPercentage.textContent = "0%"; });
+    panicBtn.addEventListener('click', () => { isPanicking = true; if (midiPlayer) midiPlayer.stop(); stopAllNotes(); displayWarning("🚨 Panic reset sent."); setTimeout(()=>isPanicking=false, 1000); });
 
     window.addEventListener('blur', () => { if (midiPlayer?.isPlaying()) { midiPlayer.pause(); stopAllNotes(); autoPaused = true; } });
     window.addEventListener('focus', async () => { if (autoPaused) { autoPaused = false; if (audioContext?.state === 'suspended') await audioContext.resume(); midiPlayer.play(); } });
