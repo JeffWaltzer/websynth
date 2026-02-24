@@ -3,257 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Tools</title>
-    <link rel="icon"
-          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
+    <title>Audio-Reactive Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Base styles */
         body {
-            margin: 0;
-            padding-top: 80px;
-            background: #0a0a0a;
-            font-family: 'Courier New', Courier, monospace;
-            color: #ccc;
+            font-family: 'Inter', sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 2rem;
         }
-
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        p {
+            text-align: center;
+            color: #888;
+            margin-bottom: 2rem;
+        }
+        .panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+        /* Card styles */
+        .card {
+            background: rgba(30, 30, 30, 0.8);
+            border-radius: 10px;
+            padding: 1rem;
+            transition: transform 0.2s;
+            border: 1px solid #333;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.2);
+        }
+        .card h2 {
+            color: #00ffff;
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .card p {
+            color: #aaa;
+            font-size: 0.9rem;
+            text-align: left;
+            margin-bottom: 1rem;
+        }
+        /* Toolbar styles */
         .toolbar {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            background: rgba(10, 0, 0, 0.9);
-            padding: 10px;
+            background: #333;
+            padding: 2px;
             box-sizing: border-box;
             text-align: center;
             z-index: 1000;
-            border-bottom: 2px solid #ff0000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 2px;
         }
-
         .toolbar button {
-            background: transparent;
-            color: #ff0000;
-            border: 1px solid #ff0000;
-            border-radius: 4px;
-            padding: 5px 15px;
+            background: #555;
+            color: white;
+            border: 1px solid #888;
+            border-radius: 3px;
+            padding: 1px 4px;
+            margin: 1px;
             cursor: pointer;
             font-size: 12px;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
+            min-width: 70px;
+            flex: 0 1 auto;
         }
-
-        .toolbar button .icon {
-            font-size: 24px;
-            margin-bottom: 2px;
+        .toolbar button:hover {
+            background: #666;
         }
-
-        .toolbar button:hover:not(:disabled) {
-            background: #ff0000;
-            color: #fff;
-            box-shadow: 0 0 10px #ff0000;
-        }
-
         .toolbar button:disabled {
-            color: #555;
-            border-color: #555;
+            background: #777;
+            color: #ccc;
             cursor: default;
         }
-
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 40px;
-            text-align: center;
-            background: rgba(10, 0, 0, 0.9);
-            border: 2px solid #ff0000;
-            box-shadow: 0 0 30px #ff0000, inset 0 0 20px #003300;
-            border-radius: 8px;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin: 0 0 10px 0;
-            color: #fff;
-            text-shadow: 3px 3px 0px #880000, -2px -2px 0px #004400;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            font-family: 'Georgia', serif;
-        }
-
-        p {
-            color: #00ff00;
-            margin-bottom: 40px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px #00ff00;
-        }
-
-        .panel {
-            margin-bottom: 35px;
-            padding: 25px;
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            background: rgba(0, 50, 0, 0.1);
-            border-radius: 6px;
-        }
-
-        .panel h2 {
-            color: #fff;
-            text-shadow: 2px 2px 0px #880000;
-            margin: -25px -25px 20px -25px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.2);
-            border-bottom: 1px solid rgba(255, 0, 0, 0.3);
-            font-size: 1.2rem;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-        }
-
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .grid-button {
-            background: transparent;
-            color: #fff;
-            border: 1px solid #ff0000;
-            border-radius: 4px;
-            padding: 12px 10px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-            transition: all 0.2s;
-            text-align: center;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .grid-button:hover {
-            background: #ff0000;
-            color: #fff;
-            box-shadow: 0 0 15px #ff0000;
-            transform: translateY(-2px);
-        }
     </style>
+<style>
+/* Icon colors */
+.icon-purple { color: #8b5cf6; }
+.icon-blue { color: #3b82f6; }
+.icon-green { color: #10b981; }
+.icon-yellow { color: #f59e0b; }
+.icon-red { color: #ef4444; }
+.icon-pink { color: #ec4899; }
+.icon-cyan { color: #06b6d4; }
+.icon-orange { color: #f97316; }
+
+/* Icon hover effects */
+.hover-glow:hover i {
+    filter: drop-shadow(0 0 3px currentColor);
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+}
+</style>
 </head>
 <body>
+    <!-- Toolbar -->
     <div class="toolbar">
-        <button onclick="window.location.href='index.html'"><span class="icon">🏠</span> Home</button>
-        <button onclick="window.location.href='AudioCritic.html'"><span class="icon">🎯</span> Critic</button>
-        <button onclick="window.location.href='berlin.html'"><span class="icon">🎵</span> Berlin</button>
-        <button onclick="window.location.href='Centipoids.html'"><span class="icon">🐛</span> Centipoids</button>
-        <button onclick="window.location.href='chords.html'"><span class="icon">🎹</span> Chords</button>
-        <button onclick="window.location.href='delay.html'"><span class="icon">📊</span> Delay</button>
-        <button onclick="window.location.href='karplus.html'"><span class="icon">🌊</span> Karplus</button>
-        <button onclick="window.location.href='polychain.html'"><span class="icon">🔄</span> Polychain</button>
-        <button onclick="window.location.href='rhythm.html'"><span class="icon">🥁</span> Rhythm</button>
-        <button onclick="window.location.href='Shepard chord.html'"><span class="icon">🌀</span> Shepard</button>
+        <button onclick="window.location.href='index.html'"><i class="fas fa-home"></i> Home</button>
+        <button onclick="window.location.href='Art Spirographia.html'"><i class="fas fa-draw-polygon"></i> Art</button>
+        <button onclick="window.location.href='AudioCritic.html'"><i class="fas fa-robot"></i> AI Critic</button>
+        <button onclick="window.location.href='berlin.html'"><i class="fas fa-drum-steelpan"></i> Berlin</button>
+        <button onclick="window.location.href='Centipoids.html'"><i class="fas fa-gamepad"></i> Centipoids</button>
+        <button onclick="window.location.href='chords.html'"><i class="fas fa-guitar"></i> Chords</button>
+        <button onclick="window.location.href='CosmicDrift.html'"><i class="fas fa-galaxy"></i> Cosmic</button>
+        <button onclick="window.location.href='DarkHolidays.html'"><i class="fas fa-tree"></i> Holidays</button>
+        <button onclick="window.location.href='delay.html'"><i class="fas fa-clock"></i> Delay</button>
+        <button onclick="window.location.href='karplus.html'"><i class="fas fa-wave-square"></i> Karplus</button>
+        <button onclick="window.location.href='LollipopLand.html'"><i class="fas fa-candy-cane"></i> Lollipop</button>
+        <button onclick="window.location.href='MandelPlanet.html'"><i class="fas fa-atom"></i> Mandel</button>
+        <button onclick="window.location.href='OceanTravels.html'"><i class="fas fa-water"></i> Ocean</button>
+        <button onclick="window.location.href='Phrenophobia.html'"><i class="fas fa-biohazard"></i> Phreno</button>
+        <button onclick="window.location.href='play_midi.html'"><i class="fas fa-play"></i> MIDI</button>
+        <button onclick="window.location.href='polychain.html'"><i class="fas fa-link"></i> Chain</button>
+        <button onclick="window.location.href='rhythm.html'"><i class="fas fa-drum"></i> Rhythm</button>
+        <button onclick="window.location.href='Shepard chord.html'"><i class="fas fa-music"></i> Shepard</button>
+        <button onclick="window.location.href='SpaceTravel.html'"><i class="fas fa-rocket"></i> Space</button>
+        <button onclick="window.location.href='SpectralSquadron.html'"><i class="fas fa-fighter-jet"></i> Squadron</button>
+        <button onclick="window.location.href='Spirals.html'"><i class="fas fa-circle-notch"></i> Spirals</button>
+        <button onclick="window.location.href='starfield.html'"><i class="fas fa-stars"></i> Stars</button>
+        <button onclick="window.location.href='Steampunk Defense.html'"><i class="fas fa-cog"></i> Defense</button>
     </div>
 
     <div class="container">
         <h1>Audio-Reactive Suite</h1>
-        <p>Select a Tool or Experience</p>
-
+        <p>A collection of audio-reactive visualizations and tools</p>
+        
         <div class="panel">
-            <h2>Audio Tools</h2>
-            <div class="button-grid">
-                <button class="grid-button" onclick="window.location.href='AudioCritic.html'">
-                    <span style="font-size: 24px;">🎯</span> Audio Critic
-                </button>
-                <button class="grid-button" onclick="window.location.href='berlin.html'">
-                    <span style="font-size: 24px;">🎵</span> Berlin
-                </button>
-                <button class="grid-button" onclick="window.location.href='chords.html'">
-                    <span style="font-size: 24px;">🎹</span> Chords
-                </button>
-                <button class="grid-button" onclick="window.location.href='delay.html'">
-                    <span style="font-size: 24px;">📊</span> Delay
-                </button>
-                <button class="grid-button" onclick="window.location.href='karplus.html'">
-                    <span style="font-size: 24px;">🌊</span> Karplus
-                </button>
-                <button class="grid-button" onclick="window.location.href='polychain.html'">
-                    <span style="font-size: 24px;">🔄</span> Polychain
-                </button>
-                <button class="grid-button" onclick="window.location.href='rhythm.html'">
-                    <span style="font-size: 24px;">🥁</span> Rhythm
-                </button>
-                <button class="grid-button" onclick="window.location.href='Shepard chord.html'">
-                    <span style="font-size: 24px;">🌀</span> Shepard Chord
-                </button>
-            </div>
-        </div>
+            <!-- Audio Visualizers -->
+<div class="card">
+    <h2><i class="fas fa-wave-square icon-cyan"></i> Audio Visualizers</h2>
+    <p>Immersive audio-reactive experiences:</p>
+    <ul class="list-disc pl-5 text-gray-300">
+        <li><a href="Art Spirographia.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-draw-polygon icon-purple"></i> Art Spirographia</a></li>
+        <li><a href="CosmicDrift.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-galaxy icon-blue"></i> Cosmic Drift</a></li>
+        <li><a href="DarkHolidays.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-tree icon-green"></i> Dark Holidays</a></li>
+        <li><a href="LollipopLand.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-candy-cane icon-red"></i> Lollipop Land</a></li>
+        <li><a href="MandelPlanet.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-atom icon-cyan"></i> Mandel Planet</a></li>
+        <li><a href="OceanTravels.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-water icon-blue"></i> Ocean Travels</a></li>
+        <li><a href="Phrenophobia.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-biohazard icon-yellow"></i> Phrenophobia</a></li>
+        <li><a href="SpaceTravel.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-rocket icon-orange"></i> Space Travel</a></li>
+        <li><a href="SpectralSquadron.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-fighter-jet icon-pink"></i> Spectral Squadron</a></li>
+        <li><a href="Spirals.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-circle-notch icon-purple"></i> Spirals</a></li>
+        <li><a href="starfield.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-stars icon-yellow"></i> Starfield</a></li>
+    </ul>
+</div>
 
-        <div class="panel">
-            <h2>Audio-Reactive Games</h2>
-            <div class="button-grid">
-                <button class="grid-button" onclick="window.location.href='Centipoids.html'">
-                    <span style="font-size: 24px;">🐛</span> Centipoids
-                </button>
-                <button class="grid-button" onclick="window.location.href='Steampunk Defense.html'">
-                    <span style="font-size: 24px;">⚙️</span> Steampunk Defense
-                </button>
-            </div>
-        </div>
+<!-- MIDI Tools -->
+<div class="card">
+    <h2><i class="fas fa-sliders icon-green"></i> MIDI Tools</h2>
+    <p>Tools for MIDI processing and analysis:</p>
+    <ul class="list-disc pl-5 text-gray-300">
+        <li><a href="berlin.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-drum-steelpan icon-blue"></i> Berlin Sequencer</a></li>
+        <li><a href="chords.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-guitar icon-orange"></i> Chord Monitor</a></li>
+        <li><a href="delay.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-clock icon-cyan"></i> MIDI Delay</a></li>
+        <li><a href="karplus.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-wave-square icon-purple"></i> Karplus Synth</a></li>
+        <li><a href="play_midi.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-play icon-green"></i> MIDI Player</a></li>
+        <li><a href="polychain.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-link icon-yellow"></i> Polychain</a></li>
+        <li><a href="rhythm.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-drum icon-red"></i> Rhythm King</a></li>
+        <li><a href="Shepard chord.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-music icon-pink"></i> Shepard Chord</a></li>
+    </ul>
+</div>
 
-        <div class="panel">
-            <h2>Audio Visualizers</h2>
-            <div class="button-grid">
-                <button class="grid-button" onclick="window.location.href='Art Spirographia.html'">
-                    <span style="font-size: 24px;">🎨</span> Spirographia
-                </button>
-                <button class="grid-button" onclick="window.location.href='CosmicDrift.html'">
-                    <span style="font-size: 24px;">🌌</span> Cosmic Drift
-                </button>
-                <button class="grid-button" onclick="window.location.href='DarkHolidays.html'">
-                    <span style="font-size: 24px;">🌙</span> Dark Holiday
-                </button>
-                <button class="grid-button" onclick="window.location.href='LollipopLand.html'">
-                    <span style="font-size: 24px;">🍭</span> Lollipop Land
-                </button>
-                <button class="grid-button" onclick="window.location.href='MandelPlanet.html'">
-                    <span style="font-size: 24px;">🌍</span> Mandel Planet
-                </button>
-                <button class="grid-button" onclick="window.location.href='OceanTravels.html'">
-                    <span style="font-size: 24px;">🌊</span> Ocean Travels
-                </button>
-                <button class="grid-button" onclick="window.location.href='Phrenophobia.html'">
-                    <span style="font-size: 24px;">😱</span> Phrenophobia
-                </button>
-                <button class="grid-button" onclick="window.location.href='pondviz.html'">
-                    <span style="font-size: 24px;">💧</span> Pond
-                </button>
-                <button class="grid-button" onclick="window.location.href='Psychedelia.html'">
-                    <span style="font-size: 24px;">🌈</span> Psychedelia
-                </button>
-                <button class="grid-button" onclick="window.location.href='SpaceTravel.html'">
-                    <span style="font-size: 24px;">🚀</span> Space Travel
-                </button>
-                <button class="grid-button" onclick="window.location.href='SpectralSquadron.html'">
-                    <span style="font-size: 24px;">📡</span> Spectral Squadron
-                </button>
-                <button class="grid-button" onclick="window.location.href='Spirals.html'">
-                    <span style="font-size: 24px;">💫</span> Spirals
-                </button>
-                <button class="grid-button" onclick="window.location.href='starfield.html'">
-                    <span style="font-size: 24px;">⭐</span> Starfield
-                </button>
-                <button class="grid-button" onclick="window.location.href='visualizer2.html'">
-                    <span style="font-size: 24px;">🎵</span> Visualizer 2
-                </button>
-            </div>
+<!-- Games -->
+<div class="card">
+    <h2><i class="fas fa-gamepad icon-orange"></i> Interactive Games</h2>
+    <p>Audio-reactive games and experiences:</p>
+    <ul class="list-disc pl-5 text-gray-300">
+        <li><a href="Centipoids.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-bug icon-green"></i> Centipoids</a></li>
+        <li><a href="Steampunk Defense.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-cog icon-yellow"></i> Steampunk Defense</a></li>
+    </ul>
+</div>
+
+<!-- Tools -->
+<div class="card">
+    <h2><i class="fas fa-toolbox icon-blue"></i> Analysis Tools</h2>
+    <p>Audio analysis and utilities:</p>
+    <ul class="list-disc pl-5 text-gray-300">
+        <li><a href="AudioCritic.html" class="text-cyan-400 hover:text-cyan-300 hover-glow"><i class="fas fa-robot icon-cyan"></i> AudioCritic.ai</a></li>
+    </ul>
+</div>
         </div>
     </div>
 </body>
