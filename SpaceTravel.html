@@ -3,1063 +3,827 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xenon - Vector Command</title>
+    <title>Hypnotic Spirals // Audio Reactive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* Psychedelic Base */
         body {
-            margin: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            background: radial-gradient(circle, #1a0033 0%, #000000 100%);
             overflow: hidden;
-            background: #000;
-            font-family: 'Courier New', Courier, monospace;
-            color: #00f3ff;
-        }
-
-        #canvas-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-
-        /* UI OVERLAY */
-        #overlay {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 100;
-            padding: 40px;
-            text-align: center;
-            background: rgba(0, 10, 20, 0.95);
-            border: 1px solid #00f3ff;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2), inset 0 0 50px rgba(0, 0, 0, 0.9);
-            clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
-            backdrop-filter: blur(8px);
-            max-width: 500px;
-            width: 90%;
-            transition: opacity 0.5s ease;
-        }
-
-        h1 {
-            font-size: 1.8rem;
-            margin: 0 0 10px 0;
-            color: #fff;
-            text-shadow: 0 0 10px #00f3ff;
-            text-transform: uppercase;
-            letter-spacing: 6px;
-        }
-
-        h2 {
-            font-size: 0.8rem;
-            color: #00f3ff;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            margin-bottom: 30px;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.3);
-            display: inline-block;
-            padding-bottom: 5px;
-        }
-
-        .control-group {
-            margin-bottom: 25px;
-            padding: 20px;
-            border: 1px solid rgba(0, 243, 255, 0.2);
-            background: rgba(0, 20, 40, 0.5);
-        }
-
-        .btn {
-            background: rgba(0, 243, 255, 0.1);
-            color: #00f3ff;
-            font-family: inherit;
-            font-size: 1.0rem;
-            font-weight: 700;
-            padding: 15px 30px;
-            border: 1px solid #00f3ff;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.2s ease;
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
-            width: 100%;
-            margin-top: 10px;
-            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-        }
-
-        .btn:hover { background: #00f3ff; color: #000; box-shadow: 0 0 25px rgba(0, 243, 255, 0.6); }
-
-        #fileInput { display: none; }
-
-        /* Recording UI */
-        #recordContainer {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 150;
-            display: none;
-            flex-direction: row;
-            gap: 15px;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-
-        .rec-btn {
-            padding: 10px 20px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Courier New', monospace;
-            text-transform: uppercase;
-            font-size: 0.7rem;
-            letter-spacing: 1px;
-            transition: all 0.2s;
-            clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
-        }
-
-        #recordButton { background: #ff0055; color: white; min-width: 150px; }
-        #recordButton:hover { background: #ff3377; }
-        #recordButton.recording { animation: pulseAlert 1s infinite; }
-        #leaveButton { background: rgba(0, 243, 255, 0.2); color: #00f3ff; border: 1px solid #00f3ff; }
-        #leaveButton:hover { background: #00f3ff; color: #000; }
-
-        @keyframes pulseAlert {
-            0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.7); }
-            50% { box-shadow: 0 0 0 10px rgba(255, 0, 85, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
-        }
-
-        #fullscreenBtn {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            width: 35px;
-            height: 35px;
-            background: rgba(0, 20, 40, 0.8);
-            border: 1px solid #00f3ff;
-            color: #00f3ff;
-            font-size: 18px;
-            cursor: pointer;
-            z-index: 150;
+            margin: 0;
+            padding: 0;
+            color: #00ffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
+            height: 100vh;
         }
 
-        #fullscreenBtn:hover { background: #00f3ff; color: #000; }
-        #message { margin-top: 15px; color: #00f3ff; font-size: 0.8rem; min-height: 1.2em; }
-        .checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; color: #81d4fa; margin-top: 15px; font-size: 0.8rem;}
-        input[type="checkbox"] { accent-color: #00f3ff; cursor: pointer; }
+        /* Neon Utilities */
+        .neon-box {
+            background: rgba(10, 0, 20, 0.85);
+            border-radius: 25px;
+            border: 2px solid #ff00ff;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
 
-        .vignette {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+        .neon-btn {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            border-radius: 50px;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            text-shadow: 0 0 5px #00ffff;
+        }
+        .neon-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px #00ffff, inset 0 0 10px #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            color: #fff;
+        }
+        .neon-btn:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 0 5px #00ffff;
+        }
+        .neon-btn:disabled {
+            border-color: #555;
+            color: #555;
+            box-shadow: none;
+            text-shadow: none;
+            cursor: default;
+        }
+
+        /* Psychedelic Title Effect */
+        .psycho-title {
+            font-size: 2.5rem;
+            letter-spacing: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #00ff00, #ffff00, #ff00ff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite, pulse-scale 2s infinite ease-in-out;
+            display: inline-block;
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        @keyframes pulse-scale {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .hidden-visually {
+            opacity: 0;
             pointer-events: none;
-            background: radial-gradient(circle, transparent 40%, #000 100%);
-            z-index: 5;
+        }
+
+        /* Canvas Positioning */
+        #visualizerCanvas {
+            box-shadow: 0 0 60px rgba(255, 0, 255, 0.2);
+            background: transparent;
+        }
+
+        /* Custom scrollbar for file info */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #ff00ff; border-radius: 3px; }
+    </style>
+    <style>
+        .toolbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 0, 20, 0.9);
+            padding: 8px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 1000;
+            border-bottom: 1px solid #ff00ff;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+        }
+        .toolbar button {
+            background: transparent;
+            color: #00ffff;
+            border: 1px solid #00ffff;
+            border-radius: 15px;
+            padding: 4px 12px;
+            margin: 2px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: all 0.2s;
+        }
+        .toolbar button:hover {
+            background: rgba(0, 255, 255, 0.2);
+            color: white;
+            box-shadow: 0 0 10px #00ffff;
+        }
+        .toolbar button:disabled {
+            background: #222;
+            color: #666;
+            border-color: #444;
+            cursor: default;
+            box-shadow: none;
         }
     </style>
 </head>
 <body>
 
-<div id="canvas-container"></div>
-
-<button id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
-
-<div id="recordContainer">
-    <button id="recordButton" class="rec-btn">Init Record</button>
-    <button id="leaveButton" class="rec-btn">Abort</button>
+<div class="toolbar">
+    <button onclick="window.location.href='index.html'">Home</button>
+    <button onclick="window.location.href='berlin.html'">Berlin</button>
+    <button onclick="window.location.href='chords.html'">Chords</button>
+    <button onclick="window.location.href='CosmicDrift.html'">Cosmic</button>
+    <button onclick="window.location.href='delay.html'">Delay</button>
+    <button onclick="window.location.href='karplus.html'">Karplus</button>
+    <button onclick="window.location.href='polychain.html'">Polychain</button>
+    <button onclick="window.location.href='pondviz.html'">Pond</button>
+    <button onclick="window.location.href='Psychedelia.html'">Psyche</button>
+    <button onclick="window.location.href='rhythm.html'">Rhythm</button>
+    <button disabled>Shepard</button>
+    <button onclick="window.location.href='starfield.html'">Starfield</button>
 </div>
 
-<div id="overlay">
-    <h1>Xenon Interface</h1>
-    <h2>Vector Command Module</h2>
-    <div class="control-group">
-        <p style="margin-top:0; color:#00f3ff; font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 15px;">INPUT NAVIGATION DATA</p>
-        <button id="selectFileBtn" class="btn">Load Audio File</button>
-        <input type="file" id="fileInput" accept="audio/*">
-    </div>
+<!-- Main Canvas Container -->
+<canvas id="visualizerCanvas" class="z-10"></canvas>
 
-    <div class="checkbox-wrapper">
-        <input type="checkbox" id="record4k">
-        <label for="record4k">Hi-Res Capture (4K)</label>
-    </div>
+<!-- Audio Element (Hidden) -->
+<audio id="audioElement"></audio>
+<input type="file" id="audioInput" accept="audio/*" class="hidden">
 
-    <div class="checkbox-wrapper">
-        <input type="checkbox" id="autoRecord">
-        <label for="autoRecord">Auto-Log Flight</label>
-    </div>
+<!-- UI Overlay: Start Modal -->
+<div id="startModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md transition-opacity duration-500">
+    <div class="relative w-[90%] max-w-[500px] p-8 neon-box text-center">
+        <h1 class="psycho-title mb-6">Hypnotic Spirals</h1>
 
-    <div id="message"></div>
+        <div class="space-y-4 text-sm mb-8 text-[#00ffff] font-bold">
+            <p class="text-[#ff00ff] tracking-widest border-b border-[#ff00ff]/30 pb-2">PSYCHEDELIC ENGINE INIT</p>
+            <div class="flex justify-between pb-1 text-gray-400">
+                <span>MODULE</span><span>STATUS</span>
+            </div>
+            <div class="flex justify-between text-xs">
+                <span>AUDIO SOURCE</span><span id="sourceStatus" class="text-yellow-400">AWAITING INPUT</span>
+            </div>
+            <div class="flex justify-between text-xs">
+                <span>OUTPUT RES</span><span class="text-green-400">1920x1080 (HD)</span>
+            </div>
+            <!-- Auto Record Toggle -->
+            <div class="flex justify-between text-xs items-center">
+                <span>AUTO-RECORD</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="autoRecToggle" class="sr-only peer" checked>
+                    <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#00ffff]"></div>
+                    <span class="ml-2 font-bold text-[#00ffff]" id="autoRecLabel">ON</span>
+                </label>
+            </div>
+
+            <div id="fileInfo" class="text-xs text-[#ff00ff] mt-2 hidden text-left truncate border border-[#ff00ff] bg-black/50 rounded-lg p-2">
+                <!-- File name goes here -->
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-4">
+            <button id="selectFileBtn" class="w-full py-3 text-lg font-bold uppercase tracking-widest neon-btn">
+                <i class="fas fa-folder-open mr-2"></i> Select Track
+            </button>
+
+            <button id="startButton" class="w-full py-4 text-xl font-bold uppercase tracking-widest neon-btn opacity-50" disabled>
+                <i class="fas fa-play mr-2"></i> Hypnotize Me
+            </button>
+        </div>
+
+        <p class="mt-6 text-xs text-[#ff00ff] font-bold uppercase tracking-widest animate-pulse">Caution: Intense Visuals / Hypnotic Patterns</p>
+    </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Recording Interface -->
+<div id="controlsUI" class="fixed bottom-8 left-0 w-full z-40 flex justify-center items-center gap-4 hidden-visually transition-opacity duration-500">
+    <div class="bg-black/80 backdrop-blur border border-[#ff00ff] p-3 rounded-full flex gap-4 items-center shadow-[0_0_15px_rgba(255,0,255,0.5)]">
 
-<!-- FRAGMENT SHADER: HYPERSPACE BG -->
-<script type="x-shader/x-fragment" id="fragShader">
-    uniform float uTime;
-    uniform vec2 uResolution;
-    uniform float uBass;
-    uniform float uMid;
-    uniform float uHigh;
-    uniform float uFade;
+        <!-- Play/Pause Control -->
+        <button id="playPauseBtn" class="w-12 h-12 rounded-full bg-transparent border-2 border-[#00ffff] text-[#00ffff] hover:bg-[#00ffff]/20 hover:shadow-[0_0_15px_#00ffff] flex items-center justify-center transition-all transform hover:scale-110">
+            <i class="fas fa-pause"></i>
+        </button>
 
-    #define PI 3.14159265359
+        <div class="h-8 w-px bg-[#ff00ff]/50 mx-2"></div>
 
-    // COOLER PALETTE (Cyan, Magenta, Blue - Reduced Yellow potential)
-    vec3 palette( in float t ) {
-        vec3 a = vec3(0.5, 0.5, 0.5);
-        vec3 b = vec3(0.5, 0.5, 0.5);
-        vec3 c = vec3(1.0, 1.0, 1.0);
-        vec3 d = vec3(0.263, 0.416, 0.557); // Cool Neon Palette
-        return a + b*cos( 6.28318*(c*t+d) );
-    }
+        <div id="recStatus" class="text-xs uppercase font-extrabold tracking-widest text-[#00ffff] w-24 text-center">STANDBY</div>
 
-    mat2 rot(float a) {
-        float s = sin(a);
-        float c = cos(a);
-        return mat2(c, -s, s, c);
-    }
+        <button id="recordBtn" class="w-12 h-12 rounded-full border-2 border-red-500 flex items-center justify-center text-red-500 hover:bg-red-500/20 hover:shadow-[0_0_15px_rgba(255,0,0,0.8)] transition-all transform hover:scale-110">
+            <div id="recIcon" class="w-4 h-4 bg-red-500 rounded-full shadow-[0_0_8px_red]"></div>
+        </button>
+    </div>
+</div>
 
-    void main() {
-        if (uFade >= 1.0) {
-            gl_FragColor = vec4(0.0, 0.05, 0.1, 1.0);
-            return;
-        }
-
-        vec2 uv = (gl_FragCoord.xy * 2.0 - uResolution.xy) / uResolution.y;
-
-        float r = length(uv);
-        float a = atan(uv.y, uv.x);
-        float z = 1.0 / (r + 0.01);
-        float speed = uTime * 4.0 + (uBass * 2.0);
-
-        vec3 finalColor = vec3(0.0);
-
-        for(float i = 0.0; i < 2.0; i++) {
-            vec2 p = vec2(z * 0.5 + speed * 0.2, a);
-            float cloud = sin(p.x * 5.0) * sin(p.y * 5.0 + i * 3.0);
-            cloud += sin(p.x * 10.0 + uTime) * 0.5;
-            float depth = 0.1 / abs(cloud + 0.1);
-            vec3 col = palette(z * 0.1 + i * 0.2 + uBass * 0.1);
-
-            // Rebalance channels to favor cool colors
-            col.r *= 0.8; // Reduce red slightly
-            col.b += uHigh * 0.5; // Boost blue
-
-            finalColor += col * depth * (r * r);
-        }
-
-        float streaks = sin(z * 20.0 + speed * 5.0) * sin(a * 10.0);
-        streaks = smoothstep(0.8, 1.0, streaks);
-        finalColor += vec3(0.8, 0.9, 1.0) * streaks * uHigh;
-
-        // --- EDGE COLOR CORRECTION ---
-        // Reduce Green and Red mixing at edges to kill Yellow
-        float edgeDeYellow = smoothstep(0.5, 1.5, r);
-        finalColor.g *= 1.0 - (edgeDeYellow * 0.8); // Kill Green at edges
-        finalColor.r *= 1.0 - (edgeDeYellow * 0.4); // Dampen Red
-        finalColor.b += edgeDeYellow * 0.2;         // Boost Blue
-
-        // Center darken (Minimal to show center)
-        finalColor *= smoothstep(0.0, 0.05, r);
-
-        // Edge Vignette
-        finalColor *= 1.0 - smoothstep(1.0, 2.2, r);
-
-        vec3 fadeColor = vec3(0.0, 0.02, 0.05);
-        finalColor = mix(finalColor, fadeColor, uFade);
-
-        gl_FragColor = vec4(finalColor, 1.0);
-    }
-</script>
+<!-- Error Toast -->
+<div id="errorToast" class="fixed top-4 right-4 z-50 bg-red-900 border-2 border-red-500 text-white px-6 py-4 rounded-xl shadow-[0_0_20px_red] hidden">
+    <h3 class="font-bold text-red-300">SYSTEM ERROR</h3>
+    <p id="errorMsg" class="text-sm">Something went out of phase.</p>
+</div>
 
 <script>
-    (function(){
-        // --- CONFIG & STATE ---
-        let audioContext, analyser, dataArray, sourceNode;
-        let renderer, sceneBG, cameraBG, materialBG, meshBG;
-        let scene3D, camera3D;
-        let sceneHUD, cameraHUD; // HUD Overlay Scene
-        let hudCanvas, hudCtx, hudTexture;
-        let isRunning = false;
-        let currentAudioFile = null;
+    // --- Configuration ---
+    const CONFIG = {
+        video: {
+            width: 1920,
+            height: 1080
+        }
+    };
 
-        // 3D HUD Objects
-        let shipWireframe, planetWireframe, tunnelRings = [];
-        let shipCoreMesh;
-        let centerSpinner;
-        let currentShapeIdx = 0;
+    // --- State Management ---
+    const state = {
+        isRecording: false,
+        isPlaying: false,
+        audioContext: null,
+        analyser: null,
+        dataArray: null,
+        sourceNode: null,
+        recordDest: null,
+        mediaRecorder: null,
+        recordedChunks: [],
+        animationId: null,
+        frameCount: 0,
+        currentFileName: null,
+        fadeOutStart: 0
+    };
 
-        // Morphing State
-        let morphState = {
-            active: false,
-            start: 0,
-            duration: 10.0,
-            oldMesh: null,
-            newMesh: null
-        };
+    // --- DOM Elements ---
+    const canvas = document.getElementById('visualizerCanvas');
+    const ctx = canvas.getContext('2d');
+    const startModal = document.getElementById('startModal');
+    const controlsUI = document.getElementById('controlsUI');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const audioInput = document.getElementById('audioInput');
+    const startBtn = document.getElementById('startButton');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const recStatus = document.getElementById('recStatus');
+    const recIcon = document.getElementById('recIcon');
+    const audioElement = document.getElementById('audioElement');
+    const sourceStatus = document.getElementById('sourceStatus');
+    const fileInfo = document.getElementById('fileInfo');
+    const errorToast = document.getElementById('errorToast');
+    const errorMsg = document.getElementById('errorMsg');
+    const autoRecToggle = document.getElementById('autoRecToggle');
+    const autoRecLabel = document.getElementById('autoRecLabel');
 
-        // Audio State
-        let smoothBass = 0, smoothMid = 0, smoothHigh = 0;
-        let lastVolume = 0;
+    // --- Visualizer Classes ---
 
-        // Fading State
-        let isFading = false;
-        let fadeStartTime = 0;
-        let fadeCompleteTime = 0;
-        const FADE_DURATION = 3.0;
-        const END_BUFFER = 1.0;
+    class DualSpirals {
+        constructor() {
+            this.rotation1 = 0;
+            this.rotation2 = 0;
+            this.rotation3 = 0;
+            this.rotation4 = 0;
+            this.pulse = 0;
+            this.hue = 0;
+            this.targetHue = 0; // Added for smooth color transitions
+            this.beatTimer = 0;
+            this.time = 0;
 
-        // Recording
-        let mediaRecorder;
-        let recordedChunks = [];
-        let isRecording = false;
-        let was4k = false;
-
-        const container = document.getElementById('canvas-container');
-        const overlay = document.getElementById('overlay');
-        const fileInput = document.getElementById('fileInput');
-        const selectFileBtn = document.getElementById('selectFileBtn');
-        const messageDiv = document.getElementById('message');
-        const recordBtn = document.getElementById('recordButton');
-        const leaveBtn = document.getElementById('leaveButton');
-        const recordContainer = document.getElementById('recordContainer');
-        const autoRecordCheck = document.getElementById('autoRecord');
-        const record4kCheck = document.getElementById('record4k');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-
-        // --- THREE.JS SETUP ---
-        function initThree() {
-            if (renderer) { container.innerHTML = ''; }
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.autoClear = false;
-            container.appendChild(renderer.domElement);
-
-            // 1. BG Scene (Hyperdrive)
-            sceneBG = new THREE.Scene();
-            cameraBG = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
-            const geometry = new THREE.PlaneGeometry(2, 2);
-            materialBG = new THREE.ShaderMaterial({
-                uniforms: {
-                    uTime: { value: 0 },
-                    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-                    uBass: { value: 0.0 },
-                    uMid: { value: 0.0 },
-                    uHigh: { value: 0.0 },
-                    uFade: { value: 0.0 }
-                },
-                fragmentShader: document.getElementById('fragShader').textContent,
-                depthWrite: false
-            });
-            meshBG = new THREE.Mesh(geometry, materialBG);
-            sceneBG.add(meshBG);
-
-            // 2. 3D Scene (Vector Graphics)
-            scene3D = new THREE.Scene();
-            camera3D = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera3D.position.z = 10;
-            create3DInterface();
-
-            // 3. HUD Scene (2D Overlay via Canvas)
-            hudCanvas = document.createElement('canvas');
-            hudCanvas.width = window.innerWidth;
-            hudCanvas.height = window.innerHeight;
-            hudCtx = hudCanvas.getContext('2d');
-            hudTexture = new THREE.CanvasTexture(hudCanvas);
-            hudTexture.minFilter = THREE.LinearFilter;
-
-            sceneHUD = new THREE.Scene();
-            cameraHUD = new THREE.OrthographicCamera(-window.innerWidth/2, window.innerWidth/2, window.innerHeight/2, -window.innerHeight/2, 0, 30);
-            const hudPlane = new THREE.Mesh(
-                new THREE.PlaneGeometry(window.innerWidth, window.innerHeight),
-                new THREE.MeshBasicMaterial({ map: hudTexture, transparent: true })
-            );
-            sceneHUD.add(hudPlane);
-
-            container.addEventListener("webglcontextlost", (event) => { event.preventDefault(); resetUI(); }, false);
-            container.addEventListener("webglcontextrestored", initThree, false);
-            window.addEventListener('resize', onResize);
-            onResize();
+            // Smoothing variables for fluid animations
+            this.sBass = 0;
+            this.sMids = 0;
+            this.sTreble = 0;
         }
 
-        function create3DInterface() {
-            const wireMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.6 });
-            const alertMat = new THREE.LineBasicMaterial({ color: 0xff0055, transparent: true, opacity: 0.8 });
+        update(audioData) {
+            // Audio frequency bands
+            const subBass = audioData.slice(0, 5).reduce((a, b) => a + b, 0) / 5 / 255;
+            const rawBass = audioData.slice(5, 15).reduce((a, b) => a + b, 0) / 10 / 255;
+            const rawMids = audioData.slice(20, 50).reduce((a, b) => a + b, 0) / 30 / 255;
+            const rawTreble = audioData.slice(100, 120).reduce((a, b) => a + b, 0) / 20 / 255;
 
-            // 1. MORPHING SHIP (Left)
-            const shipGroup = new THREE.Group();
+            // Apply easing (lerp) for buttery smooth transitions
+            this.sBass += (rawBass - this.sBass) * 0.1;
+            this.sMids += (rawMids - this.sMids) * 0.15;
+            this.sTreble += (rawTreble - this.sTreble) * 0.2;
 
-            const coreGeo = new THREE.IcosahedronGeometry(1, 0);
-            const coreMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.6 });
-            shipCoreMesh = new THREE.LineSegments(new THREE.WireframeGeometry(coreGeo), coreMat);
-            shipGroup.add(shipCoreMesh);
+            // Beat Detection
+            if (this.beatTimer > 0) this.beatTimer--;
 
-            const ringGeo = new THREE.TorusGeometry(1.6, 0.05, 4, 32);
-            const ring = new THREE.LineSegments(new THREE.WireframeGeometry(ringGeo), wireMat);
-            ring.rotation.x = Math.PI / 2;
-            shipGroup.add(ring);
-
-            shipGroup.position.set(-5, -3, 0);
-            shipGroup.rotation.y = 0.5;
-            scene3D.add(shipGroup);
-            shipWireframe = shipGroup;
-
-            // 2. TACTICAL PLANET (Right)
-            const planetGroup = new THREE.Group();
-            const planetGeo = new THREE.SphereGeometry(1.5, 16, 16);
-            const planet = new THREE.LineSegments(new THREE.WireframeGeometry(planetGeo), alertMat);
-            planetGroup.add(planet);
-            const orbitGeo = new THREE.TorusGeometry(2.2, 0.02, 4, 64);
-            const orbit = new THREE.Line(new THREE.WireframeGeometry(orbitGeo), wireMat);
-            orbit.rotation.x = Math.PI / 2.3;
-            planetGroup.add(orbit);
-
-            planetGroup.position.set(5, -3, 0);
-            scene3D.add(planetGroup);
-            planetWireframe = planetGroup;
-
-            // 3. TUNNEL
-            tunnelRings = [];
-            const baseTunnelGeo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(4.0, 4.0));
-
-            for(let i=0; i<40; i++) {
-                const frameMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.0 });
-                const frame1 = new THREE.LineSegments(baseTunnelGeo, frameMat);
-                const frame2 = new THREE.LineSegments(baseTunnelGeo, frameMat);
-                frame2.rotation.z = Math.PI / 4;
-
-                const tunnelGroup = new THREE.Group();
-                tunnelGroup.add(frame1);
-                tunnelGroup.add(frame2);
-
-                tunnelGroup.position.z = - (i * 3);
-                scene3D.add(tunnelGroup);
-                tunnelRings.push(tunnelGroup);
+            if (subBass > 0.85 && this.beatTimer === 0) {
+                this.pulse = 1.0;
+                this.beatTimer = 8;
+                this.targetHue += 60; // Jump the target hue, not actual hue
             }
 
-            // 4. CENTER SPINNER (NEW)
-            const spinnerGroup = new THREE.Group();
+            // Decay the pulse much slower for smoother zooming/ripples
+            this.pulse *= 0.94;
 
-            // Core Crystal
-            const spinGeo = new THREE.OctahedronGeometry(0.3, 0);
-            const spinMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.9 });
-            const spinMesh = new THREE.LineSegments(new THREE.WireframeGeometry(spinGeo), spinMat);
+            // Smoothly ease the current hue towards the target hue
+            this.hue += (this.targetHue - this.hue) * 0.1;
 
-            // Gyroscope Ring
-            const spinRingGeo = new THREE.TorusGeometry(0.5, 0.01, 2, 32); // Thin vector ring
-            const spinRingMesh = new THREE.LineSegments(new THREE.WireframeGeometry(spinRingGeo), wireMat);
-            spinRingMesh.rotation.x = Math.PI / 2;
+            // Smooth time progression, speeds up gracefully with smoothed energy
+            this.time += 0.02 + (this.sBass * 0.08);
 
-            spinnerGroup.add(spinMesh);
-            spinnerGroup.add(spinRingMesh);
+            // Dynamic Rotations - smoother pacing
+            this.rotation1 = this.time * 2.0 + (Math.sin(this.time * 1.5) * 0.5);
+            this.rotation2 = -this.time * 1.8 - (Math.cos(this.time * 1.0) * 0.5);
+            this.rotation3 = this.time * 3.0 + (this.pulse * 0.5);
+            this.rotation4 = -this.time * 3.5 - (this.pulse * 0.8);
 
-            spinnerGroup.position.z = 0; // Absolute center
-            scene3D.add(spinnerGroup);
-            centerSpinner = spinnerGroup;
+            // Cycle base hue smoothly, drifts with bass
+            const hueDrift = 1 + (this.sBass * 5);
+            this.hue += hueDrift;
+            this.targetHue += hueDrift; // Keep target moving to prevent stalling
         }
 
-        // --- CENTRALIZED LAYOUT UPDATE ---
-        function update3DLayout() {
-            if (!camera3D) return;
-            const vFOV = THREE.MathUtils.degToRad(camera3D.fov);
-            const distance = camera3D.position.z;
-            const heightAtZero = 2 * Math.tan(vFOV / 2) * distance;
-            const widthAtZero = heightAtZero * camera3D.aspect;
+        draw(ctx, w, h, audioData) {
+            const cx = w / 2;
+            const cy = h / 2;
 
-            if (shipWireframe) {
-                shipWireframe.position.x = (-widthAtZero / 2.5);
-                shipWireframe.position.y = -heightAtZero/4;
-            }
-            if (planetWireframe) {
-                planetWireframe.position.x = (widthAtZero / 2.5);
-                planetWireframe.position.y = -heightAtZero/4;
-            }
+            // 1. Subtle Plasma Background
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = `rgba(5, 0, 10, ${0.8 - (this.pulse * 0.2)})`;
+            ctx.fillRect(0, 0, w, h);
+
+            // Plasma blobs drifting based on time
+            const t = this.time * 0.5; // Slower background drifting
+            const b1x = cx + Math.sin(t * 0.7) * cx * 0.6;
+            const b1y = cy + Math.cos(t * 0.5) * cy * 0.6;
+            const b2x = cx + Math.cos(t * 0.4) * cx * 0.6;
+            const b2y = cy + Math.sin(t * 0.9) * cy * 0.6;
+
+            ctx.globalCompositeOperation = 'lighter';
+
+            // Purple blob
+            const grad1 = ctx.createRadialGradient(b1x, b1y, 0, b1x, b1y, cx * 1.5);
+            grad1.addColorStop(0, `rgba(60, 0, 80, 0.4)`);
+            grad1.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = grad1;
+            ctx.fillRect(0, 0, w, h);
+
+            // Blue blob
+            const grad2 = ctx.createRadialGradient(b2x, b2y, 0, b2x, b2y, cx * 1.5);
+            grad2.addColorStop(0, `rgba(0, 40, 100, 0.4)`);
+            grad2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = grad2;
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            // OPTICAL ILLUSION: The Breathing Zoom (Smoothed)
+            // Zoomed out even further (changed base scale from 0.45 to 0.25)
+            const zoomScale = 0.25 + Math.sin(this.time * 1.5) * 0.08 + (this.pulse * 0.15);
+            ctx.scale(zoomScale, zoomScale);
+
+            // 2. The Illusionary "Difference" Layers
+            ctx.globalCompositeOperation = 'difference';
+
+            // Calculate pulsating HSL colors
+            const l = 50 + (this.pulse * 20); // Less aggressive lightness spike
+            const color1 = `hsl(${this.hue % 360}, 100%, ${l}%)`;
+            const color2 = `hsl(${(this.hue + 120) % 360}, 100%, ${l}%)`;
+            const color3 = `hsl(${(this.hue + 240) % 360}, 100%, ${l}%)`;
+
+            // Core spiral flashes bright white/pastel on beat
+            const color4 = `hsl(${(this.hue + 60) % 360}, 100%, ${70 + this.pulse * 20}%)`;
+
+            // Make all lines significantly thinner!
+            // Layer 1: Forward Rotating Spirograph
+            this.drawSpiroSpiral(ctx, 0, 0, this.rotation1, 1, 8, 4, 16, 1.0, this.sMids, color1, 10 + this.pulse * 15);
+
+            // Layer 2: Backward Rotating Spirograph
+            this.drawSpiroSpiral(ctx, 0, 0, this.rotation2, -1, 8, 4, 16, 1.0, this.sMids, color2, 10 + this.pulse * 15);
+
+            // Layer 3: Forward Rotating Rapid Inner Spiro Loops
+            this.drawSpiroSpiral(ctx, 0, 0, this.rotation3, 1, 16, 2, 24, 0.5, this.sTreble, color3, 4 + this.pulse * 8);
+
+            // 3. Central Anchor Core (Source-Over)
+            ctx.globalCompositeOperation = 'source-over';
+
+            // Layer 4: Backward Rotating Ultra-Dense Center Coil
+            this.drawSpiroSpiral(ctx, 0, 0, this.rotation4, -1, 4, 10, 8, 0.2, this.sMids, color4, 2 + this.pulse * 5);
+
+            // Intricate Multi-Layered Geometric Mandala Anchor at the very center
+            this.drawSmoothRoseCore(ctx, 0, 0, this.sBass, this.sMids, this.sTreble);
+
+            ctx.restore();
         }
 
-        // --- CENTRALIZED RESIZING LOGIC ---
-        function resizeApp(w, h, updateStyle = true) {
-            if (!renderer) return;
+        drawSpiroSpiral(ctx, cx, cy, rotation, direction, arms, coilRotations, loops, loopScale, rippleMetric, color, lineWidth) {
+            // Very high resolution to ensure perfect curves
+            const pointsPerArm = 500;
+            const maxRadius = 6000;
 
-            renderer.setSize(w, h, updateStyle);
+            for (let a = 0; a < arms; a++) {
+                const armOffset = (Math.PI * 2 / arms) * a;
 
-            hudCanvas.width = w;
-            hudCanvas.height = h;
+                ctx.beginPath();
+                for (let i = 0; i < pointsPerArm; i++) {
+                    const progress = i / pointsPerArm;
 
-            if(sceneHUD && sceneHUD.children[0]) {
-                sceneHUD.children[0].geometry.dispose();
-                sceneHUD.children[0].geometry = new THREE.PlaneGeometry(w, h);
-            }
-            if(cameraHUD) {
-                cameraHUD.left = -w/2;
-                cameraHUD.right = w/2;
-                cameraHUD.top = h/2;
-                cameraHUD.bottom = -h/2;
-                cameraHUD.updateProjectionMatrix();
-            }
+                    const baseRadius = Math.pow(progress, 1.3) * maxRadius;
 
-            if(materialBG) {
-                const drawingSize = new THREE.Vector2();
-                renderer.getDrawingBufferSize(drawingSize);
-                materialBG.uniforms.uResolution.value.x = drawingSize.x;
-                materialBG.uniforms.uResolution.value.y = drawingSize.y;
-            }
+                    const theta = progress * Math.PI * 2 * coilRotations * direction + rotation + armOffset;
 
-            if(camera3D) {
-                camera3D.aspect = w / h;
-                camera3D.updateProjectionMatrix();
-            }
+                    const primaryX = cx + baseRadius * Math.cos(theta);
+                    const primaryY = cy + baseRadius * Math.sin(theta);
 
-            update3DLayout();
-        }
+                    // Smooth loop radius modulation
+                    const loopBoost = 1 + rippleMetric * 1.5;
+                    const loopRadius = 250 * progress * loopScale * loopBoost * (1 + this.pulse * 0.3);
+                    const loopAngle = progress * Math.PI * 2 * loops * direction + (this.time * 6);
 
-        function onResize() {
-            if(isRecording && was4k) return;
-            resizeApp(window.innerWidth, window.innerHeight, true);
-        }
+                    const finalX = primaryX + loopRadius * Math.cos(loopAngle);
+                    const finalY = primaryY + loopRadius * Math.sin(loopAngle);
 
-        // --- HUD DRAWING (CANVAS 2D) ---
-        function drawHUD(bass, mid, high, time, stats) {
-            if(!hudCtx) return;
-            const w = hudCanvas.width;
-            const h = hudCanvas.height;
-            const ctx = hudCtx;
+                    if (i === 0) ctx.moveTo(finalX, finalY);
+                    else ctx.lineTo(finalX, finalY);
+                }
 
-            ctx.clearRect(0, 0, w, h);
-            const scale = (w / 1920);
-            const s = Math.max(scale, 0.6);
-
-            // Base Styles
-            ctx.strokeStyle = "#00f3ff";
-            ctx.lineWidth = 1.5 * s;
-
-            const fillPanel = () => {
-                ctx.fillStyle = "rgba(0, 5, 15, 0.85)";
-                ctx.fill();
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.lineWidth = lineWidth;
+                ctx.strokeStyle = color;
                 ctx.stroke();
-            };
+            }
+        }
 
-            const applyTextStyle = (size = 11, color = "#00f3ff") => {
-                ctx.font = `bold ${size * s}px 'Courier New'`;
-                ctx.fillStyle = color;
-                ctx.shadowColor = "black";
-                ctx.shadowBlur = 4 * s;
-                ctx.shadowOffsetX = 2 * s;
-                ctx.shadowOffsetY = 2 * s;
-            };
+        drawSmoothRoseCore(ctx, cx, cy, bass, mid, treble) {
+            // Smoothed base size - significantly reduced size of center graphic
+            const coreRadius = 40 + (this.pulse * 40) + (bass * 30);
 
-            const resetShadow = () => {
-                ctx.shadowColor = "transparent";
-                ctx.shadowBlur = 0;
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 0;
-            };
-
-            // --- TOP BAR ---
-            // Left
             ctx.save();
+            ctx.translate(cx, cy);
+
             ctx.beginPath();
-            ctx.moveTo(0, 0); ctx.lineTo(300*s, 0); ctx.lineTo(300*s, 20*s); ctx.lineTo(260*s, 50*s); ctx.lineTo(0, 50*s); ctx.closePath();
-            fillPanel();
+            ctx.arc(0, 0, coreRadius * 1.3, 0, Math.PI * 2);
+            ctx.fillStyle = '#050010';
+            ctx.fill();
+            ctx.lineWidth = 2 + this.pulse * 3; // Thinner
+            ctx.strokeStyle = `hsl(${(this.hue + 180) % 360}, 100%, 60%)`;
+            ctx.stroke();
 
-            applyTextStyle(14, "#fff");
-            ctx.fillText("USS XENON", 15*s, 30*s);
-            resetShadow();
-            ctx.restore();
-
-            // Right
-            ctx.save();
-            ctx.translate(w, 0);
+            // --- Layer 1: Outer geometric starburst ---
+            // Smoothly transitioning star points
+            const starPoints = 6 + Math.floor(bass * 8);
+            ctx.rotate(this.time * 1.0);
             ctx.beginPath();
-            ctx.moveTo(0, 0); ctx.lineTo(-200*s, 0); ctx.lineTo(-200*s, 50*s); ctx.lineTo(-40*s, 50*s); ctx.lineTo(0, 20*s); ctx.closePath();
-            fillPanel();
+            for(let i=0; i<starPoints * 2; i++) {
+                const angle = (Math.PI * 2 / (starPoints * 2)) * i;
+                const r = i % 2 === 0 ? coreRadius * 1.2 : coreRadius * (0.4 + mid * 0.6);
+                if (i===0) ctx.moveTo(r * Math.cos(angle), r * Math.sin(angle));
+                else ctx.lineTo(r * Math.cos(angle), r * Math.sin(angle));
+            }
+            ctx.closePath();
+            ctx.fillStyle = `hsla(${(this.hue + 90) % 360}, 100%, 30%, 0.8)`;
+            ctx.fill();
+            ctx.lineWidth = 1.5; // Thinner
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
 
-            applyTextStyle(12, "#00f3ff");
-            ctx.fillText(`T-${Math.floor(time/60).toString().padStart(2,'0')}:${Math.floor(time%60).toString().padStart(2,'0')}`, -140*s, 30*s);
-            resetShadow();
-            ctx.restore();
+            // --- Layer 2: Complex Counter-Rotating Multi-Rose Mandala ---
+            const layers = 3;
+            for (let j = 1; j <= layers; j++) {
+                const petals = 3 + j * 2 + Math.floor(mid * 3);
+                const resolution = 200;
 
-            // --- LEFT PANEL ---
-            ctx.save();
-            ctx.translate(0, h/2 - 300*s);
-            // Frame
-            ctx.beginPath();
-            ctx.moveTo(0, 0); ctx.lineTo(100*s, 0); ctx.lineTo(140*s, 40*s); ctx.lineTo(140*s, 500*s); ctx.lineTo(100*s, 540*s); ctx.lineTo(0, 540*s); ctx.closePath();
-            fillPanel();
+                ctx.rotate(-this.time * 2 * j);
+                ctx.beginPath();
 
-            // Bars
-            ctx.translate(20*s, 80*s);
+                for(let i = 0; i <= resolution; i++) {
+                    const angle = (Math.PI * 2 / resolution) * i;
+                    const radiusMod = Math.sin(angle * petals + (this.time * j));
+                    const r = (coreRadius * 0.95 / j) * (0.5 + 0.5 * radiusMod) * (1 + treble * 0.4);
 
-            applyTextStyle(11, "#00f3ff");
-            ctx.fillText("THRUSTER_L", 0, -15*s);
-            resetShadow();
-            ctx.strokeRect(0, 0, 15*s, 150*s);
-            ctx.fillStyle = "#00f3ff";
-            ctx.globalAlpha = 0.6;
-            ctx.fillRect(2*s, (150*s) - (150*s * bass), 11*s, (150*s * bass));
+                    if (i === 0) ctx.moveTo(r * Math.cos(angle), r * Math.sin(angle));
+                    else ctx.lineTo(r * Math.cos(angle), r * Math.sin(angle));
+                }
+                ctx.closePath();
+                ctx.lineWidth = 1.5 + this.pulse * 2; // Thinner lines
+                ctx.strokeStyle = `hsl(${(this.hue + j * 75) % 360}, 100%, ${60 + this.pulse * 40}%)`;
+                ctx.stroke();
 
-            ctx.globalAlpha = 1.0;
-            applyTextStyle(11, "#00f3ff");
-            ctx.fillText("THRUSTER_R", 60*s, -15*s);
-            resetShadow();
-            ctx.strokeRect(60*s, 0, 15*s, 150*s);
-            ctx.fillStyle = "#00f3ff";
-            ctx.globalAlpha = 0.6;
-            ctx.fillRect(62*s, (150*s) - (150*s * mid), 11*s, (150*s * mid));
-
-            // Text
-            ctx.translate(0, 270*s);
-            ctx.globalAlpha = 1.0;
-            applyTextStyle(11, "#00f3ff");
-            ctx.fillText("GEOMETRY_SCAN", 0, 0);
-
-            applyTextStyle(14, "#fff");
-            let shapeName = ["ICOSAHEDRON", "OCTAHEDRON", "DODECAHEDRON", "TETRAHEDRON"][currentShapeIdx];
-            ctx.fillText(shapeName, 0, 20*s);
-            resetShadow();
-            ctx.restore();
-
-            // --- RIGHT PANEL ---
-            ctx.save();
-            ctx.translate(w, h/2 - 300*s);
-            ctx.beginPath();
-            ctx.moveTo(0,0); ctx.lineTo(-100*s,0); ctx.lineTo(-140*s,40*s); ctx.lineTo(-140*s,500*s); ctx.lineTo(-100*s,540*s); ctx.lineTo(0,540*s); ctx.closePath();
-            fillPanel();
-
-            ctx.translate(-120*s, 80*s);
-            applyTextStyle(11, "#00f3ff");
-            ctx.fillText("SENSOR_ARRAY", 0, -15*s);
-            resetShadow();
-
-            ctx.fillStyle = "#00f3ff";
-            ctx.globalAlpha = 0.4;
-            ctx.fillRect(0, 0, (20 + bass * 80)*s, 8*s);
-            ctx.fillRect(0, 15*s, (20 + mid * 80)*s, 8*s);
-            ctx.fillRect(0, 30*s, (20 + high * 80)*s, 8*s);
-
-            ctx.translate(0, 80*s);
-            ctx.globalAlpha = 1.0;
-            applyTextStyle(9, "#00f3ff");
-            ctx.fillText("OUTPUT_LEVEL", 0, 0);
-
-            applyTextStyle(11, "#00f3ff");
-            if(stats) ctx.fillText(stats.db.toFixed(1) + " dB", 0, 15*s);
-
-            ctx.translate(0, 45*s);
-            applyTextStyle(9, "#00f3ff");
-            ctx.fillText("RESONANCE", 0, 0);
-
-            applyTextStyle(11, "#00f3ff");
-            if(stats) ctx.fillText(Math.round(stats.hz) + " Hz", 0, 15*s);
-
-            ctx.translate(0, 45*s);
-            applyTextStyle(9, "#00f3ff");
-            ctx.fillText("SIGNAL FLUX", 0, 0);
-
-            applyTextStyle(11, "#00f3ff");
-            if(stats) {
-                if(stats.flux > 0.1) {
-                    ctx.fillStyle = "#ff0055";
-                    ctx.fillText("VOLATILE", 0, 15*s);
-                } else {
-                    ctx.fillText("STABLE", 0, 15*s);
+                if (j === layers) {
+                    ctx.fillStyle = `hsl(${this.hue % 360}, 100%, 50%)`;
+                    ctx.fill();
                 }
             }
-            resetShadow();
-            ctx.restore();
 
-            // --- BOTTOM BAR ---
-            ctx.save();
-            ctx.translate(w/2, h - 60*s);
-            const bw = w * 0.4;
+            // --- Layer 3: The Pulsating Inner "Eye" ---
             ctx.beginPath();
-            ctx.moveTo(-bw/2, 40*s); ctx.lineTo(-bw/2, 20*s); ctx.lineTo(-bw/2 + 20*s, 0); ctx.lineTo(bw/2 - 20*s, 0); ctx.lineTo(bw/2, 20*s); ctx.lineTo(bw/2, 40*s);
-            fillPanel();
+            ctx.arc(0, 0, coreRadius * 0.15 * (1 + bass * 1.5), 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 2; // Thinner
+            ctx.strokeStyle = `hsl(${(this.hue + 180) % 360}, 100%, 50%)`;
+            ctx.stroke();
 
-            applyTextStyle(11, "#00f3ff");
-            ctx.textAlign = "center";
-            ctx.fillText("SYSTEM: ONLINE", 0, 25*s);
-            resetShadow();
             ctx.restore();
-
-            // --- CENTER RETICLE ---
-            ctx.save();
-            ctx.translate(w/2, h/2);
-            ctx.strokeStyle = "#00f3ff";
-            ctx.lineWidth = 0.5 * s;
-            ctx.globalAlpha = 0.2;
-            ctx.beginPath(); ctx.arc(0, 0, 80*s, 0, Math.PI*2); ctx.stroke();
-            ctx.globalAlpha = 0.5;
-            ctx.lineWidth = 1.5 * s;
-            ctx.beginPath(); ctx.moveTo(-20*s, 0); ctx.lineTo(20*s, 0); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, -20*s); ctx.lineTo(0, 20*s); ctx.stroke();
-            ctx.restore();
-
-            hudTexture.needsUpdate = true;
         }
+    }
 
-        // --- SMOOTH MORPHING LOGIC ---
-        function updateMorphing(time) {
-            if (!morphState.active) {
-                morphState.active = true;
-                morphState.start = time;
-                morphState.oldMesh = shipCoreMesh;
+    // --- System Logic ---
 
-                currentShapeIdx = (currentShapeIdx + 1) % 4;
-                let newGeo;
+    const spirals = new DualSpirals();
 
-                switch(currentShapeIdx) {
-                    case 0: newGeo = new THREE.IcosahedronGeometry(1, 0); break;
-                    case 1: newGeo = new THREE.OctahedronGeometry(1, 0); break;
-                    case 2: newGeo = new THREE.DodecahedronGeometry(1, 0); break;
-                    case 3: newGeo = new THREE.TetrahedronGeometry(1, 0); break;
-                }
+    function resizeCanvas() {
+        canvas.width = CONFIG.video.width;
+        canvas.height = CONFIG.video.height;
 
-                const wireGeo = new THREE.WireframeGeometry(newGeo);
-                newGeo.dispose();
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        const scale = Math.min(winW / CONFIG.video.width, winH / CONFIG.video.height);
 
-                const mat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.0 });
-                morphState.newMesh = new THREE.LineSegments(wireGeo, mat);
-                morphState.newMesh.scale.setScalar(0.5);
+        canvas.style.width = `${CONFIG.video.width * scale}px`;
+        canvas.style.height = `${CONFIG.video.height * scale}px`;
+    }
 
-                shipWireframe.add(morphState.newMesh);
-            }
+    function initAudioEngine() {
+        if (state.audioContext) return true; // Prevent re-initialization
 
-            if (morphState.active) {
-                const progress = (time - morphState.start) / morphState.duration;
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            state.audioContext = new AudioContext();
 
-                if (progress >= 1.0) {
-                    morphState.active = false;
+            state.analyser = state.audioContext.createAnalyser();
+            state.analyser.fftSize = 256;
+            // Increased smoothing time constant for smoother analyser data
+            state.analyser.smoothingTimeConstant = 0.9;
 
-                    if (morphState.oldMesh) {
-                        morphState.oldMesh.geometry.dispose();
-                        morphState.oldMesh.material.dispose();
-                        shipWireframe.remove(morphState.oldMesh);
-                    }
+            state.dataArray = new Uint8Array(state.analyser.frequencyBinCount);
 
-                    shipCoreMesh = morphState.newMesh;
-                    shipCoreMesh.material.opacity = 0.6;
-                    shipCoreMesh.scale.setScalar(1.0);
+            state.sourceNode = state.audioContext.createMediaElementSource(audioElement);
 
-                } else {
-                    if (morphState.oldMesh) {
-                        morphState.oldMesh.material.opacity = 0.6 * (1.0 - progress);
-                        morphState.oldMesh.scale.setScalar(1.0 - (0.5 * progress));
-                        morphState.oldMesh.rotation.y -= 0.01;
-                        morphState.oldMesh.rotation.x += 0.005;
-                    }
-                    if (morphState.newMesh) {
-                        morphState.newMesh.material.opacity = 0.6 * progress;
-                        morphState.newMesh.scale.setScalar(0.5 + (0.5 * progress));
-                        morphState.newMesh.rotation.y += 0.01;
-                        morphState.newMesh.rotation.x -= 0.005;
-                    }
-                }
+            // Clean Audio Routing
+            // 1. Source -> Analyser -> Destination (Speakers)
+            state.sourceNode.connect(state.analyser);
+            state.analyser.connect(state.audioContext.destination);
+
+            // 2. Analyser -> Recording Stream Destination
+            state.recordDest = state.audioContext.createMediaStreamDestination();
+            state.analyser.connect(state.recordDest);
+
+            return true;
+        } catch (e) {
+            console.error("Audio Engine Error:", e);
+            showError("Web Audio API not supported.");
+            return false;
+        }
+    }
+
+    function renderLoop() {
+        state.animationId = requestAnimationFrame(renderLoop);
+        state.frameCount++;
+
+        if (state.analyser && !audioElement.paused) {
+            state.analyser.getByteFrequencyData(state.dataArray);
+        } else if (state.dataArray && audioElement.paused) {
+            for(let i=0; i<state.dataArray.length; i++) {
+                state.dataArray[i] = Math.max(0, state.dataArray[i] - 5);
             }
         }
 
-        function initAudio() {
-            if(!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 2048;
-                dataArray = new Uint8Array(analyser.frequencyBinCount);
-            } else if (audioContext.state === 'suspended') {
-                audioContext.resume();
+        if (state.dataArray) {
+            spirals.update(state.dataArray);
+            spirals.draw(ctx, canvas.width, canvas.height, state.dataArray);
+        }
+
+        // Fade Out Overlay (active when song ends)
+        if (state.fadeOutStart > 0) {
+            const elapsed = performance.now() - state.fadeOutStart;
+            const duration = 10000;
+            const alpha = Math.min(1, elapsed / duration);
+
+            if (alpha > 0) {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+    }
+
+    // --- Recording Logic ---
+
+    function setupRecorder() {
+        const canvasStream = canvas.captureStream(60);
+        let finalStream = canvasStream;
+
+        if (state.recordDest) {
+            const audioTracks = state.recordDest.stream.getAudioTracks();
+            if (audioTracks.length > 0) {
+                finalStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
             }
         }
 
-        function getAudioData() {
-            if(!analyser) return { bass:0, mid:0, high:0, stats: {db: -100, hz: 0, flux: 0} };
-            analyser.getByteFrequencyData(dataArray);
+        const mimeTypes = [
+            'video/webm;codecs=vp9,opus',
+            'video/webm;codecs=vp8,opus',
+            'video/webm'
+        ];
 
-            const len = dataArray.length;
-            const avg = (start, end) => {
-                let sum = 0;
-                for(let i=start; i<end; i++) sum += dataArray[i];
-                return sum / (end-start);
+        let selectedMime = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || '';
+
+        if (!selectedMime) {
+            if (MediaRecorder.isTypeSupported('video/webm')) selectedMime = 'video/webm';
+            else {
+                showError("Screen recording not supported.");
+                return;
+            }
+        }
+
+        try {
+            state.mediaRecorder = new MediaRecorder(finalStream, { mimeType: selectedMime, videoBitsPerSecond: 12000000 });
+
+            state.mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) state.recordedChunks.push(e.data);
             };
 
-            let sumSq = 0;
-            let peakVal = 0;
-            let peakIdx = 0;
-            for(let i=0; i<len; i++) {
-                const val = dataArray[i] / 255.0;
-                sumSq += val * val;
-                if(dataArray[i] > peakVal) {
-                    peakVal = dataArray[i];
-                    peakIdx = i;
-                }
+            state.mediaRecorder.onstop = saveRecording;
+
+        } catch (e) {
+            console.error(e);
+            showError("Recorder initialization failed.");
+        }
+    }
+
+    function toggleRecording() {
+        if (!state.mediaRecorder) setupRecorder();
+        if (!state.mediaRecorder) return;
+
+        if (state.isRecording) {
+            state.mediaRecorder.stop();
+            state.isRecording = false;
+            updateRecordUI(false);
+        } else {
+            state.recordedChunks = [];
+            state.mediaRecorder.start();
+            state.isRecording = true;
+            updateRecordUI(true);
+        }
+    }
+
+    function saveRecording() {
+        const blob = new Blob(state.recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+        let filename = `hypnotic-spirals-${timestamp}.webm`;
+        if (state.currentFileName) {
+            const cleanName = state.currentFileName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9\-_ ]/g, "");
+            filename = `hypnotic-spirals-${cleanName}-${timestamp}.webm`;
+        }
+
+        a.download = filename;
+
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+
+        recStatus.innerText = "SAVED!";
+        setTimeout(() => {
+            if(!state.isRecording) recStatus.innerText = "STANDBY";
+        }, 2000);
+    }
+
+    function updateRecordUI(isRecording) {
+        if (isRecording) {
+            recStatus.innerText = "REC";
+            recStatus.classList.add("text-red-500", "animate-pulse");
+            recStatus.classList.remove("text-[#00ffff]");
+            recIcon.classList.remove("rounded-full");
+            recIcon.classList.add("rounded-sm");
+            recordBtn.classList.add("bg-red-500/20");
+        } else {
+            recStatus.innerText = "PROCESSING";
+            recStatus.classList.remove("text-red-500", "animate-pulse");
+            recStatus.classList.add("text-[#00ffff]");
+            recIcon.classList.add("rounded-full");
+            recIcon.classList.remove("rounded-sm");
+            recordBtn.classList.remove("bg-red-500/20");
+        }
+    }
+
+    function showError(msg) {
+        errorMsg.innerText = msg;
+        errorToast.classList.remove('hidden');
+        setTimeout(() => errorToast.classList.add('hidden'), 5000);
+    }
+
+    // Toggle Listener
+    autoRecToggle.addEventListener('change', (e) => {
+        if(e.target.checked) {
+            autoRecLabel.innerText = "ON";
+            autoRecLabel.classList.remove('text-gray-500');
+            autoRecLabel.classList.add('text-[#00ffff]');
+        } else {
+            autoRecLabel.innerText = "OFF";
+            autoRecLabel.classList.add('text-gray-500');
+            autoRecLabel.classList.remove('text-[#00ffff]');
+        }
+    });
+
+    selectFileBtn.addEventListener('click', () => {
+        audioInput.click();
+    });
+
+    audioInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            state.currentFileName = file.name;
+            const url = URL.createObjectURL(file);
+            audioElement.src = url;
+            sourceStatus.innerText = "LOCKED ON";
+            sourceStatus.classList.remove("text-yellow-400");
+            sourceStatus.classList.add("text-[#00ffff]");
+            fileInfo.innerText = "♪ " + file.name;
+            fileInfo.classList.remove('hidden');
+            startBtn.disabled = false;
+            startBtn.classList.remove('opacity-50');
+            startBtn.classList.add('shadow-[0_0_20px_#ff00ff]', 'transform', 'hover:scale-105');
+        }
+    });
+
+    playPauseBtn.addEventListener('click', () => {
+        if (audioElement.paused) {
+            audioElement.play();
+            state.isPlaying = true;
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            state.fadeOutStart = 0;
+            if(state.audioContext && state.audioContext.state === 'suspended') {
+                state.audioContext.resume();
             }
+        } else {
+            audioElement.pause();
+            state.isPlaying = false;
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+    });
 
-            const rms = Math.sqrt(sumSq / len);
-            let db = 20 * Math.log10(rms);
-            if (!isFinite(db)) db = -100;
+    audioElement.addEventListener('ended', () => {
+        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        state.isPlaying = false;
 
-            const hz = peakIdx * (audioContext.sampleRate / analyser.fftSize);
-            const flux = Math.abs(rms - lastVolume);
-            lastVolume = rms;
+        state.fadeOutStart = performance.now();
 
-            return {
-                bass: avg(0, 10) / 255,
-                mid: avg(10, 80) / 255,
-                high: avg(80, 200) / 255,
-                stats: { db, hz, flux }
-            };
+        if (state.isRecording) {
+            setTimeout(() => {
+                if (state.isRecording && state.fadeOutStart > 0) {
+                    toggleRecording();
+                    state.fadeOutStart = 0;
+                }
+            }, 10000);
+        }
+    });
+
+    startBtn.addEventListener('click', async () => {
+        startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENGAGING...';
+        state.fadeOutStart = 0;
+
+        const audioReady = initAudioEngine();
+        if (!audioReady) return;
+
+        if (state.audioContext.state === 'suspended') {
+            await state.audioContext.resume();
         }
 
-        // --- ANIMATION ---
-        let lastFrameTime = 0;
-        let animationFrameId;
-
-        function animate(time) {
-            if(!isRunning && !isFading) return;
-
-            const currentTimeSec = time / 1000;
-            const deltaTime = (time - lastFrameTime) / 1000;
-            lastFrameTime = time;
-
-            if (isFading) {
-                const fadeProgress = (currentTimeSec - fadeStartTime) / FADE_DURATION;
-                if (fadeProgress >= 1.0) {
-                    materialBG.uniforms.uFade.value = 1.0;
-
-                    if (fadeCompleteTime === 0) fadeCompleteTime = currentTimeSec;
-
-                    renderer.clear();
-                    renderer.render(sceneBG, cameraBG);
-
-                    if (currentTimeSec - fadeCompleteTime >= END_BUFFER) {
-                        resetUI();
-                        return;
-                    }
-
-                    animationFrameId = requestAnimationFrame(animate);
-                    return;
-                }
-                materialBG.uniforms.uFade.value = fadeProgress;
-            }
-
-            const data = getAudioData();
-            smoothBass += (data.bass - smoothBass) * 0.1;
-            smoothMid += (data.mid - smoothMid) * 0.1;
-            smoothHigh += (data.high - smoothHigh) * 0.1;
-
-            materialBG.uniforms.uTime.value = currentTimeSec;
-            materialBG.uniforms.uBass.value = smoothBass;
-            materialBG.uniforms.uMid.value = smoothMid;
-            materialBG.uniforms.uHigh.value = smoothHigh;
-
-            if(shipWireframe) {
-                shipWireframe.rotation.x += deltaTime * 0.5;
-                shipWireframe.rotation.y += deltaTime * 0.2;
-                if(shipCoreMesh) shipCoreMesh.rotation.y -= deltaTime;
-                updateMorphing(currentTimeSec);
-            }
-
-            if(planetWireframe) {
-                planetWireframe.rotation.y -= deltaTime;
-                planetWireframe.children[0].material.opacity = 0.5 + smoothHigh;
-            }
-
-            // Spinner Logic
-            if(centerSpinner) {
-                // Rotate entire group
-                centerSpinner.rotation.z -= deltaTime * 0.5;
-                // Rotate internal core faster
-                if(centerSpinner.children[0]) {
-                    centerSpinner.children[0].rotation.y += deltaTime * 2;
-                    centerSpinner.children[0].rotation.x += deltaTime;
-                    // Pulse core with High frequencies (snare/hats)
-                    const pulse = 1.0 + (smoothHigh * 0.5);
-                    centerSpinner.children[0].scale.setScalar(pulse);
-                }
-                // Rotate outer ring counter
-                if(centerSpinner.children[1]) {
-                    centerSpinner.children[1].rotation.x += deltaTime * 0.2;
-                }
-            }
-
-            const baseHue = (currentTimeSec * 0.05) % 1.0;
-
-            tunnelRings.forEach((ring, i) => {
-                ring.position.z += deltaTime * (6 + smoothBass * 8);
-                ring.rotation.z += deltaTime * (i%2==0 ? 0.1 : -0.1);
-
-                const spinSpeed = 0.4 + (i * 0.02) + (smoothMid * 0.5);
-                if (ring.children[0]) ring.children[0].rotation.z += deltaTime * spinSpeed;
-                if (ring.children[1]) ring.children[1].rotation.z -= deltaTime * spinSpeed;
-
-                if(ring.position.z > 5) {
-                    ring.position.z -= 120;
-                }
-
-                ring.scale.setScalar(1.0);
-
-                const z = ring.position.z;
-
-                let opacity = 0;
-                if (z < -115) opacity = 0;
-                else if (z < -100) opacity = (z + 115) / 15;
-                else if (z < -10) opacity = 1.0;
-                else opacity = (2 - z) / 12;
-
-                opacity = Math.max(0, Math.min(1, opacity));
-
-                const hue = (baseHue + (i * 0.02) + (smoothBass * 0.1)) % 1.0;
-                const saturation = 0.8;
-                const lightness = 0.5 + (smoothHigh * 0.4);
-
-                const ringColor = new THREE.Color().setHSL(hue, saturation, lightness);
-
-                ring.children.forEach(child => {
-                    if(child.material) {
-                        child.material.opacity = opacity * 0.8;
-                        child.material.color.copy(ringColor);
-                    }
-                });
-            });
-
-            drawHUD(smoothBass, smoothMid, smoothHigh, currentTimeSec, data.stats);
-
-            renderer.clear();
-            renderer.render(sceneBG, cameraBG);
-            renderer.clearDepth();
-            renderer.render(scene3D, camera3D);
-            renderer.clearDepth();
-            renderer.render(sceneHUD, cameraHUD);
-
-            animationFrameId = requestAnimationFrame(animate);
+        try {
+            await audioElement.play();
+            state.isPlaying = true;
+        } catch(e) {
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
         }
 
-        // --- FILE HANDLING & UTILS ---
-        selectFileBtn.onclick = () => { initAudio(); fileInput.value = ''; fileInput.click(); };
+        resizeCanvas();
+        renderLoop();
 
-        fileInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if(!file) return;
-            currentAudioFile = file;
-            messageDiv.innerText = "ENGAGING HYPERDRIVE...";
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                try {
-                    const audioBuffer = await audioContext.decodeAudioData(ev.target.result);
-                    await startVisualizer(audioBuffer);
-                } catch(err) {
-                    messageDiv.innerText = "SYSTEM FAILURE: " + err.message;
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        };
+        startModal.classList.add('hidden-visually');
+        setTimeout(() => {
+            startModal.classList.add('hidden');
+            controlsUI.classList.remove('hidden-visually');
+        }, 500);
 
-        async function startVisualizer(buffer) {
-            if (audioContext.state === 'suspended') await audioContext.resume();
-            if(sourceNode) { try { sourceNode.onended = null; sourceNode.disconnect(); sourceNode.stop(); } catch(e) {} }
+        setupRecorder();
 
-            sourceNode = audioContext.createBufferSource();
-            sourceNode.buffer = buffer;
-            sourceNode.connect(analyser);
-            analyser.connect(audioContext.destination);
-            sourceNode.onended = () => { if (isRunning) triggerFadeOut(); };
-            sourceNode.start(0);
-
-            overlay.style.opacity = 0;
-            setTimeout(() => overlay.style.display = 'none', 800);
-            recordContainer.style.display = 'flex';
-            setTimeout(() => recordContainer.style.opacity = 1, 10);
-
-            isRunning = true;
-            isFading = false;
-            fadeCompleteTime = 0;
-            materialBG.uniforms.uFade.value = 0.0;
-            lastFrameTime = performance.now();
-            smoothBass = 0; smoothMid = 0; smoothHigh = 0;
-
-            onResize();
-
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            animate(lastFrameTime);
-            if(autoRecordCheck.checked) setTimeout(toggleRecord, 800);
+        if (state.mediaRecorder && !state.isRecording && autoRecToggle.checked) {
+            toggleRecording();
         }
+    });
 
-        function triggerFadeOut() {
-            if (!isRunning || isFading) return;
-            isFading = true;
-            fadeStartTime = performance.now() / 1000;
-            fadeCompleteTime = 0;
-        }
+    recordBtn.addEventListener('click', toggleRecording);
+    window.addEventListener('resize', resizeCanvas);
 
-        function resetUI() {
-            isRunning = false;
-            isFading = false;
-            fadeCompleteTime = 0;
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            if(isRecording) toggleRecord();
-            overlay.style.display = 'block';
-            setTimeout(() => overlay.style.opacity = 1, 10);
-            recordContainer.style.opacity = 0;
-            setTimeout(() => recordContainer.style.display = 'none', 500);
-            if(sourceNode) { try { sourceNode.onended = null; sourceNode.disconnect(); } catch(e){} }
-        }
-
-        leaveBtn.onclick = () => { if(sourceNode) { try { sourceNode.stop(); } catch(e){} } resetUI(); };
-        recordBtn.onclick = toggleRecord;
-
-        function toggleRecord() {
-            if(isRecording) {
-                try { mediaRecorder.stop(); } catch(e){}
-                isRecording = false;
-                recordBtn.innerText = "Init Record";
-                recordBtn.classList.remove('recording');
-                if (was4k) {
-                    resizeApp(window.innerWidth, window.innerHeight, true);
-                    was4k = false;
-                }
-            } else {
-                if (record4kCheck.checked) {
-                    was4k = true;
-                    resizeApp(3840, 2160, false);
-                }
-                const stream = renderer.domElement.captureStream(60);
-                const dest = audioContext.createMediaStreamDestination();
-                sourceNode.connect(dest);
-                const tracks = [...stream.getVideoTracks(), ...dest.stream.getAudioTracks()];
-                try { mediaRecorder = new MediaRecorder(new MediaStream(tracks), { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 15000000 }); }
-                catch (e) { try { mediaRecorder = new MediaRecorder(new MediaStream(tracks)); } catch (e2) { messageDiv.innerText = "Recording not supported"; return; } }
-                mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) recordedChunks.push(e.data); };
-                mediaRecorder.onstop = saveVideo;
-                recordedChunks = [];
-                mediaRecorder.start();
-                isRecording = true;
-                recordBtn.innerText = "Stop Rec";
-                recordBtn.classList.add('recording');
-            }
-        }
-
-        function saveVideo() {
-            if (recordedChunks.length === 0) return;
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = currentAudioFile ? `xenon-flight-${currentAudioFile.name.split('.')[0]}.webm` : 'xenon-flight.webm';
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
-        }
-
-        fullscreenBtn.onclick = () => {
-            if (!document.fullscreenElement) { document.body.requestFullscreen(); fullscreenBtn.innerHTML = "🡼"; }
-            else { document.exitFullscreen(); fullscreenBtn.innerHTML = "⛶"; }
-        };
-
-        initThree();
-    })();
 </script>
 </body>
 </html>
