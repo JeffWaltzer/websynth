@@ -132,6 +132,7 @@
                 <div>File: <span id="debug-file" class="debug-value">-</span></div>
                 <div>Ticks: <span id="debug-ticks" class="debug-value">0 / 0</span></div>
                 <div>Active Voices: <span id="debug-voices" class="debug-value">0</span></div>
+                <div>Master Route: <span id="debug-master" class="debug-value">ORIGINAL</span></div>
                 <div>Panic State: <span id="debug-panic" class="debug-value">READY</span></div>
                 <div>Routing Engine: <span id="debug-engine" class="debug-value text-blue-400">IDLE</span></div>
                 <div class="col-span-1 sm:col-span-2">Pro-800 Security: <span id="debug-pro800" class="debug-value text-green-400">CLEAN</span></div>
@@ -194,7 +195,6 @@
     let fileTotalTicks = 0;
     const keyCache = {};
     const channelCCState = Array.from({length: 16}, () => ({ cc: new Int16Array(128).fill(-1), bend: -1 }));
-    const noteReferenceCount = Array.from({length: 16}, () => new Uint8Array(128));
 
     // Sanitization Helper to prevent HTML injection errors
     function escapeHTML(str) {
@@ -283,7 +283,7 @@
 
     masterSelect.addEventListener('change', () => {
         stopAllNotes();
-        debugMaster.textContent = masterSelect.value.toUpperCase();
+        if (debugMaster) debugMaster.textContent = masterSelect.value.toUpperCase();
         displayWarning(`Master Route updated to: ${masterSelect.value === 'original' ? 'Individual Channels' : 'Channel ' + masterSelect.value}`);
     });
 
@@ -363,8 +363,22 @@
     function refreshOutputs() {
         if (!midiAccess) return;
         const outs = Array.from(midiAccess.outputs.values());
+        const prevSelectedId = deviceSelect.value;
+
         deviceSelect.innerHTML = outs.length ? '' : '<option disabled>No hardware detected</option>';
-        outs.forEach(o => { const opt = document.createElement('option'); opt.value = o.id; opt.textContent = o.name; deviceSelect.appendChild(opt); });
+        outs.forEach(o => {
+            const opt = document.createElement('option');
+            opt.value = o.id;
+            opt.textContent = o.name;
+            deviceSelect.appendChild(opt);
+        });
+
+        if (prevSelectedId && outs.some(o => o.id === prevSelectedId)) {
+            deviceSelect.value = prevSelectedId;
+        } else if (outs.length > 0) {
+            deviceSelect.selectedIndex = 0;
+        }
+
         selectedOutput = outs.find(o => o.id === deviceSelect.value) || outs[0] || null;
         if (selectedOutput) {
             statusText.textContent = `Hardware Ready: ${selectedOutput.name}`;
@@ -374,6 +388,18 @@
             panicBtn.disabled = arpOffBtn.disabled = true;
         }
     }
+
+    // Attach event listener so the user can manually change the output hardware!
+    deviceSelect.addEventListener('change', () => {
+        if (!midiAccess) return;
+        const outs = Array.from(midiAccess.outputs.values());
+        selectedOutput = outs.find(o => o.id === deviceSelect.value) || null;
+        if (selectedOutput) {
+            statusText.textContent = `Hardware Ready: ${selectedOutput.name}`;
+            debugDevice.textContent = selectedOutput.name;
+            displayWarning(`Hardware target swapped to: ${selectedOutput.name}`);
+        }
+    });
 
     // --- Master Global Note Stopper / Panic ---
     function stopAllNotes(nuclear = false) {
@@ -410,9 +436,8 @@
             }
         });
 
-        // Clean Software Reference Arrays (unconditionally to clear UI)
+        // Clean Software Reference Arrays
         for (let ch = 0; ch < 16; ch++) {
-            if (noteReferenceCount[ch]) noteReferenceCount[ch].fill(0);
             if (channelCCState[ch]) {
                 channelCCState[ch].cc.fill(-1);
                 channelCCState[ch].bend = -1;
@@ -441,13 +466,10 @@
 
         // Iterate over the Map (d1 = note number, ch = channel index)
         activeTracks[trk].forEach((ch, d1) => {
-            if (noteReferenceCount[ch] && noteReferenceCount[ch][d1] > 0) noteReferenceCount[ch][d1]--;
-            if (noteReferenceCount[ch] && noteReferenceCount[ch][d1] === 0) {
-                try {
-                    selectedOutput.send([0x80 + ch, d1, 0]);
-                    selectedOutput.send([0x90 + ch, d1, 0]);
-                } catch (e) {}
-            }
+            try {
+                selectedOutput.send([0x80 + ch, d1, 0]);
+                selectedOutput.send([0x90 + ch, d1, 0]);
+            } catch (e) {}
 
             // Clean up tracking references
             if (activeNotes[d1]) {
@@ -492,26 +514,25 @@
 
             if (ev.name === 'Note on' || ev.name === 'Note off') {
                 const isOff = ev.name === 'Note off' || ev.velocity === 0;
-                const d1 = sanitize(ev.noteNumber), d2 = sanitize((ev.velocity || 0) * parseFloat(volumeSlider.value));
+                const d1 = sanitize(ev.noteNumber);
+                const d2 = sanitize((ev.velocity || 0) * parseFloat(volumeSlider.value));
 
                 if (!activeTracks[trk]) activeTracks[trk] = new Map();
 
                 if (!isOff && d2 > 0) {
-                    if (noteReferenceCount[ch][d1] === 0) {
-                        try { selectedOutput.send([0x90 + ch, d1, d2]); } catch (e) {}
-                    }
-                    noteReferenceCount[ch][d1]++;
+                    // Send directly to hardware!
+                    try { selectedOutput.send([0x90 + ch, d1, d2]); } catch (e) {}
+
                     activeNotes[d1] = { velocity: d2, tracks: (activeNotes[d1]?.tracks || new Set()).add(trk) };
                     activeTracks[trk].set(d1, ch);
                     if (keyElements[d1]) keyElements[d1].classList.add(keyCache[d1].isBlack ? 'key-active-black' : 'key-active-white');
                 } else {
-                    if (noteReferenceCount[ch][d1] > 0) noteReferenceCount[ch][d1]--;
-                    if (noteReferenceCount[ch][d1] === 0) {
-                        try {
-                            selectedOutput.send([0x80 + ch, d1, 0]);
-                            selectedOutput.send([0x90 + ch, d1, 0]);
-                        } catch (e) {}
-                    }
+                    // Release hardware note!
+                    try {
+                        selectedOutput.send([0x80 + ch, d1, 0]);
+                        selectedOutput.send([0x90 + ch, d1, 0]); // Safety check for some synths
+                    } catch (e) {}
+
                     activeTracks[trk].delete(d1);
                     if (activeNotes[d1]) {
                         activeNotes[d1].tracks.delete(trk);
@@ -644,12 +665,13 @@
             });
 
             // Apply Meta Data to Debug Window
-            if (bpm) { metaTempoEl.classList.remove('hidden'); metaTempoEl.querySelector('span').textContent = bpm + ' BPM'; } else { metaTempoEl.classList.add('hidden'); }
-            if (timeSig) { metaTimesigEl.classList.remove('hidden'); metaTimesigEl.querySelector('span').textContent = timeSig; } else { metaTimesigEl.classList.add('hidden'); }
+            if (bpm) { metaTempoEl.classList.remove('hidden'); const s = metaTempoEl.querySelector('span'); if(s) s.textContent = bpm + ' BPM'; } else { metaTempoEl.classList.add('hidden'); }
+            if (timeSig) { metaTimesigEl.classList.remove('hidden'); const s = metaTimesigEl.querySelector('span'); if(s) s.textContent = timeSig; } else { metaTimesigEl.classList.add('hidden'); }
             const textStr = metaTexts.join(' | ');
             if (textStr) {
                 metaTextEl.classList.remove('hidden');
-                metaTextEl.querySelector('span').textContent = escapeHTML(textStr).substring(0, 150) + (textStr.length > 150 ? '...' : '');
+                const spanEl = metaTextEl.querySelector('span');
+                if (spanEl) spanEl.textContent = textStr.substring(0, 150) + (textStr.length > 150 ? '...' : '');
             } else {
                 metaTextEl.classList.add('hidden');
             }

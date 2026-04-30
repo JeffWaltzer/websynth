@@ -34,10 +34,6 @@
             line-height: 1.1;
             font-size: 0.5rem;
         }
-        .channel-card.active-flash {
-            background-color: #075985 !important;
-            transition: background-color 0.05s ease-out;
-        }
 
         /* Mini Keyboard Styles */
         .mini-keyboard-container {
@@ -123,10 +119,10 @@
 <div class="toolbar">
     <button onclick="window.location.href='index.html'">Home</button>
     <button onclick="window.location.href='berlin.html'">Berlin</button>
-    <button onclick="window.location.href='chords.html'">Chords</button>
+    <button disabled>Chords</button>
     <button onclick="window.location.href='CosmicDrift.html'">Cosmic</button>
     <button onclick="window.location.href='delay.html'">Delay</button>
-    <button disabled>Karplus</button>
+    <button onclick="window.location.href='karplus.html'">Karplus</button>
 
     <button onclick="window.location.href='polychain.html'">Polychain</button>
     <button onclick="window.location.href='pondviz.html'">Pond</button>
@@ -240,7 +236,7 @@
         return keyboardHtml;
     }
 
-    function positionBlackKeys(keyboardElement, startNote, endNote) {
+    function positionBlackKeys(keyboardElement) {
         const whiteKeyElements = Array.from(keyboardElement.querySelectorAll('.white-key'));
         const blackKeyElements = Array.from(keyboardElement.querySelectorAll('.black-key'));
 
@@ -254,11 +250,11 @@
         const blackKeyWidth = whiteKeyWidth * 0.6;
 
         blackKeyElements.forEach(blackKey => {
-            const blackKeyMidiNote = parseInt(blackKey.id.split('-').pop());
+            const blackKeyMidiNote = parseInt(blackKey.id.split('-').pop(), 10);
             const anchorWhiteKeyMidiNote = blackKeyMidiNote - 1;
 
             // Find the white key element that corresponds to the anchor note for this black key
-            const anchorWhiteKeyElement = whiteKeyElements.find(wk => parseInt(wk.id.split('-').pop()) === anchorWhiteKeyMidiNote);
+            const anchorWhiteKeyElement = whiteKeyElements.find(wk => parseInt(wk.id.split('-').pop(), 10) === anchorWhiteKeyMidiNote);
 
             if (anchorWhiteKeyElement) {
                 blackKey.style.width = `${blackKeyWidth}px`;
@@ -296,9 +292,9 @@
             chordGrid.appendChild(channelDiv);
             requestAnimationFrame(() => {
                 const activeKeyboardElement = document.getElementById(`keyboard-active-ch-${i}`);
-                if (activeKeyboardElement) positionBlackKeys(activeKeyboardElement, ACTIVE_KEYBOARD_START_MIDI_NOTE, ACTIVE_KEYBOARD_END_MIDI_NOTE);
+                if (activeKeyboardElement) positionBlackKeys(activeKeyboardElement);
                 const suggestedKeyboardElement = document.getElementById(`keyboard-suggested-ch-${i}`);
-                if (suggestedKeyboardElement) positionBlackKeys(suggestedKeyboardElement, SUGGESTED_KEYBOARD_START_MIDI_NOTE, SUGGESTED_KEYBOARD_END_MIDI_NOTE);
+                if (suggestedKeyboardElement) positionBlackKeys(suggestedKeyboardElement);
             });
         }
     }
@@ -400,13 +396,6 @@
                     activeNotesByChannel[channel].add(note);
                     if (activeNotesByChannel[channel].size > sizeBefore) {
                         stateChanged = true;
-                        const channelCard = document.getElementById(`channel-card-${channel}`);
-                        if (channelCard) {
-                            channelCard.classList.add('active-flash');
-                            setTimeout(() => {
-                                channelCard.classList.remove('active-flash');
-                            }, 150);
-                        }
                     }
                 } else {
                     if (activeNotesByChannel[channel].delete(note)) {

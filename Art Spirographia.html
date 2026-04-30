@@ -544,7 +544,7 @@
             const deltaTime = (time - lastFrameTime) / 1000;
             lastFrameTime = time;
 
-            audioData = audio.getAudioData({ bass: [0, 20], mid: [20, 100], high: [100, 250] });
+            let audioData = audio.getAudioData({ bass: [0, 20], mid: [20, 100], high: [100, 250] });
             audio.detectBeat(audioData.bass, performance.now()); // Beat detection on Bass usually works better for Shepard Drone rhythm
 
             const targetBPM = (audio.detectedBPM > 0) ? audio.detectedBPM : 10;
@@ -613,11 +613,11 @@
             audio.sourceNode.onended = resetUI;
             audio.sourceNode.start(0);
 
-            overlay.style.opacity = 0;
+            overlay.style.opacity = '0';
             setTimeout(() => overlay.style.display = 'none', 500);
 
             recordContainer.style.display = 'flex';
-            setTimeout(() => recordContainer.style.opacity = 1, 10);
+            setTimeout(() => recordContainer.style.opacity = '1', 10);
 
             isRunning = true;
             lastFrameTime = performance.now();
@@ -638,8 +638,8 @@
             isRunning = false;
             if(isRecording) toggleRecord();
             overlay.style.display = 'block';
-            setTimeout(() => overlay.style.opacity = 1, 10);
-            recordContainer.style.opacity = 0;
+            setTimeout(() => overlay.style.opacity = '1', 10);
+            recordContainer.style.opacity = '0';
             setTimeout(() => recordContainer.style.display = 'none', 500);
             if(audio.sourceNode) { audio.sourceNode.disconnect(); }
         }
@@ -698,8 +698,7 @@
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            const fileName = currentAudioFile ? `shepard-illusion-${currentAudioFile.name.split('.')[0]}.webm` : 'shepard-illusion.webm';
-            a.download = fileName;
+            a.download = currentAudioFile ? `shepard-illusion-${currentAudioFile.name.split('.')[0]}.webm` : 'shepard-illusion.webm';
             document.body.appendChild(a);
             a.click();
             setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
