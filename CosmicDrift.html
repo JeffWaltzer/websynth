@@ -291,7 +291,6 @@
 <script>
     (function(){
         // --- CONFIG & STATE ---
-        let audioContext, analyser, dataArray, sourceNode;
         let renderer, scene, camera, material, mesh;
         let isRunning = false;
 
@@ -359,32 +358,7 @@
             material.uniforms.uResolution.value.y = window.innerHeight;
         }
 
-        // --- AUDIO ENGINE & BPM LOGIC ---
-        function initAudio() {
-            if(!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 256;
-                dataArray = new Uint8Array(analyser.frequencyBinCount);
-            }
-        }
-
-        function getAudioData() {
-            if(!analyser) return { bass:0, mid:0, high:0 };
-            analyser.getByteFrequencyData(dataArray);
-
-            const bassRange = dataArray.slice(0, 10);
-            const midRange = dataArray.slice(10, 80);
-            const highRange = dataArray.slice(80, 200);
-            const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
-
-            return {
-                bass: avg(bassRange) / 255,
-                mid: avg(midRange) / 255,
-                high: avg(highRange) / 255
-            };
-        }
-
+        const audio = new AudioAnalyzer(256);
         // --- ANIMATION LOOP ---
         let lastFrameTime = 0;
 
@@ -397,7 +371,7 @@
             requestAnimationFrame(animate);
 
             // 1. Get Audio
-            const audioData = getAudioData();
+            const audioData = audio.getAudioData({ bass: [0, 10], mid: [10, 80], high: [80, 200] });
             const smoothBass = material.uniforms.uBass.value;
 
             // 2. Update Shader Uniforms
@@ -428,7 +402,7 @@
 
         // --- FILE HANDLING ---
         selectFileBtn.onclick = () => {
-            initAudio();
+            audio.init();
             fileInput.click();
         };
 
@@ -441,7 +415,7 @@
             const reader = new FileReader();
             reader.onload = async (ev) => {
                 try {
-                    const audioBuffer = await audioContext.decodeAudioData(ev.target.result);
+                    const audioBuffer = await audio.audioContext.decodeAudioData(ev.target.result);
                     startVisualizer(audioBuffer);
                 } catch(err) {
                     messageDiv.innerText = "Error: " + err.message;
@@ -451,15 +425,15 @@
         };
 
         function startVisualizer(buffer) {
-            if(sourceNode) { sourceNode.disconnect(); sourceNode.stop(); }
+            if(audio.sourceNode) { audio.sourceNode.disconnect(); audio.sourceNode.stop(); }
 
-            sourceNode = audioContext.createBufferSource();
-            sourceNode.buffer = buffer;
-            sourceNode.connect(analyser);
-            analyser.connect(audioContext.destination);
+            audio.sourceNode = audio.audioContext.createBufferSource();
+            audio.sourceNode.buffer = buffer;
+            audio.sourceNode.connect(audio.analyser);
+            audio.analyser.connect(audio.audioContext.destination);
 
-            sourceNode.onended = resetUI;
-            sourceNode.start(0);
+            audio.sourceNode.onended = resetUI;
+            audio.sourceNode.start(0);
 
             overlay.style.opacity = 0;
             setTimeout(() => overlay.style.display = 'none', 500);
@@ -484,7 +458,7 @@
             setTimeout(() => overlay.style.opacity = 1, 10);
             recordContainer.style.opacity = 0;
             setTimeout(() => recordContainer.style.display = 'none', 500);
-            if(sourceNode) { sourceNode.disconnect(); }
+            if(audio.sourceNode) { audio.sourceNode.disconnect(); }
         }
 
         leaveBtn.onclick = resetUI;
@@ -500,8 +474,8 @@
                 recordBtn.classList.remove('recording');
             } else {
                 const stream = renderer.domElement.captureStream(60);
-                const dest = audioContext.createMediaStreamDestination();
-                sourceNode.connect(dest);
+                const dest = audio.audioContext.createMediaStreamDestination();
+                audio.sourceNode.connect(dest);
                 const tracks = [...stream.getVideoTracks(), ...dest.stream.getAudioTracks()];
 
                 try {
@@ -547,5 +521,6 @@
         initThree();
     })();
 </script>
+    <script src="audio_analyzer.js"></script>
 </body>
 </html>

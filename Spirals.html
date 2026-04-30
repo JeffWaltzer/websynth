@@ -299,19 +299,12 @@
 <script>
     (function(){
         // --- CONFIG & STATE ---
-        let audioContext, analyser, dataArray, sourceNode;
         let renderer, scene, camera, material, mesh;
         let isRunning = false;
         let currentAudioFile = null;
 
         // BPM / Audio State
-        let lastBeatTime = 0;
-        let beatThreshold = 0.4;
-        let detectedBPM = 0;
-        let beatIntervals = [];
         let accumulatedRotation = 0;
-        let smoothBPM = 60;
-
         // Recording
         let mediaRecorder;
         let recordedChunks = [];
@@ -370,50 +363,7 @@
             material.uniforms.uResolution.value.y = window.innerHeight;
         }
 
-        // --- AUDIO ENGINE ---
-        function initAudio() {
-            if(!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 256;
-                dataArray = new Uint8Array(analyser.frequencyBinCount);
-            }
-        }
-
-        function getAudioData() {
-            if(!analyser) return { bass:0, mid:0, high:0 };
-            analyser.getByteFrequencyData(dataArray);
-
-            const bassRange = dataArray.slice(0, 10);
-            const midRange = dataArray.slice(10, 80);
-            const highRange = dataArray.slice(80, 200);
-            const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
-
-            return {
-                bass: avg(bassRange) / 255,
-                mid: avg(midRange) / 255,
-                high: avg(highRange) / 255
-            };
-        }
-
-        function detectBeat(highLevel) {
-            const now = performance.now();
-            if (highLevel > beatThreshold && highLevel > 0.3) {
-                if (now - lastBeatTime > 200) {
-                    const interval = now - lastBeatTime;
-                    lastBeatTime = now;
-                    beatIntervals.push(interval);
-                    if(beatIntervals.length > 8) beatIntervals.shift();
-                    const avgInterval = beatIntervals.reduce((a,b)=>a+b,0) / beatIntervals.length;
-                    const bpm = 60000 / avgInterval;
-                    if(bpm > 60 && bpm < 220) detectedBPM = bpm;
-                    beatThreshold = 1.1;
-                }
-            } else {
-                beatThreshold *= 0.95;
-                if(beatThreshold < 0.3) beatThreshold = 0.3;
-            }
-        }
+        const audio = new AudioAnalyzer(256);
 
         // --- ANIMATION ---
         let lastFrameTime = 0;
@@ -425,13 +375,13 @@
             const deltaTime = (time - lastFrameTime) / 1000;
             lastFrameTime = time;
 
-            const audioData = getAudioData();
-            detectBeat(audioData.high);
+            const audioData = audio.getAudioData({ bass: [0, 10], mid: [10, 80], high: [80, 200] });
+            audio.detectBeat(audioData.high, performance.now());
 
-            const targetBPM = (detectedBPM > 0) ? detectedBPM : 10;
-            smoothBPM += (targetBPM - smoothBPM) * 0.05;
+            const targetBPM = (audio.detectedBPM > 0) ? audio.detectedBPM : 10;
+            audio.smoothBPM += (targetBPM - audio.smoothBPM) * 0.05;
 
-            const rotationSpeed = (smoothBPM / 60.0) * 3.0;
+            const rotationSpeed = (audio.smoothBPM / 60.0) * 3.0;
             accumulatedRotation += rotationSpeed * deltaTime;
 
             material.uniforms.uTime.value = time / 1000;
@@ -448,7 +398,7 @@
 
         // --- FILE HANDLING ---
         selectFileBtn.onclick = () => {
-            initAudio();
+            audio.init();
             fileInput.click();
         };
 
@@ -462,7 +412,7 @@
             const reader = new FileReader();
             reader.onload = async (ev) => {
                 try {
-                    const audioBuffer = await audioContext.decodeAudioData(ev.target.result);
+                    const audioBuffer = await audio.audioContext.decodeAudioData(ev.target.result);
                     startVisualizer(audioBuffer);
                 } catch(err) {
                     messageDiv.innerText = "Error: " + err.message;
@@ -472,20 +422,20 @@
         };
 
         function startVisualizer(buffer) {
-            if(sourceNode) { sourceNode.disconnect(); sourceNode.stop(); }
+            if(audio.sourceNode) { audio.sourceNode.disconnect(); audio.sourceNode.stop(); }
 
-            sourceNode = audioContext.createBufferSource();
-            sourceNode.buffer = buffer;
-            // Connect the source to the analyser
-            sourceNode.connect(analyser);
+            audio.sourceNode = audio.audioContext.createBufferSource();
+            audio.sourceNode.buffer = buffer;
+            // Connect the source to the audio.analyser
+            audio.sourceNode.connect(audio.analyser);
 
-            // --- FIX: Ensure analyser is always connected to speakers ---
+            // --- FIX: Ensure audio.analyser is always connected to speakers ---
             // This connection is crucial for both hearing the sound and driving the visuals.
             // If it's missing, the audio engine may not process any audio at all.
-            analyser.connect(audioContext.destination);
+            audio.analyser.connect(audio.audioContext.destination);
 
-            sourceNode.onended = resetUI;
-            sourceNode.start(0);
+            audio.sourceNode.onended = resetUI;
+            audio.sourceNode.start(0);
 
             overlay.style.opacity = 0;
             setTimeout(() => overlay.style.display = 'none', 500);
@@ -496,9 +446,9 @@
             isRunning = true;
             lastFrameTime = performance.now();
 
-            detectedBPM = 0;
-            beatIntervals = [];
-            smoothBPM = 60;
+            audio.detectedBPM = 0;
+            audio.beatIntervals = [];
+            audio.smoothBPM = 60;
 
             animate(lastFrameTime);
 
@@ -514,7 +464,7 @@
             setTimeout(() => overlay.style.opacity = 1, 10);
             recordContainer.style.opacity = 0;
             setTimeout(() => recordContainer.style.display = 'none', 500);
-            if(sourceNode) { sourceNode.disconnect(); }
+            if(audio.sourceNode) { audio.sourceNode.disconnect(); }
         }
 
         leaveBtn.onclick = resetUI;
@@ -550,8 +500,8 @@
                 }
 
                 const stream = renderer.domElement.captureStream(60);
-                const dest = audioContext.createMediaStreamDestination();
-                sourceNode.connect(dest);
+                const dest = audio.audioContext.createMediaStreamDestination();
+                audio.sourceNode.connect(dest);
                 const tracks = [...stream.getVideoTracks(), ...dest.stream.getAudioTracks()];
 
                 try {
@@ -600,5 +550,6 @@
         initThree();
     })();
 </script>
+    <script src="audio_analyzer.js"></script>
 </body>
 </html>
