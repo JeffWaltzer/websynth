@@ -24,7 +24,7 @@ NUM_VOICES = 8
 # Represents a single voice of the synthesizer. Each voice has its own
 # oscillator and envelope.
 class Voice
-  attr_reader :id, :active, :note
+  attr_reader :id, :active, :note, :envelope
 
   def initialize(id)
     @id = id
@@ -115,6 +115,7 @@ class PolySynth
   end
 end
 
+if __FILE__ == $PROGRAM_NAME
 # -- Main Application --------------------------------------------------------
 
 puts "Starting Polyphonic Synthesizer..."
@@ -157,4 +158,6 @@ trap("INT") do
   puts "\nStopping synthesizer..."
   synth_thread.kill
   exit
+end
+
 end

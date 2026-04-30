@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>WebSynth Unit Tests</title>
+  
+  <!-- Mocha CSS -->
+  <link href="https://unpkg.com/mocha@10.2.0/mocha.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="mocha"></div>
+  
+  <!-- Mocha / Chai -->
+  <script src="https://unpkg.com/mocha@10.2.0/mocha.js"></script>
+  <script src="https://unpkg.com/chai@4.3.7/chai.js"></script>
+  
+  <script>
+    mocha.setup('bdd');
+    const expect = chai.expect;
+  </script>
+  
+  <!-- Source code to test -->
+  <script src="../audio_analyzer.js"></script>
+  
+  <!-- Test specs -->
+  <script src="audio_analyzer.test.js"></script>
+  
+  <!-- Run tests -->
+  <script>
+    mocha.run();
+  </script>
+</body>
+</html>

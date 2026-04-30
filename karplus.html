@@ -458,10 +458,9 @@
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             state.audioCtx = new AudioContext();
 
-            const blob = new Blob([document.getElementById('worklet-code').textContent], { type: 'application/javascript' });
-            const url = URL.createObjectURL(blob);
-            await state.audioCtx.audioWorklet.addModule(url);
-            URL.revokeObjectURL(url); 
+            const workletCode = document.getElementById('worklet-code').textContent;
+            const dataUrl = 'data:application/javascript;base64,' + btoa(unescape(encodeURIComponent(workletCode)));
+            await state.audioCtx.audioWorklet.addModule(dataUrl); 
 
             state.masterGain = state.audioCtx.createGain();
             state.masterGain.gain.value = 0.5;
