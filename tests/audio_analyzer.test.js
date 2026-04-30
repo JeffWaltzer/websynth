@@ -7,8 +7,8 @@ describe('AudioAnalyzer', function() {
         // Reset state before each test
         analyzer = new AudioAnalyzer(256);
         
-        // Mock the window AudioContext and related objects
-        window.AudioContext = window.AudioContext || function() {
+        // Force mock the window AudioContext and related objects
+        window.AudioContext = function() {
             this.createAnalyser = function() {
                 return {
                     frequencyBinCount: 128,
@@ -24,6 +24,8 @@ describe('AudioAnalyzer', function() {
             this.createBufferSource = function() { return { connect: () => {}, start: () => {}, stop: () => {}, disconnect: () => {} }; };
             this.destination = {};
         };
+        // Ensure webkit variant is also mocked or nullified
+        window.webkitAudioContext = window.AudioContext;
     });
 
     it('should initialize correctly with default fftSize', function() {
@@ -68,15 +70,6 @@ describe('AudioAnalyzer', function() {
         
         analyzer.beatThreshold = 0.4;
         
-        // First beat (no previous beat time so it might not trigger immediately or just set time)
-        // Actually, our code sets isBeat = true only if (now - lastBeatTime > 200) AND we enter the block.
-        // Wait, the code says:
-        // if (nowMs - this.lastBeatTime > 200) { 
-        //     interval = ...
-        //     this.lastBeatTime = nowMs;
-        //     if (interval > 300 && interval < 2000) ... isBeat = true;
-        // }
-        // Since lastBeatTime is 0 initially:
         const firstBeat = analyzer.detectBeat(0.5, time1); // interval = 1000. 1000 > 300, so it WILL be a beat!
         expect(firstBeat).to.be.true;
         expect(analyzer.lastBeatTime).to.equal(1000);
