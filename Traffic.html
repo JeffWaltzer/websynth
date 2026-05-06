@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Resonance - Audio Analysis</title>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+        :root {
+            --bg-main: #121212; --bg-panel: #1a1a1c; --bg-panel-light: #252528;
+            --border: #333336; --border-glow: #ff3b30; --text-main: #f4f4f5; --text-muted: #8e8e93;
+            --accent-red: #ff3b30; --accent-amber: #ff9500; --accent-yellow: #ffcc00; --accent-green: #34c759;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0; padding: 6px 12px; background-color: var(--bg-main);
+            background-image: linear-gradient(180deg, #0a0a0b 0%, #1a1a1c 100%);
+            color: var(--text-main); font-family: 'Space Mono', monospace;
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 6px; border-bottom: 1px solid var(--border);
+            margin-bottom: 8px; flex-shrink: 0; gap: 15px;
+        }
+
+        h1 {
+            margin: 0; font-family: 'Rajdhani', sans-serif; font-size: 1.4rem;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+            color: var(--accent-yellow); text-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
+        }
+
+        .controls { display: flex; gap: 8px; align-items: center; }
+
+        .btn {
+            background: transparent; color: var(--accent-yellow); border: 1px solid var(--accent-yellow);
+            padding: 4px 10px; font-family: 'Rajdhani', sans-serif; font-size: 0.8rem;
+            font-weight: 600; letter-spacing: 1px; cursor: pointer; text-transform: uppercase;
+            border-radius: 2px;
+        }
+
+        .recording { animation: pulseRec 1.5s infinite !important; color: var(--accent-red) !important; border-color: var(--accent-red) !important; }
+        @keyframes pulseRec { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        #fileInput { display: none; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 2.5fr 1.2fr; gap: 6px; flex-grow: 1; min-height: 0; }
+        .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; padding: 8px; display: flex; flex-direction: column; overflow-y: auto; }
+        .panel-visualizer { padding: 0; border: none; overflow: hidden; }
+
+        .panel-header {
+            font-family: 'Rajdhani', sans-serif; font-size: 0.75rem; font-weight: 600;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 4px; border-bottom: 1px solid rgba(100, 116, 139, 0.2); padding-bottom: 2px;
+        }
+
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 8px; }
+        .data-point {
+            display: flex; flex-direction: column; background: var(--bg-panel-light);
+            padding: 3px 6px; border-radius: 3px; border-left: 2px solid var(--border);
+        }
+        .data-label { font-size: 0.55rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
+        .data-value { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+        .acc-yellow { border-left-color: var(--accent-yellow); color: var(--accent-yellow); }
+
+        .meter-container { width: 100%; height: 4px; background: #020205; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+        .meter-fill { height: 100%; width: 0%; transition: width 0.1s linear; }
+
+        .inference-box { background: rgba(255, 149, 0, 0.05); border: 1px solid rgba(255, 149, 0, 0.2); padding: 8px; border-radius: 4px; margin-top: auto; }
+        #gps-nav { height: 120px; width: 100%; background: #000; border: 1px solid var(--border); margin-top: 4px; border-radius: 4px; display: block; }
+    </style>
+</head>
+<body>
+
+<div id="fadeOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; opacity: 0; pointer-events: none; z-index: 9999;"></div>
+
+<header>
+    <h1 id="mainTitle">RUSH HOUR DASHBOARD</h1>
+    <div class="controls">
+        <span id="playbackInfo" style="font-size:0.75rem; color:var(--accent-green);">AWAITING IGNITION...</span>
+        <label style="display:flex; align-items:center; gap:5px; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;"><input type="checkbox" id="autoRecordCheck" checked> Auto-Rec</label>
+        <label style="display:flex; align-items:center; gap:5px; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;"><input type="checkbox" id="record4kCheck"> 4K</label>
+        <button class="btn" id="recordBtn">Start Dashcam</button>
+        <button class="btn" id="uploadBtn">Ignition</button>
+        <input type="file" id="fileInput" accept="audio/*">
+    </div>
+</header>
+
+<div class="dashboard-grid">
+    <div class="panel panel-visualizer"><div id="threeContainer" style="width: 100%; height: 100%; background: #000;"></div></div>
+    <div class="panel panel-stats">
+        <div class="panel-header">Commute Telemetry</div>
+        <div class="data-grid">
+            <div class="data-point acc-yellow"><div class="data-label">Pitch</div><div class="data-value" id="pitch-display">--</div></div>
+            <div class="data-point"><div class="data-label">Tempo</div><div class="data-value" id="bpm-display">--</div></div>
+        </div>
+        <div class="meter-container"><div class="meter-fill" id="meter-bass" style="background: var(--accent-red);"></div></div>
+        <div class="meter-container"><div class="meter-fill" id="meter-mid" style="background: var(--accent-amber);"></div></div>
+
+        <div class="panel-header">Inference & GPS</div>
+        <div class="inference-box">
+            <div id="mood-text" style="font-size:0.7rem; color:var(--accent-yellow); margin-bottom: 8px; line-height: 1.2;">Engines primed for Fairland interstate...</div>
+            <div style="font-size: 0.55rem; color: var(--text-muted); text-transform: uppercase;">Real-Time Nav</div>
+            <canvas id="gps-nav"></canvas>
+        </div>
+
+        <div class="panel-header" style="margin-top:8px;">Morphometrics</div>
+        <div class="data-grid">
+            <div class="data-point"><div class="data-label">RMS Amp</div><div class="data-value" id="stat-rms">0.00</div></div>
+            <div class="data-point"><div class="data-label">Z-Cross</div><div class="data-value" id="stat-zcr">0</div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let audioCtx, sourceNode, analyserTime, analyserFreq, streamDest;
+        let timeData, freqData, isPlaying = false, animationId;
+        let lastBeat = 0, currentBPM = 0, recordedChunks = [], isRecording = false, currentFileName = "rush-hour-dash";
+
+        const recordCanvas = document.createElement('canvas');
+        recordCanvas.width = 3840; recordCanvas.height = 2160;
+        const recordCtx = recordCanvas.getContext('2d');
+        const gpsCanvas = document.getElementById('gps-nav');
+        const gpsCtx = gpsCanvas.getContext('2d');
+
+        const pitchDisp = document.getElementById('pitch-display'), bpmDisp = document.getElementById('bpm-display');
+        const meterBass = document.getElementById('meter-bass'), meterMid = document.getElementById('meter-mid');
+        const statRms = document.getElementById('stat-rms'), statZcr = document.getElementById('stat-zcr');
+        const moodText = document.getElementById('mood-text'), playbackInfo = document.getElementById('playbackInfo');
+        const recordBtn = document.getElementById('recordBtn'), record4kCheck = document.getElementById('record4kCheck');
+        const autoRecordCheck = document.getElementById('autoRecordCheck');
+
+        // --- 3D ENGINE STATE ---
+        const threeContainer = document.getElementById('threeContainer');
+        let scene, camera, renderer, roadPlanes = [], cars = [], oncomingCars = [], trees = [], signs = [], mountains = [];
+        let trafficZ = 0, myLaneX = 6.5, myTargetLaneX = 6.5, myIsChangingLanes = false, myTargetSpeedOffset = 0.45, myCurrentSpeedOffset = 0.45;
+        const myLanes = [2.5, 6.5, 10.5];
+
+        function getPathX(z) { return Math.sin(z * 0.005) * 30.0 + Math.cos(z * 0.002) * 20.0; }
+        function getPathY(z) { return Math.sin(z * 0.002) * 25.0 + Math.cos(z * 0.004) * 15.0; }
+
+        const globalUniforms = { time: { value: 0 }, audioBass: { value: 0 } };
+
+        function initThree() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x87CEEB, 0.00006);
+            camera = new THREE.PerspectiveCamera(60, threeContainer.clientWidth / threeContainer.clientHeight, 0.1, 20000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+            renderer.setPixelRatio(window.devicePixelRatio); renderer.setSize(threeContainer.clientWidth, threeContainer.clientHeight);
+            renderer.setClearColor(0x87CEEB, 1); threeContainer.appendChild(renderer.domElement);
+
+            // Procedural Gradient Sky
+            const skyGeo = new THREE.SphereGeometry(15000, 32, 32);
+            const skyMat = new THREE.ShaderMaterial({
+                side: THREE.BackSide,
+                uniforms: { topColor: {value: new THREE.Color(0x1166cc)}, bottomColor: {value: new THREE.Color(0xddeeff)} },
+                vertexShader: `varying vec3 vWorldPosition; void main() { vec4 worldPosition = modelMatrix * vec4(position, 1.0); vWorldPosition = worldPosition.xyz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+                fragmentShader: `uniform vec3 topColor; uniform vec3 bottomColor; varying vec3 vWorldPosition; void main() { float h = normalize(vWorldPosition + 100.0).y; gl_FragColor = vec4(mix(bottomColor, topColor, max(h, 0.0)), 1.0); }`
+            });
+            scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+            const roadMat = new THREE.ShaderMaterial({
+                uniforms: globalUniforms,
+                vertexShader: `varying vec3 vWorldPos; varying float vLocalX; float getCurveX(float z) { return sin(z * 0.005) * 30.0 + cos(z * 0.002) * 20.0; } float getCurveY(float z) { return sin(z * 0.002) * 25.0 + cos(z * 0.004) * 15.0; } void main() { vLocalX = position.x; vec4 worldPosition = modelMatrix * vec4(position, 1.0); worldPosition.x += getCurveX(worldPosition.z); worldPosition.y += getCurveY(worldPosition.z); vWorldPos = worldPosition.xyz; gl_Position = projectionMatrix * viewMatrix * worldPosition; }`,
+                fragmentShader: `varying vec3 vWorldPos; varying float vLocalX; uniform float audioBass; void main() { float roadMask = smoothstep(14.0, 20.0, abs(vLocalX)); float dash = step(0.5, fract(vWorldPos.z * 0.08)); float whiteLines = (step(abs(vLocalX-4.5), 0.1) + step(abs(vLocalX-8.5), 0.1) + step(abs(vLocalX+4.5), 0.1) + step(abs(vLocalX+8.5), 0.1)) * dash; float center = step(abs(vLocalX), 0.4); vec3 color = mix(vec3(0.2), vec3(0.9,0.7,0.1), center); color = mix(color, vec3(0.8), whiteLines); color = mix(color, vec3(0.1, 0.22, 0.08), roadMask); gl_FragColor = vec4(color, 1.0); }`
+            });
+            const roadGeo = new THREE.PlaneGeometry(1200, 400, 60, 120); roadGeo.rotateX(-Math.PI / 2);
+            for(let i=0; i<4; i++) {
+                let plane = new THREE.Mesh(roadGeo, roadMat); plane.position.set(0, 0, -i * 400); scene.add(plane); roadPlanes.push(plane);
+            }
+
+            const carColors = [0xffffff, 0xff0044, 0x00aaff, 0x00ff88, 0xffcc00, 0xcc44ff];
+            for(let i=0; i<85; i++) {
+                let cGroup = createDetailedCar(carColors[Math.floor(Math.random() * carColors.length)]);
+                Object.assign(cGroup.userData, {
+                    lanesArray: myLanes, targetLaneX: myLanes[Math.floor(Math.random()*3)],
+                    laneX: 0, isChangingLanes: false, z: -Math.random()*4000,
+                    targetSpeedOffset: (Math.random()-0.4)*0.5, currentSpeedOffset: 0, accident: false
+                });
+                cGroup.userData.laneX = cGroup.userData.targetLaneX;
+                cars.push(cGroup); scene.add(cGroup);
+            }
+
+            const mountMat = new THREE.MeshStandardMaterial({color: 0x3d4a3d, roughness: 1.0, flatShading: true});
+            for(let i=0; i<35; i++) {
+                let mGeo = new THREE.ConeGeometry(3500, 1400, 5);
+                let mount = new THREE.Mesh(mGeo, mountMat); let side = Math.random() > 0.5 ? 1 : -1;
+                mount.position.set(side * 2600, -250, -Math.random() * 9000); scene.add(mount); mountains.push(mount);
+            }
+
+            for(let i=0; i<450; i++) {
+                let tree = new THREE.Group(); let species = Math.random();
+                let leafMat = new THREE.MeshStandardMaterial({color: 0x1a4314 + Math.random()*0x112211});
+                if (species < 0.33) { let l = new THREE.Mesh(new THREE.ConeGeometry(3.5, 12, 8), leafMat); l.position.y = 7; tree.add(l); }
+                else if (species < 0.66) { let c = new THREE.Mesh(new THREE.IcosahedronGeometry(4.5, 1), leafMat); c.position.y = 6; tree.add(c); }
+                else { let c = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.8, 16, 8), leafMat); c.position.y = 9; tree.add(c); }
+                tree.userData.baseX = (Math.random()>0.5?1:-1) * (20 + Math.random()*400); tree.userData.z = -Math.random()*3000;
+                trees.push(tree); scene.add(tree);
+            }
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            let sun = new THREE.DirectionalLight(0xffffff, 1.3); sun.position.set(200, 400, 100); scene.add(sun);
+            onWindowResize(); window.addEventListener('resize', onWindowResize);
+        }
+
+        function createDetailedCar(colorHex) {
+            let g = new THREE.Group();
+            let pMat = new THREE.MeshStandardMaterial({color: colorHex, roughness: 0.1, metalness: 0.8});
+            let glMat = new THREE.MeshStandardMaterial({color: 0x050505, roughness: 0.0, metalness: 1.0});
+            let body = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), pMat); body.scale.set(1.1, 0.45, 2.5); body.position.y = 0.45; g.add(body);
+            let cab = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), glMat); cab.scale.set(0.85, 0.45, 1.3); cab.position.set(0, 0.85, -0.2); g.add(cab);
+            let tailL = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({color: 0xaa0000})); tailL.position.set(-0.6, 0.5, -2.4); g.add(tailL);
+            let tailR = tailL.clone(); tailR.position.x = 0.6; g.add(tailR);
+            let headL = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({color: 0xffffdd})); headL.position.set(-0.65, 0.4, 2.4); g.add(headL);
+            let headR = headL.clone(); headR.position.x = 0.65; g.add(headR);
+            g.userData = { lTail: tailL, rTail: tailR };
+            return g;
+        }
+
+        function createRandomSignTexture() {
+            let canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 256;
+            let ctx = canvas.getContext('2d'); let rand = Math.random();
+            if (rand < 0.55) { // HIGHER WARNING FREQUENCY
+                ctx.fillStyle = '#ffcc00'; ctx.fillRect(0, 0, 512, 256); ctx.strokeStyle = '#000'; ctx.lineWidth = 10; ctx.strokeRect(8, 8, 496, 240);
+                ctx.fillStyle = '#000'; ctx.textAlign = 'center'; ctx.font = 'bold 55px "Space Mono"';
+                let warns = [['ALIEN', 'CROSSING'], ['CAMEL', 'ZONE'], ['FALLING', 'COWS'], ['GLITCH IN', 'SIMULATION'], ['BLACK HOLE', 'AHEAD'], ['MERGE', 'LEFT'], ['CAUTION', 'TAILGATERS']];
+                let w = warns[Math.floor(Math.random()*warns.length)]; ctx.fillText(w[0], 256, 110); ctx.fillText(w[1], 256, 190);
+            } else if (rand < 0.8) {
+                ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 512, 256); ctx.strokeStyle = '#000'; ctx.lineWidth = 10; ctx.strokeRect(8, 8, 496, 240);
+                ctx.fillStyle = '#000'; ctx.textAlign = 'center'; ctx.font = 'bold 50px "Space Mono"'; ctx.fillText('SPEED LIMIT', 256, 80);
+                ctx.font = 'bold 130px "Space Mono"'; ctx.fillText(['75', '85', '95'][Math.floor(Math.random()*3)], 256, 220);
+            } else {
+                ctx.fillStyle = '#005522'; ctx.fillRect(0, 0, 512, 256); ctx.strokeStyle = '#fff'; ctx.lineWidth = 10; ctx.strokeRect(8, 8, 496, 240);
+                ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = 'bold 70px "Space Mono"'; ctx.fillText('FAIRLAND', 256, 130);
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function onWindowResize() {
+            camera.aspect = threeContainer.clientWidth / threeContainer.clientHeight;
+            camera.updateProjectionMatrix(); renderer.setSize(threeContainer.clientWidth, threeContainer.clientHeight);
+        }
+
+        function drawGPS() {
+            gpsCtx.fillStyle = '#000'; gpsCtx.fillRect(0, 0, gpsCanvas.width, gpsCanvas.height);
+            gpsCtx.strokeStyle = '#34c759'; gpsCtx.lineWidth = 3; gpsCtx.beginPath();
+            for(let i=0; i<120; i++) {
+                let z = trafficZ - i*28;
+                let x = gpsCanvas.width/2 + (getPathX(z) - getPathX(trafficZ))*1.8;
+                gpsCtx.lineTo(x, gpsCanvas.height - i);
+            }
+            gpsCtx.stroke();
+            gpsCtx.fillStyle = '#ffcc00'; gpsCtx.beginPath(); gpsCtx.arc(gpsCanvas.width/2 + myLaneX*1.8, gpsCanvas.height - 10, 5, 0, 7); gpsCtx.fill();
+        }
+
+        initThree();
+
+        function updateTrafficScene(bass, rms) {
+            let jamSpeed = Math.max(1.5, 2.2 + (rms * 0.6));
+
+            // --- PASSING-FIRST AI LOGIC ---
+            let camMinZ = Infinity, camBlocked = false;
+            cars.forEach(c => { if(Math.abs(c.userData.targetLaneX - myTargetLaneX) < 0.1) { let d = trafficZ - c.userData.z; if(d > 0 && d < camMinZ) camMinZ = d; }});
+
+            if (camMinZ < 100.0) {
+                let possible = [], curIdx = myLanes.indexOf(myTargetLaneX);
+                if(curIdx > 0) possible.push(curIdx-1); if(curIdx < myLanes.length-1) possible.push(curIdx+1);
+                let safeLane = -1;
+                possible.forEach(px => {
+                    let laneX = myLanes[px], clear = true;
+                    cars.forEach(c => { if(Math.abs(c.userData.targetLaneX-laneX)<0.1 && Math.abs(trafficZ-c.userData.z)<45) clear=false; });
+                    if(clear) safeLane = laneX;
+                });
+                if(safeLane !== -1 && Math.random() < 0.2) { myTargetLaneX = safeLane; myIsChangingLanes = true; }
+                else if(camMinZ < 20.0) { camBlocked = true; } // Tailgate only if blocked
+            }
+
+            let camTargetSpeed = (camMinZ < 15.0 && camBlocked) ? -0.6 : myTargetSpeedOffset;
+            myCurrentSpeedOffset += (camTargetSpeed - myCurrentSpeedOffset) * 0.03; // Smoothed
+            if(myIsChangingLanes) { myLaneX += (myTargetLaneX - myLaneX) * 0.05; if(Math.abs(myLaneX-myTargetLaneX)<0.05){myLaneX=myTargetLaneX; myIsChangingLanes=false;} }
+
+            trafficZ -= (jamSpeed + myCurrentSpeedOffset);
+            camera.position.set(getPathX(trafficZ) + myLaneX, getPathY(trafficZ) + 1.4, trafficZ);
+            camera.lookAt(getPathX(trafficZ - 80) + myLaneX, getPathY(trafficZ - 80) + 1.4, trafficZ - 80);
+
+            roadPlanes.forEach(p => { if(p.position.z > camera.position.z + 200) p.position.z -= 1600; });
+
+            cars.forEach(c => {
+                if(c.userData.accident) { c.userData.currentSpeedOffset += (-0.85 - c.userData.currentSpeedOffset) * 0.02; }
+                else {
+                    let dF = Infinity, dR = Infinity, canL = false, canR = false;
+                    cars.forEach(o => { if(o!==c && Math.abs(o.userData.targetLaneX-c.userData.targetLaneX)<0.1){ let d=c.userData.z-o.userData.z; if(d>0&&d<dF)dF=d; if(d<0&&Math.abs(d)<dR)dR=Math.abs(d); }});
+
+                    if(dF < 3.8) { c.userData.accident = true; }
+
+                    if(dF < 60.0) {
+                        let idx = c.userData.lanesArray.indexOf(c.userData.targetLaneX);
+                        [idx-1, idx+1].forEach(ix => { if(ix>=0 && ix<3){ let lx=c.userData.lanesArray[ix], clear=true; cars.forEach(o=>{if(o!==c && Math.abs(o.userData.targetLaneX-lx)<0.1 && Math.abs(c.userData.z-o.userData.z)<35) clear=false;}); if(clear) { if(ix<idx) canL=true; else canR=true; }}});
+                        if((canL || canR) && Math.random()<0.12) { c.userData.targetLaneX = c.userData.lanesArray[canL ? idx-1 : idx+1]; c.userData.isChangingLanes = true; }
+                    }
+
+                    // Strategic tailgating logic
+                    let tSpeed = c.userData.targetSpeedOffset;
+                    if(dF < 12.0 && !(canL || canR)) { tSpeed = -0.8; } // Tailgate if blocked
+                    else if(dF < 30.0) { tSpeed = -0.4; }
+                    c.userData.currentSpeedOffset += (tSpeed - c.userData.currentSpeedOffset) * 0.03;
+                }
+
+                c.userData.z -= (jamSpeed + c.userData.currentSpeedOffset);
+                if(c.userData.isChangingLanes){ c.userData.laneX += (c.userData.targetLaneX - c.userData.laneX)*0.045; if(Math.abs(c.userData.laneX-c.userData.targetLaneX)<0.05)c.userData.isChangingLanes=false; }
+
+                c.position.set(getPathX(c.userData.z) + c.userData.laneX, getPathY(c.userData.z) + 0.1, c.userData.z);
+                let nZ = c.userData.z - 5.0; c.lookAt(getPathX(nZ) + c.userData.laneX, getPathY(nZ), nZ);
+
+                if (c.userData.lTail && c.userData.rTail) {
+                    let braking = c.userData.currentSpeedOffset < -0.1 || c.userData.accident;
+                    let cHex = braking ? (globalUniforms.time.value % 0.4 < 0.2 && c.userData.accident ? 0xffff00 : 0xff0000) : 0x880000;
+                    c.userData.lTail.material.color.setHex(cHex);
+                    c.userData.rTail.material.color.setHex(cHex);
+                }
+
+                if(c.userData.z > camera.position.z + 50) { c.userData.z = camera.position.z - 2000 - Math.random()*500; c.userData.accident = false; }
+            });
+
+            trees.forEach(t => { if(t.userData.z > camera.position.z + 50) t.userData.z -= 2500; t.position.set(getPathX(t.userData.z)+t.userData.baseX, getPathY(t.userData.z), t.userData.z); });
+            signs.forEach(s => { if(s.userData.z > camera.position.z + 50) s.userData.z -= 4000; s.position.set(getPathX(s.userData.z)+s.userData.baseX, getPathY(s.userData.z), s.userData.z); });
+            drawGPS();
+        }
+
+        function analyzeLoop() {
+            if (!isPlaying) return; animationId = requestAnimationFrame(analyzeLoop);
+            analyserTime.getFloatTimeDomainData(timeData); analyserFreq.getByteFrequencyData(freqData);
+            let sumSq = 0; for(let i=0; i<2048; i++) sumSq += timeData[i]*timeData[i];
+            let rms = Math.sqrt(sumSq/2048); statRms.innerText = rms.toFixed(3);
+            meterBass.style.width = Math.min(100, rms*500)+"%";
+            globalUniforms.time.value += 0.016; updateTrafficScene(rms, rms); renderer.render(scene, camera);
+            if(isRecording) drawRecordUI(recordCtx, recordCanvas.width, recordCanvas.height);
+        }
+
+        function drawRecordUI(ctx, w, h) {
+            ctx.save(); ctx.fillStyle = '#0a0a0b'; ctx.fillRect(0, 0, w, h);
+            ctx.font = 'bold 95px "Rajdhani"'; ctx.fillStyle = '#ffcc00'; ctx.fillText(currentFileName.toUpperCase(), 100, 130);
+
+            const topY = 200, leftW = 2400, leftH = 1350, rightX = 2600, rightW = 1100;
+            ctx.drawImage(renderer.domElement, 100, topY, leftW, leftH);
+
+            // Right sidebar telemetry
+            ctx.fillStyle = '#1a1a1c'; ctx.fillRect(rightX, topY, rightW, 1800);
+            let tY = topY + 80;
+            ctx.font = '45px "Rajdhani"'; ctx.fillStyle = '#8e8e93'; ctx.fillText('BPM / TEMPO', rightX+50, tY);
+            ctx.font = 'bold 110px monospace'; ctx.fillStyle = '#34c759'; ctx.fillText(bpmDisp.innerText || '128', rightX+50, tY+110);
+
+            tY += 300;
+            ctx.font = '45px "Rajdhani"'; ctx.fillStyle = '#8e8e93'; ctx.fillText('GPS NAVIGATION', rightX+50, tY);
+            ctx.strokeStyle = '#333'; ctx.strokeRect(rightX+50, tY+20, 1000, 600);
+            ctx.drawImage(gpsCanvas, rightX+50, tY+20, 1000, 600);
+
+            tY += 800;
+            ctx.font = '45px "Rajdhani"'; ctx.fillStyle = '#8e8e93'; ctx.fillText('INFERENCE LOG', rightX+50, tY);
+            ctx.font = '45px monospace'; ctx.fillStyle = '#ffcc00'; wrapText(ctx, moodText.innerText, rightX+50, tY+90, 1000, 65);
+
+            // Lower Data Panel
+            let dY = topY + leftH + 100;
+            ctx.fillStyle = '#1a1a1c'; ctx.fillRect(100, dY, leftW, 350);
+            ctx.font = '50px "Rajdhani"'; ctx.fillStyle = '#8e8e93'; ctx.fillText('DIAGNOSTIC MORPHOMETRICS', 150, dY+100);
+            ctx.font = '75px monospace'; ctx.fillStyle = '#fff'; ctx.fillText(`RMS: ${statRms.innerText}   ZCR: ${statZcr.innerText}   BPM: ${bpmDisp.innerText || '--'}`, 150, dY+220);
+
+            ctx.restore();
+        }
+
+        function wrapText(c, t, x, y, mW, lH) {
+            let words = t.split(' '), line = '';
+            for(let n=0; n<words.length; n++) { let tL = line + words[n] + ' '; if(c.measureText(tL).width > mW && n>0){ c.fillText(line, x, y); line = words[n] + ' '; y += lH; } else { line = tL; } }
+            c.fillText(line, x, y);
+        }
+
+        document.getElementById('uploadBtn').onclick = () => document.getElementById('fileInput').click();
+        document.getElementById('fileInput').onchange = (e) => {
+            let f = e.target.files[0]; if(!f) return; currentFileName = f.name;
+            let r = new FileReader(); r.onload = (ev) => initAudio(ev.target.result, f.name); r.readAsArrayBuffer(f);
+        };
+
+        async function initAudio(buf, name) {
+            if(!audioCtx) audioCtx = new AudioContext();
+            let aBuf = await audioCtx.decodeAudioData(buf);
+            if(autoRecordCheck.checked) startRecording();
+            sourceNode = audioCtx.createBufferSource(); sourceNode.buffer = aBuf;
+            analyserTime = audioCtx.createAnalyser(); analyserFreq = audioCtx.createAnalyser();
+            sourceNode.connect(analyserTime); analyserTime.connect(analyserFreq); analyserFreq.connect(audioCtx.destination);
+            timeData = new Float32Array(2048); freqData = new Uint8Array(2048);
+            sourceNode.start(0); isPlaying = true; analyzeLoop();
+        }
+
+        async function startRecording() {
+            const stream = recordCanvas.captureStream(60);
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 20000000 });
+            mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+            mediaRecorder.onstop = () => { let b = new Blob(recordedChunks, {type:'video/webm'}); let a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${currentFileName}.webm`; a.click(); recordedChunks=[]; };
+            mediaRecorder.start(); isRecording = true; recordBtn.classList.add('recording');
+        }
+        recordBtn.onclick = () => { if(isRecording){ mediaRecorder.stop(); isRecording=false; recordBtn.classList.remove('recording'); } else startRecording(); };
+    })();
+</script>
+</body>
+</html>
